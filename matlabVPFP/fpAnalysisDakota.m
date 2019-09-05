@@ -1,5 +1,5 @@
 % Fiber Photometry Analysis
-% 8/14/19
+% 9/5/19
 clear
 clc
 close all
@@ -12,12 +12,12 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-indexAddress = 'C:\Users\capn1\Desktop\FPanalysis\nexFilesVPFP\vpfpIndex_template.xlsx';    % excel file location 'C:\Users\capn1\Desktop\FPAnalysis\nexFilesVPFP\vpfpIndex_template.xlsx'; %
+indexAddress = 'C:\Users\Dakota\Desktop\FP-analysis-master\FP-analysis-master\nexFilesVPFP\vpfpIndex_template.xlsx'; % excel file location 
 
-nexAddress =  'C:\Users\capn1\Desktop\FPanalysis\nexFilesVPFP';  % nex file location 'C:\Users\capn1\Desktop\FPAnalysis\nexFilesVPFP';
-nexFiles=dir([nexAddress,'//*.nex']); 
+nexAddress =  'C:\Users\Dakota\Desktop\FP-analysis-master\FP-analysis-master\nexFilesVPFP'; % nex file location 
+nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
-%TODO: Add cell array or struct containing all metadata from each session? not sure if necessary for comparing >2 animals
+figPath= 'C:\Users\Dakota\Desktop\FP-analysis-master\FP-analysis-master\matlabVPFP\figures\'; %location for output figures to be saved
 
 %% load nex data
 sesNum = 0; %for looping- simply analyzing all data from a given session simultaneously (currently 2 boxes per session- A and B)
@@ -25,7 +25,7 @@ sesNum = 0; %for looping- simply analyzing all data from a given session simulta
 
 for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile  
     
-    clearvars -except file nexFiles indexAddress nexAddress sesNum sesData subjData; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
+    clearvars -except file nexFiles indexAddress nexAddress sesNum sesData subjData figPath; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
     
     fName = nexFiles(file).name; %define the nex file name to load
     data = readNexFile([nexAddress,'//',fName]); %load the nex file data
@@ -44,24 +44,62 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     
     disp(strcat('rat A = ', num2str(sesData(file).ratA), ' ; rat B = ', num2str(sesData(file).ratB), ' ; trainStage = ', num2str(sesData(file).trainStage), ' ; trainDay = ', num2str(sesData(file).trainDay))); 
     
-%% define contvars (photometer data) %%TODO: Should probably make sure that these are constant across nex files (if not may use method like events above)
-purpleA = data.contvars{3,1}.data;  %405nm data from box A
-blueA = data.contvars{4,1}.data;    %470 nm data from box A
+%% define contvars (photometer data)
 
-purpleB = data.contvars{1,1}.data;  %405nm data from box B
-blueB = data.contvars{2,1}.data;    %470nm data from box B
-
-%Flag any change in the contvar nex file structure for photometer data- just in case this is an issue later
-if contains(data.contvars{1,1}.name, 'Dv4B') ~=1
-   disp('***********CHECK THE CONTVARS 1*************');
-elseif contains(data.contvars{2,1}.name, 'Dv3B') ~=1
-   disp('***********CHECK THE CONTVARS 2*************');
-elseif contains(data.contvars{3,1}.name, 'Dv2A') ~=1
-   disp('***********CHECK THE CONTVARS 3*************');
-elseif contains(data.contvars{4,1}.name, 'Dv1A') ~=1
-   disp('***********CHECK THE CONTVARS 4*************');   
+%find the appropriate 465nm and 405nm data from each box (by name) and assign it to the correct variable
+for i= 1:numel(data.contvars)
+   blueAindex= contains(data.contvars{i,1}.name, 'Dv1A');
+   purpleAindex= contains(data.contvars{i,1}.name, 'Dv2A');
+   
+   blueBindex= contains(data.contvars{i,1}.name, 'Dv3B');
+   purpleBindex= contains(data.contvars{i,1}.name, 'Dv4B');
+   
+   if(blueAindex ==1)  %e.g. if DSindex returns true (1), then define DS as the timestamps within this data.events series
+       blueA = data.contvars{i,1}.data;
+%        disp(strcat('465A contvar index= ', num2str(i))); %keep for debugs
+   end
+   
+   
+   if(purpleAindex ==1)  %e.g. if DSindex returns true (1), then define DS as the timestamps within this data.events series
+       purpleA = data.contvars{i,1}.data;
+%        disp(strcat('405A contvar index= ', num2str(i))); %keep for debugs
+   end
+   
+   
+  if(blueBindex ==1)  %e.g. if DSindex returns true (1), then define DS as the timestamps within this data.events series
+       blueB = data.contvars{i,1}.data;
+%        disp(strcat('465B contvar index= ', num2str(i))); %keep for debugs
+   end
+   
+   if(purpleBindex ==1)  %e.g. if DSindex returns true (1), then define DS as the timestamps within this data.events series
+        purpleB = data.contvars{i,1}.data;
+%        disp(strcat('405B contvar index= ', num2str(i))); %keep for debugs
+   end     
 end
 
+
+% %Flag any change in the contvar nex file structure for photometer data-
+% %this should not be an issue now that these are assigned programatically(see below)
+% if contains(data.contvars{1,1}.name, 'Dv4B') ~=1
+%    disp('***********CHECK THE CONTVARS 1*************');
+% elseif contains(data.contvars{2,1}.name, 'Dv3B') ~=1
+%    disp('***********CHECK THE CONTVARS 2*************');
+% elseif contains(data.contvars{3,1}.name, 'Dv2A') ~=1
+%    disp('***********CHECK THE CONTVARS 3*************');
+% elseif contains(data.contvars{4,1}.name, 'Dv1A') ~=1
+%    disp('***********CHECK THE CONTVARS 4*************');   
+% end
+% 
+% if contains(data.contvars{1,1}.name, 'Dv4B') ~=1
+%    disp('***********CHECK THE CONTVARS 1*************');
+% elseif contains(data.contvars{2,1}.name, 'Dv3B') ~=1
+%    disp('***********CHECK THE CONTVARS 2*************');
+% elseif contains(data.contvars{3,1}.name, 'Dv2A') ~=1
+%    disp('***********CHECK THE CONTVARS 3*************');
+% elseif contains(data.contvars{4,1}.name, 'Dv1A') ~=1
+%    disp('***********CHECK THE CONTVARS 4*************');   
+% end
+% 
 % disp(strcat(data.contvars{1,1}.name, ' ', data.contvars{2,1}.name, ' ', data.contvars{3,1}.name, ' ', data.contvars{4,1}.name));
 
 %% define events; Since nexfile organization differs, search the nexfile and define events programmatically
@@ -195,12 +233,13 @@ fitB= controlFit(reblueB, repurpleB);
 %% Fitted plots %%
 % figure(sesNum)
 % subplot (4,1,1) %fitted overlaid on same subplot as blue&purple
+%hold on
 % plot(cutTime, fitA,'g');
 % title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' ControlFit box A'));
 % legend('purple','blue','controlfit')
-% 
 % figure(sesNum)
 % subplot (4,1,2)
+%hold on
 % plot(cutTime, fitB,'g');
 % title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' ControlFit box B'));
 % legend('purple','blue','controlfit')
@@ -212,15 +251,43 @@ dfB = deltaFF(reblueB,fitB);
 %% dF plots %%
 % figure(sesNum)
 % subplot (4,1,3)
+%hold on
 % plot(cutTime, dfA);
 % title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' dF/F box A'));
 % ylabel('% dF');
 % 
 % figure(sesNum)
 % subplot (4,1,4)
+%hold on
 % plot(cutTime, dfB);
 % title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' dF/F box B'));
 % ylabel('% dF');
+
+%% SAVE PLOTS OF overlaid fitted 405nm signal and 465nm signal - should be easier to see dynamic Ca2+ events, saves plots as .fig
+figure()
+plot(cutTime,reblueA, 'b');
+hold on
+plot (cutTime, fitA, 'm');
+title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' downsample box A & fit A'));
+legend('blue','controlfit')
+
+%Save the figure and close
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+saveas(gcf, strcat(figPath,'VPFP_rat_ ', num2str(sesData(file).ratA),'photometry traces', 'day ', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
+close; %close 
+
+figure()
+plot(cutTime,reblueB, 'b');
+hold on
+plot (cutTime, fitB, 'm');
+title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' downsample box B & fit B'));
+legend('blue','controlfit')
+
+%Save the figure and close
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+saveas(gcf, strcat(figPath,'VPFP_rat_ ', num2str(sesData(file).ratB),'photometry traces', 'day ', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
+close; %close 
+
 
 %% Event-triggered analysis of dF & z-score timelocked to cue presentation 
 %In this section, go cue-by-cue examining how fluorescence intensity changes in response to cue onset (either DS or NS)
@@ -881,7 +948,7 @@ subjField= fieldnames(subjData); %access struct with dynamic fieldname
 for i= 1:numel(subjField)
     
     %reset arrays between subjects to clear any remaining data 
-    clearvars -except i sesData subjData subjField timeLock fs slideTime; 
+    clearvars -except i sesData subjData subjField timeLock fs slideTime figPath; 
     
     disp(subjField(i));
     currentSubj= subjData.(subjField{i}); 
@@ -1082,7 +1149,7 @@ for i= 1:numel(subjField)
 %     
 %     %SAVE PLOTS
 %    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-%    saveas(gcf, strcat('rat_', num2str(ratID),'_meanZ_perSession','.tiff')); %save the current figure in tif format
+%    saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_meanZ_perSession','.tiff')); %save the current figure in tif format
      
 % % %     %add annotation with number of cues for each trial included in analysis- probably can delete
 % % %     textPos= 1/numel(subjTrial)/2;
@@ -1166,7 +1233,7 @@ for i= 1:numel(subjField)
 % 
 %     
 %    %SAVE PLOTS
-%    saveas(gcf, strcat('rat_', num2str(ratID),'_Zscore_AllCues','.tiff')); %save the current figure in tif format
+%    saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_Zscore_AllCues','.tiff')); %save the current figure in tif format
     
     
     %PLOT OF ALL INDIVIDUAL CUE RESPONSES- TRIALS SORTED BY PE LATENCY, CONTAINING ONLY TRIALS IN WHICH A PE WAS MADE
@@ -1230,7 +1297,7 @@ for i= 1:numel(subjField)
 
     %SAVE PLOTS
     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-    saveas(gcf, strcat('rat_', num2str(ratID),'_Zscore_AllCuesSorted-WithLicks','.tiff')); %save the current figure in tif format
+    saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_Zscore_AllCuesSorted-WithLicks','.tiff')); %save the current figure in tif format
 
      
     %     %%%%%%%%%%%%%%%%%%%%%%%%%%% IN PROGRESS- visualizing lox
@@ -1267,7 +1334,7 @@ for i= 1:numel(subjField)
 %     
 %     %SAVE PLOTS
 %     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-%     saveas(gcf, strcat('rat_', num2str(ratID),'_licks_surrounding_cue_sorted','.tiff')); %save the current figure in tif format
+%     saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_licks_surrounding_cue_sorted','.tiff')); %save the current figure in tif format
 
 % %plot of all DSz- sorted by latency (seems unnecessary at this point)- delete?
 %     figure;
