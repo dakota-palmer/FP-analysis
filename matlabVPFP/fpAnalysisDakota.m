@@ -12,9 +12,9 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-indexAddress = 'C:\Users\Dakota\Desktop\FP-analysis-master\nexFilesVPFP\vpfpIndex_template.xlsx'; % excel file location 
+indexAddress = 'C:\Users\Dakota\Desktop\VP-VTA-FP Analysis\nexFilesVPFP\VP-VTA-FP_Metadata.xlsx'; % excel file location 
 
-nexAddress =  'C:\Users\Dakota\Desktop\FP-analysis-master\nexFilesVPFP'; % nex file location 
+nexAddress =  'C:\Users\Dakota\Desktop\VP-VTA-FP Analysis\nexFilesVPFP\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 figPath= 'C:\Users\Dakota\Desktop\FP-analysis-master\matlabVPFP\figures\'; %location for output figures to be saved
@@ -274,7 +274,7 @@ legend('blue','controlfit')
 
 %Save the figure and close
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-saveas(gcf, strcat(figPath,'VPFP_rat_ ', num2str(sesData(file).ratA),'photometry traces', 'day ', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
+saveas(gcf, strcat(figPath,'VP-VTA-FP rat ', num2str(sesData(file).ratA),'box A photometry traces', 'day ', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
 close; %close 
 
 figure()
@@ -286,7 +286,7 @@ legend('blue','controlfit')
 
 %Save the figure and close
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-saveas(gcf, strcat(figPath,'VPFP_rat_ ', num2str(sesData(file).ratB),'photometry traces', 'day ', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
+saveas(gcf, strcat(figPath,'VP-VTA-FP rat ', num2str(sesData(file).ratB),'box B photometry traces', 'day ', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
 close; %close 
 
 %% If this is not active DS training session (e.g. if it's magazine training) - Break out here 
