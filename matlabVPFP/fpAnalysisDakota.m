@@ -12,20 +12,21 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-indexAddress = 'C:\Users\Dakota\Desktop\FP-analysis-master\FP-analysis-master\nexFilesVPFP\vpfpIndex_template.xlsx'; % excel file location 
+indexAddress = 'C:\Users\Dakota\Desktop\FP-analysis-master\nexFilesVPFP\vpfpIndex_template.xlsx'; % excel file location 
 
-nexAddress =  'C:\Users\Dakota\Desktop\FP-analysis-master\FP-analysis-master\nexFilesVPFP'; % nex file location 
+nexAddress =  'C:\Users\Dakota\Desktop\FP-analysis-master\nexFilesVPFP'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
-figPath= 'C:\Users\Dakota\Desktop\FP-analysis-master\FP-analysis-master\matlabVPFP\figures\'; %location for output figures to be saved
+figPath= 'C:\Users\Dakota\Desktop\FP-analysis-master\matlabVPFP\figures\'; %location for output figures to be saved
+
+runAnalysis= 1; %logic gate for running typical DS training analysis... will not run if an atypical DS training session is loaded (e.g. magazine training session where stage =0)
 
 %% load nex data
 sesNum = 0; %for looping- simply analyzing all data from a given session simultaneously (currently 2 boxes per session- A and B)
 
-
 for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile  
     
-    clearvars -except file nexFiles indexAddress nexAddress sesNum sesData subjData figPath; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
+    clearvars -except file nexFiles indexAddress nexAddress sesNum sesData subjData figPath runAnalysis; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
     
     fName = nexFiles(file).name; %define the nex file name to load
     data = readNexFile([nexAddress,'//',fName]); %load the nex file data
@@ -288,6 +289,13 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before s
 saveas(gcf, strcat(figPath,'VPFP_rat_ ', num2str(sesData(file).ratB),'photometry traces', 'day ', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
 close; %close 
 
+%% If this is not active DS training session (e.g. if it's magazine training) - Break out here 
+
+if sesData(file).trainStage ==0
+    disp('loaded magazine training session- loading next session, wont run any analysis');
+    runAnalysis=0;
+    continue
+end
 
 %% Event-triggered analysis of dF & z-score timelocked to cue presentation 
 %In this section, go cue-by-cue examining how fluorescence intensity changes in response to cue onset (either DS or NS)
@@ -823,630 +831,633 @@ end
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%End of file loop
 
-%% Reorganize data by subject instead of by box
- 
-%Heatmap of z score cue response across trials
+if runAnalysis ==1 %only run this if all sessions loaded are from valid DS training stages (w
 
-%identify unique rats and associate data from all sessions with rat instead of box
-rats= cat(1, sesData.ratA, sesData.ratB);
-rats= unique(rats);
 
-trialCount = 0; %counter for looping to fill subjData appropriately
+    %% Reorganize data by subject instead of by box
 
-%create a new struct, subjData, containing all subject's data and session metadata
-for rat = 1:numel(rats) 
-    subj= rats(rat);
-    
-    subjField= (strcat('rat',num2str(subj))); %dynamically assign field name for each subject- This may be problematic
-        
-    for i=1:numel(sesData) 
-        
-        subjData.(subjField)(i).cutTime= cutTime;
-        
-        if subj == sesData(i).ratA %if this rat was in boxA, associate session data from boxA with it
-            trialCount= trialCount+1; %increment counter
-            
-            subjData.(subjField)(i).rat= subj;
-            subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
-            subjData.(subjField)(i).trainStage= sesData(i).trainStage;
-            subjData.(subjField)(i).box= 'box A';
-            
-            subjData.(subjField)(i).DSdf= sesData(i).DSdfA;
-            subjData.(subjField)(i).DSz= sesData(i).DSzA;
-            subjData.(subjField)(i).meanDSz = sesData(i).meanDSzA;
-                       
-            subjData.(subjField)(i).numDS= sesData(i).numDS;
-            
-            
-            subjData.(subjField)(i).poxDS= sesData(i).poxADS;
-            
-            subjData.(subjField)(i).loxDS= sesData(i).loxADS;
-            
-            subjData.(subjField)(i).loxDSmat= sesData(i).loxADSmat;
-            
-            subjData.(subjField)(i).poxDSlatency= sesData(i).poxADSlatency;
-            subjData.(subjField)(i).meanpoxDSlatency= sesData(i).meanpoxADSlatency;
+    %Heatmap of z score cue response across trials
 
-                        
-            if subjData.(subjField)(i).trainStage== 5 %NS only on stage 5
-            subjData.(subjField)(i).numNS= sesData(i).numNS;
-            subjData.(subjField)(i).NSdf= sesData(i).NSdfA;
-    
-            subjData.(subjField)(i).NSz= sesData(i).NSzA;
-            subjData.(subjField)(i).meanNSz = sesData(i).meanNSzA;
-            
-            subjData.(subjField)(i).poxNS= sesData(i).poxANS;
-           
-            
-            subjData.(subjField)(i).loxNS= sesData(i).loxANS;
-            subjData.(subjField)(i).loxNSmat= sesData(i).loxANSmat;
+    %identify unique rats and associate data from all sessions with rat instead of box
+    rats= cat(1, sesData.ratA, sesData.ratB);
+    rats= unique(rats);
 
-            
-            subjData.(subjField)(i).poxNSlatency= sesData(i).poxANSlatency;
-            subjData.(subjField)(i).meanpoxNSlatency= sesData(i).meanpoxANSlatency;
+    trialCount = 0; %counter for looping to fill subjData appropriately
 
+    %create a new struct, subjData, containing all subject's data and session metadata
+    for rat = 1:numel(rats) 
+        subj= rats(rat);
+
+        subjField= (strcat('rat',num2str(subj))); %dynamically assign field name for each subject- This may be problematic
+
+        for i=1:numel(sesData) 
+
+            subjData.(subjField)(i).cutTime= cutTime;
+
+            if subj == sesData(i).ratA %if this rat was in boxA, associate session data from boxA with it
+                trialCount= trialCount+1; %increment counter
+
+                subjData.(subjField)(i).rat= subj;
+                subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
+                subjData.(subjField)(i).trainStage= sesData(i).trainStage;
+                subjData.(subjField)(i).box= 'box A';
+
+                subjData.(subjField)(i).DSdf= sesData(i).DSdfA;
+                subjData.(subjField)(i).DSz= sesData(i).DSzA;
+                subjData.(subjField)(i).meanDSz = sesData(i).meanDSzA;
+
+                subjData.(subjField)(i).numDS= sesData(i).numDS;
+
+
+                subjData.(subjField)(i).poxDS= sesData(i).poxADS;
+
+                subjData.(subjField)(i).loxDS= sesData(i).loxADS;
+
+                subjData.(subjField)(i).loxDSmat= sesData(i).loxADSmat;
+
+                subjData.(subjField)(i).poxDSlatency= sesData(i).poxADSlatency;
+                subjData.(subjField)(i).meanpoxDSlatency= sesData(i).meanpoxADSlatency;
+
+
+                if subjData.(subjField)(i).trainStage== 5 %NS only on stage 5
+                subjData.(subjField)(i).numNS= sesData(i).numNS;
+                subjData.(subjField)(i).NSdf= sesData(i).NSdfA;
+
+                subjData.(subjField)(i).NSz= sesData(i).NSzA;
+                subjData.(subjField)(i).meanNSz = sesData(i).meanNSzA;
+
+                subjData.(subjField)(i).poxNS= sesData(i).poxANS;
+
+
+                subjData.(subjField)(i).loxNS= sesData(i).loxANS;
+                subjData.(subjField)(i).loxNSmat= sesData(i).loxANSmat;
+
+
+                subjData.(subjField)(i).poxNSlatency= sesData(i).poxANSlatency;
+                subjData.(subjField)(i).meanpoxNSlatency= sesData(i).meanpoxANSlatency;
+
+                end
+
+
+            elseif subj ==sesData(i).ratB %if this rat was in boxB, associate session data from boxB with it
+                trialCount= trialCount+1;
+
+                subjData.(subjField)(i).rat= subj;
+                subjData.(subjField)(i).trainDay= sesData(i).trainDay;
+                subjData.(subjField)(i).trainStage= sesData(i).trainStage;
+                subjData.(subjField)(i).box= 'box B';
+                subjData.(subjField)(i).DSdf= sesData(i).DSdfB;
+                subjData.(subjField)(i).DSz= sesData(i).DSzB;
+
+                subjData.(subjField)(i).meanDSz = sesData(i).meanDSzB;
+
+                subjData.(subjField)(i).numDS= sesData(i).numDS;
+
+
+                subjData.(subjField)(i).poxDS= sesData(i).poxBDS;
+
+                subjData.(subjField)(i).loxDS= sesData(i).loxBDS;
+
+                subjData.(subjField)(i).loxDSmat= sesData(i).loxBDSmat;
+
+
+                subjData.(subjField)(i).poxDSlatency= sesData(i).poxBDSlatency;
+
+                subjData.(subjField)(i).meanpoxDSlatency= sesData(i).meanpoxBDSlatency;
+
+
+
+
+                if subjData.(subjField)(i).trainStage==5 %NS only on stage 5
+                subjData.(subjField)(i).numNS= sesData(i).numNS;
+                subjData.(subjField)(i).NSdf= sesData(i).NSdfB;
+                subjData.(subjField)(i).NSz= sesData(i).NSzB;
+
+                subjData.(subjField)(i).meanNSz = sesData(i).meanNSzB;
+
+                subjData.(subjField)(i).poxNS= sesData(i).poxBNS;
+
+                subjData.(subjField)(i).loxNS= sesData(i).loxBNS;
+                subjData.(subjField)(i).loxNSmat= sesData(i).loxBNSmat;
+
+
+                subjData.(subjField)(i).poxNSlatency= sesData(i).poxBNSlatency;
+                subjData.(subjField)(i).meanpoxNSlatency= sesData(i).meanpoxBNSlatency;
+
+                end
             end
-          
-            
-        elseif subj ==sesData(i).ratB %if this rat was in boxB, associate session data from boxB with it
-            trialCount= trialCount+1;
-           
-            subjData.(subjField)(i).rat= subj;
-            subjData.(subjField)(i).trainDay= sesData(i).trainDay;
-            subjData.(subjField)(i).trainStage= sesData(i).trainStage;
-            subjData.(subjField)(i).box= 'box B';
-            subjData.(subjField)(i).DSdf= sesData(i).DSdfB;
-            subjData.(subjField)(i).DSz= sesData(i).DSzB;
+        end 
 
-            subjData.(subjField)(i).meanDSz = sesData(i).meanDSzB;
-            
-            subjData.(subjField)(i).numDS= sesData(i).numDS;
-            
-             
-            subjData.(subjField)(i).poxDS= sesData(i).poxBDS;
-            
-            subjData.(subjField)(i).loxDS= sesData(i).loxBDS;
-            
-            subjData.(subjField)(i).loxDSmat= sesData(i).loxBDSmat;
+        % remove empty cells from subjData!
+        subjData.(subjField)= subjData.(subjField)(~cellfun(@isempty,{subjData.(subjField).trainDay})); %Remove empty cells from subjData (TODO: apply this method to SubjData itself)
 
-            
-            subjData.(subjField)(i).poxDSlatency= sesData(i).poxBDSlatency;
-        
-            subjData.(subjField)(i).meanpoxDSlatency= sesData(i).meanpoxBDSlatency;
 
-            
+    end
 
-           
-            if subjData.(subjField)(i).trainStage==5 %NS only on stage 5
-            subjData.(subjField)(i).numNS= sesData(i).numNS;
-            subjData.(subjField)(i).NSdf= sesData(i).NSdfB;
-            subjData.(subjField)(i).NSz= sesData(i).NSzB;
+    %% Subject heat plot organization
+    subjField= fieldnames(subjData); %access struct with dynamic fieldname
+    for i= 1:numel(subjField)
 
-            subjData.(subjField)(i).meanNSz = sesData(i).meanNSzB;
-            
-            subjData.(subjField)(i).poxNS= sesData(i).poxBNS;
-            
-            subjData.(subjField)(i).loxNS= sesData(i).loxBNS;
-            subjData.(subjField)(i).loxNSmat= sesData(i).loxBNSmat;
+        %reset arrays between subjects to clear any remaining data 
+        clearvars -except i sesData subjData subjField timeLock fs slideTime figPath runAnalysis; 
 
-            
-            subjData.(subjField)(i).poxNSlatency= sesData(i).poxBNSlatency;
-            subjData.(subjField)(i).meanpoxNSlatency= sesData(i).meanpoxBNSlatency;
+        disp(subjField(i));
+        currentSubj= subjData.(subjField{i}); 
 
+        %Exclude data- since cue lengths vary between sessions
+        %For now, only do this for trials with cueLength ==10 (stage 4 or 5)... colormap will probably appear off if including irrelevant trials
+        for trial = 1:numel(currentSubj)
+            if currentSubj(trial).trainStage ~= 4 && currentSubj(trial).trainStage ~=5 %if not stage 4 or 5, exclude data 
+                fn = fieldnames(currentSubj);
+                for field = 1:numel(fieldnames(currentSubj))
+                    currentSubj(trial).(fn{field})= []; %delete the data
+               end
             end
         end
-    end 
-    
-    % remove empty cells from subjData!
-    subjData.(subjField)= subjData.(subjField)(~cellfun(@isempty,{subjData.(subjField).trainDay})); %Remove empty cells from subjData (TODO: apply this method to SubjData itself)
 
-    
-end
+        currentSubj= currentSubj(~cellfun(@isempty,{currentSubj.trainDay})); %remove empty cells after defining data to exclude
 
-%% Subject heat plot organization
-subjField= fieldnames(subjData); %access struct with dynamic fieldname
-for i= 1:numel(subjField)
-    
-    %reset arrays between subjects to clear any remaining data 
-    clearvars -except i sesData subjData subjField timeLock fs slideTime figPath; 
-    
-    disp(subjField(i));
-    currentSubj= subjData.(subjField{i}); 
-    
-    %Exclude data- since cue lengths vary between sessions
-    %For now, only do this for trials with cueLength ==10 (stage 4 or 5)... colormap will probably appear off if including irrelevant trials
-    for trial = 1:numel(currentSubj)
-        if currentSubj(trial).trainStage ~= 4 && currentSubj(trial).trainStage ~=5 %if not stage 4 or 5, exclude data 
-            fn = fieldnames(currentSubj);
-            for field = 1:numel(fieldnames(currentSubj))
-                currentSubj(trial).(fn{field})= []; %delete the data
-           end
-       	end
-    end
-    
-    currentSubj= currentSubj(~cellfun(@isempty,{currentSubj.trainDay})); %remove empty cells after defining data to exclude
-    
-    ratID= currentSubj(i).rat;
-    
-     %%%%%IN PROGRESS- LOX RESHAPE
-           %Reshape the lox matrix so that dimensions for each session match (for concatenation)
-           for ses = 1:numel(currentSubj) %for each session
-              loxDSmatSize(ses,:)= size(currentSubj(ses).loxDSmat, 1) %get the size of the x dimension of the lick array (how many licks in that session)
-              loxNSmatSize(ses,:) = size(currentSubj(ses).loxNSmat, 1) %repeat for NS
-           end
-           
-           loxDSmatSize= max(loxDSmatSize); %this is the maximum number of licks out of all sessions
-           loxNSmatSize= max(loxNSmatSize); %repeat for NS 
-           
-           for ses= 1:numel(currentSubj) %for each session
-               if size(currentSubj(ses).loxDSmat, 1) < loxDSmatSize %if the current # rows is less than the desired # rows
-                  currentSubj(ses).loxDSmat(end+1:loxDSmatSize,:)= NaN; %add rows containing all NaN values from the final row until the desired max row to match number of maximum rows 
+        ratID= currentSubj(i).rat;
+
+         %%%%%IN PROGRESS- LOX RESHAPE
+               %Reshape the lox matrix so that dimensions for each session match (for concatenation)
+               for ses = 1:numel(currentSubj) %for each session
+                  loxDSmatSize(ses,:)= size(currentSubj(ses).loxDSmat, 1) %get the size of the x dimension of the lick array (how many licks in that session)
+                  loxNSmatSize(ses,:) = size(currentSubj(ses).loxNSmat, 1) %repeat for NS
                end
-               
-               if size(currentSubj(ses).loxNSmat, 1) < loxNSmatSize %repeat for NS
-                  currentSubj(ses).loxNSmat(end+1: loxDSmatSize,:) = NaN;  
+
+               loxDSmatSize= max(loxDSmatSize); %this is the maximum number of licks out of all sessions
+               loxNSmatSize= max(loxNSmatSize); %repeat for NS 
+
+               for ses= 1:numel(currentSubj) %for each session
+                   if size(currentSubj(ses).loxDSmat, 1) < loxDSmatSize %if the current # rows is less than the desired # rows
+                      currentSubj(ses).loxDSmat(end+1:loxDSmatSize,:)= NaN; %add rows containing all NaN values from the final row until the desired max row to match number of maximum rows 
+                   end
+
+                   if size(currentSubj(ses).loxNSmat, 1) < loxNSmatSize %repeat for NS
+                      currentSubj(ses).loxNSmat(end+1: loxDSmatSize,:) = NaN;  
+                   end
                end
-           end
-           
-           
-           
-    %Sort trials by PE latency within sessions and collect all cue presentations from across all sessions   
-    for ses= 1:numel(currentSubj) %for each session
-                   
-            %need to sort each cue by PE latency for each session and figure out the sorted order (indices to match up latency with data)
-           [currentSubj(ses).poxDSlatencySorted,currentSubj(ses).poxDSlatencySortOrder] = sort(currentSubj(ses).poxDSlatency); %Get the sorted order (the index after sorting) for each cue presentation during this session 
-           [currentSubj(ses).poxNSlatencySorted, currentSubj(ses).poxNSlatencySortOrder]= sort(currentSubj(ses).poxNSlatency); %repeat for NS
-           
-           %now, use that sorted order to sort cue presentations by PE latency (this isn't actually necessary at this point, just a good way to verify sorted data)
-           currentSubj(ses).poxDSsorted = currentSubj(ses).poxDS(currentSubj(ses).poxDSlatencySortOrder);
-           currentSubj(ses).poxNSsorted = currentSubj(ses).poxNS(currentSubj(ses).poxNSlatencySortOrder); %repeat for NS
-           
-           %now, use that sorted order to sort z score responses to DS by PE latency- remember that each cue is a page in the 3rd dimension of DSz, so the order will define the order of pages
-           currentSubj(ses).DSzSorted= currentSubj(ses).DSz(:,:,currentSubj(ses).poxDSlatencySortOrder); 
-           currentSubj(ses).NSzSorted= currentSubj(ses).NSz(:,:,currentSubj(ses).poxNSlatencySortOrder); %repeat for NS
-           
-           
-           %now, we've sorted within-session but haven't sorted between sessions... this is done later
-           
-           %manually calculate mean PE latency per session
-           currentSubj(ses).meanpoxDSlatency= nanmean(currentSubj(ses).poxDSlatency);
-           currentSubj(ses).meanpoxNSlatency= nanmean(currentSubj(ses).poxNSlatency); %repeat for NS
-           
-        %collect all z score responses to every single DS across all sessions (and the latency to PE in response to every single DS)
-        if ses==1
-        currentSubjDSz= squeeze(currentSubj(ses).DSz); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-        currentSubjpoxDSlatency= currentSubj(ses).poxDSlatency;
-        
-        currentSubjloxDS= currentSubj(ses).loxDS;%collect all licks to every single DS across all sections
-        
-        currentSubjloxDSmat= currentSubj(ses).loxDSmat;
-        
-        %repeat for NS
-        currentSubjNSz= squeeze(currentSubj(ses).NSz); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-        currentSubjpoxNSlatency= currentSubj(ses).poxNSlatency;
-        
-        currentSubjloxNS= currentSubj(ses).loxNS;
-        
-        currentSubjloxNSmat= currentSubj(ses).loxNSmat;
-        
-        
-        else
-        currentSubjDSz = cat(2, currentSubjDSz, (squeeze(currentSubj(ses).DSz))); %this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-        currentSubjpoxDSlatency = cat(2,currentSubjpoxDSlatency,currentSubj(ses).poxDSlatency); %this contains the latency to PE in response to every DS (each column = 1 DS)
-        
-        currentSubjloxDS= cat(2, currentSubjloxDS, currentSubj(ses).loxDS); %this contains licks surrounding every DS (each column = 1 DS)
-        currentSubjloxDSmat= cat(2, currentSubjloxDSmat, currentSubj(ses).loxDSmat);
-
-        
-        %repeat for NS
-        currentSubjNSz = cat(2, currentSubjNSz, (squeeze(currentSubj(ses).NSz))); %this contains z score response to NS from every NS (should have #columns= ~30 cues x #sessions)
-        currentSubjpoxNSlatency = cat(2,currentSubjpoxNSlatency,currentSubj(ses).poxNSlatency); %this contains the latency to PE in response to every DS (each column = 1 NS)
-        
-        currentSubjloxNS= cat(2, currentSubjloxNS, currentSubj(ses).loxNS); %this contains licks surrounding every NS (each column = 1 NS)
-        
-        currentSubjloxNSmat= cat(2, currentSubjloxNSmat, currentSubj(ses).loxNSmat);
-
-        end
-    end
-   
-   
-    %Sort all DS presentations across sessions by PE latency
-    %Similar approach to sorting by latency within-session, but applied to all cues across all trials
-    [currentSubjpoxDSlatencySorted,currentSubjpoxDSlatencySortOrder]= sort(currentSubjpoxDSlatency); %sort all latencies and retrieve the sort order for indexing
-    currentSubjDSzSorted = currentSubjDSz(:,currentSubjpoxDSlatencySortOrder); %sort DSz by latency using the latency sort order as indices (currently each column in currentSubjDSz corresponds to 1 cue here, so get all rows for that column)
-    
-    currentSubjloxDSSorted= currentSubjloxDS(:,currentSubjpoxDSlatencySortOrder); %sort lick data by PE latency
-    
-    currentSubjloxDSmatSorted= currentSubjloxDSmat(:,currentSubjpoxDSlatencySortOrder);
-    
-    %repeat for NS
-    [currentSubjpoxNSlatencySorted,currentSubjpoxNSlatencySortOrder]= sort(currentSubjpoxNSlatency); %sort all latencies and retrieve the sort order for indexing
-    currentSubjNSzSorted = currentSubjNSz(:,currentSubjpoxNSlatencySortOrder); %sort DSz by latency using the latency sort order as indices (currently each column in currentSubjDSz corresponds to 1 cue here, so get all rows for that column)
-     
-    currentSubjloxNSSorted = currentSubjloxNS(:,currentSubjpoxNSlatencySortOrder); %sort lick data by PE latency
-    
-    currentSubjloxNSmatSorted= currentSubjloxNSmat(:, currentSubjpoxNSlatencySortOrder);
-    
-    %Now, remove NaNs (trials in which the animal did not make a port entry or was already in the port when the cue came on)
-    currentSubjDSzSortedNoNan=  currentSubjDSzSorted(:,~isnan(currentSubjpoxDSlatencySorted)); %Find indices containing a latency (~isnan) from the sorted latencies, then use those indices to retrieve DSz from only those trials in the sorted data
-    currentSubjNSzSortedNoNan=  currentSubjNSzSorted(:,~isnan(currentSubjpoxNSlatencySorted)); %repeat for NS
-
-    currentSubjloxDSSortedNoNan = currentSubjloxDSSorted(:, ~isnan(currentSubjpoxDSlatencySorted)); %repeat for licks surrounding DS
-    currentSubjloxNSSortedNoNan = currentSubjloxNSSorted(:, ~isnan(currentSubjpoxNSlatencySorted)); %repeat for licks surrounding DS
-
-    currentSubjpoxDSlatencySortedNoNan= currentSubjpoxDSlatencySorted(:,~isnan(currentSubjpoxDSlatencySorted));
-    currentSubjpoxNSlatencySortedNoNan= currentSubjpoxNSlatencySorted(:,~isnan(currentSubjpoxNSlatencySorted));
-
-    
-    currentSubjloxDSmatSortedNoNan= currentSubjloxDSmatSorted(:, ~isnan(currentSubjpoxDSlatencySorted));
-    currentSubjloxNSmatSortedNoNan= currentSubjloxNSmatSorted(:, ~isnan(currentSubjpoxNSlatencySorted));
-    
-    
-    %Unsorted data
-    DSzAllTrials= cat(2,currentSubj.meanDSz);
-    DSzAllTrials= DSzAllTrials.'; %transpose for better readability
-    
-%     if currentSubj(i).trainStage==5 % May need this 
-    NSzAllTrials= cat(2,currentSubj.meanNSz); 
-    NSzAllTrials= NSzAllTrials.';
-%     end
-
-    subjTrial= [currentSubj.trainDay];
-    trialDSnum = [currentSubj.numDS];
 
 
-    %define a shared colormap axis for both DS and NS (bottom and top of color range)
-    bottom = min(min(min(DSzAllTrials)), min(min(NSzAllTrials)));
-    top = max(max(max(DSzAllTrials)), max(max(NSzAllTrials)));
-    
-    %define a shared colormap axis for DS/NS excluding NaN trials TODO: decide if this is a good idea
-    bottomNoNan= min(min(min(currentSubjDSzSortedNoNan)), min(min(currentSubjNSzSortedNoNan)));
-    topNoNan= max(max(max(currentSubjDSzSortedNoNan)), max(max(currentSubjNSzSortedNoNan)));
 
-%     %PLOT OF AVG CUE RESPONSE PER SESSION
-%     %DS z plot
-%     figure; 
-%     subplot(2,1,1); %subplot for shared colorbar
-%     
-%     trialCount=0; %counter for loop/indexing
-%     for trial= 1:numel(currentSubj)
-%         if currentSubj(trial).trainStage==5
-%             trialCount=trialCount+1;
-%             stage5trial(trialCount) = currentSubj(trial).trainDay;
-%         end
-%     end
-%     
-%     heatDSz= imagesc(timeLock,subjTrial,DSzAllTrials);
-%     title(strcat('rat ', num2str(ratID), 'avg z score response to DS ', '(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%     xlabel('seconds from cue onset');
-%     ylabel('training day');
-%     set(gca, 'ytick', subjTrial); %label trials appropriately
-%     caxis manual;
-%     caxis([bottom top]);
-%     
-%     c= colorbar; %colorbar legend
-%     c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%     
-% %     if currentSubj(i).trainStage==5 %NS only on stage 5?
-%     
-%     trialNSnum= [currentSubj.numNS];
-% 
-% %   NSz plot (subplotted for shared colorbar)
-%     subplot(2,1,2);
-%     heatNSz= imagesc(timeLock,stage5trial,NSzAllTrials);
-% 
-%     title(strcat('rat ', num2str(ratID), ' avg z score response to NS ', '(n= ', num2str(unique(trialNSnum)),')')); 
-%     xlabel('seconds from cue onset');
-%     ylabel('training day');
-%   
-%     set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
-%         
-%     caxis manual;
-%     caxis([bottom top]);
-%     
-%     c= colorbar; %colorbar legend
-%     c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%     
-%     %SAVE PLOTS
-%    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-%    saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_meanZ_perSession','.tiff')); %save the current figure in tif format
-     
-% % %     %add annotation with number of cues for each trial included in analysis- probably can delete
-% % %     textPos= 1/numel(subjTrial)/2;
-% % %     for i=1:numel(subjTrial)
-% % %     annotation('textbox', [0, textPos, 0, 0], 'string', strcat(num2str(subjTrial(i)), '(n= ',num2str(trialNSnum(i)),')'));
-% % %         if(textPos+textPos<1)
-% % %             textPos= textPos+textPos;
-% % %         else
-% % %             textPos=.99;
-% % %         end
-% % %     end
-% % %     
-% % %     end
+        %Sort trials by PE latency within sessions and collect all cue presentations from across all sessions   
+        for ses= 1:numel(currentSubj) %for each session
 
-% % %plot across sessions sorted by latency %missing subplot of NS with this
-% % figure;
-% % imagesc(timeLock,sortedTrial, sortedDSz);
-% % title(strcat('rat ', num2str(ratID), ' avg z score response to DS; day sorted by avg DS PE latency (hi to lo)'));
-% % 
-% % c= colorbar; %colorbar legend
-% % c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-% % xlabel('seconds from cue onset');
-% % ylabel('training day');
-% % set(gca,'YTick',[]) %should find a way to label Y values out of order
+                %need to sort each cue by PE latency for each session and figure out the sorted order (indices to match up latency with data)
+               [currentSubj(ses).poxDSlatencySorted,currentSubj(ses).poxDSlatencySortOrder] = sort(currentSubj(ses).poxDSlatency); %Get the sorted order (the index after sorting) for each cue presentation during this session 
+               [currentSubj(ses).poxNSlatencySorted, currentSubj(ses).poxNSlatencySortOrder]= sort(currentSubj(ses).poxNSlatency); %repeat for NS
 
-% ALL CUE HEAT PLOTS (all cues across all sessions)  
-%     
-%     %PLOT OF ALL INDIVIDUAL CUE RESPONSES- UNSORTED (in order of presentation) 
-%     %plot of all DSz- unsorted
-%     figure; 
-%     subplot(2,1,1); %subplot for shared colorbar
-%     
-%     currentSubjDSz= currentSubjDSz.'; %transpose for readability, each row is now 1 cue! 
-%     imagesc(timeLock, 1:size(currentSubjDSz,1), currentSubjDSz);
-%     
-%     caxis manual;
-%     caxis([bottom top]);
-%     
-%     c= colorbar; %colorbar legend
-%     c.Label.String= strcat('Z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%     xlabel('seconds from cue onset');
-%     ylabel('cue presentation')
-%     title(strcat('rat ', num2str(ratID), ' z score response to every DS cue'));
-%     
-%     %overlay plot of PE latency 
-% %     for trial= 1:numel(currentSubjpoxDSlatency)
-%     hold on;
-% %     scatter(currentSubjpoxDSlatency(trial), trial, 'm');    
-% %     end
-% 
-%     s= scatter(currentSubjpoxDSlatency, 1:numel(currentSubjpoxDSlatency), 'm');
-%     s.Marker= '.'; %make marker a single small point
-% 
-% % %     %overlay plot of licks surrounding the cue onset
-% % %     hold on;
-% % %     s= scatter(currentSubjloxDS, 1:numel(currentSubjloxDS), 'g');
-% % %     s.Marker= '.';
-% % %     
-%     
-%     %plot of all NSz- unsorted
-%     subplot(2,1,2);
-%     currentSubjNSz= currentSubjNSz.'; %transpose for readability, each row is now 1 cue! 
-%     imagesc(timeLock, 1:size(currentSubjNSz,1), currentSubjNSz);
-%     
-%     caxis manual;
-%     caxis([bottom top]);
-%     
-%     c= colorbar; %colorbar legend
-%     c.Label.String= strcat('Z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%     xlabel('seconds from cue onset');
-%     ylabel('cue presentation')
-%     title(strcat('rat ', num2str(ratID), ' z score response to every NS cue'));
-%     
-%     
-%     %overlay plot of PE latency 
-%     hold on;
-% %     plot(currentSubjpoxNSlatency, 1:numel(currentSubjpoxNSlatency), 'm');
-%     
-%     s= scatter(currentSubjpoxNSlatency, 1:numel(currentSubjpoxNSlatency), 'm');
-%     s.Marker= '.';
-% 
-%     
-%    %SAVE PLOTS
-%    saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_Zscore_AllCues','.tiff')); %save the current figure in tif format
-    
-    
-    %PLOT OF ALL INDIVIDUAL CUE RESPONSES- TRIALS SORTED BY PE LATENCY, CONTAINING ONLY TRIALS IN WHICH A PE WAS MADE
-%     %plot of all DSz- sorted by latency WITH NaN REMOVED
-    figure;
-    subplot(2,1,1); %subplot for shared colorbar
+               %now, use that sorted order to sort cue presentations by PE latency (this isn't actually necessary at this point, just a good way to verify sorted data)
+               currentSubj(ses).poxDSsorted = currentSubj(ses).poxDS(currentSubj(ses).poxDSlatencySortOrder);
+               currentSubj(ses).poxNSsorted = currentSubj(ses).poxNS(currentSubj(ses).poxNSlatencySortOrder); %repeat for NS
 
-    currentSubjDSzSortedNoNan = currentSubjDSzSortedNoNan.';  %transpose for readability, each row is now 1 cue! 
-    imagesc(timeLock, 1:size(currentSubjDSzSortedNoNan,1), currentSubjDSzSortedNoNan);
-    
-    caxis manual;
-    caxis([bottom top]); %TODO: consider using restricted color axis here
-    
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('Z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-    xlabel('seconds from cue onset');
-    ylabel('cue presentation')
-    title(strcat('rat ', num2str(ratID), ' z score response to every DS cue SORTED BY LATENCY (Lo-Hi; NaN removed)'));
-    
-    %overlay plot of PE latency 
-    hold on;    
-    s= scatter(currentSubjpoxDSlatencySorted, 1:numel(currentSubjpoxDSlatencySorted), 'm');
-    s.Marker= '.';
+               %now, use that sorted order to sort z score responses to DS by PE latency- remember that each cue is a page in the 3rd dimension of DSz, so the order will define the order of pages
+               currentSubj(ses).DSzSorted= currentSubj(ses).DSz(:,:,currentSubj(ses).poxDSlatencySortOrder); 
+               currentSubj(ses).NSzSorted= currentSubj(ses).NSz(:,:,currentSubj(ses).poxNSlatencySortOrder); %repeat for NS
 
-%     %overlay plot of licks surrounding DS - a little more complicated because this is a cell array with an unknown number of licks per cue
-%     for trial = 1:numel(currentSubjloxDSSortedNoNan) %for each trial
-%         hold on;
-%         currentTrial = ones([numel(currentSubjloxDSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
-%         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
-%         s= scatter(currentSubjloxDSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
-%         s.Marker = '.'; %make the marker a small point
-%     end
-    
-    %plot of all NSz- sorted by latency WITH NaN REMOVED
-    subplot(2,1,2); %subplot for shared colorbar
-    currentSubjNSzSortedNoNan = currentSubjNSzSortedNoNan.';  %transpose for readability, each row is now 1 cue! 
-    imagesc(timeLock, 1:size(currentSubjNSzSortedNoNan,1), currentSubjNSzSortedNoNan);
-    
-    caxis manual;
-    caxis([bottom top]);
-    
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('Z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-    xlabel('seconds from cue onset');
-    ylabel('cue presentation')
-    title(strcat('rat ', num2str(ratID), ' z score response to every NS cue SORTED BY LATENCY (Lo-Hi; NaN removed)'));
-    
-    %overlay plot of PE latency 
-    hold on;    
-    s= scatter(currentSubjpoxNSlatencySorted, 1:numel(currentSubjpoxNSlatencySorted), 'm');
-    s.Marker= '.';
-    
-    %overlay plot of licks surrounding NS - a little more complicated because this is a cell array with an unknown number of licks per cue
-%     for trial = 1:numel(currentSubjloxNSSortedNoNan) %for each trial
-%         hold on;
-%         currentTrial = ones([numel(currentSubjloxNSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
-%         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
-%         s= scatter(currentSubjloxNSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
-%         s.Marker = '.'; %make the marker a small point
-%     end
 
-    %SAVE PLOTS
-    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-    saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_Zscore_AllCuesSorted-WithLicks','.tiff')); %save the current figure in tif format
+               %now, we've sorted within-session but haven't sorted between sessions... this is done later
 
-     
-    %     %%%%%%%%%%%%%%%%%%%%%%%%%%% IN PROGRESS- visualizing lox
-% 
-%     %PLOT OF ALL LICKS SURROUNDING EACH INDIVIDUAL CUE PRESENTATION- TRIALS SORTED BY PE LATENCY, only including trials in which a PE was made
-%     figure;
-%     subplot(2,1,1);
-%      for trial = 1:numel(currentSubjloxDSSortedNoNan) %for each trial
-%         hold on;
-%         currentTrial = ones([numel(currentSubjloxDSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
-%         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
-%         s= scatter(currentSubjloxDSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
-%         s.Marker = '.'; %make the marker a small point
-%      end
-%      
-%     set(gca,'Ydir','reverse');% flip the y axis, since this scatter is plotting trials in the opposite direction relative to heat plots
-%     xlabel('seconds from cue onset');
-%     ylabel('cue presentation')
-%     title(strcat('rat ', num2str(ratID), ' licks surrounding DS'));
-%     
-%     subplot(2,1,2);
-%     for trial = 1:numel(currentSubjloxNSSortedNoNan) %for each trial
-%         hold on;
-%         currentTrial = ones([numel(currentSubjloxNSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
-%         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
-%         s= scatter(currentSubjloxNSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
-%         s.Marker = '.'; %make the marker a small point
-%     end
-%     
-%     set(gca,'Ydir','reverse');% flip the y axis, since this scatter is plotting trials in the opposite direction relative to heat plots
-%     xlabel('seconds from cue onset');
-%     ylabel('cue presentation')
-%     title(strcat('rat ', num2str(ratID), ' licks surrounding NS'));
-%     
-%     %SAVE PLOTS
-%     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-%     saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_licks_surrounding_cue_sorted','.tiff')); %save the current figure in tif format
+               %manually calculate mean PE latency per session
+               currentSubj(ses).meanpoxDSlatency= nanmean(currentSubj(ses).poxDSlatency);
+               currentSubj(ses).meanpoxNSlatency= nanmean(currentSubj(ses).poxNSlatency); %repeat for NS
 
-% %plot of all DSz- sorted by latency (seems unnecessary at this point)- delete?
-%     figure;
-%     currentSubjDSzSorted = currentSubjDSzSorted.';  %transpose for readability, each row is now 1 cue! 
-%     imagesc(timeLock, 1:size(currentSubjDSzSorted,1), currentSubjDSzSorted);
-% %     imagesc(timeLock, currentSubjpoxDSlatencySorted, currentSubjDSzSorted); %TODO: trying to show latency on y axis
-%     c= colorbar; %colorbar legend
-%     c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%     xlabel('seconds from cue onset');
-%     ylabel('cue presentation') %TODO: change to latency
-%     title(strcat('rat ', num2str(ratID), ' z score response to every DS cue SORTED BY LATENCY (Lo-Hi-NaN)')); 
+            %collect all z score responses to every single DS across all sessions (and the latency to PE in response to every single DS)
+            if ses==1
+            currentSubjDSz= squeeze(currentSubj(ses).DSz); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+            currentSubjpoxDSlatency= currentSubj(ses).poxDSlatency;
 
-% Within session plots (all cues from a single session)
+            currentSubjloxDS= currentSubj(ses).loxDS;%collect all licks to every single DS across all sections
 
-%     currentSubj= subjData.(subjField{i});
-% for ses= 1:numel(currentSubj) %for each session
-%     
-%     currentSesDSz= squeeze(currentSubj(ses).DSz); %squeeze the 3d matrix into a 2d array, with each column representing 1 cue
-%     
-%     figure;
-%     currentSesDSz= currentSesDSz.'; %transpose for readability, each row is now 1 cue 
-%     imagesc(timeLock, 1:size(currentSesDSz,1), currentSesDSz);
-%     c= colorbar; %colorbar legend
-%     c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%     xlabel('seconds from cue onset');
-%     ylabel('cue presentation')
-%     title(strcat('rat ', num2str(ratID), ' z score response to DS; training day: ', num2str(currentSubj(ses).trainDay)));
-% end
+            currentSubjloxDSmat= currentSubj(ses).loxDSmat;
 
- %% SPEARMAN CORRELATION - still in the loop through subjects
- 
-     %DEFINE DATA FOR SPEARMAN CORRELATION
-    postCueCorrWindow= .300; %300ms (as in Richard et al., 2018) - CHANGE this to define the duration of activity after the cue to examine
-    postCueCorrFrames= postCueCorrWindow*fs; %multiply by frequency of sampling to get appropriate # datapoints
-   
-    
-    postCueDSzSortedNoNan= currentSubjDSzSortedNoNan(:,1:postCueCorrFrames); %extract only z score values in the time window of interest following the cue
- 
-    meanPostCueDSzSortedNoNan= mean(postCueDSzSortedNoNan,2); %avg z score within the time window of interest immediately following the cue
-        
-    
-    %get the PE and lick onset for each cue for spearman correlation (first + lick)
-    %To run the correlation, we need arrays of size= postCueCorrFrames x number of cues
-        for trial= 1:numel(currentSubjloxDSSortedNoNan) %for each cue
-            
-            %Get the first PE timestamp after cue onset
-            postCuepoxOnset(1:postCueCorrFrames, trial)= currentSubjpoxDSlatencySortedNoNan(:,trial); %filling out a row for each frame
-            
-            %Get the first positive lick timestamp relative to cue onset
-            if any(currentSubjloxDSSortedNoNan{:,trial}>0) ==1 %it's possible (though seems very unlikely) that some trials will only have licks that occur before the cue (- value), just discard these
-            postCueloxOnset(1:postCueCorrFrames,trial)= min(currentSubjloxDSSortedNoNan{:,trial}(currentSubjloxDSSortedNoNan{:,trial}>0)); 
-            disp(postCueloxOnset(1:postCueCorrFrames,trial));
+            %repeat for NS
+            currentSubjNSz= squeeze(currentSubj(ses).NSz); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+            currentSubjpoxNSlatency= currentSubj(ses).poxNSlatency;
+
+            currentSubjloxNS= currentSubj(ses).loxNS;
+
+            currentSubjloxNSmat= currentSubj(ses).loxNSmat;
+
+
             else
-                postCueloxOnset(1:postCueCorrFrames,trial)= nan;
-            end            
-        end        
-        
-        %determine spearman correlation between activity just after cue and PE onset
-        %X AND Y MUST HAVE SAME # ROWS- consider filling out a cue x postcuecorrframes array where each cue column is populated with the same pe latency/lick latency 
-%         meanPostCueDSzSortedNoNan= meanPostCueDSzSortedNoNan.'; %need to flip this data to make dimensions equal for correlation
-        
-        postCueDSzSortedNoNan= postCueDSzSortedNoNan.'; %transpose to make dimensions equal
-        [DSpoxLatencyRho, DSpoxLatencyPval]= corrcoef(postCueDSzSortedNoNan, postCuepoxOnset);
-               
-        %determine spearman correlation between activity just after cue and lick onset
-        [DSloxLatencyRho, DSloxLatencyPval]= corrcoef(postCueDSzSortedNoNan, postCueloxOnset);
+            currentSubjDSz = cat(2, currentSubjDSz, (squeeze(currentSubj(ses).DSz))); %this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+            currentSubjpoxDSlatency = cat(2,currentSubjpoxDSlatency,currentSubj(ses).poxDSlatency); %this contains the latency to PE in response to every DS (each column = 1 DS)
 
- 
-% postCueCorrWindow= .300; %300ms (as in Richard et al., 2018) - CHANGE this to define the duration of activity after the cue to examine
-% 
-% postCueCorrFrames= postCueCorrWindow*fs; %multiply by frequency of sampling to get appropriate # datapoints
-% 
-% for subj= 1:numel(subjField) %for each subj
-%     
-%     clearvars -except subj subjField postCueCorrWindow postCueCorrFrames fs sesData subjData
-% % 
-% %     currentSubj= subjData.(subjField{subj});
-% %     
-% %     for ses= 1:numel(currentSubj)
-% %        
-% %         %Exclude data- since cue lengths vary between sessions
-% %         %For now, only do this for trials with cueLength ==10 (stage 4 or 5)... colormap will probably appear off if including irrelevant trials
-% %         if currentSubj(ses).trainStage ~= 4 && currentSubj(ses).trainStage ~=5 %if not stage 4 or 5, exclude data 
-% %             fn = fieldnames(currentSubj);
-% %             for field = 1:numel(fieldnames(currentSubj))
-% %                 currentSubj(ses).(fn{field})= []; %delete the data
-% %             end
-% %         end
-%         
-%     %Get the z score fluorescence response within the defined time window after the cue 
-%         disp(ses);
-%         if ses==1 %for the first session initialize these arrays 
-%         periDSz= squeeze(currentSubj(ses).DSz); %get all of the z scores surrounding the for this session
-%         periNSz= squeeze(currentSubj(ses).NSz);
-%         
-%         
-%         else %for subsequent sessions, use cat to add on data
-%         periDSz= cat(2, periDSz, squeeze(currentSubj(ses).DSz));
-%         periDSz= cat(2, periNSz, squeeze(currentSubj(ses).NSz));
-%         end
-% %     
-% %     postCueCorrDSz= periDSz(1:postCueCorrFrames,:); %extract only z score values in the time window of interest following the cue
-% %     postCueCorrNSz= periNSz(1:postCueCorrFrames, :);
-% %         
-% %     postCueCorrDSzMean= mean(postCueCorrDSz, 2); %avg across 2nd dimension (across all cues)
-% %     postCueCorrNSzMean= mean(postCueCorrNSz, 2); %avg across 2nd dimension (across all cues)
-% % 
-% %     %Must find the onset time of the first lick AFTER cue onset (first positive value)
-% %     postCueCorrLoxDS= subjData.(subjField{subj}).loxDS; %Must find the onset time of the first lick AFTER cue onset (first positive value)
-% %  
-% %     currentSubj= subjData.(subjField{i}); 
+            currentSubjloxDS= cat(2, currentSubjloxDS, currentSubj(ses).loxDS); %this contains licks surrounding every DS (each column = 1 DS)
+            currentSubjloxDSmat= cat(2, currentSubjloxDSmat, currentSubj(ses).loxDSmat);
 
+
+            %repeat for NS
+            currentSubjNSz = cat(2, currentSubjNSz, (squeeze(currentSubj(ses).NSz))); %this contains z score response to NS from every NS (should have #columns= ~30 cues x #sessions)
+            currentSubjpoxNSlatency = cat(2,currentSubjpoxNSlatency,currentSubj(ses).poxNSlatency); %this contains the latency to PE in response to every DS (each column = 1 NS)
+
+            currentSubjloxNS= cat(2, currentSubjloxNS, currentSubj(ses).loxNS); %this contains licks surrounding every NS (each column = 1 NS)
+
+            currentSubjloxNSmat= cat(2, currentSubjloxNSmat, currentSubj(ses).loxNSmat);
+
+            end
+        end
+
+
+        %Sort all DS presentations across sessions by PE latency
+        %Similar approach to sorting by latency within-session, but applied to all cues across all trials
+        [currentSubjpoxDSlatencySorted,currentSubjpoxDSlatencySortOrder]= sort(currentSubjpoxDSlatency); %sort all latencies and retrieve the sort order for indexing
+        currentSubjDSzSorted = currentSubjDSz(:,currentSubjpoxDSlatencySortOrder); %sort DSz by latency using the latency sort order as indices (currently each column in currentSubjDSz corresponds to 1 cue here, so get all rows for that column)
+
+        currentSubjloxDSSorted= currentSubjloxDS(:,currentSubjpoxDSlatencySortOrder); %sort lick data by PE latency
+
+        currentSubjloxDSmatSorted= currentSubjloxDSmat(:,currentSubjpoxDSlatencySortOrder);
+
+        %repeat for NS
+        [currentSubjpoxNSlatencySorted,currentSubjpoxNSlatencySortOrder]= sort(currentSubjpoxNSlatency); %sort all latencies and retrieve the sort order for indexing
+        currentSubjNSzSorted = currentSubjNSz(:,currentSubjpoxNSlatencySortOrder); %sort DSz by latency using the latency sort order as indices (currently each column in currentSubjDSz corresponds to 1 cue here, so get all rows for that column)
+
+        currentSubjloxNSSorted = currentSubjloxNS(:,currentSubjpoxNSlatencySortOrder); %sort lick data by PE latency
+
+        currentSubjloxNSmatSorted= currentSubjloxNSmat(:, currentSubjpoxNSlatencySortOrder);
+
+        %Now, remove NaNs (trials in which the animal did not make a port entry or was already in the port when the cue came on)
+        currentSubjDSzSortedNoNan=  currentSubjDSzSorted(:,~isnan(currentSubjpoxDSlatencySorted)); %Find indices containing a latency (~isnan) from the sorted latencies, then use those indices to retrieve DSz from only those trials in the sorted data
+        currentSubjNSzSortedNoNan=  currentSubjNSzSorted(:,~isnan(currentSubjpoxNSlatencySorted)); %repeat for NS
+
+        currentSubjloxDSSortedNoNan = currentSubjloxDSSorted(:, ~isnan(currentSubjpoxDSlatencySorted)); %repeat for licks surrounding DS
+        currentSubjloxNSSortedNoNan = currentSubjloxNSSorted(:, ~isnan(currentSubjpoxNSlatencySorted)); %repeat for licks surrounding DS
+
+        currentSubjpoxDSlatencySortedNoNan= currentSubjpoxDSlatencySorted(:,~isnan(currentSubjpoxDSlatencySorted));
+        currentSubjpoxNSlatencySortedNoNan= currentSubjpoxNSlatencySorted(:,~isnan(currentSubjpoxNSlatencySorted));
+
+
+        currentSubjloxDSmatSortedNoNan= currentSubjloxDSmatSorted(:, ~isnan(currentSubjpoxDSlatencySorted));
+        currentSubjloxNSmatSortedNoNan= currentSubjloxNSmatSorted(:, ~isnan(currentSubjpoxNSlatencySorted));
+
+
+        %Unsorted data
+        DSzAllTrials= cat(2,currentSubj.meanDSz);
+        DSzAllTrials= DSzAllTrials.'; %transpose for better readability
+
+    %     if currentSubj(i).trainStage==5 % May need this 
+        NSzAllTrials= cat(2,currentSubj.meanNSz); 
+        NSzAllTrials= NSzAllTrials.';
+    %     end
+
+        subjTrial= [currentSubj.trainDay];
+        trialDSnum = [currentSubj.numDS];
+
+
+        %define a shared colormap axis for both DS and NS (bottom and top of color range)
+        bottom = min(min(min(DSzAllTrials)), min(min(NSzAllTrials)));
+        top = max(max(max(DSzAllTrials)), max(max(NSzAllTrials)));
+
+        %define a shared colormap axis for DS/NS excluding NaN trials TODO: decide if this is a good idea
+        bottomNoNan= min(min(min(currentSubjDSzSortedNoNan)), min(min(currentSubjNSzSortedNoNan)));
+        topNoNan= max(max(max(currentSubjDSzSortedNoNan)), max(max(currentSubjNSzSortedNoNan)));
+
+    %     %PLOT OF AVG CUE RESPONSE PER SESSION
+    %     %DS z plot
+    %     figure; 
+    %     subplot(2,1,1); %subplot for shared colorbar
+    %     
+    %     trialCount=0; %counter for loop/indexing
+    %     for trial= 1:numel(currentSubj)
+    %         if currentSubj(trial).trainStage==5
+    %             trialCount=trialCount+1;
+    %             stage5trial(trialCount) = currentSubj(trial).trainDay;
+    %         end
+    %     end
+    %     
+    %     heatDSz= imagesc(timeLock,subjTrial,DSzAllTrials);
+    %     title(strcat('rat ', num2str(ratID), 'avg z score response to DS ', '(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    %     xlabel('seconds from cue onset');
+    %     ylabel('training day');
+    %     set(gca, 'ytick', subjTrial); %label trials appropriately
+    %     caxis manual;
+    %     caxis([bottom top]);
+    %     
+    %     c= colorbar; %colorbar legend
+    %     c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+    %     
+    % %     if currentSubj(i).trainStage==5 %NS only on stage 5?
+    %     
+    %     trialNSnum= [currentSubj.numNS];
+    % 
+    % %   NSz plot (subplotted for shared colorbar)
+    %     subplot(2,1,2);
+    %     heatNSz= imagesc(timeLock,stage5trial,NSzAllTrials);
+    % 
+    %     title(strcat('rat ', num2str(ratID), ' avg z score response to NS ', '(n= ', num2str(unique(trialNSnum)),')')); 
+    %     xlabel('seconds from cue onset');
+    %     ylabel('training day');
+    %   
+    %     set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
+    %         
+    %     caxis manual;
+    %     caxis([bottom top]);
+    %     
+    %     c= colorbar; %colorbar legend
+    %     c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+    %     
+    %     %SAVE PLOTS
+    %    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+    %    saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_meanZ_perSession','.tiff')); %save the current figure in tif format
+
+    % % %     %add annotation with number of cues for each trial included in analysis- probably can delete
+    % % %     textPos= 1/numel(subjTrial)/2;
+    % % %     for i=1:numel(subjTrial)
+    % % %     annotation('textbox', [0, textPos, 0, 0], 'string', strcat(num2str(subjTrial(i)), '(n= ',num2str(trialNSnum(i)),')'));
+    % % %         if(textPos+textPos<1)
+    % % %             textPos= textPos+textPos;
+    % % %         else
+    % % %             textPos=.99;
+    % % %         end
+    % % %     end
+    % % %     
+    % % %     end
+
+    % % %plot across sessions sorted by latency %missing subplot of NS with this
+    % % figure;
+    % % imagesc(timeLock,sortedTrial, sortedDSz);
+    % % title(strcat('rat ', num2str(ratID), ' avg z score response to DS; day sorted by avg DS PE latency (hi to lo)'));
+    % % 
+    % % c= colorbar; %colorbar legend
+    % % c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+    % % xlabel('seconds from cue onset');
+    % % ylabel('training day');
+    % % set(gca,'YTick',[]) %should find a way to label Y values out of order
+
+    % ALL CUE HEAT PLOTS (all cues across all sessions)  
+    %     
+    %     %PLOT OF ALL INDIVIDUAL CUE RESPONSES- UNSORTED (in order of presentation) 
+    %     %plot of all DSz- unsorted
+    %     figure; 
+    %     subplot(2,1,1); %subplot for shared colorbar
+    %     
+    %     currentSubjDSz= currentSubjDSz.'; %transpose for readability, each row is now 1 cue! 
+    %     imagesc(timeLock, 1:size(currentSubjDSz,1), currentSubjDSz);
+    %     
+    %     caxis manual;
+    %     caxis([bottom top]);
+    %     
+    %     c= colorbar; %colorbar legend
+    %     c.Label.String= strcat('Z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+    %     xlabel('seconds from cue onset');
+    %     ylabel('cue presentation')
+    %     title(strcat('rat ', num2str(ratID), ' z score response to every DS cue'));
+    %     
+    %     %overlay plot of PE latency 
+    % %     for trial= 1:numel(currentSubjpoxDSlatency)
+    %     hold on;
+    % %     scatter(currentSubjpoxDSlatency(trial), trial, 'm');    
+    % %     end
+    % 
+    %     s= scatter(currentSubjpoxDSlatency, 1:numel(currentSubjpoxDSlatency), 'm');
+    %     s.Marker= '.'; %make marker a single small point
+    % 
+    % % %     %overlay plot of licks surrounding the cue onset
+    % % %     hold on;
+    % % %     s= scatter(currentSubjloxDS, 1:numel(currentSubjloxDS), 'g');
+    % % %     s.Marker= '.';
+    % % %     
+    %     
+    %     %plot of all NSz- unsorted
+    %     subplot(2,1,2);
+    %     currentSubjNSz= currentSubjNSz.'; %transpose for readability, each row is now 1 cue! 
+    %     imagesc(timeLock, 1:size(currentSubjNSz,1), currentSubjNSz);
+    %     
+    %     caxis manual;
+    %     caxis([bottom top]);
+    %     
+    %     c= colorbar; %colorbar legend
+    %     c.Label.String= strcat('Z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+    %     xlabel('seconds from cue onset');
+    %     ylabel('cue presentation')
+    %     title(strcat('rat ', num2str(ratID), ' z score response to every NS cue'));
+    %     
+    %     
+    %     %overlay plot of PE latency 
+    %     hold on;
+    % %     plot(currentSubjpoxNSlatency, 1:numel(currentSubjpoxNSlatency), 'm');
+    %     
+    %     s= scatter(currentSubjpoxNSlatency, 1:numel(currentSubjpoxNSlatency), 'm');
+    %     s.Marker= '.';
+    % 
+    %     
+    %    %SAVE PLOTS
+    %    saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_Zscore_AllCues','.tiff')); %save the current figure in tif format
+
+
+        %PLOT OF ALL INDIVIDUAL CUE RESPONSES- TRIALS SORTED BY PE LATENCY, CONTAINING ONLY TRIALS IN WHICH A PE WAS MADE
+    %     %plot of all DSz- sorted by latency WITH NaN REMOVED
+        figure;
+        subplot(2,1,1); %subplot for shared colorbar
+
+        currentSubjDSzSortedNoNan = currentSubjDSzSortedNoNan.';  %transpose for readability, each row is now 1 cue! 
+        imagesc(timeLock, 1:size(currentSubjDSzSortedNoNan,1), currentSubjDSzSortedNoNan);
+
+        caxis manual;
+        caxis([bottom top]); %TODO: consider using restricted color axis here
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('Z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+        xlabel('seconds from cue onset');
+        ylabel('cue presentation')
+        title(strcat('rat ', num2str(ratID), ' z score response to every DS cue SORTED BY LATENCY (Lo-Hi; NaN removed)'));
+
+        %overlay plot of PE latency 
+        hold on;    
+        s= scatter(currentSubjpoxDSlatencySorted, 1:numel(currentSubjpoxDSlatencySorted), 'm');
+        s.Marker= '.';
+
+    %     %overlay plot of licks surrounding DS - a little more complicated because this is a cell array with an unknown number of licks per cue
+    %     for trial = 1:numel(currentSubjloxDSSortedNoNan) %for each trial
+    %         hold on;
+    %         currentTrial = ones([numel(currentSubjloxDSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
+    %         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
+    %         s= scatter(currentSubjloxDSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
+    %         s.Marker = '.'; %make the marker a small point
+    %     end
+
+        %plot of all NSz- sorted by latency WITH NaN REMOVED
+        subplot(2,1,2); %subplot for shared colorbar
+        currentSubjNSzSortedNoNan = currentSubjNSzSortedNoNan.';  %transpose for readability, each row is now 1 cue! 
+        imagesc(timeLock, 1:size(currentSubjNSzSortedNoNan,1), currentSubjNSzSortedNoNan);
+
+        caxis manual;
+        caxis([bottom top]);
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('Z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+        xlabel('seconds from cue onset');
+        ylabel('cue presentation')
+        title(strcat('rat ', num2str(ratID), ' z score response to every NS cue SORTED BY LATENCY (Lo-Hi; NaN removed)'));
+
+        %overlay plot of PE latency 
+        hold on;    
+        s= scatter(currentSubjpoxNSlatencySorted, 1:numel(currentSubjpoxNSlatencySorted), 'm');
+        s.Marker= '.';
+
+        %overlay plot of licks surrounding NS - a little more complicated because this is a cell array with an unknown number of licks per cue
+    %     for trial = 1:numel(currentSubjloxNSSortedNoNan) %for each trial
+    %         hold on;
+    %         currentTrial = ones([numel(currentSubjloxNSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
+    %         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
+    %         s= scatter(currentSubjloxNSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
+    %         s.Marker = '.'; %make the marker a small point
+    %     end
+
+        %SAVE PLOTS
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+        saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_Zscore_AllCuesSorted-WithLicks','.tiff')); %save the current figure in tif format
+
+
+        %     %%%%%%%%%%%%%%%%%%%%%%%%%%% IN PROGRESS- visualizing lox
+    % 
+    %     %PLOT OF ALL LICKS SURROUNDING EACH INDIVIDUAL CUE PRESENTATION- TRIALS SORTED BY PE LATENCY, only including trials in which a PE was made
+    %     figure;
+    %     subplot(2,1,1);
+    %      for trial = 1:numel(currentSubjloxDSSortedNoNan) %for each trial
+    %         hold on;
+    %         currentTrial = ones([numel(currentSubjloxDSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
+    %         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
+    %         s= scatter(currentSubjloxDSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
+    %         s.Marker = '.'; %make the marker a small point
+    %      end
+    %      
+    %     set(gca,'Ydir','reverse');% flip the y axis, since this scatter is plotting trials in the opposite direction relative to heat plots
+    %     xlabel('seconds from cue onset');
+    %     ylabel('cue presentation')
+    %     title(strcat('rat ', num2str(ratID), ' licks surrounding DS'));
+    %     
+    %     subplot(2,1,2);
+    %     for trial = 1:numel(currentSubjloxNSSortedNoNan) %for each trial
+    %         hold on;
+    %         currentTrial = ones([numel(currentSubjloxNSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
+    %         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
+    %         s= scatter(currentSubjloxNSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
+    %         s.Marker = '.'; %make the marker a small point
+    %     end
+    %     
+    %     set(gca,'Ydir','reverse');% flip the y axis, since this scatter is plotting trials in the opposite direction relative to heat plots
+    %     xlabel('seconds from cue onset');
+    %     ylabel('cue presentation')
+    %     title(strcat('rat ', num2str(ratID), ' licks surrounding NS'));
+    %     
+    %     %SAVE PLOTS
+    %     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+    %     saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_licks_surrounding_cue_sorted','.tiff')); %save the current figure in tif format
+
+    % %plot of all DSz- sorted by latency (seems unnecessary at this point)- delete?
+    %     figure;
+    %     currentSubjDSzSorted = currentSubjDSzSorted.';  %transpose for readability, each row is now 1 cue! 
+    %     imagesc(timeLock, 1:size(currentSubjDSzSorted,1), currentSubjDSzSorted);
+    % %     imagesc(timeLock, currentSubjpoxDSlatencySorted, currentSubjDSzSorted); %TODO: trying to show latency on y axis
+    %     c= colorbar; %colorbar legend
+    %     c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+    %     xlabel('seconds from cue onset');
+    %     ylabel('cue presentation') %TODO: change to latency
+    %     title(strcat('rat ', num2str(ratID), ' z score response to every DS cue SORTED BY LATENCY (Lo-Hi-NaN)')); 
+
+    % Within session plots (all cues from a single session)
+
+    %     currentSubj= subjData.(subjField{i});
+    % for ses= 1:numel(currentSubj) %for each session
+    %     
+    %     currentSesDSz= squeeze(currentSubj(ses).DSz); %squeeze the 3d matrix into a 2d array, with each column representing 1 cue
+    %     
+    %     figure;
+    %     currentSesDSz= currentSesDSz.'; %transpose for readability, each row is now 1 cue 
+    %     imagesc(timeLock, 1:size(currentSesDSz,1), currentSesDSz);
+    %     c= colorbar; %colorbar legend
+    %     c.Label.String= strcat('z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+    %     xlabel('seconds from cue onset');
+    %     ylabel('cue presentation')
+    %     title(strcat('rat ', num2str(ratID), ' z score response to DS; training day: ', num2str(currentSubj(ses).trainDay)));
+    % end
+
+     %% SPEARMAN CORRELATION - still in the loop through subjects
+
+         %DEFINE DATA FOR SPEARMAN CORRELATION
+        postCueCorrWindow= .300; %300ms (as in Richard et al., 2018) - CHANGE this to define the duration of activity after the cue to examine
+        postCueCorrFrames= postCueCorrWindow*fs; %multiply by frequency of sampling to get appropriate # datapoints
+
+
+        postCueDSzSortedNoNan= currentSubjDSzSortedNoNan(:,1:postCueCorrFrames); %extract only z score values in the time window of interest following the cue
+
+        meanPostCueDSzSortedNoNan= mean(postCueDSzSortedNoNan,2); %avg z score within the time window of interest immediately following the cue
+
+
+        %get the PE and lick onset for each cue for spearman correlation (first + lick)
+        %To run the correlation, we need arrays of size= postCueCorrFrames x number of cues
+            for trial= 1:numel(currentSubjloxDSSortedNoNan) %for each cue
+
+                %Get the first PE timestamp after cue onset
+                postCuepoxOnset(1:postCueCorrFrames, trial)= currentSubjpoxDSlatencySortedNoNan(:,trial); %filling out a row for each frame
+
+                %Get the first positive lick timestamp relative to cue onset
+                if any(currentSubjloxDSSortedNoNan{:,trial}>0) ==1 %it's possible (though seems very unlikely) that some trials will only have licks that occur before the cue (- value), just discard these
+                postCueloxOnset(1:postCueCorrFrames,trial)= min(currentSubjloxDSSortedNoNan{:,trial}(currentSubjloxDSSortedNoNan{:,trial}>0)); 
+                disp(postCueloxOnset(1:postCueCorrFrames,trial));
+                else
+                    postCueloxOnset(1:postCueCorrFrames,trial)= nan;
+                end            
+            end        
+
+            %determine spearman correlation between activity just after cue and PE onset
+            %X AND Y MUST HAVE SAME # ROWS- consider filling out a cue x postcuecorrframes array where each cue column is populated with the same pe latency/lick latency 
+    %         meanPostCueDSzSortedNoNan= meanPostCueDSzSortedNoNan.'; %need to flip this data to make dimensions equal for correlation
+
+            postCueDSzSortedNoNan= postCueDSzSortedNoNan.'; %transpose to make dimensions equal
+            [DSpoxLatencyRho, DSpoxLatencyPval]= corrcoef(postCueDSzSortedNoNan, postCuepoxOnset);
+
+            %determine spearman correlation between activity just after cue and lick onset
+            [DSloxLatencyRho, DSloxLatencyPval]= corrcoef(postCueDSzSortedNoNan, postCueloxOnset);
+
+
+    % postCueCorrWindow= .300; %300ms (as in Richard et al., 2018) - CHANGE this to define the duration of activity after the cue to examine
+    % 
+    % postCueCorrFrames= postCueCorrWindow*fs; %multiply by frequency of sampling to get appropriate # datapoints
+    % 
+    % for subj= 1:numel(subjField) %for each subj
+    %     
+    %     clearvars -except subj subjField postCueCorrWindow postCueCorrFrames fs sesData subjData
+    % % 
+    % %     currentSubj= subjData.(subjField{subj});
+    % %     
+    % %     for ses= 1:numel(currentSubj)
+    % %        
+    % %         %Exclude data- since cue lengths vary between sessions
+    % %         %For now, only do this for trials with cueLength ==10 (stage 4 or 5)... colormap will probably appear off if including irrelevant trials
+    % %         if currentSubj(ses).trainStage ~= 4 && currentSubj(ses).trainStage ~=5 %if not stage 4 or 5, exclude data 
+    % %             fn = fieldnames(currentSubj);
+    % %             for field = 1:numel(fieldnames(currentSubj))
+    % %                 currentSubj(ses).(fn{field})= []; %delete the data
+    % %             end
+    % %         end
+    %         
+    %     %Get the z score fluorescence response within the defined time window after the cue 
+    %         disp(ses);
+    %         if ses==1 %for the first session initialize these arrays 
+    %         periDSz= squeeze(currentSubj(ses).DSz); %get all of the z scores surrounding the for this session
+    %         periNSz= squeeze(currentSubj(ses).NSz);
+    %         
+    %         
+    %         else %for subsequent sessions, use cat to add on data
+    %         periDSz= cat(2, periDSz, squeeze(currentSubj(ses).DSz));
+    %         periDSz= cat(2, periNSz, squeeze(currentSubj(ses).NSz));
+    %         end
+    % %     
+    % %     postCueCorrDSz= periDSz(1:postCueCorrFrames,:); %extract only z score values in the time window of interest following the cue
+    % %     postCueCorrNSz= periNSz(1:postCueCorrFrames, :);
+    % %         
+    % %     postCueCorrDSzMean= mean(postCueCorrDSz, 2); %avg across 2nd dimension (across all cues)
+    % %     postCueCorrNSzMean= mean(postCueCorrNSz, 2); %avg across 2nd dimension (across all cues)
+    % % 
+    % %     %Must find the onset time of the first lick AFTER cue onset (first positive value)
+    % %     postCueCorrLoxDS= subjData.(subjField{subj}).loxDS; %Must find the onset time of the first lick AFTER cue onset (first positive value)
+    % %  
+    % %     currentSubj= subjData.(subjField{i}); 
+    end
 end
 
 
