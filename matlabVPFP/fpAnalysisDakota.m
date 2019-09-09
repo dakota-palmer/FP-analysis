@@ -1,5 +1,5 @@
 % Fiber Photometry Analysis
-% 9/5/19
+% 9/9/19
 clear
 clc
 close all
@@ -12,12 +12,14 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-indexAddress = 'C:\Users\Dakota\Desktop\VP-VTA-FP Analysis\nexFilesVPFP\VP-VTA-FP_Metadata.xlsx'; % excel file location 
+indexAddress = 'C:\Users\Dakota\Desktop\VPFPanalysis\nexFilesVPFP\vpfpIndex_template.xlsx'; % excel file location 
 
-nexAddress =  'C:\Users\Dakota\Desktop\VP-VTA-FP Analysis\nexFilesVPFP\'; % nex file location 
+nexAddress =  'C:\Users\Dakota\Desktop\VPFPanalysis\nexFilesVPFP\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 figPath= 'C:\Users\Dakota\Desktop\FP-analysis-master\matlabVPFP\figures\'; %location for output figures to be saved
+
+experimentName= 'VP-VTA-FP'; %change experiment name for automatic naming of figures
 
 runAnalysis= 1; %logic gate for running typical DS training analysis... will not run if an atypical DS training session is loaded (e.g. magazine training session where stage =0)
 
@@ -26,7 +28,7 @@ sesNum = 0; %for looping- simply analyzing all data from a given session simulta
 
 for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile  
     
-    clearvars -except file nexFiles indexAddress nexAddress sesNum sesData subjData figPath runAnalysis; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
+    clearvars -except file nexFiles indexAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
     
     fName = nexFiles(file).name; %define the nex file name to load
     data = readNexFile([nexAddress,'//',fName]); %load the nex file data
@@ -185,14 +187,15 @@ reTime= linspace(data.tbeg, data.tend, length(reblueA));     %Create time axis i
 % title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' Downsampled box B'));
 
 %% remove several initial and final data points to eliminate artifacts
-numExclude = 400;                                   % define the number of data points to exclude- here 400 = 10s of data(remember, 40Hz downsample so 400/40 = 10s)
-repurpleA = repurpleA(numExclude:end-numExclude);    % 405nm data from box A ; here I simply redefined repurpleA as rePurpleA minus the number of excluded data points from both the beginning and end defined above (400)
-reblueA = reblueA(numExclude:end-numExclude);       % 470nm data from box A
+numStartExclude= 400;  % define the number of data points to exclude from end- here 400 = 10s of data(remember, 40Hz downsample so 400/40 = 10s)
+numEndExclude = 400; % define the number of data points to exclude from beginning- here 400 = 10s of data(remember, 40Hz downsample so 400/40 = 10s)
+repurpleA = repurpleA(numStartExclude:end-numEndExclude);    % 405nm data from box A ; here I simply redefined repurpleA as rePurpleA minus the number of excluded data points from both the beginning and end defined above (400)
+reblueA = reblueA(numStartExclude:end-numEndExclude);       % 470nm data from box A
 
-repurpleB = repurpleB(numExclude:end-numExclude);   % 405nm data from box B
-reblueB = reblueB(numExclude:end-numExclude);       % 470nm data from box B
+repurpleB = repurpleB(numStartExclude:end-numEndExclude);   % 405nm data from box B
+reblueB = reblueB(numStartExclude:end-numEndExclude);       % 470nm data from box B
 
-cutTime = reTime(numExclude:end-numExclude);        % define cutTime as a new time axis w/o removed points- remember each intensity value should have a corresponding timestamp
+cutTime = reTime(numStartExclude:end-numEndExclude);        % define cutTime as a new time axis w/o removed points- remember each intensity value should have a corresponding timestamp
 fs=40;      
 
 %Based on training stage, define cue length - may consider adding this into the spreadsheet itself in case training protocol changes
@@ -274,7 +277,7 @@ legend('blue','controlfit')
 
 %Save the figure and close
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-saveas(gcf, strcat(figPath,'VP-VTA-FP rat ', num2str(sesData(file).ratA),'box A photometry traces', 'day ', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
+saveas(gcf, strcat(figPath, experimentName, 'rat ', num2str(sesData(file).ratA),'box A photometry traces ', ' day ', num2str(sesData(file).trainDay),'_', num2str(numStartExclude), ' excluded start ', num2str(numEndExclude), ' excluded end ', '.fig')); %save the current figure in fig format
 close; %close 
 
 figure()
@@ -286,7 +289,7 @@ legend('blue','controlfit')
 
 %Save the figure and close
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-saveas(gcf, strcat(figPath,'VP-VTA-FP rat ', num2str(sesData(file).ratB),'box B photometry traces', 'day ', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
+saveas(gcf, strcat(figPath, experimentName, ' rat ', num2str(sesData(file).ratA),'box A photometry traces ', ' day ', num2str(sesData(file).trainDay),'_', num2str(numStartExclude), ' excluded start ', num2str(numEndExclude), ' excluded end ', '.fig')); %save the current figure in fig format
 close; %close 
 
 %% If this is not active DS training session (e.g. if it's magazine training) - Break out here 
@@ -959,7 +962,7 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
     for i= 1:numel(subjField)
 
         %reset arrays between subjects to clear any remaining data 
-        clearvars -except i sesData subjData subjField timeLock fs slideTime figPath runAnalysis; 
+        clearvars -except i sesData subjData subjField timeLock fs slideTime figPath runAnalysis experimentName; 
 
         disp(subjField(i));
         currentSubj= subjData.(subjField{i}); 
