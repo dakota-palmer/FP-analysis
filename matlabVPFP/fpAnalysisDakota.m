@@ -1,5 +1,5 @@
 % Fiber Photometry Analysis
-% 9/9/19
+% 9/20/19
 clear
 clc
 close all
@@ -12,14 +12,14 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-indexAddress = 'C:\Users\capn1\Desktop\VP-VTA-FP (Round 2)\.NEX files\Magazine training\VP-VTA-FP_Metadata.xlsx'; % excel file location 
+indexAddress = 'C:\Users\Ally\iCloudDrive\RichardLabAnalysis_MATLAB\FP-analysis-master\nexFilesVPFP\GAD-VPFP_Index.xlsx'; % excel file location 
 
-nexAddress =  'C:\Users\capn1\Desktop\VP-VTA-FP (Round 2)\.NEX files\Magazine training'; % nex file location 
+nexAddress =  'C:\Users\Ally\iCloudDrive\RichardLabAnalysis_MATLAB\FP-analysis-master\nexFilesVPFP'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
-figPath= 'C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\figures\'; %location for output figures to be saved
+figPath= 'Z:\Ally\GAD-VPFP DS Training'; %location for output figures to be saved
 
-experimentName= 'VP-VTA-FP'; %change experiment name for automatic naming of figures
+experimentName= 'GAD-VPFP'; %change experiment name for automatic naming of figures
 
 runAnalysis= 1; %logic gate for running typical DS training analysis... will not run if an atypical DS training session is loaded (e.g. magazine training session where stage =0)
 
@@ -41,11 +41,12 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     
     sesData(file).ratA= excelData{fileIndex,2}(); %assign appropriate metadata...These values must be changed if the spreadsheet column organization is changed
     sesData(file).ratB = excelData{fileIndex,3}();
-    sesData(file).trainStage = excelData{fileIndex,4}();
-    sesData(file).trainDay = excelData{fileIndex,5}();
+    sesData(file).trainStageA = excelData{fileIndex,4}();
+    sesData(file).trainStageB = excelData{fileIndex,5}();
+    sesData(file).trainDay = excelData{fileIndex,6}();
 
     
-    disp(strcat('rat A = ', num2str(sesData(file).ratA), ' ; rat B = ', num2str(sesData(file).ratB), ' ; trainStage = ', num2str(sesData(file).trainStage), ' ; trainDay = ', num2str(sesData(file).trainDay))); 
+    disp(strcat('rat A = ', num2str(sesData(file).ratA), ' ; rat B = ', num2str(sesData(file).ratB), ' ; trainStageA = ', num2str(sesData(file).trainStageA), ' ; trainStageB = ', num2str(sesData(file).trainStageB), ' ; trainDay = ', num2str(sesData(file).trainDay))); 
     
 %% define contvars (photometer data)
 
@@ -199,17 +200,25 @@ cutTime = reTime(numStartExclude:end-numEndExclude);        % define cutTime as 
 fs=40;      
 
 %Based on training stage, define cue length - may consider adding this into the spreadsheet itself in case training protocol changes
-if sesData(file).trainStage==1
-    cueLength= 60*fs;
-elseif sesData(file).trainStage==2
-    cueLength= 30*fs;
-elseif sesData(file).trainStage==3
-    cueLength=20*fs;
+if sesData(file).trainStageA==1
+    cueLengthA= 60*fs;
+elseif sesData(file).trainStageA==2
+    cueLengthA= 30*fs;
+elseif sesData(file).trainStageA==3
+    cueLengthA=20*fs;
 else
-    cueLength=10*fs; %cue is 10s on both stage 4 and 5
+    cueLengthA=10*fs; %cue is 10s on both stage 4 and 5
 end
 
-
+if sesData(file).trainStageB==1
+    cueLengthB= 60*fs;
+elseif sesData(file).trainStageB==2
+    cueLengthB= 30*fs;
+elseif sesData(file).trainStageB==3
+    cueLengthB=20*fs;
+else
+    cueLengthB=10*fs; %cue is 10s on both stage 4 and 5
+end
 %% Raw plots (downsampled and cut data - so not really raw here, but prior to fitting the 465nm and 405nm signals together/subtraction/dF calc) %%% figure(sesNum)
 % subplot (4,1,1)
 % plot(cutTime,repurpleA, 'm');
@@ -294,7 +303,7 @@ close; %close
 
 %% If this is not active DS training session (e.g. if it's magazine training) - Break out here 
 
-if sesData(file).trainStage ==0
+if sesData(file).trainStageA==0|sesData(file).trainStageB ==0
     disp('loaded magazine training session- loading next session, wont run any analysis');
     runAnalysis=0;
     continue
@@ -356,7 +365,7 @@ for cue=1:length(DS) %DS CUES %For each DS cue, conduct event-triggered analysis
     %first, find all the PEs during that cue
     %poxA
     for i= 1:numel(poxA) %for every port entry made in boxA
-       if (cutTime(DSonsetShifted)<poxA(i)) && (poxA(i)<cutTime(DSonsetShifted+cueLength))%if the port entry occurs between this cue's onset and this cue's offset, assign it to this cue
+       if (cutTime(DSonsetShifted)<poxA(i)) && (poxA(i)<cutTime(DSonsetShifted+cueLengthA))%if the port entry occurs between this cue's onset and this cue's offset, assign it to this cue
            poxADS(i,cue)= poxA(i); %poxADS will contain all of the port entries made during each cue (if any)
 %            disp(strcat('cue ', num2str(cue), 'pox ',num2str(poxADS(i,cue)), ' = ', num2str(poxA(i)))); %debug
        else
@@ -366,7 +375,7 @@ for cue=1:length(DS) %DS CUES %For each DS cue, conduct event-triggered analysis
     
     %poxB
     for i= 1:numel(poxB)
-       if (cutTime(DSonsetShifted)<poxB(i)) && (poxB(i)<cutTime(DSonsetShifted+cueLength)) %if the port entry occurs between cue onset and cue offset, assign it to that cue
+       if (cutTime(DSonsetShifted)<poxB(i)) && (poxB(i)<cutTime(DSonsetShifted+cueLengthB)) %if the port entry occurs between cue onset and cue offset, assign it to that cue
            poxBDS(i,cue)= poxB(i);
 %            disp(strcat('cue ', num2str(cue), 'pox ',num2str(poxADS(i,cue)), ' = ', num2str(poxA(i)))); %debug
        else
@@ -394,7 +403,7 @@ for cue=1:length(DS) %DS CUES %For each DS cue, conduct event-triggered analysis
     poxADSlatencyCell(1,cue)= min(poxADScell{1,cue}()); %get the lowest PE timestamp after each cue
     poxADSlatencyCell(1,cue) = poxADSlatencyCell(1,cue)-cutTime(DSonsetShifted); %calculate latency by subtracting PE timestamp from cue onset? 
      
-    if poxADSlatencyCell(1,cue)<0 || abs(poxADSlatencyCell(1,cue))>cueLength/fs %flag abnormal latency values
+    if poxADSlatencyCell(1,cue)<0 || abs(poxADSlatencyCell(1,cue))>cueLengthA/fs %flag abnormal latency values
        disp(strcat('>>Error ***PE Latency miscalc cue # ', num2str(cue), '_', num2str(poxADSlatencyCell(1,cue)),' minus ', num2str(cutTime(DSonsetShifted)), ' = ', num2str(lat), '******'));
     end
     
@@ -402,7 +411,7 @@ for cue=1:length(DS) %DS CUES %For each DS cue, conduct event-triggered analysis
     poxBDSlatencyCell(1,cue)= min(poxBDScell{1,cue}()); %get the lowest PE timestamp after each cue
     poxBDSlatencyCell(1,cue) = poxBDSlatencyCell(1,cue)-cutTime(DSonsetShifted); 
      
-    if poxBDSlatencyCell(1,cue)<0 || abs(poxBDSlatencyCell(1,cue))>cueLength/fs %flag abnormal latency values
+    if poxBDSlatencyCell(1,cue)<0 || abs(poxBDSlatencyCell(1,cue))>cueLengthB/fs %flag abnormal latency values
        disp(strcat('>>Error ***PE Latency miscalc cue # ', num2str(cue), '_', num2str(poxBDSlatencyCell(1,cue)),' minus ', num2str(cutTime(DSonsetShifted)), ' = ', num2str(lat), '******'));
     end
        
@@ -474,7 +483,7 @@ for cue=1:length(DS) %DS CUES %For each DS cue, conduct event-triggered analysis
     end    
 end
 
-if sesData(file).trainStage== 5 %If the NS is present, calculate and plot NS-triggered avgs and z score as well
+if sesData(file).trainStageA==5|sesData(file).trainStageB== 5 %If the NS is present, calculate and plot NS-triggered avgs and z score as well
        NSskipped= 0; %counter to know how many cues were cut off/not analyzed    
     for cue =1:length(NS) %NS CUES ; For each NS presentation
          NSonset = NS(cue,1); %each entry in NS is a timestamp of the NS onset before downsampling   
@@ -522,7 +531,7 @@ if sesData(file).trainStage== 5 %If the NS is present, calculate and plot NS-tri
     %first, find all the PEs during that NS
     %poxA
     for i= 1:numel(poxA) %for every port entry made in boxA
-       if (cutTime(NSonsetShifted)<poxA(i)) && (poxA(i)<cutTime(NSonsetShifted+cueLength))%if the port entry occurs between this cue's onset and this cue's offset, assign it to this cue
+       if (cutTime(NSonsetShifted)<poxA(i)) && (poxA(i)<cutTime(NSonsetShifted+cueLengthA))%if the port entry occurs between this cue's onset and this cue's offset, assign it to this cue
            poxANS(i,cue)= poxA(i); %poxANS will contain all of the port entries made during each NS (if any)
 %            disp(strcat('cue ', num2str(cue), 'pox ',num2str(poxANS(i,cue)), ' = ', num2str(poxA(i)))); %debug
        else
@@ -532,7 +541,7 @@ if sesData(file).trainStage== 5 %If the NS is present, calculate and plot NS-tri
     
     %poxB
     for i= 1:numel(poxB)
-       if (cutTime(NSonsetShifted)<poxB(i)) && (poxB(i)<cutTime(NSonsetShifted+cueLength)) %if the port entry occurs between cue onset and cue offset, assign it to that cue
+       if (cutTime(NSonsetShifted)<poxB(i)) && (poxB(i)<cutTime(NSonsetShifted+cueLengthB)) %if the port entry occurs between cue onset and cue offset, assign it to that cue
            poxBNS(i,cue)= poxB(i);
 %            disp(strcat('cue ', num2str(cue), 'pox ',num2str(poxBNS(i,cue)), ' = ', num2str(poxA(i)))); %debug
        else
@@ -542,7 +551,7 @@ if sesData(file).trainStage== 5 %If the NS is present, calculate and plot NS-tri
     
     
     for i=1:numel(loxA) %TODO: lox stuff is in progress
-        if (cutTime(NSonsetShifted)<loxA(i)) && (loxA(i)<cutTime(NSonsetShifted+cueLength)) %if the port entry occurs between cue onset and cue offset, assign it to that cue
+        if (cutTime(NSonsetShifted)<loxA(i)) && (loxA(i)<cutTime(NSonsetShifted+cueLengthA)) %if the port entry occurs between cue onset and cue offset, assign it to that cue
            loxANS(i,cue)= loxA(i);
        end
     end
@@ -568,7 +577,7 @@ if sesData(file).trainStage== 5 %If the NS is present, calculate and plot NS-tri
     poxANSlatencyCell(1,cue)= min(poxANScell{1,cue}()); %get the lowest PE timestamp after each cue
     poxANSlatencyCell(1,cue) = poxANSlatencyCell(1,cue)-cutTime(NSonsetShifted); 
      
-    if poxANSlatencyCell(1,cue)<0 || abs(poxANSlatencyCell(1,cue))>cueLength/fs %flag abnormal latency values
+    if poxANSlatencyCell(1,cue)<0 || abs(poxANSlatencyCell(1,cue))>cueLengthA/fs %flag abnormal latency values
        disp(strcat('>>Error ***PE Latency miscalc NS # ', num2str(cue), '_', num2str(poxANSlatencyCell(1,cue)),' minus ', num2str(cutTime(NSonsetShifted)), ' = ', num2str(lat), '******'));
     end
     
@@ -576,7 +585,7 @@ if sesData(file).trainStage== 5 %If the NS is present, calculate and plot NS-tri
     poxBNSlatencyCell(1,cue)= min(poxBNScell{1,cue}()); %get the lowest PE timestamp after each cue
     poxBNSlatencyCell(1,cue) = poxBNSlatencyCell(1,cue)-cutTime(NSonsetShifted); 
      
-    if poxBNSlatencyCell(1,cue)<0 || abs(poxBNSlatencyCell(1,cue))>cueLength/fs %flag abnormal latency values
+    if poxBNSlatencyCell(1,cue)<0 || abs(poxBNSlatencyCell(1,cue))>cueLengthB/fs %flag abnormal latency values
        disp(strcat('>>Error ***PE Latency miscalc NS # ', num2str(cue), '_', num2str(poxBNSlatencyCell(1,cue)),' minus ', num2str(cutTime(NSonsetShifted)), ' = ', num2str(lat), '******'));
     end
 
@@ -657,7 +666,7 @@ meanDSzB = mean(DSzB, 3);
 
 DSincluded = numel(DS)-DSskipped; %keep track of how many cues were excluded from analysis
 
-if sesData(file).trainStage==5 %run NS related analyses only if on stage 5
+if sesData(file).trainStageA==5|sesData(file).trainStageB==5 %run NS related analyses only if on stage 5
     meanNSdfA = mean(NSdfA, 3);
     meanNSdfB = mean(NSdfB, 3);
 
@@ -786,7 +795,7 @@ sesData(file).DSpoxRatioB= DSpoxRatioB;
 
 sesData(file).numDS= DSincluded;
 
-if sesData(file).trainStage==5 %only stage 5 has the NS
+if sesData(file).trainStageA==5|sesData(file).trainStageB==5 %only stage 5 has the NS
     sesData(file).numNS= NSincluded; 
 
     sesData(file).NS= NS;
@@ -862,7 +871,7 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
 
                 subjData.(subjField)(i).rat= subj;
                 subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
-                subjData.(subjField)(i).trainStage= sesData(i).trainStage;
+                subjData.(subjField)(i).trainStage= sesData(i).trainStageA;
                 subjData.(subjField)(i).box= 'box A';
 
                 subjData.(subjField)(i).DSdf= sesData(i).DSdfA;
@@ -907,7 +916,7 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
 
                 subjData.(subjField)(i).rat= subj;
                 subjData.(subjField)(i).trainDay= sesData(i).trainDay;
-                subjData.(subjField)(i).trainStage= sesData(i).trainStage;
+                subjData.(subjField)(i).trainStage= sesData(i).trainStageB;
                 subjData.(subjField)(i).box= 'box B';
                 subjData.(subjField)(i).DSdf= sesData(i).DSdfB;
                 subjData.(subjField)(i).DSz= sesData(i).DSzB;
@@ -1272,14 +1281,14 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
         s= scatter(currentSubjpoxDSlatencySorted, 1:numel(currentSubjpoxDSlatencySorted), 'm');
         s.Marker= '.';
 
-    %     %overlay plot of licks surrounding DS - a little more complicated because this is a cell array with an unknown number of licks per cue
-    %     for trial = 1:numel(currentSubjloxDSSortedNoNan) %for each trial
-    %         hold on;
-    %         currentTrial = ones([numel(currentSubjloxDSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
-    %         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
-    %         s= scatter(currentSubjloxDSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
-    %         s.Marker = '.'; %make the marker a small point
-    %     end
+        %overlay plot of licks surrounding DS - a little more complicated because this is a cell array with an unknown number of licks per cue
+        for trial = 1:numel(currentSubjloxDSSortedNoNan) %for each trial
+            hold on;
+            currentTrial = ones([numel(currentSubjloxDSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
+            currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
+            s= scatter(currentSubjloxDSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
+            s.Marker = '.'; %make the marker a small point
+        end
 
         %plot of all NSz- sorted by latency WITH NaN REMOVED
         subplot(2,1,2); %subplot for shared colorbar
@@ -1301,17 +1310,17 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
         s.Marker= '.';
 
         %overlay plot of licks surrounding NS - a little more complicated because this is a cell array with an unknown number of licks per cue
-    %     for trial = 1:numel(currentSubjloxNSSortedNoNan) %for each trial
-    %         hold on;
-    %         currentTrial = ones([numel(currentSubjloxNSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
-    %         currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
-    %         s= scatter(currentSubjloxNSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
-    %         s.Marker = '.'; %make the marker a small point
-    %     end
+        for trial = 1:numel(currentSubjloxNSSortedNoNan) %for each trial
+            hold on;
+            currentTrial = ones([numel(currentSubjloxNSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
+            currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
+            s= scatter(currentSubjloxNSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
+            s.Marker = '.'; %make the marker a small point
+        end
 
         %SAVE PLOTS
         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-        saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_Zscore_AllCuesSorted-WithLicks','.tiff')); %save the current figure in tif format
+        saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_Zscore_AllCuesSorted-WithLicks','.fig')); %save the current figure in tif format
 
 
         %     %%%%%%%%%%%%%%%%%%%%%%%%%%% IN PROGRESS- visualizing lox
