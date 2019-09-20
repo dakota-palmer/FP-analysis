@@ -12,14 +12,14 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-indexAddress = 'C:\Users\Ally\iCloudDrive\RichardLabAnalysis_MATLAB\FP-analysis-master\nexFilesVPFP\GAD-VPFP_Index.xlsx'; % excel file location 
+indexAddress = 'C:\Users\Dakota\Desktop\VPFPanalysis\nexFilesVPFP\vpfpIndex_template.xlsx'; % excel file location 
 
-nexAddress =  'C:\Users\Ally\iCloudDrive\RichardLabAnalysis_MATLAB\FP-analysis-master\nexFilesVPFP'; % nex file location 
+nexAddress =  'C:\Users\Dakota\Desktop\VPFPanalysis\nexFilesVPFP\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
-figPath= 'Z:\Ally\GAD-VPFP DS Training'; %location for output figures to be saved
+figPath= 'C:\Users\Dakota\Desktop\FP-analysis-master\matlabVPFP\figures\'; %location for output figures to be saved
 
-experimentName= 'GAD-VPFP'; %change experiment name for automatic naming of figures
+experimentName= 'VPFP- RAW Test'; %change experiment name for automatic naming of figures
 
 runAnalysis= 1; %logic gate for running typical DS training analysis... will not run if an atypical DS training session is loaded (e.g. magazine training session where stage =0)
 
@@ -257,49 +257,59 @@ fitB= controlFit(reblueB, repurpleB);
 % title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' ControlFit box B'));
 % legend('purple','blue','controlfit')
 
+%% Delta F
+% dfA= reblueA-fitA; %This df is simply the voltage difference between the 465nm signal and the fitted 405nm signal
+% dfB= reblueB-fitB;
+
 %% Delta F/F 
 dfA = deltaFF(reblueA,fitA); %This is dF for boxA in %, calculated by running the deltaFF function on the resampled blue data from boxA and the fitted data from boxA
 dfB = deltaFF(reblueB,fitB);
 
 %% dF plots %%
-% figure(sesNum)
-% subplot (4,1,3)
-%hold on
+
+% figure()
 % plot(cutTime, dfA);
 % title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' dF/F box A'));
 % ylabel('% dF');
+%  
+% %Save the figure and close
+% set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% saveas(gcf, strcat(figPath, experimentName, ' rat ', num2str(sesData(file).ratA),'dF trace A', ' day ', num2str(sesData(file).trainDay),'_', num2str(numStartExclude), ' excluded start ', num2str(numEndExclude), ' excluded end ', '.fig')); %save the current figure in fig format
+% close; %close 
 % 
-% figure(sesNum)
-% subplot (4,1,4)
-%hold on
+% figure()
 % plot(cutTime, dfB);
 % title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' dF/F box B'));
 % ylabel('% dF');
-
+%  
+% %Save the figure and close
+% set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% saveas(gcf, strcat(figPath, experimentName, ' rat ', num2str(sesData(file).ratB),'dF trace B ', ' day ', num2str(sesData(file).trainDay),'_', num2str(numStartExclude), ' excluded start ', num2str(numEndExclude), ' excluded end ', '.fig')); %save the current figure in fig format
+% close; %close 
 %% SAVE PLOTS OF overlaid fitted 405nm signal and 465nm signal - should be easier to see dynamic Ca2+ events, saves plots as .fig
-figure()
-plot(cutTime,reblueA, 'b');
-hold on
-plot (cutTime, fitA, 'm');
-title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' downsample box A & fit A'));
-legend('blue','controlfit')
-
-%Save the figure and close
-set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-saveas(gcf, strcat(figPath, experimentName, 'rat ', num2str(sesData(file).ratA),'box A photometry traces ', ' day ', num2str(sesData(file).trainDay),'_', num2str(numStartExclude), ' excluded start ', num2str(numEndExclude), ' excluded end ', '.fig')); %save the current figure in fig format
-close; %close 
-
-figure()
-plot(cutTime,reblueB, 'b');
-hold on
-plot (cutTime, fitB, 'm');
-title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' downsample box B & fit B'));
-legend('blue','controlfit')
-
-%Save the figure and close
-set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-saveas(gcf, strcat(figPath, experimentName, ' rat ', num2str(sesData(file).ratB),'box B photometry traces ', ' day ', num2str(sesData(file).trainDay),'_', num2str(numStartExclude), ' excluded start ', num2str(numEndExclude), ' excluded end ', '.fig')); %save the current figure in fig format
-close; %close 
+% figure()
+% plot(cutTime,reblueA, 'b');
+% hold on
+% plot (cutTime, fitA, 'm');
+% title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' downsample box A & fit A'));
+% legend('blue','controlfit')
+% 
+% %Save the figure and close
+% set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% saveas(gcf, strcat(figPath, experimentName, 'rat ', num2str(sesData(file).ratA),'box A photometry traces ', ' day ', num2str(sesData(file).trainDay),'_', num2str(numStartExclude), ' excluded start ', num2str(numEndExclude), ' excluded end ', '.fig')); %save the current figure in fig format
+% close; %close 
+% 
+% figure()
+% plot(cutTime,reblueB, 'b');
+% hold on
+% plot (cutTime, fitB, 'm');
+% title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' downsample box B & fit B'));
+% legend('blue','controlfit')
+% 
+% %Save the figure and close
+% set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% saveas(gcf, strcat(figPath, experimentName, ' rat ', num2str(sesData(file).ratB),'box B photometry traces ', ' day ', num2str(sesData(file).trainDay),'_', num2str(numStartExclude), ' excluded start ', num2str(numEndExclude), ' excluded end ', '.fig')); %save the current figure in fig format
+% close; %close 
 
 %% If this is not active DS training session (e.g. if it's magazine training) - Break out here 
 
@@ -1282,13 +1292,13 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
         s.Marker= '.';
 
         %overlay plot of licks surrounding DS - a little more complicated because this is a cell array with an unknown number of licks per cue
-        for trial = 1:numel(currentSubjloxDSSortedNoNan) %for each trial
-            hold on;
-            currentTrial = ones([numel(currentSubjloxDSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
-            currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
-            s= scatter(currentSubjloxDSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
-            s.Marker = '.'; %make the marker a small point
-        end
+%         for trial = 1:numel(currentSubjloxDSSortedNoNan) %for each trial
+%             hold on;
+%             currentTrial = ones([numel(currentSubjloxDSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
+%             currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
+%             s= scatter(currentSubjloxDSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
+%             s.Marker = '.'; %make the marker a small point
+%         end
 
         %plot of all NSz- sorted by latency WITH NaN REMOVED
         subplot(2,1,2); %subplot for shared colorbar
@@ -1310,18 +1320,18 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
         s.Marker= '.';
 
         %overlay plot of licks surrounding NS - a little more complicated because this is a cell array with an unknown number of licks per cue
-        for trial = 1:numel(currentSubjloxNSSortedNoNan) %for each trial
-            hold on;
-            currentTrial = ones([numel(currentSubjloxNSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
-            currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
-            s= scatter(currentSubjloxNSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
-            s.Marker = '.'; %make the marker a small point
-        end
+%         for trial = 1:numel(currentSubjloxNSSortedNoNan) %for each trial
+%             hold on;
+%             currentTrial = ones([numel(currentSubjloxNSSortedNoNan{trial}),1]); %make an array equal to the size of the number of licks for that trial
+%             currentTrial(:)= trial; %make each entry in this array equal to the current trial number (so we have a correct x value for each lick to scatter plot)
+%             s= scatter(currentSubjloxNSSortedNoNan{trial}, currentTrial, 'k'); %scatter plot the licks for each trial
+%             s.Marker = '.'; %make the marker a small point
+%         end
 
         %SAVE PLOTS
         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-        saveas(gcf, strcat(figPath,'rat_', num2str(ratID),'_Zscore_AllCuesSorted-WithLicks','.fig')); %save the current figure in tif format
-
+        saveas(gcf, strcat(figPath , experimentName ,'rat_', num2str(ratID),'_Zscore_AllCuesSorted-WithLicks','.fig')); %save the current figure in tif format
+        close;
 
         %     %%%%%%%%%%%%%%%%%%%%%%%%%%% IN PROGRESS- visualizing lox
     % 
