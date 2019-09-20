@@ -14,7 +14,7 @@
      * VPFPIndex will provide all session metadata to MatLab for analysis
      * Make sure VPFPIndex.xlsx is up-to-date and accurate 
 
-* Open fpAnalysisDakotav2.m in matlab
+* Open fpAnalysisDakota.m in matlab
      * Make sure the file paths toward the beginning of the script for the .Nex files and index are up to date 
      * Make sure the indices are correct for the xlsread section- they should correspond to your files of interest
 
