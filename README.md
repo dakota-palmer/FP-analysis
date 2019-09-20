@@ -6,17 +6,18 @@
 * Retrieve TDT files for each session- saved locally on recording PC 
 
 * In MatLab, run TDT2NEX(‘tank filepath’) to generate a .NEX (.NEX5 is disposable)
-    * You can use the batchTDT2NEX script to save time with a lot of tanks
-     * Once you've generated .Nex files, save them and you won't need to do it again
-     * Generating & moving NEX files / TDT data can take a very long time- consider doing this on the data collection PC after recording or automating this step somehow
+     * You can use the batchTDT2NEX script to save time with a lot of tanks
+     * Once you've generated .Nex files, save them and you won't need to do it again- these are the only files you will use for analysis
+     * Generating & moving NEX files / TDT data can take a long time- batchTDT2NEX.m will help, but consider doing this on the data collection PC after recording or automating this step somehow
      
 * Place these .NEX files in a folder along with VPFPIndex.xlsx (https://github.umn.edu/palme876/FP-analysis/tree/master/nexFilesVPFP)
      * VPFPIndex will provide all session metadata to MatLab for analysis
-     * Make sure VPFPIndex.xlsx is up-to-date and accurate 
+     * Make sure VPFPIndex.xlsx is up-to-date and accurate with the metadata corresponding to each TDT tank (each .NEX file) 
 
 * Open fpAnalysisDakota.m in matlab
      * Make sure the file paths toward the beginning of the script for the .Nex files and index are up to date 
      * Make sure the indices are correct for the xlsread section- they should correspond to your files of interest
+     * Make sure the experiment name string is updated- this will be used to automatically generate filenames for saved plots
 
 * Take time to go through and figure out what information you want to be plotted (ctl+F->plot); by default a lot of these plots are commented out to save time, but it is important to view each step of the data processing (downsample, fit, dF, etc)
 
