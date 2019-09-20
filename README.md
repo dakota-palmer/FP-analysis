@@ -1,7 +1,5 @@
 # FP-analysis
  Matlab workflow for fiber photometry analysis
-2.22.19 
-FP Analysis Workflow
 
 * Download necessary MatLab scripts (https://github.umn.edu/palme876/FP-analysis/tree/master/matlabVPFP)
 
