@@ -5,7 +5,7 @@ function TDT2NEX(BLOCKPATH)
     [pathstr,name,ext] = fileparts(BLOCKPATH);
 
     nexFilePath = strcat(BLOCKPATH, '\', name, '.nex');
-    nex5FilePath = strcat(BLOCKPATH, '\', name, '.nex5');
+    %nex5FilePath = strcat(BLOCKPATH, '\', name, '.nex5');
 
     data = TDTbin2mat(BLOCKPATH, 'VERBOSE', 0);
 
@@ -33,7 +33,7 @@ function TDT2NEX(BLOCKPATH)
 
     writeNexFile(nexFile, nexFilePath);
     fprintf('writing %s\n', nexFilePath);
-    writeNex5File(nexFile, nex5FilePath);
-    fprintf('writing %s\n', nex5FilePath);
+    %writeNex5File(nexFile, nex5FilePath);
+    %fprintf('writing %s\n', nex5FilePath);
     disp('done')
 end
