@@ -1,5 +1,5 @@
 % Fiber Photometry Analysis
-% 9/20/19
+% 11/5/19
 clear
 clc
 close all
@@ -771,6 +771,14 @@ sesData(file).cutTime= cutTime;
 
 sesData(file).DS = DS;
 
+sesData(file).reblueA= reblueA;
+sesData(file).repurpleA= repurpleA;
+sesData(file).controlfitA= fitA;
+
+sesData(file).reblueB= reblueB;
+sesData(file).repurpleB= repurpleB;
+sesData(file).controlfitB= fitB;
+
 sesData(file).poxA= poxA;
 sesData(file).poxB= poxB;
 
@@ -883,6 +891,13 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
                 subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageA;
                 subjData.(subjField)(i).box= 'box A';
+                
+                subjData.(subjField)(i).reblue= sesData(i).reblueA;
+                subjData.(subjField)(i).repurple= sesData(i).repurpleA;
+                subjData.(subjField)(i).controlfit= sesData(i).controlfitA;
+
+
+                
 
                 subjData.(subjField)(i).DSdf= sesData(i).DSdfA;
                 subjData.(subjField)(i).DSz= sesData(i).DSzA;
@@ -928,6 +943,11 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
                 subjData.(subjField)(i).trainDay= sesData(i).trainDay;
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageB;
                 subjData.(subjField)(i).box= 'box B';
+                
+                subjData.(subjField)(i).reblue= sesData(i).reblueB;
+                subjData.(subjField)(i).repurple= sesData(i).repurpleB;
+                subjData.(subjField)(i).controlfit= sesData(i).controlfitB;
+                
                 subjData.(subjField)(i).DSdf= sesData(i).DSdfB;
                 subjData.(subjField)(i).DSz= sesData(i).DSzB;
 
