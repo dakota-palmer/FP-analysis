@@ -12,7 +12,7 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-indexAddress = 'C:\Users\Dakota\Desktop\VPFPanalysis\nexFilesVPFP\vpfpIndex_template.xlsx'; % excel file location 
+metadataAddress = 'C:\Users\Dakota\Desktop\VPFPanalysis\nexFilesVPFP\vpfp_metadata_template.xlsx'; % excel file location 
 
 nexAddress =  'C:\Users\Dakota\Desktop\VPFPanalysis\nexFilesVPFP\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
@@ -28,7 +28,7 @@ sesNum = 0; %for looping- simply analyzing all data from a given session simulta
 
 for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile  
     
-    clearvars -except file nexFiles indexAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
+    clearvars -except file nexFiles metadataAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
     
     fName = nexFiles(file).name; %define the nex file name to load
     data = readNexFile([nexAddress,'//',fName]); %load the nex file data
@@ -36,7 +36,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     
     sesNum=sesNum+1; %increment the loop
      
-    [~,~,excelData] = xlsread(indexAddress); %import metadata from excel spreadsheet
+    [~,~,excelData] = xlsread(metadataAddress); %import metadata from excel spreadsheet
     fileIndex= find(strcmp(excelData(:,1),fName)); %search the spreadsheet data for the matching fileName to get index for matching metadata
     
     sesData(file).ratA= excelData{fileIndex,2}(); %assign appropriate metadata...These values must be changed if the spreadsheet column organization is changed
