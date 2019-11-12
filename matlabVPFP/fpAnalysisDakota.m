@@ -1,6 +1,6 @@
 % Fiber Photometry Analysis
-% 11/1/19
-% Currently not plotting licks
+% 11/12/19
+
 clear
 clc
 close all
@@ -13,12 +13,13 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-indexAddress = 'Z:\Ally\GAD-VPFP DS Training\nexFilesVPFP\GAD-VPFP_Index.xlsx'; % excel file location 
+metaDataAddress = 'Z:\Ally\GAD-VPFP DS Training\nexFilesVPFP\GAD-VPFP_Index.xlsx'; % excel file location 
 
-nexAddress =  'Z:\Ally\GAD-VPFP DS Training\nexFilesVPFP'; % nex file location 
+nexAddress =  'Z:\Ally\GAD-VPFP DS Training\nexFilesVPFP\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 figPath= 'C:\Users\Dakota\Desktop\test\'; %location for output figures to be saved
+figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
 experimentName= 'GAD-VPFP'; %change experiment name for automatic naming of figures
 
@@ -29,7 +30,7 @@ sesNum = 0; %for looping- simply analyzing all data from a given session simulta
 
 for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile  
     
-    clearvars -except file nexFiles indexAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
+    clearvars -except file nexFiles metaDataAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
     
     fName = nexFiles(file).name; %define the nex file name to load
     data = readNexFile([nexAddress,'//',fName]); %load the nex file data
@@ -37,7 +38,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     
     sesNum=sesNum+1; %increment the loop
      
-    [~,~,excelData] = xlsread(indexAddress); %import metadata from excel spreadsheet
+    [~,~,excelData] = xlsread(metaDataAddress); %import metadata from excel spreadsheet
     fileIndex= find(strcmp(excelData(:,1),fName)); %search the spreadsheet data for the matching fileName to get index for matching metadata
     
     sesData(file).ratA= excelData{fileIndex,2}(); %assign appropriate metadata...These values must be changed if the spreadsheet column organization is changed
@@ -84,7 +85,7 @@ end
 
 
 % %Flag any change in the contvar nex file structure for photometer data-
-% %this should not be an issue now that these are assigned programatically(see below)
+% %this should not be an issue now that these are assigned programatically(see above)
 % if contains(data.contvars{1,1}.name, 'Dv4B') ~=1
 %    disp('***********CHECK THE CONTVARS 1*************');
 % elseif contains(data.contvars{2,1}.name, 'Dv3B') ~=1
@@ -155,7 +156,6 @@ for i = 1:numel(data.events) %search through all event channels for matching nam
        poxB = data.events{i,1}.timestamps;
 %        disp(strcat('poxB event index= ', num2str(i)));
    end
-   
    
   if(loxBindex ==1)
        loxB = data.events{i,1}.timestamps;
@@ -241,39 +241,42 @@ plot(cutTime,reblueB, 'b');
 % % plot(poxB, 150, 'go');
 % % plot(loxB, 200, 'k*');
 title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' downsampled box B'));
-saveas(gcf, strcat(figPath,'rawsignal_trainingday', num2str(sesData(file).trainDay),'_downsampled_cut','.fig'))
-% %% ControlFit (fits 2 signals together)
+
+% %Save the figure and close
+% set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% saveas(gcf, strcat(figPath, experimentName, ' rat ', num2str(sesData(file).ratA),'rawsignal_day_', num2str(sesData(file).trainDay),'_downsampled_cut_', num2str(numStartExclude), num2str(numEndExclude), '.fig')); %save the current figure in fig format
+% close; %close 
+
+%% ControlFit (fits 2 signals together), result is 405 signal fitted to 465
 % fitA= controlFit(reblueA, repurpleA);
 % fitB= controlFit(reblueB, repurpleB);
-% 
+
 %% Fitted plots %%
 % figure(sesNum)
-% subplot (4,1,1) %fitted overlaid on same subplot as blue&purple
+% subplot (2,1,1) %fitted overlaid on same subplot as blue&purple
 %hold on
-% plot(cutTime, fitA,'g');
+% plot(cutTime, fitA,'k');
 % title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' ControlFit box A'));
 % legend('purple','blue','controlfit')
 % figure(sesNum)
-% subplot (4,1,2)
+% subplot (2,1,2)
 %hold on
-% plot(cutTime, fitB,'g');
+% plot(cutTime, fitB,'k');
 % title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' ControlFit box B'));
 % legend('purple','blue','controlfit')
 
 %% Delta F/F 
-% dfA = deltaFF(reblueA,fitA); %This is dF for boxA in %, calculated by running the deltaFF function on the resampled blue data from boxA and the fitted data from boxA
-% dfB = deltaFF(reblueB,fitB);
+ dfA = deltaFF(reblueA,fitA); %This is dF for boxA in %, calculated by running the deltaFF function on the resampled blue data from boxA and the fitted data from boxA
+ dfB = deltaFF(reblueB,fitB);
 
 %% dF plots %%
-% figure(sesNum)
-% subplot (4,1,3)
+% figure()
 %hold on
 % plot(cutTime, dfA);
 % title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' dF/F box A'));
 % ylabel('% dF');
 % 
-% figure(sesNum)
-% subplot (4,1,4)
+% figure()
 %hold on
 % plot(cutTime, dfB);
 % title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' dF/F box B'));
@@ -377,7 +380,7 @@ for cue=1:length(DS) %DS CUES %For each DS cue, conduct event-triggered analysis
     end
     
     %poxB
-if exist('poxB')==1
+if exist('poxB')==1 %TODO: make a better logic check (if rat is not present in box, skip analysis)
     for i= 1:numel(poxB)
        if (cutTime(DSonsetShifted)<poxB(i)) && (poxB(i)<cutTime(DSonsetShifted+cueLengthB)) %if the port entry occurs between cue onset and cue offset, assign it to that cue
            poxBDS(i,cue)= poxB(i);
@@ -397,7 +400,7 @@ end
     end
     
     %poxB
- if exist('poxB')==1
+ if exist('poxB')==1 %TODO: make a better logic check (if rat is not present in box, skip analysis)
     if find(~isnan(poxBDS(:,cue)))  
     poxBDScell{:,cue}= poxBDS(~isnan(poxBDS(:,cue)),cue); %create a cell array with all port entries made per cue presentation- containing only non-nan values in poxADS
     else
@@ -405,30 +408,30 @@ end
     end
  end  
  
- %% finding first port entry after DS
+ %% Finding first port entry after DS
     if find(~isnan(poxADScell{:,cue}))  
-    firstpoxAafterDS(:,cue)= min(poxADScell{:,cue}); %create a cell array with all port entries made per cue presentation- containing only non-nan values in poxADS
+    firstpoxADS(:,cue)= min(poxADScell{:,cue}); 
     for ts = 1:length(cutTime) %for each timestamp in cutTime 
-        PEAtimeDiff(1,ts) = abs(firstpoxAafterDS(:,cue)-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
+        DSfirstpoxATimeDiff(1,ts) = abs(firstpoxADS(:,cue)-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
     end
     
-    [~,PoxAShifted] = min(PEAtimeDiff);  
+    [~,firstpoxADSshifted] = min(DSfirstpoxATimeDiff);  
     else
-    firstpoxAafterDS(:,cue)=nan;
+    firstpoxADS(:,cue)=nan;
     end
     
  %poxB
   if exist('poxB')==1
     if find(~isnan(poxBDScell{:,cue}))  
-    firstpoxBafterDS(:,cue)= min(poxBDScell{:,cue}); %create a cell array with all port entries made per cue presentation- containing only non-nan values in poxADS
+    firstpoxBDS(:,cue)= min(poxBDScell{:,cue}); %create a cell array with all port entries made per cue presentation- containing only non-nan values in poxADS
     %find closest value (min difference) in cutTime (the current time axis) to PEby subtraction
         for ts = 1:length(cutTime) %for each timestamp in cutTime 
-        PEBtimeDiff(1,ts) = abs(firstpoxBafterDS(:,cue)-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
+        DSfirstpoxBTimeDiff(1,ts) = abs(firstpoxBDS(:,cue)-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
         end
     
-    [~,PoxBShifted] = min(PEBtimeDiff);   
+    [~,firstpoxBDSshifted] = min(DSfirstpoxBTimeDiff);   
     else
-    firstpoxBafterDS(:,cue)=nan;
+    firstpoxBDS(:,cue)=nan;
     end
   end   
   
@@ -443,11 +446,10 @@ end
     end
     
     %box B
-   if exist('poxB')==1  
+   if exist('poxB')==1  %TODO: add better logic gate at start to skip over analysis (if no rat defined)
     poxBDSlatencyCell(1,cue)= min(poxBDScell{1,cue}()); %get the lowest PE timestamp after each cue
     poxBDSlatencyCell(1,cue) = poxBDSlatencyCell(1,cue)-cutTime(DSonsetShifted); 
  
-  
     if poxBDSlatencyCell(1,cue)<0 || abs(poxBDSlatencyCell(1,cue))>cueLengthB/fs %flag abnormal latency values
        disp(strcat('>>Error ***PE Latency miscalc cue # ', num2str(cue), '_', num2str(poxBDSlatencyCell(1,cue)),' minus ', num2str(cutTime(DSonsetShifted)), ' = ', num2str(lat), '******'));
     end
@@ -488,7 +490,7 @@ end
 
     %loxBDS
     %Extract licks that occur within the peri-event window of interest 
-    if exist('loxB')==1
+    if exist('loxB')==1 %TODO: add better logic gate at start to skip over analysis (if no rat defined)
     for i=1:numel(loxB) %TODO: lox stuff is in progress
         if (cutTime(preEventTime)<loxB(i)) && (loxB(i)<cutTime(postEventTime)) %if the lick entry occurs between preEventTime and postEventTime, assign it to that cue
            loxBDS(i,cue)= loxB(i);
@@ -500,7 +502,7 @@ end
     end
     
     %Create a cell array with licks, retaining only licks in the peri-event window of interest
-    
+
     if find(~isnan(loxBDS(:,cue)))  
         loxBDScell{:,cue}= loxBDS(~isnan(loxBDS(:,cue)),cue); %create a cell array with all port entries made per cue presentation- containing only non-nan values in poxADS
     else
@@ -509,94 +511,105 @@ end
  end
 %% if want to time lock at DS PE define the frames (datapoints) around each portentry and find zscore
 if cue==1   
-if isnan(firstpoxAafterDS(:,cue))%  if don't have port entry during first cue then still initialize matricies for information to be added to
-    poxApreEventTime = NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-    poxApostEventTime = NaN(1,2*periCueFrames+1); 
-    eventTimepoxA(:,:,cue)= NaN(1,2*periCueFrames+1,1);
-    DSbluepoxA(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
-    DSpurplepoxA(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
-    DSzbluepoxA(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
-    DSzpurplepoxA(:,:,cue)=NaN(2*periCueFrames+1,1,1);     
-elseif ~isnan(firstpoxAafterDS(:,cue)) 
-    poxApreEventTime = PoxAShifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-    poxApostEventTime = PoxAShifted+periCueFrames; 
-    eventTimepoxA(:,:,cue)= cutTime(poxApreEventTime:poxApostEventTime);
-    DSbluepoxA(:,:,cue) = reblueA(poxApreEventTime:poxApostEventTime);  %extract the df data corresponding to this time window for blue
-    DSpurplepoxA(:,:,cue) = repurpleA(poxApreEventTime:poxApostEventTime);  %extract the df data corresponding to this time window for blue
-    DSzbluepoxA(:,:,cue)=(((reblueA(poxApreEventTime:poxApostEventTime))-baselineMeanblueA))/(baselineStdblueA); 
-    DSzpurplepoxA(:,:,cue)=(((repurpleA(poxApreEventTime:poxApostEventTime))-baselineMeanpurpleA))/(baselineStdpurpleA);  
+if isnan(firstpoxADS(:,cue))%  if don't have port entry during first cue then still initialize matricies for information to be added to- TODO: not sure if want to do this
+  
+  %% %%%%%%%%%%%%%%%%%%%% Why multiply pericueFrames * 2 and +1???
+  %% %%%%%%%%%%%%%%%%%%%% Just use preEventTime:postEventTime?
+  %was just initializing with nan() - probably shouldnt do it this way, just clear
+  %this whole block of code is just initializing?
+    preEventTimepoxADS = NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+    postEventTimepoxADS = NaN(1,2*periCueFrames+1); 
+    eventTimepoxADS(:,:,cue)= NaN(1,2*periCueFrames+1,1);
+    firstpoxADSblue(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the 465 raw data corresponding to this time window  
+    firstpoxADSpurple(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the 405 raw data corresponding to this time window  
+    firstpoxADSblueZ(:,:,cue)=NaN(2*periCueFrames+1,1,1);  %extract the 465 z score data corresponding to this time window
+    firstpoxADSpurpleZ(:,:,cue)=NaN(2*periCueFrames+1,1,1); %extract the 405 z score data corresponding to this time window
+elseif ~isnan(firstpoxADS(:,cue)) %if there is a port entry present 
+    preEventTimepoxADS = firstpoxADSshifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+    postEventTimepoxADS = firstpoxADSshifted+periCueFrames; 
+
+    %TODO: Given current indexing, baseline for z score calc here is 10s prior to cue (not 10s prior to PE)
+
+    eventTimepoxADS(:,:,cue)= cutTime(preEventTimepoxADS:postEventTimepoxADS);
+    firstpoxADSblue(:,:,cue) = reblueA(preEventTimepoxADS:postEventTimepoxADS);  %extract the df data corresponding to this time window for blue
+    firstpoxADSpurple(:,:,cue) = repurpleA(preEventTimepoxADS:postEventTimepoxADS);  %extract the df data corresponding to this time window for blue
+    firstpoxADSblueZ(:,:,cue)=(((reblueA(preEventTimepoxADS:postEventTimepoxADS))-baselineMeanblueA))/(baselineStdblueA); 
+    firstpoxADSpurpleZ(:,:,cue)=(((repurpleA(preEventTimepoxADS:postEventTimepoxADS))-baselineMeanpurpleA))/(baselineStdpurpleA);  
 end
 else
-if isnan(firstpoxAafterDS(:,cue))%  if don't have port entry during first cue then still initialize matricies for information to be added to
-    poxApreEventTime = NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-    poxApostEventTime = NaN(1,2*periCueFrames+1); 
-    eventTimepoxA(:,:,cue)= NaN(1,2*periCueFrames+1,1);
-    DSbluepoxA(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
-    DSpurplepoxA(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
-    DSzbluepoxA(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
-    DSzpurplepoxA(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
+if isnan(firstpoxADS(:,cue))%  if dont have port entry during first cue then still initialize matricies for information to be added to
+    preEventTimepoxADS = NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+    postEventTimepoxADS = NaN(1,2*periCueFrames+1); 
+    eventTimepoxADS(:,:,cue)= NaN(1,2*periCueFrames+1,1);
+    firstpoxADSblue(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
+    firstpoxADSpurple(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
+    firstpoxADSblueZ(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
+    firstpoxADSpurpleZ(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
     
-%    DSbluepoxA(:,:,cue) = DSbluepoxA;
-%    DSpurplepoxA (:,:,cue)=  DSpurplepoxA;
-%    DSzbluepoxA(:,:,cue)= DSzbluepoxA;  
-%    DSzpurplepoxA(:,:,cue)= DSzpurplepoxA; 
+%    firstpoxADSblue(:,:,cue) = firstpoxADSblue;
+%    firstpoxADSpurple (:,:,cue)=  firstpoxADSpurple;
+%    firstpoxADSblueZ(:,:,cue)= firstpoxADSblueZ;  
+%    firstpoxADSpurpleZ(:,:,cue)= firstpoxADSpurpleZ; 
     else
-   poxApreEventTime = PoxAShifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-   poxApostEventTime = PoxAShifted+periCueFrames;
-   eventTimepoxA= cat(3,eventTimepoxA,cutTime(poxApreEventTime:poxApostEventTime));
-   DSbluepoxA = cat(3, DSbluepoxA, reblueA(poxApreEventTime:poxApostEventTime));
-   DSpurplepoxA = cat(3, DSpurplepoxA, repurpleA(poxApreEventTime:poxApostEventTime));
-   DSzbluepoxA= cat(3,DSzbluepoxA,(((reblueA(poxApreEventTime:poxApostEventTime))-baselineMeanblueA)/(baselineStdblueA)));  
-   DSzpurplepoxA= cat(3,DSzpurplepoxA,(((repurpleA(poxApreEventTime:poxApostEventTime))-baselineMeanpurpleA)/(baselineStdpurpleA)));  
+        preEventTimepoxADS = firstpoxADSshifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+        postEventTimepoxADS = firstpoxADSshifted+periCueFrames;
+        eventTimepoxADS= cat(3,eventTimepoxADS,cutTime(preEventTimepoxADS:postEventTimepoxADS));
+        firstpoxADSblue = cat(3, firstpoxADSblue, reblueA(preEventTimepoxADS:postEventTimepoxADS));
+        firstpoxADSpurple = cat(3, firstpoxADSpurple, repurpleA(preEventTimepoxADS:postEventTimepoxADS));
+        firstpoxADSblueZ= cat(3,firstpoxADSblueZ,(((reblueA(preEventTimepoxADS:postEventTimepoxADS))-baselineMeanblueA)/(baselineStdblueA)));  
+        firstpoxADSpurpleZ= cat(3,firstpoxADSpurpleZ,(((repurpleA(preEventTimepoxADS:postEventTimepoxADS))-baselineMeanpurpleA)/(baselineStdpurpleA)));  
 end
 end
 
-if exist('poxB')==1
+if exist('poxB')==1 %TODO better logic gate at start (if no rat, dont analyze)
 if cue==1  
-if isnan(firstpoxBafterDS(:,cue))
-    poxBpreEventTime =NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-    poxBpostEventTime = NaN(1,2*periCueFrames+1); 
-    eventTimepoxB(:,:,cue)= NaN(1,2*periCueFrames+1,1);
-    DSbluepoxB(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
-    DSpurplepoxB(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
-    DSzbluepoxB(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
-    DSzpurplepoxB(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
-elseif ~isnan(firstpoxBafterDS(:,cue))
-    poxBpreEventTime = PoxBShifted-periCueFrames; %earliest timepoint to examine is the shifted poxB onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-    poxBpostEventTime = PoxBShifted+periCueFrames; 
-    eventTimepoxB(:,:,cue)= cutTime(poxBpreEventTime:poxBpostEventTime);
-    DSbluepoxB(:,:,cue) = reblueB(poxBpreEventTime:poxBpostEventTime);  %extract the df data corresponding to this time window for blue
-    DSpurplepoxB(:,:,cue) = repurpleB(poxBpreEventTime:poxBpostEventTime);  %extract the df data corresponding to this time window for blue
-    DSzbluepoxB(:,:,cue)=(((reblueB(poxBpreEventTime:poxBpostEventTime))-baselineMeanblueB))/(baselineStdblueB); 
-    DSzpurplepoxB(:,:,cue)=(((repurpleB(poxBpreEventTime:poxBpostEventTime))-baselineMeanpurpleB))/(baselineStdpurpleB);  
+if isnan(firstpoxBDS(:,cue))
+    preEventTimepoxBDS =NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+    postEventTimepoxBDS = NaN(1,2*periCueFrames+1); 
+    eventTimepoxBDS(:,:,cue)= NaN(1,2*periCueFrames+1,1);
+    firstpoxBDSblue(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
+    firstpoxBDSpurple(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
+    firstpoxBDSblueZ(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
+    firstpoxBDSpurpleZ(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
+elseif ~isnan(firstpoxBDS(:,cue))
+    preEventTimepoxBDS = firstpoxBDSshifted-periCueFrames; %earliest timepoint to examine is the shifted poxB onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+    postEventTimepoxBDS = firstpoxBDSshifted+periCueFrames; 
+    eventTimepoxBDS(:,:,cue)= cutTime(preEventTimepoxBDS:postEventTimepoxBDS);
+    firstpoxBDSblue(:,:,cue) = reblueB(preEventTimepoxBDS:postEventTimepoxBDS);  %extract the df data corresponding to this time window for blue
+    firstpoxBDSpurple(:,:,cue) = repurpleB(preEventTimepoxBDS:postEventTimepoxBDS);  %extract the df data corresponding to this time window for blue
+   
+   %TODO: Given indexing here, baseline for z score calc is 10s prior to cue (not 10s prior to PE)
+   
+    firstpoxBDSblueZ(:,:,cue)=(((reblueB(preEventTimepoxBDS:postEventTimepoxBDS))-baselineMeanblueB))/(baselineStdblueB); 
+    firstpoxBDSpurpleZ(:,:,cue)=(((repurpleB(preEventTimepoxBDS:postEventTimepoxBDS))-baselineMeanpurpleB))/(baselineStdpurpleB);  
 end
 else
- if isnan(firstpoxBafterDS(:,cue))
-    poxBpreEventTime =NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-    poxBpostEventTime = NaN(1,2*periCueFrames+1); 
-    eventTimepoxB(:,:,cue)= NaN(1,2*periCueFrames+1,1);
-    DSbluepoxB(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
-    DSpurplepoxB(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
-    DSzbluepoxB(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
-    DSzpurplepoxB(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
+ if isnan(firstpoxBDS(:,cue))
+    preEventTimepoxBDS =NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+    postEventTimepoxBDS = NaN(1,2*periCueFrames+1); 
+    eventTimepoxBDS(:,:,cue)= NaN(1,2*periCueFrames+1,1);
+    firstpoxBDSblue(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
+    firstpoxBDSpurple(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
+    firstpoxBDSblueZ(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
+    firstpoxBDSpurpleZ(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
     
-%    DSbluepoxB(:,:,cue) = DSbluepoxB;
-%    DSpurplepoxB(:,:,cue) =  DSpurplepoxB;
-%    DSzbluepoxB(:,:,cue)= DSzbluepoxB;  
-%    DSzpurplepoxB(:,:,cue)= DSzpurplepoxB; 
+%    firstpoxBDSblue(:,:,cue) = firstpoxBDSblue;
+%    firstpoxBDSpurple(:,:,cue) =  firstpoxBDSpurple;
+%    firstpoxBDSblueZ(:,:,cue)= firstpoxBDSblueZ;  
+%    firstpoxBDSpurpleZ(:,:,cue)= firstpoxBDSpurpleZ; 
  else   
-   poxBpreEventTime = PoxBShifted-periCueFrames; %earliest timepoint to examine is the shifted poxB onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-   poxBpostEventTime = PoxBShifted+periCueFrames;
-   eventTimepoxB= cat(3,eventTimepoxB,cutTime(poxBpreEventTime:poxBpostEventTime));
-   DSbluepoxB = cat(3, DSbluepoxB, reblueB(poxBpreEventTime:poxBpostEventTime));
-   DSpurplepoxB = cat(3, DSpurplepoxB, repurpleB(poxBpreEventTime:poxBpostEventTime));
-   DSzbluepoxB= cat(3,DSzbluepoxB,(((reblueB(poxBpreEventTime:poxBpostEventTime))-baselineMeanblueB)/(baselineStdblueB)));  
-   DSzpurplepoxB= cat(3,DSzpurplepoxB,(((repurpleB(poxBpreEventTime:poxBpostEventTime))-baselineMeanpurpleB)/(baselineStdpurpleB)));  
+   preEventTimepoxBDS = firstpoxBDSshifted-periCueFrames; %earliest timepoint to examine is the shifted poxB onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+   postEventTimepoxBDS = firstpoxBDSshifted+periCueFrames;
+   eventTimepoxBDS= cat(3,eventTimepoxBDS,cutTime(preEventTimepoxBDS:postEventTimepoxBDS));
+   firstpoxBDSblue = cat(3, firstpoxBDSblue, reblueB(preEventTimepoxBDS:postEventTimepoxBDS));
+   firstpoxBDSpurple = cat(3, firstpoxBDSpurple, repurpleB(preEventTimepoxBDS:postEventTimepoxBDS));
+   firstpoxBDSblueZ= cat(3,firstpoxBDSblueZ,(((reblueB(preEventTimepoxBDS:postEventTimepoxBDS))-baselineMeanblueB)/(baselineStdblueB)));  
+   firstpoxBDSpurpleZ= cat(3,firstpoxBDSpurpleZ,(((repurpleB(preEventTimepoxBDS:postEventTimepoxBDS))-baselineMeanpurpleB)/(baselineStdpurpleB)));  
 end
 end
 end
 
-%% Extract dF data from the peri-event window of interest for time locking at DS
+%% Extract data from the peri-event window of interest for time locking at DS
     %for the first cue, initialize arrays for dF and time surrounding cue
     if cue==1
         
@@ -756,10 +769,10 @@ if sesData(file).trainStageA==5|sesData(file).trainStageB== 5 %If the NS is pres
     firstpoxBafterNS(:,cue)= min(poxBNScell{:,cue}); %create a cell array with all port entries made per cue presentation- containing only non-nan values in poxADS
     %find closest value (min difference) in cutTime (the current time axis) to PEby subtraction
         for ts = 1:length(cutTime) %for each timestamp in cutTime 
-        NSPEBtimeDiff(1,ts) = abs(firstpoxBafterNS(:,cue)-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
+        NSDSfirstpoxBTimeDiff(1,ts) = abs(firstpoxBafterNS(:,cue)-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
         end
     
-    [~,PoxBNSShifted] = min(NSPEBtimeDiff);   
+    [~,PoxBNSShifted] = min(NSDSfirstpoxBTimeDiff);   
     else
     firstpoxBafterNS(:,cue)=nan;
     end
@@ -767,44 +780,44 @@ if sesData(file).trainStageA==5|sesData(file).trainStageB== 5 %If the NS is pres
 %% if want to time lock at NS PE define the frames (datapoints) around each portentry and find zscore
 if cue==1   
 if isnan(firstpoxAafterNS(:,cue))%  if don't have port entry during first cue then still initialize matricies for information to be added to
-    NSpoxApreEventTime = NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-    NSpoxApostEventTime = NaN(1,2*periCueFrames+1); 
+    NSpreEventTimepoxADS = NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+    NSpostEventTimepoxADS = NaN(1,2*periCueFrames+1); 
     NSeventTimepoxA(:,:,cue)= NaN(1,2*periCueFrames+1,1);
     NSbluepoxA(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
     NSpurplepoxA(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
     NSzbluepoxA(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
     NSzpurplepoxA(:,:,cue)=NaN(2*periCueFrames+1,1,1);     
 elseif ~isnan(firstpoxAafterNS(:,cue)) 
-    NSpoxApreEventTime = PoxANSShifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-    NSpoxApostEventTime = PoxANSShifted+periCueFrames; 
-    NSeventTimepoxA(:,:,cue)= cutTime(NSpoxApreEventTime:NSpoxApostEventTime);
-    NSbluepoxA(:,:,cue) = reblueA(NSpoxApreEventTime:NSpoxApostEventTime);  %extract the df data corresponding to this time window for blue
-    NSpurplepoxA(:,:,cue) = repurpleA(NSpoxApreEventTime:NSpoxApostEventTime);  %extract the df data corresponding to this time window for blue
-    NSzbluepoxA(:,:,cue)=(((reblueA(NSpoxApreEventTime:NSpoxApostEventTime))-baselineMeanblueA))/(baselineStdblueA); 
-    NSzpurplepoxA(:,:,cue)=(((repurpleA(NSpoxApreEventTime:NSpoxApostEventTime))-baselineMeanpurpleA))/(baselineStdpurpleA);  
+    NSpreEventTimepoxADS = PoxANSShifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+    NSpostEventTimepoxADS = PoxANSShifted+periCueFrames; 
+    NSeventTimepoxA(:,:,cue)= cutTime(NSpreEventTimepoxADS:NSpostEventTimepoxADS);
+    NSbluepoxA(:,:,cue) = reblueA(NSpreEventTimepoxADS:NSpostEventTimepoxADS);  %extract the df data corresponding to this time window for blue
+    NSpurplepoxA(:,:,cue) = repurpleA(NSpreEventTimepoxADS:NSpostEventTimepoxADS);  %extract the df data corresponding to this time window for blue
+    NSzbluepoxA(:,:,cue)=(((reblueA(NSpreEventTimepoxADS:NSpostEventTimepoxADS))-baselineMeanblueA))/(baselineStdblueA); 
+    NSzpurplepoxA(:,:,cue)=(((repurpleA(NSpreEventTimepoxADS:NSpostEventTimepoxADS))-baselineMeanpurpleA))/(baselineStdpurpleA);  
 end
 else
 if isnan(firstpoxAafterNS(:,cue))%  if don't have port entry during first cue then still initialize matricies for information to be added to
-    NSpoxApreEventTime = NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-    NSpoxApostEventTime = NaN(1,2*periCueFrames+1); 
+    NSpreEventTimepoxADS = NaN(1,2*periCueFrames+1); %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+    NSpostEventTimepoxADS = NaN(1,2*periCueFrames+1); 
     NSeventTimepoxA(:,:,cue)= NaN(1,2*periCueFrames+1,1);
     NSbluepoxA(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
     NSpurplepoxA(:,:,cue) = NaN(2*periCueFrames+1,1,1);  %extract the df data corresponding to this time window for blue
     NSzbluepoxA(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
     NSzpurplepoxA(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
     
-%    DSbluepoxA(:,:,cue) = DSbluepoxA;
-%    DSpurplepoxA (:,:,cue)=  DSpurplepoxA;
-%    DSzbluepoxA(:,:,cue)= DSzbluepoxA;  
-%    DSzpurplepoxA(:,:,cue)= DSzpurplepoxA; 
+%    firstpoxADSblue(:,:,cue) = firstpoxADSblue;
+%    firstpoxADSpurple (:,:,cue)=  firstpoxADSpurple;
+%    firstpoxADSblueZ(:,:,cue)= firstpoxADSblueZ;  
+%    firstpoxADSpurpleZ(:,:,cue)= firstpoxADSpurpleZ; 
     else
-   NSpoxApreEventTime = PoxANSShifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-   NSpoxApostEventTime = PoxANSShifted+periCueFrames;
-   NSeventTimepoxA= cat(3,NSeventTimepoxA,cutTime(NSpoxApreEventTime:NSpoxApostEventTime));
-   NSbluepoxA = cat(3, NSbluepoxA, reblueA(NSpoxApreEventTime:NSpoxApostEventTime));
-   NSpurplepoxA = cat(3, NSpurplepoxA, repurpleA(NSpoxApreEventTime:NSpoxApostEventTime));
-   NSzbluepoxA= cat(3,NSzbluepoxA,(((reblueA(NSpoxApreEventTime:NSpoxApostEventTime))-baselineMeanblueA)/(baselineStdblueA)));  
-   NSzpurplepoxA= cat(3,NSzpurplepoxA,(((repurpleA(NSpoxApreEventTime:NSpoxApostEventTime))-baselineMeanpurpleA)/(baselineStdpurpleA)));  
+   NSpreEventTimepoxADS = PoxANSShifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+   NSpostEventTimepoxADS = PoxANSShifted+periCueFrames;
+   NSeventTimepoxA= cat(3,NSeventTimepoxA,cutTime(NSpreEventTimepoxADS:NSpostEventTimepoxADS));
+   NSbluepoxA = cat(3, NSbluepoxA, reblueA(NSpreEventTimepoxADS:NSpostEventTimepoxADS));
+   NSpurplepoxA = cat(3, NSpurplepoxA, repurpleA(NSpreEventTimepoxADS:NSpostEventTimepoxADS));
+   NSzbluepoxA= cat(3,NSzbluepoxA,(((reblueA(NSpreEventTimepoxADS:NSpostEventTimepoxADS))-baselineMeanblueA)/(baselineStdblueA)));  
+   NSzpurplepoxA= cat(3,NSzpurplepoxA,(((repurpleA(NSpreEventTimepoxADS:NSpostEventTimepoxADS))-baselineMeanpurpleA)/(baselineStdpurpleA)));  
 end
 end
 
@@ -837,10 +850,10 @@ else
     NSzbluepoxB(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
     NSzpurplepoxB(:,:,cue)=NaN(2*periCueFrames+1,1,1); 
     
-%    DSbluepoxB(:,:,cue) = DSbluepoxB;
-%    DSpurplepoxB(:,:,cue) =  DSpurplepoxB;
-%    DSzbluepoxB(:,:,cue)= DSzbluepoxB;  
-%    DSzpurplepoxB(:,:,cue)= DSzpurplepoxB; 
+%    firstpoxBDSblue(:,:,cue) = firstpoxBDSblue;
+%    firstpoxBDSpurple(:,:,cue) =  firstpoxBDSpurple;
+%    firstpoxBDSblueZ(:,:,cue)= firstpoxBDSblueZ;  
+%    firstpoxBDSpurpleZ(:,:,cue)= firstpoxBDSpurpleZ; 
  else   
    NSpoxBpreEventTime = PoxBNSShifted-periCueFrames; %earliest timepoint to examine is the shifted poxB onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
    NSpoxBpostEventTime = PoxBNSShifted+periCueFrames;
@@ -966,13 +979,13 @@ meanDSzblueB = mean(DSzblueB, 3);
 meanDSzpurpleA = mean(DSzpurpleA, 3);
 meanDSzpurpleB = mean(DSzpurpleB, 3);
 
-meanDSzbluepoxA = nanmean(DSzbluepoxA, 3);
-meanDSzpurplepoxA = nanmean(DSzpurplepoxA, 3);
+meanfirstpoxADSblueZ = nanmean(firstpoxADSblueZ, 3);
+meanDSzpurplepoxA = nanmean(firstpoxADSpurpleZ, 3);
 
 
 if exist('poxB')==1  
-meanDSzbluepoxB = nanmean(DSzbluepoxB, 3);
-meanDSzpurplepoxB = nanmean(DSzpurplepoxB, 3);
+meanDSzbluepoxB = nanmean(firstpoxBDSblueZ, 3);
+meanDSzpurplepoxB = nanmean(firstpoxBDSpurpleZ, 3);
 
 end
 
@@ -1124,14 +1137,14 @@ sesData(file).poxADSlatency = poxADSlatencyCell;
 sesData(file).meanpoxADSlatency= nanmean(poxADSlatencyCell);
 sesData(file).DSpoxRatioA= DSpoxRatioA;
 
- sesData(file).poxApreEventTime = poxApreEventTime; 
- sesData(file).poxApostEventTime = poxApostEventTime; 
- sesData(file).eventTimepoxA= eventTimepoxA;
- sesData(file).DSbluepoxA = DSbluepoxA;  
- sesData(file).DSpurplepoxA =DSpurplepoxA;  
- sesData(file).DSzbluepoxA=DSzbluepoxA; 
- sesData(file).DSzpurplepoxA=DSzpurplepoxA; 
- sesData(file).meanDSzbluepoxA=meanDSzbluepoxA;
+ sesData(file).preEventTimepoxADS = preEventTimepoxADS; 
+ sesData(file).postEventTimepoxADS = postEventTimepoxADS; 
+ sesData(file).eventTimepoxADS= eventTimepoxADS;
+ sesData(file).firstpoxADSblue = firstpoxADSblue;  
+ sesData(file).firstpoxADSpurple =firstpoxADSpurple;  
+ sesData(file).firstpoxADSblueZ=firstpoxADSblueZ; 
+ sesData(file).firstpoxADSpurpleZ=firstpoxADSpurpleZ; 
+ sesData(file).meanfirstpoxADSblueZ=meanfirstpoxADSblueZ;
  sesData(file).meanDSzpurplepoxA=meanDSzpurplepoxA;
 
  if exist('poxB')==1
@@ -1139,13 +1152,13 @@ sesData(file).poxBDSlatency = poxBDSlatencyCell;
 sesData(file).meanpoxBDSlatency= nanmean(poxBDSlatencyCell);
 sesData(file).DSpoxRatioB= DSpoxRatioB;
 
- sesData(file).poxBpreEventTime = poxBpreEventTime; 
- sesData(file).poxBpostEventTime = poxBpostEventTime; 
- sesData(file).eventTimepoxB= eventTimepoxB;
- sesData(file).DSbluepoxB = DSbluepoxB;  
- sesData(file).DSpurplepoxB =DSpurplepoxB;  
- sesData(file).DSzbluepoxB=DSzbluepoxB; 
- sesData(file).DSzpurplepoxB=DSzpurplepoxB;
+ sesData(file).preEventTimepoxBDS = preEventTimepoxBDS; 
+ sesData(file).postEventTimepoxBDS = postEventTimepoxBDS; 
+ sesData(file).eventTimepoxBDS= eventTimepoxBDS;
+ sesData(file).firstpoxBDSblue = firstpoxBDSblue;  
+ sesData(file).firstpoxBDSpurple =firstpoxBDSpurple;  
+ sesData(file).firstpoxBDSblueZ=firstpoxBDSblueZ; 
+ sesData(file).firstpoxBDSpurpleZ=firstpoxBDSpurpleZ;
  sesData(file).meanDSzbluepoxB=meanDSzbluepoxB;
  sesData(file).meanDSzpurplepoxB=meanDSzpurplepoxB;
  end
@@ -1273,11 +1286,11 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
                 subjData.(subjField)(i).meanpoxDSlatency= sesData(i).meanpoxADSlatency;
 
               
-               subjData.(subjField)(i).DSbluepox = sesData(i).DSbluepoxA;  
-               subjData.(subjField)(i).DSpurplepox =sesData(i).DSpurplepoxA;  
-               subjData.(subjField)(i).DSzbluepox=sesData(i).DSzbluepoxA; 
-               subjData.(subjField)(i).DSzpurplepox=sesData(i).DSzpurplepoxA; 
-               subjData.(subjField)(i).meanDSzbluepox=sesData(i).meanDSzbluepoxA;
+               subjData.(subjField)(i).DSbluepox = sesData(i).firstpoxADSblue;  
+               subjData.(subjField)(i).DSpurplepox =sesData(i).firstpoxADSpurple;  
+               subjData.(subjField)(i).DSzbluepox=sesData(i).firstpoxADSblueZ; 
+               subjData.(subjField)(i).DSzpurplepox=sesData(i).firstpoxADSpurpleZ; 
+               subjData.(subjField)(i).meanDSzbluepox=sesData(i).meanfirstpoxADSblueZ;
                subjData.(subjField)(i).meanDSzpurplepox=sesData(i).meanDSzpurplepoxA;
                
 
@@ -1340,10 +1353,10 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
 
                 subjData.(subjField)(i).meanpoxDSlatency= sesData(i).meanpoxBDSlatency;
 
-               subjData.(subjField)(i).DSbluepox = sesData(i).DSbluepoxB;  
-               subjData.(subjField)(i).DSpurplepox =sesData(i).DSpurplepoxB;  
-               subjData.(subjField)(i).DSzbluepox=sesData(i).DSzbluepoxB; 
-               subjData.(subjField)(i).DSzpurplepox=sesData(i).DSzpurplepoxB; 
+               subjData.(subjField)(i).DSbluepox = sesData(i).firstpoxBDSblue;  
+               subjData.(subjField)(i).DSpurplepox =sesData(i).firstpoxBDSpurple;  
+               subjData.(subjField)(i).DSzbluepox=sesData(i).firstpoxBDSblueZ; 
+               subjData.(subjField)(i).DSzpurplepox=sesData(i).firstpoxBDSpurpleZ; 
                subjData.(subjField)(i).meanDSzbluepox=sesData(i).meanDSzbluepoxB;
                 subjData.(subjField)(i).meanDSzpurplepox=sesData(i).meanDSzpurplepoxB;
 
@@ -1553,8 +1566,8 @@ if ~strcmp(subjField{i},'ratNaN')
         DSzpurpleAllTrials= DSzpurpleAllTrials.'; %transpose for better readability
       
    
-        DSzbluepoxAllTrials= cat(2,currentSubj.meanDSzbluepox);
-        DSzbluepoxAllTrials= DSzbluepoxAllTrials.'; %transpose for better readability
+        firstpoxADSblueZllTrials= cat(2,currentSubj.meanDSzbluepox);
+        firstpoxADSblueZllTrials= firstpoxADSblueZllTrials.'; %transpose for better readability
         DSzpurplepoxAllTrials= cat(2,currentSubj.meanDSzpurplepox);
         DSzpurplepoxAllTrials= DSzpurplepoxAllTrials.'; %transpose for better readability
 
@@ -1605,8 +1618,8 @@ if ~strcmp(subjField{i},'ratNaN')
      end
  % shared color bar for pox time locked data    
       if  sum(strcmp(fn,'loxNSmat'))==1; 
-        bottompoxDS = min(min(min(DSzbluepoxAllTrials)), min(min(DSzpurplepoxAllTrials)));
-        toppoxDS = max(max(max(DSzbluepoxAllTrials)), max(max(DSzpurplepoxAllTrials)));
+        bottompoxDS = min(min(min(firstpoxADSblueZllTrials)), min(min(DSzpurplepoxAllTrials)));
+        toppoxDS = max(max(max(firstpoxADSblueZllTrials)), max(max(DSzpurplepoxAllTrials)));
         %for NS
         bottompoxNS = min(min(min(NSzbluepoxAllTrials)), min(min(NSzpurplepoxAllTrials)));
         toppoxNS = max(max(max(NSzbluepoxAllTrials)), max(max(NSzpurplepoxAllTrials)));
@@ -1618,8 +1631,8 @@ if ~strcmp(subjField{i},'ratNaN')
 %         bottomNoNanpurple= min(min(min(currentSubjDSzpurpleSortedNoNan)), min(min(currentSubjNSzpurpleSortedNoNan)));
 %         topNoNanpurple= max(max(max(currentSubjDSzpurpleSortedNoNan)), max(max(currentSubjNSzpurpleSortedNoNan)));
      else % if on lower training stage and still want graph
-        bottompoxNS = min(min(min(DSzbluepoxAllTrials)), min(min(DSzpurplepoxAllTrials)));
-        toppoxDS = max(max(max(DSzbluepoxAllTrials)), max(max(DSzpurplepoxAllTrials)));
+        bottompoxNS = min(min(min(firstpoxADSblueZllTrials)), min(min(DSzpurplepoxAllTrials)));
+        toppoxDS = max(max(max(firstpoxADSblueZllTrials)), max(max(DSzpurplepoxAllTrials)));
 %          bottomblue = min(min(DSzblueAllTrials));
 %          topblue = max(max(DSzblueAllTrials));
 %          bottomNoNanblue= min(min(currentSubjDSzblueSortedNoNan));
@@ -1730,7 +1743,7 @@ end
         end
         
         %plot blue DS
-        heatDSzblue= imagesc(timeLock,subjTrial,DSzbluepoxAllTrials);
+        heatDSzblue= imagesc(timeLock,subjTrial,firstpoxADSblueZllTrials);
         title(strcat('rat ', num2str(ratID), 'avg blue z score response to DS ', '(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
         xlabel('seconds from first PE within cue');
         ylabel('training day');
