@@ -1429,8 +1429,7 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
                 subjData.(subjField)(i).DSdf= sesData(i).DSdfB;
                 subjData.(subjField)(i).meanDSdf= sesData(i).meanDSdfB;
 
-                    %Timelocked to FIRclose all
-                    ST PE after DS         
+                    %Timelocked to FIRST PE after DS         
                subjData.(subjField)(i).firstpoxDSblue = sesData(i).firstpoxBDSblue;  
                subjData.(subjField)(i).firstpoxDSpurple =sesData(i).firstpoxBDSpurple;  
                subjData.(subjField)(i).firstpoxDSblueZ=sesData(i).firstpoxBDSblueZ; 
