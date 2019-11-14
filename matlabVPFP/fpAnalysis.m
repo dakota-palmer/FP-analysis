@@ -13,14 +13,14 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-metaDataAddress = 'Z:\Ally\GAD-VPFP DS Training\nexFilesVPFP\GAD-VPFP_Index.xlsx'; % excel file location 
+metaDataAddress = 'Z:\Dakota\Photometry\VP-VTA-FP\round2\Magazine training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
 
-nexAddress =  'Z:\Ally\GAD-VPFP DS Training\nexFilesVPFP\'; % nex file location 
+nexAddress =  'Z:\Dakota\Photometry\VP-VTA-FP\round2\Magazine training\nexFilesVP-VTA-FP-round2\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-experimentName= 'GAD-VPFP'; %change experiment name for automatic naming of figures
+experimentName= 'VP-VTA-FP'; %change experiment name for automatic naming of figures
 
 runAnalysis= 1; %logic gate for running typical DS training analysis... will not run if an atypical DS training session is loaded (e.g. magazine training session where stage =0)
 
@@ -251,18 +251,24 @@ fitA= controlFit(reblueA, repurpleA);
 fitB= controlFit(reblueB, repurpleB);
 
 %% Fitted plots %%
-% figure(sesNum)
-% subplot (2,1,1) %fitted overlaid on same subplot as blue&purple
-%hold on
-% plot(cutTime, fitA,'k');
-% title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' ControlFit box A'));
-% legend('purple','blue','controlfit')
-% figure(sesNum)
-% subplot (2,1,2)
-%hold on
-% plot(cutTime, fitB,'k');
-% title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' ControlFit box B'));
-% legend('purple','blue','controlfit')
+figure(sesNum)
+subplot (2,1,1) %fitted purple overlaid on same subplot as blue
+hold on
+plot(cutTime, reblueA, 'b');
+plot(cutTime, fitA,'m');
+title(strcat('Rat #',num2str(sesData(file).ratA),' training day :', num2str(sesData(file).trainDay), ' ControlFit box A'));
+legend('blue (465)','fitted purple (405)')
+figure(sesNum)
+subplot (2,1,2)
+hold on
+plot(cutTime, reblueB, 'b');
+plot(cutTime, fitB,'m');
+title(strcat('Rat #',num2str(sesData(file).ratB),' training day :', num2str(sesData(file).trainDay), ' ControlFit box B'));
+legend('blue (465)','fitted purple (405)')
+
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+saveas(gcf, strcat(figPath, experimentName, '_rat_', num2str(sesData(file).ratA),'_&_ ', num2str(sesData(file).ratB), '_Fitted_signal_day_', num2str(sesData(file).trainDay), '.fig')); %save the current figure in fig format
+close; %close 
 
 %% Delta F/F 
  dfA = deltaFF(reblueA,fitA); %This is dF for boxA in %, calculated by running the deltaFF function on the resampled blue data from boxA and the fitted data from boxA
@@ -1485,7 +1491,7 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
         if ~isnan(subj)
             subjData.(subjField)= subjData.(subjField)(~cellfun(@isempty,{subjData.(subjField).trainDay})); %Remove empty cells from subjData (TODO: apply this method to SubjData itself)
         end
-        end
+        
   
 
     %% Subject heat plot organization
@@ -2289,6 +2295,7 @@ end
     % %  
     % %     currentSubj= subjData.(subjField{i}); 
 end
+    end
 end
     disp('All done');    
 
