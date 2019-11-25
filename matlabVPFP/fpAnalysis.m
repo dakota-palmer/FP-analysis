@@ -20,7 +20,7 @@ nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-experimentName= 'VP-VTA-FP'; %change experiment name for automatic naming of figures
+experimentName= 'VPFP'; %change experiment name for automatic naming of figures
 
 runAnalysis= 1; %logic gate for running typical DS training analysis... will not run if an atypical DS training session is loaded (e.g. magazine training session where stage =0)
 
@@ -1300,8 +1300,6 @@ if runAnalysis ==1 %only run this if all sessions loaded are from valid DS train
 
     %% Reorganize data by subject instead of by box
 
-    %Heatmap of z score cue response across trials
-
     %identify unique rats and associate data from all sessions with rat
     %instead of boxF
     rats= cat(1, sesData.ratA, sesData.ratB);
@@ -2297,6 +2295,11 @@ end
 end
     end
 end
+
+    %% Save subjData struct as a file for subsequent analysis
+    
+    save(strcat(experimentName,date),'subjData');
+    
     disp('All done');    
 
 

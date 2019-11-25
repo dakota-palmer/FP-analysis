@@ -151,7 +151,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     %% could add preprocessing here - e.g. downsample to 40hz to save space
     
     %% Save all data for a given session to struct for easy access
-
+    
         %Events
     sesData(file).DS = DS;
 
@@ -195,6 +195,7 @@ for rat = 1:numel(rats)
                 trialCount= trialCount+1; %increment counter
                 
                 %Metadata
+                subjData.(subjField)(i).experiment= experimentName
                 subjData.(subjField)(i).rat= subj;
                 subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageA;
