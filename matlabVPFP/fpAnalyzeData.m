@@ -83,8 +83,10 @@ for subj= 1:numel(subjects)
     
     disp(strcat('plotting photometry data for_', subjects{subj}));
     
-    figure(figureCount+subj) %one figure per subject, with all sessions subplotted
+    figure(figureCount) %one figure per subject, with all sessions subplotted
     figureCount= figureCount+1;
+    
+   sgtitle(strcat(currentSubj(1).experiment, subjects{subj}, 'downsampled photometry traces')); %add big title above all subplots
     
    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
        
@@ -99,7 +101,7 @@ for subj= 1:numel(subjects)
         xlabel('time (s)');
         ylabel('mV');
         legend('blue (465)',' purple (405)');
-   end
+   end  
         %make figure full screen, save, and close this figure
         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 %         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
@@ -223,4 +225,4 @@ end
 %        
 % end
 
-disp('all done');
+disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
