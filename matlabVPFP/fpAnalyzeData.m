@@ -1,39 +1,105 @@
 %fp data analysis 
 %11/25/19
-% clear
-% clc
-% close all
-% 
+clear
+clc
+close all
+
 figPath = 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
-% 
+
 % %% Load struct containing data organized by subject
+
 load(uigetfile); %choose the subjData file to open for your experiment
 
 subjects= fieldnames(subjData); %access subjData struct with dynamic fieldnames
 
 
-%% Within-subjects plots
+%% Behavioral plots- in progress
+
+% PLOT PORT ENTRY COUNT ACROSS DAYS FOR ALL SUBJECTS - not very meaningful,  but good template for DS PE ratio or latency
+figure() %one figure with poxCount across sessions for all subjects
 for subj= 1:numel(subjects)
    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
        
        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
       
-       %% Raw session plots- within subjects
-        figure(subj) %one figure per subject, with all sessions subplotted
-        subplot(numel(subjData.(subjects{subj})),1,session); 
-        hold on
-        plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b');
-        plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m');
-        title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled '));
-        xlabel('time (s)');
-        ylabel('mV');
-        legend('blue (465)',' purple (405)');
+       %Plot number of port entries across all sessions
+       
+        poxCount(session)= numel(currentSubj(session).pox); %get the total number of port entries across days
+        days(session)= currentSubj(session).trainDay; %keep track of days to associate with poxCount
    end
-        %make figure full screen, save, and close this figure
-        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-        saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
-        close; %close 
+   hold on;
+   scatter(days, poxCount)
 end
+
+title(strcat(currentSubj(session).experiment,' port entry count across days'));
+xlabel('training day');
+ylabel('port entry count');
+legend(subjects); %add rats to legend
+
+%make figure full screen, save, and close this figure
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'port_entries_by_session','.fig'));
+%         close; %close 
+
+%% Between subjects behavioral plots
+%PLOT AVERAGE PORT ENTRY COUNT BETWEEN DAYS FOR ALL ANIMALS
+figure() %one figure with avg poxCount for all subjects
+for subj= 1:numel(subjects)
+   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+       
+       currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
+      
+       %Plot number of port entries across all sessions
+       
+        poxCount(session)= numel(currentSubj(session).pox); %get the total number of port entries across days
+   end
+   subjectLabel(subj)= currentSubj(session).rat; %get the rat # for proper x axis
+   meanpoxCount(subj)= mean(poxCount);
+   hold on;
+   bar(subjectLabel,meanpoxCount)
+end
+
+title(strcat(currentSubj(session).experiment,' avg port entry count across all sessions by subject'));
+xlabel('subject');
+ylabel('avg port entry count');
+
+%make figure full screen, save, and close this figure
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'average_port_entries_by_subject','.fig'));
+%         close; %close 
+
+
+
+%% Within-subjects photometry plots - this works but it's a lot of data so may be slow 
+% for subj= 1:numel(subjects)
+%    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+%        
+%        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
+%       
+%        %% Raw session plots- within subjects
+%         figure(subj) %one figure per subject, with all sessions subplotted
+%         subplot(numel(subjData.(subjects{subj})),1,session); 
+%         hold on
+%         plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b');
+%         plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m');
+%         title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled '));
+%         xlabel('time (s)');
+%         ylabel('mV');
+%         legend('blue (465)',' purple (405)');
+%    end
+%         %make figure full screen, save, and close this figure
+%         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+%         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
+%         close; %close 
+% end
+
+
+
+
+
+
+
+
 
 % %% Within-subjects event-triggered analysis- in progress
 % for subj= 1:numel(subjects) %for each subject
@@ -143,3 +209,5 @@ end
 %    end
 %        
 % end
+
+disp('all done');

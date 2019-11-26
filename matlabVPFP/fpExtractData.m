@@ -6,21 +6,22 @@ clc
 close all
 %originally adapted from JocelynPhotometryRetro.m
 
-%Make sure you have the vpfpIndex excel sheet filled out properly and paths are correct
+%Make sure you have the vpfpIndex excel sheet filled out properly and paths are correct!
+%Make sure experiment name is correct!
 
 %% Use excel spreadsheet as index to load all .NEXs along with subject # and experiment details etc.
 
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-metaDataAddress = 'Z:\Dakota\Photometry\VP-VTA-FP\round2\Magazine training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
+metaDataAddress = 'C:\Users\Dakota\Desktop\vpfpData\nexFiles_VPFP\vpfp_metadata.xlsx'; % excel file location 
 
-nexAddress =  'Z:\Dakota\Photometry\VP-VTA-FP\round2\Magazine training\nexFilesVP-VTA-FP-round2\'; % nex file location 
+nexAddress =  'C:\Users\Dakota\Desktop\vpfpData\nexFiles_VPFP\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
-figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
+% figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-experimentName= 'VP-VTA-FP'; %change experiment name for automatic naming of figures
+experimentName= 'VPFP-QuantNeuro'; %change experiment name for automatic naming of figures
 
 %% Loop through each nex file, extracting data
 
@@ -187,11 +188,11 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     sesData(file).outB= outB;
     
         %Photometry signals
-    subjData.(subjField)(i).cutTime= cutTime;
-    sesData(file).blueA = blueA;
-    sesData(file).blueB = blueB;
-    sesData(file).purpleA = purpleA;
-    sesData(file).purpleB = purpleB;
+    sesData(file).cutTime= cutTime;
+    sesData(file).reblueA = reblueA;
+    sesData(file).reblueB = reblueB;
+    sesData(file).repurpleA = repurpleA;
+    sesData(file).repurpleB = repurpleB;
 
     if sesData(file).trainStageA==5|sesData(file).trainStageB==5 %only stage 5 has the NS
         sesData(file).NS= NS;
@@ -226,7 +227,7 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).box= 'box A';
                 
                 %Photometry signals
-                subjData.(subjField)(i).cutTime= cutTime;
+                subjData.(subjField)(i).cutTime= sesData(i).cutTime;
                 subjData.(subjField)(i).reblue= sesData(i).reblueA;
                 subjData.(subjField)(i).repurple= sesData(i).repurpleA;
 
@@ -238,7 +239,7 @@ for rat = 1:numel(rats)
 
                 if subjData.(subjField)(i).trainStage== 5 %NS only on stage 5
                 
-                    subjData.subjField(i).NS= sesData(i).NS;
+                    subjData.(subjField)(i).NS= sesData(i).NS;
                 end
                 
         %BOX B
@@ -253,8 +254,8 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).box= 'box B';
 
                 %Photometry signals
-                subjData.(subjField)(i).cutTime= cutTime;
-                subjData.(subjField)(i).bluere= sesData(i).reblueB;
+                subjData.(subjField)(i).cutTime= sesData(i).cutTime;
+                subjData.(subjField)(i).reblue= sesData(i).reblueB;
                 subjData.(subjField)(i).repurple= sesData(i).repurpleB;
 
                 %events
@@ -278,3 +279,5 @@ for rat = 1:numel(rats)
     end  
 end %end subject loop
 
+%save the subjData struct for later analysis
+save(strcat(experimentName,'-', date), 'subjData');
