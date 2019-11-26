@@ -148,7 +148,30 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
       end
     end
       
-    %% could add preprocessing here - e.g. downsample to 40hz to save space
+    %% Preprocessing- downsample to 40Hz and remove some datapoints at beginning & end to remove artifacts
+    %Downsample to 40hz from fs
+    fs = data.contvars{1,1}.ADFrequency; %Frequency of sampling- todo: double check this (should not be a fraction?)
+
+    reblueA=resample(blueA,40,round(fs));       %Downsample to 40Hz from fs %consider using downsample() function here instead of resample()?
+    repurpleA=resample(purpleA,40,round(fs));
+
+    reblueB=resample(blueB,40,round(fs));
+    repurpleB=resample(purpleB,40,round(fs));
+    
+    fs=40;    
+    
+    reTime= linspace(data.tbeg, data.tend, length(reblueA));     %Create time axis in seconds based on this resampling- so that each intensity value has a corresponding timestamp
+
+    % remove several initial and final data points to eliminate artifacts
+    numStartExclude= 400;  % define the number of data points to exclude from end- here 400 = 10s of data(remember, 40Hz downsample so 400/40 = 10s)
+    numEndExclude = 400; % define the number of data points to exclude from beginning- here 400 = 10s of data(remember, 40Hz downsample so 400/40 = 10s)
+    repurpleA = repurpleA(numStartExclude:end-numEndExclude);    % 405nm data from box A ; here I simply redefined repurpleA as rePurpleA minus the number of excluded data points from both the beginning and end defined above (400)
+    reblueA = reblueA(numStartExclude:end-numEndExclude);       % 465nm data from box A
+
+    repurpleB = repurpleB(numStartExclude:end-numEndExclude);   % 405nm data from box B
+    reblueB = reblueB(numStartExclude:end-numEndExclude);       % 465nm data from box B
+
+    cutTime = reTime(numStartExclude:end-numEndExclude);        % define cutTime as a new time axis w/o removed points- remember each intensity value should have a corresponding timestamp
     
     %% Save all data for a given session to struct for easy access
     
@@ -164,6 +187,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     sesData(file).outB= outB;
     
         %Photometry signals
+    subjData.(subjField)(i).cutTime= cutTime;
     sesData(file).blueA = blueA;
     sesData(file).blueB = blueB;
     sesData(file).purpleA = purpleA;
@@ -202,8 +226,9 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).box= 'box A';
                 
                 %Photometry signals
-                subjData.(subjField)(i).blue= sesData(i).blueA;
-                subjData.(subjField)(i).purple= sesData(i).purpleA;
+                subjData.(subjField)(i).cutTime= cutTime;
+                subjData.(subjField)(i).reblue= sesData(i).reblueA;
+                subjData.(subjField)(i).repurple= sesData(i).repurpleA;
 
                 
                 subjData.(subjField)(i).DS= sesData(i).DS;
@@ -221,14 +246,16 @@ for rat = 1:numel(rats)
                  trialCount= trialCount+1; %increment counter
 
                 %Metadata
+                subjData.(subjField)(i).experiment= experimentName
                 subjData.(subjField)(i).rat= subj;
                 subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageB;
                 subjData.(subjField)(i).box= 'box B';
 
                 %Photometry signals
-                subjData.(subjField)(i).blue= sesData(i).blueB;
-                subjData.(subjField)(i).purple= sesData(i).purpleB;
+                subjData.(subjField)(i).cutTime= cutTime;
+                subjData.(subjField)(i).bluere= sesData(i).reblueB;
+                subjData.(subjField)(i).repurple= sesData(i).repurpleB;
 
                 %events
 

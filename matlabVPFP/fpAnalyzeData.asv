@@ -35,7 +35,7 @@ for subj= 1:numel(subjects)
         close; %close 
 end
 
-% %% Within-subjects event-triggered analysis- in progress
+% %% Within-subjects event-triggered analysis
 % for subj= 1:numel(subjects) %for each subject
 %    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
 %        
