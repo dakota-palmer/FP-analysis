@@ -12,11 +12,15 @@ load(uigetfile); %choose the subjData file to open for your experiment
 
 subjects= fieldnames(subjData); %access subjData struct with dynamic fieldnames
 
+figureCount= 1 ; %keep track of figure # throughout to prevent overwriting
 
 %% Behavioral plots- in progress
 
 % PLOT PORT ENTRY COUNT ACROSS DAYS FOR ALL SUBJECTS - not very meaningful,  but good template for DS PE ratio or latency
-figure() %one figure with poxCount across sessions for all subjects
+disp('plotting port entry counts')
+
+figure(figureCount) %one figure with poxCount across sessions for all subjects
+figureCount= figureCount+1;
 for subj= 1:numel(subjects)
    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
        
@@ -43,7 +47,11 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before s
 
 %% Between subjects behavioral plots
 %PLOT AVERAGE PORT ENTRY COUNT BETWEEN DAYS FOR ALL ANIMALS
-figure() %one figure with avg poxCount for all subjects
+
+disp('plotting avg port entry counts by animal');
+
+figure(figureCount) %one figure with avg poxCount for all subjects
+figureCount= figureCount+1;
 for subj= 1:numel(subjects)
    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
        
@@ -70,28 +78,33 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before s
 
 
 
-%% Within-subjects photometry plots - this works but it's a lot of data so may be slow 
-% for subj= 1:numel(subjects)
-%    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
-%        
-%        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
-%       
-%        %% Raw session plots- within subjects
-%         figure(subj) %one figure per subject, with all sessions subplotted
-%         subplot(numel(subjData.(subjects{subj})),1,session); 
-%         hold on
-%         plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b');
-%         plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m');
-%         title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled '));
-%         xlabel('time (s)');
-%         ylabel('mV');
-%         legend('blue (465)',' purple (405)');
-%    end
-%         %make figure full screen, save, and close this figure
-%         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+%% Within-subjects photometry plots - this works but it's a lot of data and is inefficient so may be slow 
+for subj= 1:numel(subjects)
+    
+    disp(strcat('plotting photometry data for_', subjects{subj}));
+    
+    figure(figureCount+subj) %one figure per subject, with all sessions subplotted
+    figureCount= figureCount+1;
+    
+   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+       
+       currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
+      
+       %% Raw session plots- within subjects
+        subplot(numel(subjData.(subjects{subj})),1,session); 
+        hold on
+        plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b');
+        plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m');
+        title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled '));
+        xlabel('time (s)');
+        ylabel('mV');
+        legend('blue (465)',' purple (405)');
+   end
+        %make figure full screen, save, and close this figure
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 %         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
 %         close; %close 
-% end
+end
 
 
 
