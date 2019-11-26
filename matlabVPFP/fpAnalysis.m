@@ -10,9 +10,6 @@ close all
 
 %% Use excel spreadsheet as index to load all .NEXs along with subject # and experiment details etc.
 
-% TODO: read whole index and analyze >2 rats at a time
-% TODO: fix rat names and other sesData (always showing 2 and 3 currently)
-
 metaDataAddress = 'Z:\Dakota\Photometry\VP-VTA-FP\round2\Magazine training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
 
 nexAddress =  'Z:\Dakota\Photometry\VP-VTA-FP\round2\Magazine training\nexFilesVP-VTA-FP-round2\'; % nex file location 
