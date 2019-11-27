@@ -14,9 +14,9 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-metaDataAddress = 'C:\Users\Dakota\Desktop\vpfpData\nexFiles_VPFP\vpfp_metadata.xlsx'; % excel file location 
+metaDataAddress = 'C:\Users\capn1\Desktop\nexFiles_VPFP\vpfp_metadata.xlsx'; % excel file location 
 
-nexAddress =  'C:\Users\Dakota\Desktop\vpfpData\nexFiles_VPFP\'; % nex file location 
+nexAddress =  'C:\Users\capn1\Desktop\nexFiles_VPFP\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 % figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
@@ -260,7 +260,7 @@ for rat = 1:numel(rats)
 
                 %events
 
-
+                subjData.(subjField)(i).DS= sesData(i).DS;
                 subjData.(subjField)(i).pox= sesData(i).poxB;
                 subjData.(subjField)(i).out= sesData(i).outB;
                 subjData.(subjField)(i).lox= sesData(i).loxB;
