@@ -113,7 +113,6 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before s
 
 %% Event-Triggered Analyses %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Within-subjects event-triggered analysis- in progress
-
 for subj= 1:numel(subjects) %for each subject
     
         currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
@@ -128,9 +127,10 @@ for subj= 1:numel(subjects) %for each subject
         slideTime = 400; %define time window before cue onset to get baseline mean/stdDev for calculating sliding z scores- 400 for 10s (remember 400/40hz ~10s)
               
    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
-     
+       tic
+       
        clear timeDiff %this is cleared between sessions to prevent spillover
-      
+             
        disp(strcat('running DS-triggered analysis subject ', num2str(subj), '/', num2str(numel(subjects)), ' session ', num2str(session), '/', num2str(numel(currentSubj))));
       
         %%%%%TIMELOCK TO DS
@@ -183,48 +183,54 @@ for subj= 1:numel(subjects) %for each subject
 
                 eventTimeDS = currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS); %define the time axis for the event (cue onset +/- periCueTime)
 
-                %blue signal indexed 20s before and after cue 
-                subjDataAnalyzed.(subjects{subj}).DSblue = currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);  %extract the raw data corresponding to this time window for blue
+                  DSblue{session}= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS); 
+                  subjDataAnalyzed.(subjects{subj})(session).DSblue= DSblue;
 
-                %repear for purple signal
-                subjDataAnalyzed.(subjects{subj}).DSpurple = currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);  %extract the raw data corresponding to this time window for purple
-
-               %calculate zscore for each point in the peri-event period based on
-               %baseline mean and stdDev in the preceding 10s for blue and purple
-               subjDataAnalyzed.(subjects{subj}).DSzblue=(((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue);  
-
-               subjDataAnalyzed.(subjects{subj}).DSzpurple=(((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))-baselineMeanpurple))/(baselineStdpurple);  
+%                 %blue signal indexed 20s before and after cue 
+%                 subjDataAnalyzed.(subjects{subj})(session).DSblue = currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);  %extract the raw data corresponding to this time window for blue
+% 
+%                 %repear for purple signal
+%                 subjDataAnalyzed.(subjects{subj})(session).DSpurple = currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);  %extract the raw data corresponding to this time window for purple
+% 
+%                %calculate zscore for each point in the peri-event period based on
+%                %baseline mean and stdDev in the preceding 10s for blue and purple
+%                subjDataAnalyzed.(subjects{subj})(session).DSzblue=(((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue);  
+% 
+%                subjDataAnalyzed.(subjects{subj})(session).DSzpurple=(((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))-baselineMeanpurple))/(baselineStdpurple);  
 
 
             else        %for subsequent cues (~=1), add onto these arrays as new 3d pages        
                 eventTimeDS = cat(3,eventTimeDS,currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS)); %concatenate in the 3rd dimension (such that each cue has its own 2d page with the surrounding cue-related data)
 
-                %for blue
-                subjDataAnalyzed.(subjects{subj}).DSblue = cat(3, subjDataAnalyzed.(subjects{subj}).DSblue, currentSubj(session).reblue(preEventTimeDS:postEventTimeDS));
-                %for purple
-                subjDataAnalyzed.(subjects{subj}).DSpurple = cat(3, subjDataAnalyzed.(subjects{subj}).DSpurple, currentSubj(session).repurple(preEventTimeDS:postEventTimeDS));
-                %for blue
-                subjDataAnalyzed.(subjects{subj}).DSzblue= cat(3,subjDataAnalyzed.(subjects{subj}).DSzblue,(((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue)/(baselineStdblue)));  
-                %for purple
-                subjDataAnalyzed.(subjects{subj}).DSzpurple= cat(3,subjDataAnalyzed.(subjects{subj}).DSzpurple,(((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))-baselineMeanpurple)/(baselineStdpurple)));  
+                DSblue{session}= cat(3,DSblue{session}, currentSubj(session).reblue(preEventTimeDS:postEventTimeDS));
+                subjDataAnalyzed.(subjects{subj})(session).DSblue = DSblue{session};
+                
+%                 %for blue
+%                 subjDataAnalyzed.(subjects{subj})(session).DSblue = cat(3, subjDataAnalyzed.(subjects{subj}).DSblue, currentSubj(session).reblue(preEventTimeDS:postEventTimeDS));
+%                 %for purple
+%                 subjDataAnalyzed.(subjects{subj})(session).DSpurple = cat(3, subjDataAnalyzed.(subjects{subj}).DSpurple, currentSubj(session).repurple(preEventTimeDS:postEventTimeDS));
+%                 %for blue
+%                 subjDataAnalyzed.(subjects{subj})(session).DSzblue= cat(3,subjDataAnalyzed.(subjects{subj}).DSzblue,(((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue)/(baselineStdblue)));  
+%                 %for purple
+%                 subjDataAnalyzed.(subjects{subj})(session).DSzpurple= cat(3,subjDataAnalyzed.(subjects{subj}).DSzpurple,(((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))-baselineMeanpurple)/(baselineStdpurple)));  
+%          
             end
             
-            %get the mean response to the cue for this session
-            subjDataAnalyzed.(subjects{subj}).meanDSblue = subjDataAnalyzed.(subjects{subj}).mean(DSblueA, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
-            meanDSblueB = mean(DSblueB, 3);
+            %get the mean response to the DS for this session
+%             subjDataAnalyzed.(subjects{subj})(session).meanDSblue = mean(subjDataAnalyzed.(subjects{subj})(session).DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+% 
+%             subjDataAnalyzed.(subjects{subj})(session).meanDSpurple = mean(subjDataAnalyzed.(subjects{subj})(session).DSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+% 
+%             subjDataAnalyzed.(subjects{subj})(session).meanDSzblue = mean(subjDataAnalyzed.(subjects{subj})(session).DSzblue, 3);
+% 
+%             subjDataAnalyzed.(subjects{subj})(session).meanDSzpurple = mean(subjDataAnalyzed.(subjects{subj})(session).DSzpurple, 3);
 
-            meanDSpurpleA = mean(DSpurpleA, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
-            meanDSpurpleB = mean(DSpurpleB, 3);
-
-            meanDSzblueA = mean(DSzblueA, 3);
-            meanDSzblueB = mean(DSzblueB, 3);
-
-            meanDSzpurpleA = mean(DSzpurpleA, 3);
-            meanDSzpurpleB = mean(DSzpurpleB, 3);
-
+toc
         end
-    end
+   end
+       
 end
+
 
 %% Visualize analyzed data from subjDataAnalyzed struct %%%%%%%%%%%%%%%%%%%
 
@@ -234,10 +240,10 @@ subjectsAnalyzed = fieldnames(subjDataAnalyzed);
 %% HEAT PLOT OF RESPONSE TO DS (by trial)
 
 %here, we'll pull from the subjDataAnalyzed struct to make our heatplots
-
+tic
 for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
-   for session = 1:numel(subjData.(subjectsAnalyzed{subj})) %for each training session this subject completed
-       currentSubj= subjData.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
+       currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
      
         %photometry signals sorted by trial, timelocked to DS
         subjDataAnalyzed.(subjectsAnalyzed{subj}).DSzblueAllTrials= cat(2,currentSubj.meanDSzblue).';%transpose for better readability
@@ -248,7 +254,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
    
    end %end session loop
 end %end subject loop
-
+toc
 %% End of file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
 
