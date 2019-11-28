@@ -111,6 +111,20 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before s
 % %         close; %close 
 % end
 
+%% Create subjDataAnalyzed struct for analyzed data%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Fill with metadata
+ for subj= 1:numel(subjects) %for each subject
+   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+       currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+       
+       subjDataAnalyzed.(subjects{subj})(session).experiment= currentSubj(session).experiment;
+       subjDataAnalyzed.(subjects{subj})(session).rat= currentSubj(session).rat;
+       subjDataAnalyzed.(subjects{subj})(session).trainDay= currentSubj(session).trainDay;
+       subjDataAnalyzed.(subjects{subj})(session).trainStage= currentSubj(session).trainStage;
+      subjDataAnalyzed.(subjects{subj})(session).box= currentSubj(session).box;       
+   end %end session loop
+end %end subject loop
 
 %% Event-Triggered Analyses %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Within-subjects event-triggered analysis- in progress
@@ -183,7 +197,9 @@ for subj= 1:numel(subjects) %for each subject
             
             subjDataAnalyzed.(subjects{subj})(session).DSblue(:,:,cue)= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);
             subjDataAnalyzed.(subjects{subj})(session).DSpurple(:,:,cue)= currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);
-
+            
+            subjDataAnalyzed.(subjects{subj})(session).DSzblue(:,:,cue)= (((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue);
+            subjDataAnalyzed.(subjects{subj})(session).DSzpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))- baselineMeanpurple))/(baselineStdpurple);
             
             if cue==1 %for the first cue, initialize arrays for dF and time surrounding cue
 
@@ -223,21 +239,21 @@ for subj= 1:numel(subjects) %for each subject
             end
             
             %get the mean response to the DS for this session
-%             subjDataAnalyzed.(subjects{subj})(session).meanDSblue = mean(subjDataAnalyzed.(subjects{subj})(session).DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
-% 
-%             subjDataAnalyzed.(subjects{subj})(session).meanDSpurple = mean(subjDataAnalyzed.(subjects{subj})(session).DSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
-% 
-%             subjDataAnalyzed.(subjects{subj})(session).meanDSzblue = mean(subjDataAnalyzed.(subjects{subj})(session).DSzblue, 3);
-% 
-%             subjDataAnalyzed.(subjects{subj})(session).meanDSzpurple = mean(subjDataAnalyzed.(subjects{subj})(session).DSzpurple, 3);
+            subjDataAnalyzed.(subjects{subj})(session).meanDSblue = mean(subjDataAnalyzed.(subjects{subj})(session).DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+
+            subjDataAnalyzed.(subjects{subj})(session).meanDSpurple = mean(subjDataAnalyzed.(subjects{subj})(session).DSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+
+            subjDataAnalyzed.(subjects{subj})(session).meanDSzblue = mean(subjDataAnalyzed.(subjects{subj})(session).DSzblue, 3);
+
+            subjDataAnalyzed.(subjects{subj})(session).meanDSzpurple = mean(subjDataAnalyzed.(subjects{subj})(session).DSzpurple, 3);
 
         end %end cue loop
-        toc
+%         toc
 
    end  %end session loop
        
 end %end subject loop
-
+toc
 
 %% Visualize analyzed data from subjDataAnalyzed struct %%%%%%%%%%%%%%%%%%%
 
@@ -247,21 +263,73 @@ subjectsAnalyzed = fieldnames(subjDataAnalyzed);
 %% HEAT PLOT OF RESPONSE TO DS (by trial)
 
 %here, we'll pull from the subjDataAnalyzed struct to make our heatplots
-tic
 for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
    for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
        currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
-     
+           
         %photometry signals sorted by trial, timelocked to DS
-        subjDataAnalyzed.(subjectsAnalyzed{subj}).DSzblueAllTrials= cat(2,currentSubj.meanDSzblue).';%transpose for better readability
+        currentSubj(1).DSzblueAllTrials= cat(2,currentSubj.meanDSzblue).';%transpose for better readability; only need to save one
 %         DSzblueAllTrials.(subjectsAnalyzed{subj}).= DSzblueAllTrials.'; %transpose for better readability
-        subjDataAnalyzed.(subjectsAnalyzed{subj}).DSzpurpleAllTrials= cat(2,currentSubj.meanDSzpurple).';%transpose for better readability
+        currentSubj(1).DSzpurpleAllTrials= cat(2,currentSubj.meanDSzpurple).';%transpose for better readability
 %         DSzpurpleAllTrials= DSzpurpleAllTrials.'; %transpose for better readability
    
-   
    end %end session loop
+   
+      %get list of session days for heatplot y axis
+      subjTrial= cat(2, currentSubj.trainDay).';
+      
+      %get bottom and top for color axis of heatplot
+      bottomDS = min(min(min(currentSubj(1).DSzblueAllTrials)), min(min(currentSubj(1).DSzpurpleAllTrials)));
+      topDS = max(max(max(currentSubj(1).DSzblueAllTrials)), max(max(currentSubj(1).DSzpurpleAllTrials)));
+      
+      
+     %     %DS z plot
+        figure(figureCount);
+        figureCount=figureCount+1;
+        subplot(2,2,1); %subplot for shared colorbar
+        
+        trialCount=0; %counter for loop/indexing
+%             if currentSubj(trial).trainStage==5
+%                 trialCount=trialCount+1;
+%                 stage5trial(trialCount) = currentSubj(trial).trainDay;
+%             end
+        
+        %plot blue DS
+        
+        timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+        
+        heatDSzblue= imagesc(timeLock,subjTrial,currentSubj(1).DSzblueAllTrials);
+        title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+        xlabel('seconds from cue onset');
+        ylabel('training day');
+        set(gca, 'ytick', subjTrial); %label trials appropriately
+        caxis manual;
+        caxis([bottomDS topDS]); %TODO: is this appropriate??
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+        
+    
+    %   plot purple DS (subplotted for shared colorbar)
+        subplot(2,2,3);
+        heatDSzpurple= imagesc(timeLock,subjTrial,currentSubj(1).DSzpurpleAllTrials); 
+    
+        title(strcat('rat ', num2str(subjectsAnalyzed{subj}), ' avg purple z score response to DS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+        xlabel('seconds from cue onset');
+        ylabel('training day');
+      
+        set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
+            
+        caxis manual;
+        caxis([bottomDS topDS]);
+        
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+   
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+   
+   
 end %end subject loop
-toc
 %% End of file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
 
