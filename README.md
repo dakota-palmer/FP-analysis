@@ -1,5 +1,5 @@
 # FP-analysis
- Matlab workflow for fiber photometry analysis
+ Matlab workflow for fiber photometry analysis- In this branch, data extraction is separated from data analysis
 
 * Download necessary MatLab scripts (https://github.umn.edu/palme876/FP-analysis/tree/master/matlabVPFP)
 
@@ -14,16 +14,17 @@
      * The metadata .xlsx will provide all session metadata to MatLab for analysis
      * Make sure the metadata .xlsx is up-to-date and accurate with the metadata corresponding to each TDT tank (each .NEX file) 
 
-* Open fpAnalysisDakota.m in matlab
+* Open fpExtractData.m in matlab
      * Make sure the file paths toward the beginning of the script for the .Nex files and metadata .xlsx are up to date 
      * Make sure the indices are correct for the xlsread section- they should correspond to your files of interest
-     * Make sure the experiment name string is updated- this will be used to automatically generate filenames for saved plots
-
-* Take time to go through and figure out what information you want to be plotted (ctl+F->plot); by default a lot of these plots are commented out to save time, but it is important to view each step of the data processing (downsample, fit, dF, etc)
+     * Make sure the experiment name string is updated- this will be used to automatically generate filenames for saved plots/variables
 
 * Run the script. It should load all data in according to the metadata .xlsx
-     * The script will loop through each recording session (each nex file within the .nex filepath indicated), associating metadata with it (rat #s, training day, training stage etc.), and performing data analysis within-session (e.g. dF & z-score calculations around the time of cue onsets)
+     * The script will loop through each recording session (each nex file within the .nex filepath indicated), associating metadata with it (rat #s, training day, training stage etc.)
      * Because of how our recording is setup, data is originally imported in terms of training box (for now, this is either A or B)
-After looping through each session, data is reorganized by subject (instead of by box) and then you can perform additional between-session analyses (e.g. plotting heatmap of all cue responses for a given rat)
+     * After looping through each session, data is reorganized by subject (instead of by box) and saved into a struct 
      * Data from each session is stored in sesData in terms of recording box and subjData in terms of subject
-
+     * The script will save the subjData struct as a .mat file indcluding the experimentName and date in the filename 
+* Open fpAnalyzeData.m in matlab
+* Run the script. You will be prompted to select a data file to load- Choose the .mat containing the subjData struct output by the previous scrip
+      * This script will perform data analysis within-session (e.g. dF & z-score calculations around the time of cue onsets) and between-session analyses (e.g. plotting heatmap of all cue responses for a given rat)
