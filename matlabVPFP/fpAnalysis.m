@@ -1215,7 +1215,7 @@ sesData(file).numDS= DSincluded;
 if sesData(file).trainStageA==5|sesData(file).trainStageB==5 %only stage 5 has the NS
     sesData(file).numNS= NSincluded; 
 
-    sesData(file).NS= NS;
+    sesData(file).NS = NS;
 
     sesData(file).poxANS= poxANScell;
     sesData(file).loxANS= loxANScell;

@@ -128,6 +128,8 @@ end %end subject loop
 
 %% Event-Triggered Analyses %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Within-subjects event-triggered analysis- in progress
+
+%% Timelock to DS
 for subj= 1:numel(subjects) %for each subject
     
         currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
@@ -147,9 +149,7 @@ for subj= 1:numel(subjects) %for each subject
        clear timeDiff %this is cleared between sessions to prevent spillover
              
        disp(strcat('running DS-triggered analysis subject ', num2str(subj), '/', num2str(numel(subjects)), ' session ', num2str(session), '/', num2str(numel(currentSubj))));
-      
-        %%%%%TIMELOCK TO DS
-        
+              
         DSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
 
         for cue=1:length(currentSubj(session).DS) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
@@ -201,43 +201,6 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).DSzblue(:,:,cue)= (((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue);
             subjDataAnalyzed.(subjects{subj})(session).DSzpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))- baselineMeanpurple))/(baselineStdpurple);
             
-            if cue==1 %for the first cue, initialize arrays for dF and time surrounding cue
-
-                eventTimeDS = currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS); %define the time axis for the event (cue onset +/- periCueTime)
-% % % 
-% % %                   DSblue{session}= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS); 
-% % %                   subjDataAnalyzed.(subjects{subj})(session).DSblue= DSblue;
-
-%                 %blue signal indexed 20s before and after cue 
-%                 subjDataAnalyzed.(subjects{subj})(session).DSblue = currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);  %extract the raw data corresponding to this time window for blue
-% 
-%                 %repear for purple signal
-%                 subjDataAnalyzed.(subjects{subj})(session).DSpurple = currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);  %extract the raw data corresponding to this time window for purple
-% 
-%                %calculate zscore for each point in the peri-event period based on
-%                %baseline mean and stdDev in the preceding 10s for blue and purple
-%                subjDataAnalyzed.(subjects{subj})(session).DSzblue=(((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue);  
-% 
-%                subjDataAnalyzed.(subjects{subj})(session).DSzpurple=(((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))-baselineMeanpurple))/(baselineStdpurple);  
-
-
-            else        %for subsequent cues (~=1), add onto these arrays as new 3d pages        
-% % %                 eventTimeDS = cat(3,eventTimeDS,currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS)); %concatenate in the 3rd dimension (such that each cue has its own 2d page with the surrounding cue-related data)
-% % % 
-% % %                 DSblue{session}= cat(3,DSblue{session}, currentSubj(session).reblue(preEventTimeDS:postEventTimeDS));
-% % %                 subjDataAnalyzed.(subjects{subj})(session).DSblue = DSblue{session};
-                
-%                 %for blue
-%                 subjDataAnalyzed.(subjects{subj})(session).DSblue = cat(3, subjDataAnalyzed.(subjects{subj}).DSblue, currentSubj(session).reblue(preEventTimeDS:postEventTimeDS));
-%                 %for purple
-%                 subjDataAnalyzed.(subjects{subj})(session).DSpurple = cat(3, subjDataAnalyzed.(subjects{subj}).DSpurple, currentSubj(session).repurple(preEventTimeDS:postEventTimeDS));
-%                 %for blue
-%                 subjDataAnalyzed.(subjects{subj})(session).DSzblue= cat(3,subjDataAnalyzed.(subjects{subj}).DSzblue,(((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue)/(baselineStdblue)));  
-%                 %for purple
-%                 subjDataAnalyzed.(subjects{subj})(session).DSzpurple= cat(3,subjDataAnalyzed.(subjects{subj}).DSzpurple,(((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))-baselineMeanpurple)/(baselineStdpurple)));  
-%          
-            end
-            
             %get the mean response to the DS for this session
             subjDataAnalyzed.(subjects{subj})(session).meanDSblue = mean(subjDataAnalyzed.(subjects{subj})(session).DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
 
@@ -247,11 +210,97 @@ for subj= 1:numel(subjects) %for each subject
 
             subjDataAnalyzed.(subjects{subj})(session).meanDSzpurple = mean(subjDataAnalyzed.(subjects{subj})(session).DSzpurple, 3);
 
-        end %end cue loop
-%         toc
-
-   end  %end session loop
+        end %end DS cue loop
+        toc
+   end %end session loop
+end %end subject loop
+        
+%% TIMELOCK TO NS
+        for subj= 1:numel(subjects) %for each subject
+   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+       currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
        
+       clear timeDiff;
+  
+      NSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
+
+      disp(strcat('running NS-triggered analysis subject ', num2str(subj), '/', num2str(numel(subjects)), ' session ', num2str(session), '/', num2str(numel(currentSubj))));
+
+      if isnan(currentSubj(session).NS)  %only run if NS is present (e.g. stage 5 and above), otherwise fill with NaN 
+        subjDataAnalyzed.(subjects{subj})(session).NSblue= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSpurple= nan;
+
+        subjDataAnalyzed.(subjects{subj})(session).NSzblue= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSzpurple= nan;
+
+        %get the mean response to the DS for this session
+        subjDataAnalyzed.(subjects{subj})(session).meanNSblue = nan;
+        subjDataAnalyzed.(subjects{subj})(session).meanNSpurple = nan; 
+
+        subjDataAnalyzed.(subjects{subj})(session).meanNSzblue = nan;
+
+        subjDataAnalyzed.(subjects{subj})(session).meanNSzpurple = nan;
+      else
+
+            for cue=1:length(currentSubj(session).NS) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
+                NSonset = currentSubj(session).NS(cue,1); %each entry in DS is a timestamp of the DS onset before downsampling- this needs to be aligned with our current time axis   
+
+                %find closest value (min difference) in cutTime (the current time axis) to DSonset by subtraction
+                for ts = 1:length(currentSubj(session).cutTime) %for each timestamp in cutTime 
+                    timeDiff(1,ts) = abs(NSonset-currentSubj(session).cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
+                end
+
+                [~,NSonsetShifted] = min(timeDiff); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual DSonset- define this as DSonsetShifted
+
+
+                timeShift= currentSubj(session).cutTime(NSonsetShifted)-currentSubj(session).NS(cue,1);  %calculate the difference between the shifted onset time and the actual onset time (just for QA- we wouldn't want this to be too large)
+                if abs(timeShift) >0.5 %this will flag cues whose time shift deviates above a threshold (in seconds- 0.5s)
+                    disp(strcat('>>Error *big cue time shift cue# ', num2str(cue), 'shifted NS ', num2str(currentSubj(session).cutTime(NSonsetShifted)), ' - actual DS ', num2str(NS(cue,1)), ' = ', num2str(timeShift), '*'));
+                end
+
+                %define the frames (datapoints) around each cue to analyze
+                preEventTimeNS = NSonsetShifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+                postEventTimeNS = NSonsetShifted+periCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periCueFrames (now this is equivalent to 20s after the shifted cue onset)
+
+               if preEventTimeDS< 1 %TODO: Double check this
+                  disp(strcat('****NS cue ', num2str(cue), ' too close to beginning, breaking out'));
+                  NSskipped= NSskipped+1;
+                  break
+               end
+
+               if postEventTimeNS> length(currentSubj(session).cutTime)-slideTime %if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
+                  disp(strcat('****NS cue ', num2str(cue), ' too close to end, breaking out'));
+                  NSskipped= NSskipped+1;  %iterate the counter for skipped DS cues
+                  break %break out of the loop and move onto the next DS cue
+               end
+
+                % Calculate average baseline mean&stdDev 10s prior to DS for z-score
+                %blueA
+                baselineMeanblue=mean(currentSubj(session).reblue((NSonsetShifted-slideTime):NSonsetShifted)); %baseline mean df 10s prior to DS onset for boxA
+                baselineStdblue=std(currentSubj(session).reblue((NSonsetShifted-slideTime):NSonsetShifted)); %baseline stdDev 10s prior to DS onset for boxA
+                %purpleA
+                baselineMeanpurple=mean(currentSubj(session).repurple((NSonsetShifted-slideTime):NSonsetShifted)); %baseline mean df 10s prior to DS onset for boxA
+                baselineStdpurple=std(currentSubj(session).repurple((NSonsetShifted-slideTime):NSonsetShifted)); %baseline stdDev 10s prior to DS onset for boxA
+
+                %save the data
+
+                subjDataAnalyzed.(subjects{subj})(session).NSblue(:,:,cue)= currentSubj(session).reblue(preEventTimeNS:postEventTimeNS);
+                subjDataAnalyzed.(subjects{subj})(session).NSpurple(:,:,cue)= currentSubj(session).repurple(preEventTimeNS:postEventTimeNS);
+
+                subjDataAnalyzed.(subjects{subj})(session).NSzblue(:,:,cue)= (((currentSubj(session).reblue(preEventTimeNS:postEventTimeNS))-baselineMeanblue))/(baselineStdblue);
+                subjDataAnalyzed.(subjects{subj})(session).NSzpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTimeNS:postEventTimeNS))- baselineMeanpurple))/(baselineStdpurple);
+
+                %get the mean response to the DS for this session
+                subjDataAnalyzed.(subjects{subj})(session).meanNSblue = mean(subjDataAnalyzed.(subjects{subj})(session).NSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+
+                subjDataAnalyzed.(subjects{subj})(session).meanNSpurple = mean(subjDataAnalyzed.(subjects{subj})(session).NSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+
+                subjDataAnalyzed.(subjects{subj})(session).meanNSzblue = mean(subjDataAnalyzed.(subjects{subj})(session).NSzblue, 3);
+
+                subjDataAnalyzed.(subjects{subj})(session).meanNSzpurple = mean(subjDataAnalyzed.(subjects{subj})(session).NSzpurple, 3);
+            end % end NS cue loop
+      end %end if NS ~nan conditional 
+   end %end session loop
 end %end subject loop
 toc
 
@@ -330,6 +379,76 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
    
    
 end %end subject loop
+
+%% HEAT PLOT OF RESPONSE TO NS (by trial)
+
+%here, we'll pull from the subjDataAnalyzed struct to make our heatplots
+for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
+   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
+       currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+           
+        %photometry signals sorted by trial, timelocked to DS
+        currentSubj(1).NSzblueAllTrials= cat(2,currentSubj.meanNSzblue).';%transpose for better readability; only need to save one
+        currentSubj(1).NSzpurpleAllTrials= cat(2,currentSubj.meanNSzpurple).';%transpose for better readability
+   
+   end %end session loop
+   
+      %get list of session days for heatplot y axis
+      subjTrial= cat(2, currentSubj.trainDay).';
+      
+      %get bottom and top for color axis of heatplot
+      bottomNS = min(min(min(currentSubj(1).NSzblueAllTrials)), min(min(currentSubj(1).NSzpurpleAllTrials)));
+      topNS = max(max(max(currentSubj(1).NSzblueAllTrials)), max(max(currentSubj(1).NSzpurpleAllTrials)));
+      
+      
+     %     %DS z plot
+        figure(figureCount-1); %subplotting on the same figure as the DS heatplots
+%         figureCount=figureCount+1;
+        subplot(2,2,3); %subplot for shared colorbar
+        
+        trialCount=0; %counter for loop/indexing
+%             if currentSubj(trial).trainStage==5
+%                 trialCount=trialCount+1;
+%                 stage5trial(trialCount) = currentSubj(trial).trainDay;
+%             end
+        
+        %plot blue DS
+        
+        timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+        
+        heatNSzblue= imagesc(timeLock,subjTrial,currentSubj(1).NSzblueAllTrials);
+        title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to NS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+        xlabel('seconds from cue onset');
+        ylabel('training day');
+        set(gca, 'ytick', subjTrial); %label trials appropriately
+        caxis manual;
+        caxis([bottomNS topNS]); %TODO: is this appropriate??
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+        
+    
+    %   plot purple DS (subplotted for shared colorbar)
+        subplot(2,2,4);
+        heatNSzpurple= imagesc(timeLock,subjTrial,currentSubj(1).NSzpurpleAllTrials); 
+    
+        title(strcat('rat ', num2str(subjectsAnalyzed{subj}), ' avg purple z score response to NS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+        xlabel('seconds from cue onset');
+        ylabel('training day');
+      
+        set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
+            
+        caxis manual;
+        caxis([bottomNS topNS]);
+        
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+   
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+   
+   
+end %end subject loop
+
 %% End of file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
 

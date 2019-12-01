@@ -194,9 +194,9 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     sesData(file).repurpleA = repurpleA;
     sesData(file).repurpleB = repurpleB;
 
-    if sesData(file).trainStageA==5|sesData(file).trainStageB==5 %only stage 5 has the NS
-        sesData(file).NS= NS;
-    end   
+%     if sesData(file).trainStageA==5|sesData(file).trainStageB==5 %only stage 5 has the NS
+        sesData(file).NS= NS; %will just populate with Nan if not present
+%     end   
     
 end %End file loop
 
@@ -237,10 +237,10 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).out= sesData(i).outA;
                 subjData.(subjField)(i).lox= sesData(i).loxA;
 
-                if subjData.(subjField)(i).trainStage== 5 %NS only on stage 5
+%                 if subjData.(subjField)(i).trainStage== 5 %NS only on stage 5
                 
-                    subjData.(subjField)(i).NS= sesData(i).NS;
-                end
+                    subjData.(subjField)(i).NS= sesData(i).NS; %will just populate with nan if not present
+%                 end
                 
         %BOX B
             elseif subj ==sesData(i).ratB %if this rat was in boxB, associate session data from boxB with it
@@ -265,10 +265,10 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).out= sesData(i).outB;
                 subjData.(subjField)(i).lox= sesData(i).loxB;
 
-                if subjData.(subjField)(i).trainStage== 5 %NS only on stage 5
+%                 if subjData.(subjField)(i).trainStage== 5 %NS only on stage 5
                 
                     subjData.(subjField)(i).NS= sesData(i).NS;
-                end
+%                 end
 
             end 
         end %end session loop
