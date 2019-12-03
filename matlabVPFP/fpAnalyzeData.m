@@ -216,7 +216,7 @@ for subj= 1:numel(subjects) %for each subject
 end %end subject loop
         
 %% TIMELOCK TO NS
-        for subj= 1:numel(subjects) %for each subject
+for subj= 1:numel(subjects) %for each subject
    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
        
@@ -227,19 +227,19 @@ end %end subject loop
       disp(strcat('running NS-triggered analysis subject ', num2str(subj), '/', num2str(numel(subjects)), ' session ', num2str(session), '/', num2str(numel(currentSubj))));
 
       if isnan(currentSubj(session).NS)  %only run if NS is present (e.g. stage 5 and above), otherwise fill with NaN 
-        subjDataAnalyzed.(subjects{subj})(session).NSblue= nan;
-        subjDataAnalyzed.(subjects{subj})(session).NSpurple= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSblue(1:periCueFrames*2+1,1)= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSpurple(1:periCueFrames*2+1,1)= nan;
 
-        subjDataAnalyzed.(subjects{subj})(session).NSzblue= nan;
-        subjDataAnalyzed.(subjects{subj})(session).NSzpurple= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSzblue(1:periCueFrames*2+1,1)= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSzpurple(1:periCueFrames*2+1,1)= nan;
 
         %get the mean response to the DS for this session
-        subjDataAnalyzed.(subjects{subj})(session).meanNSblue = nan;
-        subjDataAnalyzed.(subjects{subj})(session).meanNSpurple = nan; 
+        subjDataAnalyzed.(subjects{subj})(session).meanNSblue(1:periCueFrames*2+1,1) = nan;
+        subjDataAnalyzed.(subjects{subj})(session).meanNSpurple(1:periCueFrames*2+1,1) = nan; 
 
-        subjDataAnalyzed.(subjects{subj})(session).meanNSzblue = nan;
+        subjDataAnalyzed.(subjects{subj})(session).meanNSzblue(1:periCueFrames*2+1,1) = nan;
 
-        subjDataAnalyzed.(subjects{subj})(session).meanNSzpurple = nan;
+        subjDataAnalyzed.(subjects{subj})(session).meanNSzpurple(1:periCueFrames*2+1,1) = nan;
       else
 
             for cue=1:length(currentSubj(session).NS) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
@@ -334,7 +334,8 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
       
      %     %DS z plot
         figure(figureCount);
-        figureCount=figureCount+1;
+%         figureCount=figureCount+1;
+        hold on;
         subplot(2,2,1); %subplot for shared colorbar
         
         trialCount=0; %counter for loop/indexing
@@ -378,20 +379,20 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
    
    
-end %end subject loop
+% end %end subject loop
 
 %% HEAT PLOT OF RESPONSE TO NS (by trial)
 
 %here, we'll pull from the subjDataAnalyzed struct to make our heatplots
-for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
-   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
+% for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
+%    for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
        currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
            
         %photometry signals sorted by trial, timelocked to DS
         currentSubj(1).NSzblueAllTrials= cat(2,currentSubj.meanNSzblue).';%transpose for better readability; only need to save one
         currentSubj(1).NSzpurpleAllTrials= cat(2,currentSubj.meanNSzpurple).';%transpose for better readability
    
-   end %end session loop
+%    end %end session loop
    
       %get list of session days for heatplot y axis
       subjTrial= cat(2, currentSubj.trainDay).';
@@ -401,10 +402,11 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
       topNS = max(max(max(currentSubj(1).NSzblueAllTrials)), max(max(currentSubj(1).NSzpurpleAllTrials)));
       
       
-     %     %DS z plot
-        figure(figureCount-1); %subplotting on the same figure as the DS heatplots
-%         figureCount=figureCount+1;
-        subplot(2,2,3); %subplot for shared colorbar
+     %     %NS z plot
+%         figure(figureCount-1); %subplotting on the same figure as the DS heatplots
+        hold on;
+        figureCount=figureCount+1;
+        subplot(2,2,2); %subplot for shared colorbar
         
         trialCount=0; %counter for loop/indexing
 %             if currentSubj(trial).trainStage==5
@@ -412,7 +414,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 %                 stage5trial(trialCount) = currentSubj(trial).trainDay;
 %             end
         
-        %plot blue DS
+        %plot blue NS
         
         timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
         
@@ -428,7 +430,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
         c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
         
     
-    %   plot purple DS (subplotted for shared colorbar)
+    %   plot purple NS (subplotted for shared colorbar)
         subplot(2,2,4);
         heatNSzpurple= imagesc(timeLock,subjTrial,currentSubj(1).NSzpurpleAllTrials); 
     
