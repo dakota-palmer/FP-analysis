@@ -451,6 +451,32 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
    
 end %end subject loop
 
+%% Power analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Need to define a timescale within which to look for cue-related effect
+%Here, we will use a 1s time window after cue onset
+effectStartTime= ((periCueTime*fs)/2)+1;
+effectDuration= 1; %1s
+effectWindow= effectStartTime:effectStartTime+(effectDuration*fs);
+
+
+%Because 405nm and 465nm signals are inversely related, looking for an
+%effect between these signals doesn't seem appropriate. We could look for
+%a difference between response to DS vs. response to NS. We could also look
+%for a difference between cue-related response and 'spontaneous'
+%activity during ITI
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+   
+       subjData.(subjects{subj})(session).effecBlue= currentSubj.DSblue(eventWindow, 1, :)
+   
+   end %end session loop
+   
+   subjData.(subjects{subj})(session).effectBlueMean= mean(3, effectBlue);
+end %end subject loop
+
+
 %% End of file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
 
@@ -458,7 +484,7 @@ disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
 
 %% Example structure of loop through subjects and sessions 
 % for subj= 1:numel(subjects) %for each subject
+%    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
 %    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
-%        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
 %    end %end session loop
 % end %end subject loop
