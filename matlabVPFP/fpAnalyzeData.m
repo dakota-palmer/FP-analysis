@@ -118,6 +118,8 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before s
    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
        
+       experimentName= currentSubj(session).experiment;
+       
        subjDataAnalyzed.(subjects{subj})(session).experiment= currentSubj(session).experiment;
        subjDataAnalyzed.(subjects{subj})(session).rat= currentSubj(session).rat;
        subjDataAnalyzed.(subjects{subj})(session).trainDay= currentSubj(session).trainDay;
@@ -218,8 +220,9 @@ end %end subject loop
 %% TIMELOCK TO NS
 for subj= 1:numel(subjects) %for each subject
    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+       tic;
        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-       
+
        clear timeDiff;
   
       NSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
@@ -300,9 +303,9 @@ for subj= 1:numel(subjects) %for each subject
                 subjDataAnalyzed.(subjects{subj})(session).meanNSzpurple = mean(subjDataAnalyzed.(subjects{subj})(session).NSzpurple, 3);
             end % end NS cue loop
       end %end if NS ~nan conditional 
+      toc
    end %end session loop
 end %end subject loop
-toc
 
 %% Visualize analyzed data from subjDataAnalyzed struct %%%%%%%%%%%%%%%%%%%
 
@@ -381,7 +384,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
    
 % end %end subject loop
 
-%% HEAT PLOT OF RESPONSE TO NS (by trial)
+% HEAT PLOT OF RESPONSE TO NS (by trial)
 
 %here, we'll pull from the subjDataAnalyzed struct to make our heatplots
 % for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
@@ -455,9 +458,9 @@ end %end subject loop
 
 %Need to define a timescale within which to look for cue-related effect
 %Here, we will use a 1s time window after cue onset
-effectStartTime= ((periCueTime*fs)/2)+1;
+effectStartTime= ((periCueTime*fs)/2);
 effectDuration= 1; %1s
-effectWindow= effectStartTime:effectStartTime+(effectDuration*fs);
+effectWindow= effectStartTime+1:effectStartTime+(effectDuration*fs);
 
 
 %Because 405nm and 465nm signals are inversely related, looking for an
@@ -466,16 +469,36 @@ effectWindow= effectStartTime:effectStartTime+(effectDuration*fs);
 %for a difference between cue-related response and 'spontaneous'
 %activity during ITI
 for subj= 1:numel(subjects) %for each subject
-   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+   currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
    
-       subjData.(subjects{subj})(session).effecBlue= currentSubj.DSblue(eventWindow, 1, :)
+       %raw blue and purple signals don't mean much as their value is arbitrary, can't really compare the two directly 
+       %instead, need to look at change in signal over time
+%        subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSblue= currentSubj(session).DSblue(effectWindow, 1, :);
+%        subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSblueMean= mean(mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSblue, 3)); %avg response throughout 1s,grand avg across all cues for that session
+%        
+%        subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSpurple= currentSubj(session).DSpurple(effectWindow, 1, :);
+%        subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSpurpleMean= mean(mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSpurple, 3)); %avg response throughout 1s,grand avg across all cues for that session
+%        
+       %Z score already uses std dev to calculate, so probably not good to calculate effect size on top of this
+       subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblue= currentSubj(session).DSzblue(effectWindow, 1, :);
+       subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblueMean= mean(mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblue, 3)); %avg response throughout 1s,grand avg across all cues for that session
    
+       subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzpurple= currentSubj(session).DSzpurple(effectWindow, 1, :);
+       subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzpurpleMean= mean(mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzpurple, 3)); %avg response throughout 1s,grand avg across all cues for that session
+
+       %Instead, I could calculate some kind of df/F for both channels relative to the 'baseline'activity 10s preceding the cue?
+       %this would look like (blue-baselineblue)/baselineblue for each timestamp
+
+
    end %end session loop
    
-   subjData.(subjects{subj})(session).effectBlueMean= mean(3, effectBlue);
 end %end subject loop
 
+
+%% Save the analyzed data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%save the subjDataAnalyzed struct for later analysis
+save(strcat(experimentName,'-', date), 'subjDataAnalyzed');
 
 %% End of file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
