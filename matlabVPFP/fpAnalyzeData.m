@@ -405,6 +405,8 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     caxis manual;
     caxis([bottomShared topShared]); %use a shared color axis to encompass all values
+    
+    %% try linspace with caxis
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -553,6 +555,9 @@ end %end subject loop
  
  %just for fun, what n would I need for .80 power?
  nCuePresentationsNeeded = sampsizepwr('t',[grandMeanEffectDSzblueAllSubjects, pooledStdAllSubjects], grandMeanEffectNSzblueAllSubjects, .80,[])
+ 
+ %% use 'z' for sampsizepwr ?
+ 
  %that's a lot of trials... 1398/30 per day ~ 47 days of training
 
  
