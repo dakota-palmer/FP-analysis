@@ -16,7 +16,7 @@ figureCount= 1 ; %keep track of figure # throughout to prevent overwriting
 
 fs= 40; %This is important- if you change sampling frequency of photometry recordings for some reason, change this too! TODO: just save this in subjData as more metadata
 
-%% Behavioral plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Behavioral plots%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 %% PLOT PORT ENTRY COUNT ACROSS DAYS FOR ALL SUBJECTS - not very meaningful,  but good template for DS PE ratio or latency
 disp('plotting port entry counts')
@@ -80,38 +80,39 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before s
 %         close; %close 
 
 
-%% Photometry plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Photometry plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Within-subjects photometry plots - this works but it's a lot of data and is inefficient so may be slow 
-% for subj= 1:numel(subjects)
-%     
-%     disp(strcat('plotting photometry data for_', subjects{subj}));
-%     
-%     figure(figureCount) %one figure per subject, with all sessions subplotted
-%     figureCount= figureCount+1;
-%     
-%    sgtitle(strcat(currentSubj(1).experiment, subjects{subj}, 'downsampled photometry traces')); %add big title above all subplots
-%     
-%    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
-%        
-%        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
-%       
-%        %% Raw session plots- within subjects
-%         subplot(numel(subjData.(subjects{subj})),1,session); 
-%         hold on
-%         plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b');
-%         plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m');
-%         title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled '));
-%         xlabel('time (s)');
-%         ylabel('mV');
-%         legend('blue (465)',' purple (405)');
-%    end  
-%         %make figure full screen, save, and close this figure
-%         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-% %         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
-% %         close; %close 
-% end
+for subj= 1:numel(subjects)
+    tic
+    disp(strcat('plotting photometry data for_', subjects{subj}));
+    
+    figure(figureCount) %one figure per subject, with all sessions subplotted
+    figureCount= figureCount+1;
+    
+   sgtitle(strcat(currentSubj(1).experiment, subjects{subj}, 'downsampled photometry traces')); %add big title above all subplots
+    
+   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+       
+       currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
+      
+       %% Raw session plots- within subjects
+        subplot(numel(subjData.(subjects{subj})),1,session); 
+        hold on
+        plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b');
+        plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m');
+        title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled '));
+        xlabel('time (s)');
+        ylabel('mV');
+        legend('blue (465)',' purple (405)');
+   end  
+        %make figure full screen, save, and close this figure
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+%         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
+%         close; %close 
+    toc
+end
 
-%% Create subjDataAnalyzed struct for analyzed data%%%%%%%%%%%%%%%%%%%%%%%%
+%% Create subjDataAnalyzed struct for analyzed data
 
 %Fill with metadata
  for subj= 1:numel(subjects) %for each subject
@@ -128,10 +129,12 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before s
    end %end session loop
 end %end subject loop
 
-%% Event-Triggered Analyses %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Within-subjects event-triggered analysis- in progress
+% Event-Triggered Analyses %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Timelock to DS
+%TODO: indexing is probably taking way too long here, find more efficient
+%solution (maybe get rid of dynamic fieldnames or save to struct at end)
+
+%% TIMELOCK TO DS
 for subj= 1:numel(subjects) %for each subject
     
         currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
@@ -230,19 +233,19 @@ for subj= 1:numel(subjects) %for each subject
       disp(strcat('running NS-triggered analysis subject ', num2str(subj), '/', num2str(numel(subjects)), ' session ', num2str(session), '/', num2str(numel(currentSubj))));
 
       if isnan(currentSubj(session).NS)  %only run if NS is present (e.g. stage 5 and above), otherwise fill with NaN 
-        subjDataAnalyzed.(subjects{subj})(session).NSblue(1:periCueFrames*2+1,1)= nan;
-        subjDataAnalyzed.(subjects{subj})(session).NSpurple(1:periCueFrames*2+1,1)= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSblue=[]; %(1:periCueFrames*2+1,1)= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSpurple=[]; %(1:periCueFrames*2+1,1)= nan;
 
-        subjDataAnalyzed.(subjects{subj})(session).NSzblue(1:periCueFrames*2+1,1)= nan;
-        subjDataAnalyzed.(subjects{subj})(session).NSzpurple(1:periCueFrames*2+1,1)= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSzblue= [];%(1:periCueFrames*2+1,1)= nan;
+        subjDataAnalyzed.(subjects{subj})(session).NSzpurple=[]; %(1:periCueFrames*2+1,1)= nan;
 
         %get the mean response to the DS for this session
-        subjDataAnalyzed.(subjects{subj})(session).meanNSblue(1:periCueFrames*2+1,1) = nan;
-        subjDataAnalyzed.(subjects{subj})(session).meanNSpurple(1:periCueFrames*2+1,1) = nan; 
+        subjDataAnalyzed.(subjects{subj})(session).meanNSblue=[]; %(1:periCueFrames*2+1,1) = nan;
+        subjDataAnalyzed.(subjects{subj})(session).meanNSpurple=[]; %(1:periCueFrames*2+1,1) = nan; 
 
-        subjDataAnalyzed.(subjects{subj})(session).meanNSzblue(1:periCueFrames*2+1,1) = nan;
+        subjDataAnalyzed.(subjects{subj})(session).meanNSzblue=[]; %(1:periCueFrames*2+1,1) = nan;
 
-        subjDataAnalyzed.(subjects{subj})(session).meanNSzpurple(1:periCueFrames*2+1,1) = nan;
+        subjDataAnalyzed.(subjects{subj})(session).meanNSzpurple= []; %(1:periCueFrames*2+1,1) = nan;
       else
 
             for cue=1:length(currentSubj(session).NS) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
@@ -307,154 +310,143 @@ for subj= 1:numel(subjects) %for each subject
    end %end session loop
 end %end subject loop
 
-%% Visualize analyzed data from subjDataAnalyzed struct %%%%%%%%%%%%%%%%%%%
+% Visualize analyzed data from subjDataAnalyzed struct %%%%%%%%%%%%%%%%%%%
 
 subjectsAnalyzed = fieldnames(subjDataAnalyzed); 
-%% Heat plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Heat plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% HEAT PLOT OF RESPONSE TO DS (by trial)
+%% HEAT PLOT OF AVG RESPONSE TO CUE (by trial)
 
 %here, we'll pull from the subjDataAnalyzed struct to make our heatplots
+%first, we need to collect the avg cue response from all sessions and reshape for plotting
+
 for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
-   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
-       currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
-           
-        %photometry signals sorted by trial, timelocked to DS
-        currentSubj(1).DSzblueAllTrials= cat(2,currentSubj.meanDSzblue).';%transpose for better readability; only need to save one
-%         DSzblueAllTrials.(subjectsAnalyzed{subj}).= DSzblueAllTrials.'; %transpose for better readability
-        currentSubj(1).DSzpurpleAllTrials= cat(2,currentSubj.meanDSzpurple).';%transpose for better readability
-%         DSzpurpleAllTrials= DSzpurpleAllTrials.'; %transpose for better readability
-   
-   end %end session loop
-   
-      %get list of session days for heatplot y axis
-      subjTrial= cat(2, currentSubj.trainDay).';
-      
-      %get bottom and top for color axis of heatplot
-      bottomDS = min(min(min(currentSubj(1).DSzblueAllTrials)), min(min(currentSubj(1).DSzpurpleAllTrials)));
-      topDS = max(max(max(currentSubj(1).DSzblueAllTrials)), max(max(currentSubj(1).DSzpurpleAllTrials)));
-      
-      
-     %     %DS z plot
-        figure(figureCount);
-%         figureCount=figureCount+1;
-        hold on;
-        subplot(2,2,1); %subplot for shared colorbar
-        
-        trialCount=0; %counter for loop/indexing
-%             if currentSubj(trial).trainStage==5
-%                 trialCount=trialCount+1;
-%                 stage5trial(trialCount) = currentSubj(trial).trainDay;
-%             end
-        
-        %plot blue DS
-        
-        timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-        
-        heatDSzblue= imagesc(timeLock,subjTrial,currentSubj(1).DSzblueAllTrials);
-        title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-        xlabel('seconds from cue onset');
-        ylabel('training day');
-        set(gca, 'ytick', subjTrial); %label trials appropriately
-        caxis manual;
-        caxis([bottomDS topDS]); %TODO: is this appropriate??
+    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
 
-        c= colorbar; %colorbar legend
-        c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-        
+    %DS - extract data for plots
+    %avg cue response sorted by trial, timelocked to DS
+    currentSubj(1).DSzblueAllTrials= cat(2,currentSubj.meanDSzblue).'; %transpose for better readability; only need to save one
+    currentSubj(1).DSzpurpleAllTrials= cat(2,currentSubj.meanDSzpurple).';%transpose for better readability
+
+
+    %get list of session days for heatplot y axis
+    subjTrial= cat(2, currentSubj.trainDay).';
+
+    %get bottom and top for color axis of DS heatplot
+    bottomDS = min(min(min(currentSubj(1).DSzblueAllTrials)), min(min(currentSubj(1).DSzpurpleAllTrials))); %find the lowest value 
+    topDS = max(max(max(currentSubj(1).DSzblueAllTrials)), max(max(currentSubj(1).DSzpurpleAllTrials))); %find the highest value
+
+
+    %NS- extract data for plots
+    %time axis is handled a bit differently because we only want to show sessions that have NS cues
     
+    %photometry signals sorted by trial, timelocked to DS
+    currentSubj(1).NSzblueAllTrials= cat(2,currentSubj.meanNSzblue).';%transpose for better readability; only need to save one
+    currentSubj(1).NSzpurpleAllTrials= cat(2,currentSubj.meanNSzpurple).';%transpose for better readability
+            
+    %get list of session days for heatplot y axis
+    subjTrialNS=[]; %keep track of sessions that have valid NS trials
+    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+
+        if ~isempty(currentSubj(session).meanNSzblue) %if there's an NS trial in this session
+             subjTrialNS= cat(2, subjTrialNS, currentSubj(session).trainDay);
+        end
+    end %end session loop
+
+    %get bottom and top for color axis of NS heatplot
+    bottomNS = min(min(min(currentSubj(1).NSzblueAllTrials)), min(min(currentSubj(1).NSzpurpleAllTrials)));
+    topNS = max(max(max(currentSubj(1).NSzblueAllTrials)), max(max(currentSubj(1).NSzpurpleAllTrials)));
+
+
+    %Establish a shared bottom and top for shared color axis of DS & NS
+    bottomShared= min(bottomDS, bottomNS); %find the absolute min value
+    topShared= max(topDS, topNS); %find the absolute min value
+    
+    %Heatplots!       
+    %DS z plot
+    figure(figureCount);
+    hold on;
+    subplot(2,2,1); %subplot for shared colorbar
+
+    %plot blue DS
+
+    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+
+    heatDSzblue= imagesc(timeLock,subjTrial,currentSubj(1).DSzblueAllTrials);
+    title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+    set(gca, 'ytick', subjTrial); %label trials appropriately
+    caxis manual;
+    caxis([bottomDS topDS]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+
     %   plot purple DS (subplotted for shared colorbar)
-        subplot(2,2,3);
-        heatDSzpurple= imagesc(timeLock,subjTrial,currentSubj(1).DSzpurpleAllTrials); 
-    
-        title(strcat('rat ', num2str(subjectsAnalyzed{subj}), ' avg purple z score response to DS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
-        xlabel('seconds from cue onset');
-        ylabel('training day');
-      
-        set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
-            
-        caxis manual;
-        caxis([bottomDS topDS]);
-        
-        c= colorbar; %colorbar legend
-        c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-   
-        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-   
-   
-% end %end subject loop
+    subplot(2,2,3);
+    heatDSzpurple= imagesc(timeLock,subjTrial,currentSubj(1).DSzpurpleAllTrials); 
 
-% HEAT PLOT OF RESPONSE TO NS (by trial)
+    title(strcat('rat ', num2str(subjectsAnalyzed{subj}), ' avg purple z score response to DS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from cue onset');
+    ylabel('training day');
 
-%here, we'll pull from the subjDataAnalyzed struct to make our heatplots
-% for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
-%    for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
-       currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
-           
-        %photometry signals sorted by trial, timelocked to DS
-        currentSubj(1).NSzblueAllTrials= cat(2,currentSubj.meanNSzblue).';%transpose for better readability; only need to save one
-        currentSubj(1).NSzpurpleAllTrials= cat(2,currentSubj.meanNSzpurple).';%transpose for better readability
-   
-%    end %end session loop
-   
-      %get list of session days for heatplot y axis
-      subjTrial= cat(2, currentSubj.trainDay).';
-      
-      %get bottom and top for color axis of heatplot
-      bottomNS = min(min(min(currentSubj(1).NSzblueAllTrials)), min(min(currentSubj(1).NSzpurpleAllTrials)));
-      topNS = max(max(max(currentSubj(1).NSzblueAllTrials)), max(max(currentSubj(1).NSzpurpleAllTrials)));
-      
-      
-     %     %NS z plot
-%         figure(figureCount-1); %subplotting on the same figure as the DS heatplots
-        hold on;
-        figureCount=figureCount+1;
-        subplot(2,2,2); %subplot for shared colorbar
-        
-        trialCount=0; %counter for loop/indexing
-%             if currentSubj(trial).trainStage==5
-%                 trialCount=trialCount+1;
-%                 stage5trial(trialCount) = currentSubj(trial).trainDay;
-%             end
-        
-        %plot blue NS
-        
-        timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-        
-        heatNSzblue= imagesc(timeLock,subjTrial,currentSubj(1).NSzblueAllTrials);
-        title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to NS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-        xlabel('seconds from cue onset');
-        ylabel('training day');
-        set(gca, 'ytick', subjTrial); %label trials appropriately
-        caxis manual;
-        caxis([bottomNS topNS]); %TODO: is this appropriate??
+    set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
 
-        c= colorbar; %colorbar legend
-        c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-        
-    
+    caxis manual;
+    caxis([bottomDS topDS]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+
+
+
+    %     %NS z plot
+    %         figure(figureCount-1); %subplotting on the same figure as the DS heatplots
+    hold on;
+    figureCount=figureCount+1;
+    subplot(2,2,2); %subplot for shared colorbar
+
+    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+
+    heatNSzblue= imagesc(timeLock,subjTrialNS,currentSubj(1).NSzblueAllTrials);
+    title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to NS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+    set(gca, 'ytick', subjTrialNS); %label trials appropriately
+    caxis manual;
+    caxis([bottomNS topNS]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+
     %   plot purple NS (subplotted for shared colorbar)
-        subplot(2,2,4);
-        heatNSzpurple= imagesc(timeLock,subjTrial,currentSubj(1).NSzpurpleAllTrials); 
-    
-        title(strcat('rat ', num2str(subjectsAnalyzed{subj}), ' avg purple z score response to NS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
-        xlabel('seconds from cue onset');
-        ylabel('training day');
-      
-        set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
-            
-        caxis manual;
-        caxis([bottomNS topNS]);
-        
-        c= colorbar; %colorbar legend
-        c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-   
-        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-   
-   
+    subplot(2,2,4);
+    heatNSzpurple= imagesc(timeLock,subjTrialNS,currentSubj(1).NSzpurpleAllTrials); 
+
+    title(strcat('rat ', num2str(subjectsAnalyzed{subj}), ' avg purple z score response to NS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+
+    set(gca, 'ytick', subjTrialNS); %TODO: NS trial labels must be different, only stage 5 trials
+
+    caxis manual;
+    caxis([bottomNS topNS]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+
 end %end subject loop
 
-%% Power analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Power analysis 
 
 %Need to define a timescale within which to look for cue-related effect
 %Here, we will use a 1s time window after cue onset
@@ -496,13 +488,13 @@ for subj= 1:numel(subjects) %for each subject
 end %end subject loop
 
 
-%% Save the analyzed data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Save the analyzed data 
 %save the subjDataAnalyzed struct for later analysis
 save(strcat(experimentName,'-', date), 'subjDataAnalyzed');
 
-%% End of file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% End of file 
 disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
-
+figureCount=1;
 
 
 %% Example structure of loop through subjects and sessions 
