@@ -1,5 +1,5 @@
 %fp data analysis 
-%11/25/19
+%12/4/19
 clear
 clc
 close all
@@ -54,7 +54,7 @@ disp('plotting avg port entry counts by animal');
 
 figure(figureCount) %one figure with avg poxCount for all subjects
 figureCount= figureCount+1;
-title(strcat(currentSubj(session).experiment,' port entry count'));
+title(strcat(currentSubj(session).experiment,'avg port entry count by subject +/- SEM'));
 xlabel('subject');
 ylabel(' port entry count');
 for subj= 1:numel(subjects)
@@ -64,14 +64,21 @@ for subj= 1:numel(subjects)
       
        %Plot number of port entries across all sessions
        
-        poxCount(session)= numel(currentSubj(session).pox); %get the total number of port entries across days
+        poxCount(session,subj)= numel(currentSubj(session).pox); %get the total number of port entries across days
         subjectLabel(session,subj)= currentSubj(session).rat;
    end
-   meanpoxCount(subj)= mean(poxCount);
-   hold on;
-   scatter(subjectLabel(:,subj), poxCount); %scatter daily port entry counts by subject
-   plot([subjectLabel(1,subj)-.2,subjectLabel(1,subj)+.2] , [meanpoxCount(subj), meanpoxCount(subj)], 'k'); %overlay mean of each subject
+%    poxCount(subj,:)= poxCount;
+   meanpoxCount(subj)= mean(poxCount(:,subj));
+   sempoxCount(1,subj)= std(poxCount(:,subj))/sqrt(numel(currentSubj));
 
+   hold on;
+   scatter(subjectLabel(:,subj), poxCount(:,subj)); %scatter daily port entry counts by subject
+   plot([subjectLabel(1,subj)-.2,subjectLabel(1,subj)+.2] , [meanpoxCount(subj), meanpoxCount(subj)], 'k'); %overlay mean of each subject
+   
+   plot([subjectLabel(1,subj)-.2,subjectLabel(1,subj)+.2] , [meanpoxCount(subj)-sempoxCount(1,subj), meanpoxCount(subj)-sempoxCount(1,subj)], 'k--');%overlay - sem of each subject
+   plot([subjectLabel(1,subj)-.2,subjectLabel(1,subj)+.2] , [meanpoxCount(subj)+sempoxCount(1,subj), meanpoxCount(subj)+sempoxCount(1,subj)], 'k--');%overlay + sem of each subject
+   plot([subjectLabel(1,subj), subjectLabel(1,subj)], [meanpoxCount(subj),meanpoxCount(subj)-sempoxCount(1,subj)], 'k--'); %connect -SEM to mean
+   plot([subjectLabel(1,subj), subjectLabel(1,subj)], [ meanpoxCount(subj), meanpoxCount(subj)+sempoxCount(1,subj)], 'k--'); %connect +SEM to mean
 end
 
 %make figure full screen, save, and close this figure
@@ -133,6 +140,8 @@ end %end subject loop
 
 %TODO: indexing is probably taking way too long here, find more efficient
 %solution (maybe get rid of dynamic fieldnames or save to struct at end)
+%Try using currentSubj throughout then assigning to subjectDataAnalyzed at
+%very end
 
 %% TIMELOCK TO DS
 for subj= 1:numel(subjects) %for each subject
@@ -148,7 +157,7 @@ for subj= 1:numel(subjects) %for each subject
 
         slideTime = 400; %define time window before cue onset to get baseline mean/stdDev for calculating sliding z scores- 400 for 10s (remember 400/40hz ~10s)
               
-   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+   for session = 1:numel(currentSubj) %for each training session this subject completed
        tic
        
        clear timeDiff %this is cleared between sessions to prevent spillover
@@ -156,7 +165,7 @@ for subj= 1:numel(subjects) %for each subject
        disp(strcat('running DS-triggered analysis subject ', num2str(subj), '/', num2str(numel(subjects)), ' session ', num2str(session), '/', num2str(numel(currentSubj))));
               
         DSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
-
+ 
         for cue=1:length(currentSubj(session).DS) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
 
             DSonset = currentSubj(session).DS(cue,1); %each entry in DS is a timestamp of the DS onset before downsampling- this needs to be aligned with our current time axis   
@@ -378,7 +387,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     ylabel('training day');
     set(gca, 'ytick', subjTrial); %label trials appropriately
     caxis manual;
-    caxis([bottomDS topDS]); %use a shared color axis to encompass all values
+    caxis([bottomShared topShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -395,7 +404,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
 
     caxis manual;
-    caxis([bottomDS topDS]); %use a shared color axis to encompass all values
+    caxis([bottomShared topShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -419,7 +428,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     ylabel('training day');
     set(gca, 'ytick', subjTrialNS); %label trials appropriately
     caxis manual;
-    caxis([bottomNS topNS]); %use a shared color axis to encompass all values
+    caxis([bottomShared topShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -436,7 +445,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     set(gca, 'ytick', subjTrialNS); %TODO: NS trial labels must be different, only stage 5 trials
 
     caxis manual;
-    caxis([bottomNS topNS]); %use a shared color axis to encompass all values
+    caxis([bottomShared topShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -459,11 +468,15 @@ effectWindow= effectStartTime+1:effectStartTime+(effectDuration*fs);
 %effect between these signals doesn't seem appropriate. We could look for
 %a difference between response to DS vs. response to NS. We could also look
 %for a difference between cue-related response and 'spontaneous'
-%activity during ITI
-for subj= 1:numel(subjects) %for each subject
+%activity during ITI. I think there must be some normalized metric between
+%subjects to estimate an effect size
+for subj= 1:numel(subjectsAnalyzed) %for each subject
    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
-   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
    
+   disp(strcat('working on effect size estimate for subj', num2str(subj), ' / ', num2str(numel(subjectsAnalyzed))));
+   
+   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
+   tic
        %raw blue and purple signals don't mean much as their value is arbitrary, can't really compare the two directly 
        %instead, need to look at change in signal over time
 %        subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSblue= currentSubj(session).DSblue(effectWindow, 1, :);
@@ -472,20 +485,90 @@ for subj= 1:numel(subjects) %for each subject
 %        subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSpurple= currentSubj(session).DSpurple(effectWindow, 1, :);
 %        subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSpurpleMean= mean(mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSpurple, 3)); %avg response throughout 1s,grand avg across all cues for that session
 %        
-       %Z score already uses std dev to calculate, so probably not good to calculate effect size on top of this
+       %Z score already uses std dev to calculate, so probably not good to
+       %calculate effect size on top of this, but will try
+       
+       %get the z score values during the 'effect' time window
+       %for now, interested in blue signal
+       
+       %Extract the blue z score response to cue in a specific time window of interest
+       %for all DS cues (and then the avg response to all cues)...
        subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblue= currentSubj(session).DSzblue(effectWindow, 1, :);
        subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblueMean= mean(mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblue, 3)); %avg response throughout 1s,grand avg across all cues for that session
-   
-       subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzpurple= currentSubj(session).DSzpurple(effectWindow, 1, :);
-       subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzpurpleMean= mean(mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzpurple, 3)); %avg response throughout 1s,grand avg across all cues for that session
-
-       %Instead, I could calculate some kind of df/F for both channels relative to the 'baseline'activity 10s preceding the cue?
+       %then calculate the std of this response to cues (and then the avg std of response to all cues)
+       subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblueStd= std(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).DSzblue(effectWindow,1,:)); %this gives us std of response to each cue
+       subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblueAvgStd= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblueStd); %this gives us the avg std of response to each cue
+       
+       %repeat above but for response to NS cue
+       if isempty(currentSubj(session).NSzblue) %if there's no valid NS, there's no effect to look for
+           subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblue= [];
+           subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblueMean= [];
+           
+           subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblueStd= [];
+           subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblueAvgStd= [];
+       else %if an NS is present, extract cue-related activity in the 'effect' time window
+           subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblue= currentSubj(session).NSzblue(effectWindow,1,:);
+           subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblueMean= mean(mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblue,3));
+       
+           subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblueStd= std(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).NSzblue(effectWindow,1,:)); %this gives us std of response to each cue
+           subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblueAvgStd= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblueStd); %this gives us the avg std of response to each cue
+       end
+              
+       %Instead of looking at z score, I could calculate some kind of df/F for both channels relative to the 'baseline'activity 10s preceding the cue?
        %this would look like (blue-baselineblue)/baselineblue for each timestamp
 
 
    end %end session loop
    
+  %get a grand mean of 'effect' (here the z score in the blue channel) across all cues and all sessions for each subject
+  grandMeanEffectDSzblue(:,subj)= mean(cat(2,subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblueMean));  
+  grandMeanEffectNSzblue(:,subj)= mean(cat(2,subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblueMean));
+   
+  %get a grand avg std of the z score (again, this seems inappropriate because std of the raw signal is used to calculate z score?)
+  grandStdDSzblue(:,subj)= mean(cat(2,subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectDSzblueAvgStd));  
+  grandStdNSzblue(:,subj)= mean(cat(2,subjDataAnalyzed.(subjectsAnalyzed{subj})(session).effectNSzblueAvgStd));  
+
+   
+  toc
 end %end subject loop
+
+  %now avg everything across subjects
+  grandMeanEffectDSzblueAllSubjects= mean(grandMeanEffectDSzblue); %avg response to DS
+  grandMeanEffectNSzblueAllSubjects= mean(grandMeanEffectNSzblue); %avg response to NS
+
+  grandStdDSzblueAllSubjects= mean(grandStdDSzblue); %avg std in response to DS
+  grandStdNSzblueAllSubjects= mean(grandStdNSzblue); %avg std in response to NS
+  
+  
+  %now, calculate a pooledStd between the DS and NS 
+  pooledStdAllSubjects= sqrt(((grandStdDSzblueAllSubjects^2)+(grandStdNSzblueAllSubjects^2))/2); 
+
+ %now, estimate Cohen's D (mean1-mean2)/pooledStd
+ 
+ cohensDzBlue= abs((grandMeanEffectDSzblueAllSubjects-grandMeanEffectNSzblueAllSubjects)/pooledStdAllSubjects)
+ %resulting Cohen's D estimate is pretty small, but I think it may have to
+ %do with stacked variance caused by the z score calculation? Also, I may
+ %need to refine the time period over which to look for an effect (1s seems
+ %too broad, heatplots show response ~500ms after cue)
+ 
+ %just for fun, what n would I need for .80 power?
+ nCuePresentationsNeeded = sampsizepwr('t',[grandMeanEffectDSzblueAllSubjects, pooledStdAllSubjects], grandMeanEffectNSzblueAllSubjects, .80,[])
+ %that's a lot of trials... 1398/30 per day ~ 47 days of training
+
+ 
+ %lets save this too
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+   subjDataAnalyzed.(subjectsAnalyzed{subj})(1).cohensDzBlue= cohensDzBlue;
+   subjDataAnalyzed.(subjectsAnalyzed{subj})(1).nCuePresentationsNeeded= nCuePresentationsNeeded;
+end %end subject loop
+%% Inferential stats
+
+% I think the data here will be parametric - at least in latter stages of
+% training, there seem to be consistent cue responses 
+
+% Since I'd like to see how the neural cue response changes with training, I would like to
+% use n-way ANOVA to look at the main effect of cue, the main effect of session,
+% and any interaction
 
 
 %% Save the analyzed data 
@@ -500,6 +583,6 @@ figureCount=1;
 %% Example structure of loop through subjects and sessions 
 % for subj= 1:numel(subjects) %for each subject
 %    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-%    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+%    for session = 1:numel(currentSubj)) %for each training session this subject completed
 %    end %end session loop
 % end %end subject loop
