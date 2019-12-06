@@ -44,6 +44,16 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     [~,~,excelData] = xlsread(metaDataAddress); %import metadata from excel spreadsheet
     fileIndex= find(strcmp(excelData(:,1),fName)); %search the spreadsheet data for the matching fileName to get index for matching metadata
     
+    
+    
+    sesData(file).ratA= excelData{fileIndex,2}(); %assign appropriate metadata...These values must be changed if the spreadsheet column organization is changed
+    sesData(file).ratB = excelData{fileIndex,3}();
+    sesData(file).trainStageA = excelData{fileIndex,4}();
+    sesData(file).trainStageB = excelData{fileIndex,5}();
+    sesData(file).trainDay = excelData{fileIndex,6}();
+
+    
+    
     for i= 1:numel(data.contvars)
        broadbandAindex= contains(data.contvars{i,1}.name, 'Fi1r_5');
        broadbandBindex= contains(data.contvars{i,1}.name, 'Fi1r_6');
@@ -67,7 +77,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
         figure();
         hold on
         plot(broadbandA);
-        title(strcat(fName, ' broadband signal A'));
+        title(strcat(experimentName, ' rat ', num2str(sesData(file).ratA), ' day ', num2str(sesData(file).trainDay),  ' broadband signal A'));
         ylabel('V');
 
     end
@@ -77,7 +87,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
         figure();
         hold on;
         plot(broadbandB);
-        title(strcat(fName, ' broadband signal B'));
+        title(strcat(experimentName, ' rat ', num2str(sesData(file).ratB), ' day ', num2str(sesData(file).trainDay),  ' broadband signal B'));
         ylabel('V');
     end
 end
