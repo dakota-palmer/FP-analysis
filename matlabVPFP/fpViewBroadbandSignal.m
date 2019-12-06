@@ -12,21 +12,22 @@ close all
 
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
-
-metaDataAddress = 'C:\Users\capn1\Desktop\nexFiles_VPFP\vpfp_metadata.xlsx'; % excel file location 
-
-nexAddress =  'C:\Users\capn1\Desktop\nexFiles_VPFP\'; % nex file location 
+      
+metaDataAddress = 'Z:\Dakota\Photometry\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
+ 
+nexAddress =  'Z:\Dakota\Photometry\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 % figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-experimentName= 'VPFP-QuantNeuro'; %change experiment name for automatic naming of figures
+experimentName= 'VP-VTA-FP-round2'; %change experiment name for automatic naming of figures
 
 
 
-%establish photometer clip thresholds (in V)
-thresholdA= 4
-thresholdB= 5
+%establish photometer clip thresholds (in V)- TODO: now that we have 3
+%boxes, use metadata to check which photometers are used 
+thresholdA= 5.3 %5.4 is actual limit for photometer 1
+thresholdB= 6.9 %7 is actual limit for photometer 2
 
 
 %% Loop through each nex file, extracting data
@@ -77,9 +78,13 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
         figure();
         hold on
         plot(broadbandA);
-        title(strcat(experimentName, ' rat ', num2str(sesData(file).ratA), ' day ', num2str(sesData(file).trainDay),  ' broadband signal A'));
-        ylabel('V');
+        plot([0, numel(broadbandA)], [thresholdA, thresholdA], 'r--');
+        title(strcat(experimentName, ' rat ', num2str(sesData(file).ratA), ' day ', num2str(sesData(file).trainDay),  ' broadband signal A', '(file= ', fName,')'));
+        ylabel('voltage (V)');
 
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+        saveas(gcf, strcat(experimentName,'_', 'rat_',num2str(sesData(file).ratA),'photometer_A_high_V','.tiff'));
+        close;
     end
     
     if  max(broadbandB) > thresholdB
@@ -87,8 +92,13 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
         figure();
         hold on;
         plot(broadbandB);
-        title(strcat(experimentName, ' rat ', num2str(sesData(file).ratB), ' day ', num2str(sesData(file).trainDay),  ' broadband signal B'));
-        ylabel('V');
+        plot([0, numel(broadbandB)], [thresholdB, thresholdB], 'r--');
+        title(strcat(experimentName, ' rat ', num2str(sesData(file).ratB), ' day ', num2str(sesData(file).trainDay),  ' broadband signal B','(file= ', fName,')'));
+        ylabel('voltage (V)');
+        
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+        saveas(gcf, strcat(experimentName,'_', 'rat_',num2str(sesData(file).ratB),'photometer_B_high_V','.tiff'));
+        close;
     end
 end
 % %% plot broadband signals
@@ -108,3 +118,6 @@ end
 %         title('broadband signal B')
 %         ylabel('V');
 %    end  
+
+
+disp('done');
