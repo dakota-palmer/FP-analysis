@@ -14,10 +14,13 @@ close all
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-metaDataAddress = 'C:\Users\capn1\Desktop\VP-VTA-FP (Round 2)\.NEX files\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
+metaDataAddress = 'Z:\Dakota\Photometry\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
 
-nexAddress =  'C:\Users\capn1\Desktop\VP-VTA-FP (Round 2)\.NEX files\DS training\nexFilesVP-VTA-FP-round2\'; % nex file location 
+nexAddress =  'Z:\Dakota\Photometry\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
+%note: assembly of this nex file list is case-sensitive (I had a minor issue
+%where files with subjects in caps were being loaded before uncapitalized
+%subject files- but sorting by training day would fix any of these issues)
 
 % figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
@@ -28,6 +31,8 @@ experimentName= 'VP-VTA-FP-round2'; %change experiment name for automatic naming
 sesNum= 0;
 
 for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile  
+    
+    tic;
     
     clearvars -except file nexFiles metaDataAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
     
@@ -42,12 +47,18 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     
     sesData(file).ratA= excelData{fileIndex,2}(); %assign appropriate metadata...These values must be changed if the spreadsheet column organization is changed
     sesData(file).ratB = excelData{fileIndex,3}();
+    
+    sesData(file).boxA= excelData{fileIndex,8}(); %get the actual box identity
+    sesData(file).boxB= excelData{fileIndex,9}();
+    
+    sesData(file).DSidentity = excelData{fileIndex,7}();
     sesData(file).trainStageA = excelData{fileIndex,4}();
     sesData(file).trainStageB = excelData{fileIndex,5}();
     sesData(file).trainDay = excelData{fileIndex,6}();
+    sesData(file).fileName= fName;
 
     
-    disp(strcat('rat A = ', num2str(sesData(file).ratA), ' ; rat B = ', num2str(sesData(file).ratB), ' ; trainStageA = ', num2str(sesData(file).trainStageA), ' ; trainStageB = ', num2str(sesData(file).trainStageB), ' ; trainDay = ', num2str(sesData(file).trainDay))); 
+    disp(strcat('rat A = ', num2str(sesData(file).ratA), ' ; rat B = ', num2str(sesData(file).ratB), '; box A= ', num2str(sesData(file).boxA), '; box B= ', num2str(sesData(file).boxB), ' ;  trainStageA = ', num2str(sesData(file).trainStageA), ' ; trainStageB = ', num2str(sesData(file).trainStageB), ' ; trainDay = ', num2str(sesData(file).trainDay))); 
     
     %% Extract contvars (photometer data)
 
@@ -198,6 +209,8 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
         sesData(file).NS= NS; %will just populate with Nan if not present
 %     end   
     
+toc
+
 end %End file loop
 
     %% Reorganize data into struct by subject 
@@ -220,11 +233,13 @@ for rat = 1:numel(rats)
                 trialCount= trialCount+1; %increment counter
                 
                 %Metadata
-                subjData.(subjField)(i).experiment= experimentName
+                subjData.(subjField)(i).experiment= experimentName;
                 subjData.(subjField)(i).rat= subj;
+                subjData.(subjField)(i).fileName= sesData(i).fileName;
+                subjData.(subjField)(i).DSidentity= sesData(i).DSidentity;
                 subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageA;
-                subjData.(subjField)(i).box= 'box A';
+                subjData.(subjField)(i).box= sesData(i).boxA;
                 
                 %Photometry signals
                 subjData.(subjField)(i).cutTime= sesData(i).cutTime;
@@ -247,11 +262,13 @@ for rat = 1:numel(rats)
                  trialCount= trialCount+1; %increment counter
 
                 %Metadata
-                subjData.(subjField)(i).experiment= experimentName
+                subjData.(subjField)(i).experiment= experimentName;
                 subjData.(subjField)(i).rat= subj;
+                subjData.(subjField)(i).fileName= sesData(i).fileName;
+                subjData.(subjField)(i).DSidentity= sesData(i).DSidentity;
                 subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageB;
-                subjData.(subjField)(i).box= 'box B';
+                subjData.(subjField)(i).box= sesData(i).boxB;
 
                 %Photometry signals
                 subjData.(subjField)(i).cutTime= sesData(i).cutTime;
@@ -279,5 +296,9 @@ for rat = 1:numel(rats)
     end  
 end %end subject loop
 
+%% Save .mat
 %save the subjData struct for later analysis
-save(strcat(experimentName,'-', date), 'subjData');
+save(strcat(experimentName,'-', date, 'subjDataRaw'), 'subjData'); %the second argument here is the variable saved, the first is the filename
+
+
+disp('all done')
