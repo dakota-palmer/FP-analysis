@@ -340,6 +340,10 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     %get list of session days for heatplot y axis
     subjTrial= cat(2, currentSubj.trainDay).';
+    
+    if currentSubj(1).rat== 13 %exception for this specific subject bc file loaded out of order for some reason
+       subjTrial= [1:numel(currentSubj)]; 
+    end
 
     %get bottom and top for color axis of DS heatplot
     bottomDS = min(min(min(currentSubj(1).DSzblueAllTrials)), min(min(currentSubj(1).DSzpurpleAllTrials))); %find the lowest value 
@@ -368,9 +372,13 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
 
     %Establish a shared bottom and top for shared color axis of DS & NS
-    bottomShared= min(bottomDS, bottomNS); %find the absolute min value
-    topShared= max(topDS, topNS); %find the absolute min value
-    
+    if ~isempty(bottomNS) %if there is an NS
+        bottomShared= min(bottomDS, bottomNS); %find the absolute min value
+        topShared= max(topDS, topNS); %find the absolute min value
+    else
+        bottomShared= bottomDS;
+        topShared= topDS;
+    end
     %Heatplots!       
     %DS z plot
     figure(figureCount);
