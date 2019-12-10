@@ -347,17 +347,17 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     for session = 1:numel(currentSubj) %for each training session this subject completed
         if session ==1 %for the first session, get this sessions periDS blue z score response
-                currentSubj(1).DSzblueAllTrials= currentSubj(session).periDS.DSzblueMean; 
-                currentSubj(1).DSzpurpleAllTrials= currentSubj(session).periDS.DSzpurpleMean;
+                currentSubj(1).DSzblueSessionMean= currentSubj(session).periDS.DSzblueMean; 
+                currentSubj(1).DSzpurpleSessionMean= currentSubj(session).periDS.DSzpurpleMean;
         else % add on periDS response for subsequent sessions
-                currentSubj(1).DSzblueAllTrials= cat(2, currentSubj(1).DSzblueAllTrials, currentSubj(session).periDS.DSzblueMean);
-                currentSubj(1).DSzpurpleAllTrials= cat(2, currentSubj(1).DSzpurpleAllTrials, currentSubj(session).periDS.DSzpurpleMean);
+                currentSubj(1).DSzblueSessionMean= cat(2, currentSubj(1).DSzblueSessionMean, currentSubj(session).periDS.DSzblueMean);
+                currentSubj(1).DSzpurpleSessionMean= cat(2, currentSubj(1).DSzpurpleSessionMean, currentSubj(session).periDS.DSzpurpleMean);
         end
     end %end session loop
     
     %Transpose for readability
-    currentSubj(1).DSzblueAllTrials= currentSubj(1).DSzblueAllTrials';
-    currentSubj(1).DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials';
+    currentSubj(1).DSzblueSessionMean= currentSubj(1).DSzblueSessionMean';
+    currentSubj(1).DSzpurpleSessionMean= currentSubj(1).DSzpurpleSessionMean';
 
     %get list of session days for heatplot y axis
     subjTrial= cat(2, currentSubj.trainDay).';
@@ -367,8 +367,8 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     end
 
     %get bottom and top for color axis of DS heatplot
-    bottomDS = min(min(min(currentSubj(1).DSzblueAllTrials)), min(min(currentSubj(1).DSzpurpleAllTrials))); %find the lowest value 
-    topDS = max(max(max(currentSubj(1).DSzblueAllTrials)), max(max(currentSubj(1).DSzpurpleAllTrials))); %find the highest value
+    bottomMeanDS = min(min(min(currentSubj(1).DSzblueSessionMean)), min(min(currentSubj(1).DSzpurpleSessionMean))); %find the lowest value 
+    topMeanDS = max(max(max(currentSubj(1).DSzblueSessionMean)), max(max(currentSubj(1).DSzpurpleSessionMean))); %find the highest value
 
 
     %NS- extract data for plots
@@ -378,18 +378,18 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     
     for session = 1:numel(currentSubj) %for each training session this subject completed
         if session ==1 %for the first session, get this sessions periDS blue z score response
-            currentSubj(1).NSzblueAllTrials= currentSubj(session).periNS.NSzblueMean; 
-            currentSubj(1).NSzpurpleAllTrials= currentSubj(session).periNS.NSzpurpleMean;
+            currentSubj(1).NSzblueSessionMean= currentSubj(session).periNS.NSzblueMean; 
+            currentSubj(1).NSzpurpleSessionMean= currentSubj(session).periNS.NSzpurpleMean;
         else % add on periDS response for subsequent sessions
-            currentSubj(1).NSzblueAllTrials= cat(2, currentSubj(1).NSzblueAllTrials, currentSubj(session).periNS.NSzblueMean);
-            currentSubj(1).NSzpurpleAllTrials= cat(2, currentSubj(1).NSzpurpleAllTrials, currentSubj(session).periNS.NSzpurpleMean);
+            currentSubj(1).NSzblueSessionMean= cat(2, currentSubj(1).NSzblueSessionMean, currentSubj(session).periNS.NSzblueMean);
+            currentSubj(1).NSzpurpleSessionMean= cat(2, currentSubj(1).NSzpurpleSessionMean, currentSubj(session).periNS.NSzpurpleMean);
         end
     end %end session loop
     
     
     %Transpose for readability
-    currentSubj(1).NSzblueAllTrials= currentSubj(1).NSzblueAllTrials';
-    currentSubj(1).NSzpurpleAllTrials= currentSubj(1).NSzpurpleAllTrials';
+    currentSubj(1).NSzblueSessionMean= currentSubj(1).NSzblueSessionMean';
+    currentSubj(1).NSzpurpleSessionMean= currentSubj(1).NSzpurpleSessionMean';
    
     %get list of session days for heatplot y axis
     subjTrialNS=[]; %keep track of sessions that have valid NS trials
@@ -401,17 +401,17 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     end %end session loop
 
     %get bottom and top for color axis of NS heatplot
-    bottomNS = min(min(min(currentSubj(1).NSzblueAllTrials)), min(min(currentSubj(1).NSzpurpleAllTrials)));
-    topNS = max(max(max(currentSubj(1).NSzblueAllTrials)), max(max(currentSubj(1).NSzpurpleAllTrials)));
+    bottomMeanNS = min(min(min(currentSubj(1).NSzblueSessionMean)), min(min(currentSubj(1).NSzpurpleSessionMean)));
+    topMeanNS = max(max(max(currentSubj(1).NSzblueSessionMean)), max(max(currentSubj(1).NSzpurpleSessionMean)));
 
 
     %Establish a shared bottom and top for shared color axis of DS & NS
-    if ~isempty(bottomNS) %if there is an NS
-        bottomShared= min(bottomDS, bottomNS); %find the absolute min value
-        topShared= max(topDS, topNS); %find the absolute min value
+    if ~isempty(bottomMeanNS) %if there is an NS
+        bottomMeanShared= min(bottomMeanDS, bottomMeanNS); %find the absolute min value
+        topMeanShared= max(topMeanDS, topMeanNS); %find the absolute min value
     else
-        bottomShared= bottomDS;
-        topShared= topDS;
+        bottomMeanShared= bottomMeanDS;
+        topMeanShared= topMeanDS;
     end
     %Heatplots!       
     %DS z plot
@@ -423,13 +423,13 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     timeLock = [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
-    heatDSzblue= imagesc(timeLock,subjTrial,currentSubj(1).DSzblueAllTrials);
+    heatDSzblueMean= imagesc(timeLock,subjTrial,currentSubj(1).DSzblueSessionMean);
     title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from cue onset');
     ylabel('training day');
     set(gca, 'ytick', subjTrial); %label trials appropriately
     caxis manual;
-    caxis([bottomShared topShared]); %use a shared color axis to encompass all values
+    caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -437,7 +437,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     %   plot purple DS (subplotted for shared colorbar)
     subplot(2,2,3);
-    heatDSzpurple= imagesc(timeLock,subjTrial,currentSubj(1).DSzpurpleAllTrials); 
+    heatDSzpurpleMean= imagesc(timeLock,subjTrial,currentSubj(1).DSzpurpleSessionMean); 
 
     title(strcat('rat ', num2str(subjectsAnalyzed{subj}), ' avg purple z score response to DS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from cue onset');
@@ -446,7 +446,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
 
     caxis manual;
-    caxis([bottomShared topShared]); %use a shared color axis to encompass all values
+    caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
     
 %     %% TODO: try linspace with caxis
 
@@ -466,13 +466,13 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     timeLock = [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
-    heatNSzblue= imagesc(timeLock,subjTrialNS,currentSubj(1).NSzblueAllTrials);
+    heatNSzblueMean= imagesc(timeLock,subjTrialNS,currentSubj(1).NSzblueSessionMean);
     title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to NS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from cue onset');
     ylabel('training day');
     set(gca, 'ytick', subjTrialNS); %label trials appropriately
     caxis manual;
-    caxis([bottomShared topShared]); %use a shared color axis to encompass all values
+    caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -480,7 +480,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     %   plot purple NS (subplotted for shared colorbar)
     subplot(2,2,4);
-    heatNSzpurple= imagesc(timeLock,subjTrialNS,currentSubj(1).NSzpurpleAllTrials); 
+    heatNSzpurpleMean= imagesc(timeLock,subjTrialNS,currentSubj(1).NSzpurpleSessionMean); 
 
     title(strcat('rat ', num2str(subjectsAnalyzed{subj}), ' avg purple z score response to NS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from cue onset');
@@ -489,7 +489,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     set(gca, 'ytick', subjTrialNS); %TODO: NS trial labels must be different, only stage 5 trials
 
     caxis manual;
-    caxis([bottomShared topShared]); %use a shared color axis to encompass all values
+    caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -498,6 +498,207 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
 
 end %end subject loop
+
+%% HEAT PLOT OF RESPONSE TO EVERY INDIVIDUAL CUE PRESENTATION
+
+
+
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+    for session = 1:numel(currentSubj) %for each training session this subject completed
+        
+        %collect all z score responses to every single DS across all sessions (and the latency to PE in response to every single DS)
+        if session==1
+            currentSubj(1).DSzblueAllTrials= squeeze(currentSubj(session).periDS.DSzblue); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+            currentSubj(1).DSzpurpleAllTrials= squeeze(currentSubj(session).periDS.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+
+        else
+            currentSubj(1).DSzblueAllTrials = cat(2, currentSubj.DSzblueAllTrials, (squeeze(currentSubj(session).periDS.DSzblue))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+            currentSubj(1).DSzpurpleAllTrials = cat(2, currentSubj.DSzpurpleAllTrials, (squeeze(currentSubj(session).periDS.DSzpurple))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+        end
+        
+    end %end session loop
+    
+    %Transpose these data for readability
+    currentSubj(1).DSzblueAllTrials= currentSubj(1).DSzblueAllTrials';
+    currentSubj(1).DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials';
+    
+    %get bottom and top for color axis of DS heatplot
+    bottomAllDS = min(min(min(currentSubj(1).DSzblueAllTrials)), min(min(currentSubj(1).DSzpurpleAllTrials))); %find the lowest value 
+    topAllDS = max(max(max(currentSubj(1).DSzblueAllTrials)), max(max(currentSubj(1).DSzpurpleAllTrials))); %find the highest value
+    
+    
+    %get bottom and top for color axis of NS heatplot
+    bottomAllNS= []
+    topAllNS= []
+    
+    %Establish a shared bottom and top for shared color axis of DS & NS
+    if ~isempty(bottomAllNS) %if there is an NS
+        bottomAllShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
+        topAllShared= max(topAllDS, topAllNS); %find the absolute min value
+    else
+        bottomAllShared= bottomAllDS;
+        topAllShared= topAllDS;
+    end
+        
+    
+    %get a trial count to use for the heatplot ytick
+    currentSubj(1).totalDScount= 1:size(currentSubj(1).DSzblueAllTrials,1) 
+    
+    %TODO: split up yticks by session (this would show any clear differences between days)
+    
+     %Heatplots!       
+    %DS z plot
+    figure(figureCount);
+    hold on;
+    subplot(2,2,1); %subplot for shared colorbar
+
+    %plot blue DS
+
+    timeLock = [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+
+    heatDSzblueAllTrials= imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzblueAllTrials);
+    title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'blue z score response to every DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from cue onset');
+    ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
+%     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+    caxis manual;
+    caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+
+    %   plot purple DS (subplotted for shared colorbar)
+    subplot(2,2,3);
+    heatDSzpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzpurpleAllTrials); 
+
+    title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'purple z score response to every DS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from cue onset');
+    ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
+
+%     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+
+    caxis manual;
+    caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+    
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+    
+    
+    figureCount= figureCount+1;
+end %end subject loop
+
+
+%% HEAT PLOT OF RESPONSE TO EVERY INDIVIDUAL CUE PRESENTATION- WITH SHARED COLORBAR ACROSS SUBJECTS
+
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+    for session = 1:numel(currentSubj) %for each training session this subject completed
+        
+        %collect all z score responses to every single DS across all sessions (and the latency to PE in response to every single DS)
+        if session==1
+            subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials= squeeze(currentSubj(session).periDS.DSzblue); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+            subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials= squeeze(currentSubj(session).periDS.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+
+        else
+            subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials = cat(2, subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials, (squeeze(currentSubj(session).periDS.DSzblue))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+            subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials = cat(2, subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials, (squeeze(currentSubj(session).periDS.DSzpurple))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+        end
+        
+    end %end session loop
+    
+    %Transpose these data for readability
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials';
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials';
+    
+    %get bottom and top for color axis of DS heatplot
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllDS = min(min(min(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials)), min(min(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials))); %find the lowest value 
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllDS = max(max(max(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials)), max(max(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials))); %find the highest value
+    
+    
+    %get bottom and top for color axis of NS heatplot
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllNS= []
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllNS= []
+    
+    %Establish a shared bottom and top for shared color axis of DS & NS
+    if ~isempty(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllNS) %if there is an NS
+        subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared= min(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllDS, subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllNS); %find the absolute min value
+        subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllShared= max(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllDS, subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllNS); %find the absolute min value
+    else
+       subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllDS;
+       subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllShared= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllDS;
+    end
+        
+    %This time, save the bottom & top for this subject in an array to compare between all subjects
+    bottomAllBetweenSubjects(1,subj)= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared;
+    topAllBetweenSubjects(1,subj)= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllShared;
+
+    %get a trial count to use for the heatplot ytick
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.totalDScount= 1:size(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials,1); 
+    
+    %TODO: split up yticks by session (this would show any clear differences between days)
+    
+end %end subj loop
+
+%This time, find the min and max values between all subjects for
+%colormap before making heatplots for each subject
+
+bottomAllBetweenSubjects= min(bottomAllBetweenSubjects);
+topAllBetweenSubjects= max(topAllBetweenSubjects);
+
+
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+    
+     %Heatplots!       
+    %DS z plot
+    figure(figureCount);
+    hold on;
+    subplot(2,2,1); %subplot for shared colorbar
+
+    %plot blue DS
+
+    timeLock = [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+
+    heatDSzblueAllTrials= imagesc(timeLock,currentSubj(1).periDS.totalDScount,currentSubj(1).periDS.DSzblueAllTrials);
+    title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'blue z score response to every DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from cue onset');
+    ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).periDS.totalDScount(end)), ')'));
+%     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+    caxis manual;
+    caxis([bottomAllBetweenSubjects topAllBetweenSubjects]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+
+    %   plot purple DS (subplotted for shared colorbar)
+    subplot(2,2,3);
+    heatDSzpurpleAllTrials= imagesc(timeLock,currentSubj(1).periDS.totalDScount,currentSubj(1).periDS.DSzpurpleAllTrials); 
+
+    title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'purple z score response to every DS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from cue onset');
+    ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).periDS.totalDScount(end)), ')'));
+
+%     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+
+    caxis manual;
+    caxis([bottomAllBetweenSubjects topAllBetweenSubjects]); %use a shared color axis to encompass all values
+    
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+    
+    
+    figureCount= figureCount+1;
+end %end subject loop
+
 
 %% Power analysis 
 

@@ -8,6 +8,10 @@ close all
 
 %Make sure you have the vpfpIndex excel sheet filled out properly and paths are correct
 
+
+%For optimization/tracking performance of the code
+profile on;
+
 %% Use excel spreadsheet as index to load all .NEXs along with subject # and experiment details etc.
 
 metaDataAddress = 'Z:\Dakota\Photometry\VP-VTA-FP\round2\Magazine training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
@@ -2298,6 +2302,12 @@ end
     save(strcat(experimentName,date),'subjData');
     
     disp('All done');    
+    
+    
+    %%  Speed test /optimizing
+
+profile viewer;
+% %things that should be optimized:
 
 
 
