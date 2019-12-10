@@ -543,7 +543,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         
     
     %get a trial count to use for the heatplot ytick
-    currentSubj(1).totalDScount= 1:size(currentSubj(1).DSzblueAllTrials,1) 
+    currentSubj(1).totalDScount= 1:size(currentSubj(1).DSzblueAllTrials,1); 
+    %save for later 
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.totalDScount= currentSubj(1).totalDScount;
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared= bottomAllShared;
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllShared= topAllShared;
     
     %TODO: split up yticks by session (this would show any clear differences between days)
     
@@ -591,37 +595,6 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     figureCount= figureCount+1;
 end %end subject loop
-
-%% Try nonlinear colormap?
-
-% First, I’d pick an existing colormap, such as Parula. Specify the max and min values of your data (e.g. 34 and -350), and then select the value at which you would like more color variation (e.g. perhaps 34 or 0). You can play with the scaling intensity parameter to see what looks nice.
-  cMap = parula(256);
-  dataMax = topAllShared;
-  dataMin = bottomAllShared;
-  centerPoint = 0 %mean(mean(currentSubj(1).DSzpurpleAllTrials,1));
-  scalingIntensity = 1;
-% Then perform some operations to create your colormap. I have done this by altering the indices “x” at which each existing color lives, and then interpolating to expand or shrink certain areas of the spectrum.
-  x = 1:length(cMap); 
-  x = x - (centerPoint-dataMin)*length(x)/(dataMax-dataMin);
-  x = scalingIntensity * x/max(abs(x));
-% Next, select some function or operations to transform the original linear indices into nonlinear. In the last line, I then use “interp1” to create the new colormap from the original colormap and the transformed indices.
-  x = sign(x).* exp(abs(x));
-  x = x - min(x); x = x*511/max(x)+1; 
-  newMap = interp1(x, cMap, 1:512);
-% Then plot! 
-%   figure; imagesc(X);
-%   figure; imagesc(X); colormap(newMap);
-  figure; imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzpurpleAllTrials); colorbar; title('auto colormap');
-  figure; imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzpurpleAllTrials); colormap(newMap); colorbar;
-  title(strcat('nonlinear colormap; center= ', num2str(centerPoint), '; scaling = ', num2str(scalingIntensity)));
-  
-%     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-    
-    
-    figureCount= figureCount+1;
-
-
 
 %% HEAT PLOT OF RESPONSE TO EVERY INDIVIDUAL CUE PRESENTATION- WITH SHARED COLORBAR ACROSS SUBJECTS
 
@@ -729,7 +702,6 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
     figureCount= figureCount+1;
 end %end subject loop
 
-
 %% Power analysis 
 
 %Need to define a timescale within which to look for cue-related effect
@@ -836,6 +808,170 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).effectSize.cohensDzBlue= cohensDzBlue;
    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).effectSize.nCuePresentationsNeeded= nCuePresentationsNeeded;
 end %end subject loop
+
+
+%% ~~~ Try to identify / exclude outlier trials~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%Maybe we should just exclude extreme trials- trying to visualize
+    %outliers here first
+    
+    %% INDIVIDUAL TRIAL Z SCORE RESPONSE HISTOGRAMS
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+    
+    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+    
+    %histogram plot of the blue z score response to DS, #bins = # cue presentations
+    figure;
+    subplot(2,1,1);
+    histogram(currentSubj(1).periDS.DSzblueAllTrials, currentSubj(1).periDS.totalDScount(end), 'facecolor', 'b');
+    title(strcat('rat_', num2str(currentSubj(1).rat), 'blue z score in response to DS (n= ', num2str(currentSubj(1).periDS.totalDScount(end)), '*1601 timestamps)'));
+    xlabel(strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue'));
+    ylabel('# timestamps with this value');
+    xlim([currentSubj(1).periDS.bottomAllShared,currentSubj(1).periDS.topAllShared]); %set a shared x axis for comparison
+    
+    %hist the purple z score response to DS #bins = # cue presentations
+    subplot(2,1,2)
+    histogram(currentSubj(1).periDS.DSzpurpleAllTrials, currentSubj(1).periDS.totalDScount(end) , 'facecolor', 'm');
+    xlabel(strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue'));
+    ylabel('# timestamps with this value');
+    title(strcat('rat_', num2str(currentSubj(1).rat), 'purple z score in response to DS (n= ', num2str(currentSubj(1).periDS.totalDScount(end)), '*1601 timestamps)'));
+    xlim([currentSubj(1).periDS.bottomAllShared,currentSubj(1).periDS.topAllShared]); %set a shared x axis for comparison
+    
+    
+end
+
+% % % HISTOGRAM OF RESPONSE OVER TIME
+% % march through timestamps on button press
+% % for subj= 1:numel(subjectsAnalyzed) %for each subject
+% %     
+% %     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+% %     
+% %     timeStep= [1:fs:numel(timeLock)]; %create an array containing 1s "steps" in time around the cue (based on fs)
+% %     
+% %     histogram plot of the blue z score response to DS
+% %     figure(figureCount);
+% %     figureCount= figureCount+1;
+% %     disp('***displaying histograms of z score response to cue thru time');
+% %     for timestamp= 1:numel(timeStep)
+% %             subplot(2,1,1);
+% %             histogram(currentSubj(1).periDS.DSzblueAllTrials(:,timestamp), 'facecolor', 'b');
+% %             title(strcat('rat_', num2str(currentSubj(1).rat), 'blue z score in response to DS at T= ', num2str(timeLock(timeStep(timestamp)))));
+% %             xlabel(strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue'));
+% %             ylabel('# timestamps with this value');
+% %             xlim([currentSubj(1).periDS.bottomAllShared,currentSubj(1).periDS.topAllShared]); %set a shared x axis for comparison
+% %         
+% %             hist the purple z score response to DS 
+% %             subplot(2,1,2)
+% %             histogram(currentSubj(1).periDS.DSzpurpleAllTrials(:,timestamp), 'facecolor', 'm');
+% %             xlabel(strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue'));
+% %             ylabel('# timestamps with this value');
+% %             title(strcat('rat_', num2str(currentSubj(1).rat), 'purple z score in response to DS at T= ', num2str(timeLock(timeStep(timestamp)))));
+% %             xlim([currentSubj(1).periDS.bottomAllShared,currentSubj(1).periDS.topAllShared]); %set a shared x axis for comparison
+% %             pause(0.008); %this will automatically iterate (seconds); to wait for user input use pause()
+% %     end
+% %     close;
+% % end
+
+%% ** Infinitely looping histogram of z score DS response over time
+timeStep= [1:fs:numel(timeLock)]; %create an array containing 1s "steps" in time around the cue (based on fs)
+
+figure(figureCount);
+figureCount=figureCount+1;
+hold on;
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+histTitle= sgtitle(strcat('z score in response to DS at T= ')) %add big title above all subplots
+
+
+% while 1 %infinite loop while true
+    disp('***displaying histograms of z score response to cue thru time, press key to stop');
+    
+    %loop through all timestamps, for each timestamp loop through subjects
+    %and plot the peri-cue z score values first in the blue channel then in
+    %the purple channel (looped twice in order to organize subplots so that
+    %blue is on top of purple for each subject)
+    
+    for timestamp= 1:numel(timeStep)
+        subplotCount= 1; %reset all the subplots between timestamps
+        
+        for subj= 1:numel(subjectsAnalyzed)
+            
+               histTitle.String= strcat('z score in response to DS at T= ', num2str(timeLock(timeStep(timestamp)))) %update the big title above all subplots, need to do it this way otherwise it draws over itself
+                
+                currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subjects within the struct
+            
+                subplot(2, numel(subjectsAnalyzed), subplotCount);   
+                subplotCount=subplotCount+1;
+                
+                histogram(currentSubj(1).periDS.DSzblueAllTrials(:,timestamp), 'facecolor', 'b');
+                title(strcat('rat_', num2str(currentSubj(1).rat), 'blue z'));
+                xlabel(strcat('DS blue z-score'));
+                ylabel('# trials');
+                xlim([currentSubj(1).periDS.bottomAllShared,currentSubj(1).periDS.topAllShared]); %set a shared x axis for comparison
+
+        end
+        
+        
+        for subj= 1:numel(subjectsAnalyzed)
+            
+               histTitle.String= strcat('z score in response to DS at T= ', num2str(timeLock(timeStep(timestamp)))) %update the big title above all subplots, need to do it this way otherwise it draws over itself
+                
+                currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subjects within the struct
+            
+                %hist the purple z score response to DS #bins = # cue presentations
+                subplot(2, numel(subjectsAnalyzed), subplotCount);
+                subplotCount=subplotCount+1;
+                histogram(currentSubj(1).periDS.DSzpurpleAllTrials(:,timestamp), 'facecolor', 'm');
+                xlabel(strcat('DS blue z-score'));
+                ylabel('# trials');
+                title(strcat('rat_', num2str(currentSubj(1).rat), 'purple z'));
+                xlim([currentSubj(1).periDS.bottomAllShared,currentSubj(1).periDS.topAllShared]); %set a shared x axis for comparison
+        end
+        
+        pause(0.005); %this will automatically iterate (seconds); to wait for user input use pause()
+
+    end
+% end
+
+close;
+
+    %% SESSION AVG Z SCORE RESPONSE HISTOGRAMS
+   
+%% Try nonlinear colormap?
+
+
+
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+    
+  currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+  
+% First, I’d pick an existing colormap, such as Parula. Specify the max and min values of your data (e.g. 34 and -350), and then select the value at which you would like more color variation (e.g. perhaps 34 or 0). You can play with the scaling intensity parameter to see what looks nice.
+  cMap = parula(256);
+  dataMax = topAllShared;
+  dataMin = bottomAllShared;
+  centerPoint = 1; %mean(mean(currentSubj(1).periDS.DSzpurpleAllTrials,1));
+  scalingIntensity = 1; %mean(std(currentSubj(1).periDS.DSzpurpleAllTrials));
+% Then perform some operations to create your colormap. I have done this by altering the indices “x” at which each existing color lives, and then interpolating to expand or shrink certain areas of the spectrum.
+  x = 1:length(cMap); 
+  x = x - (centerPoint-dataMin)*length(x)/(dataMax-dataMin);
+  x = scalingIntensity * x/max(abs(x));
+% Next, select some function or operations to transform the original linear indices into nonlinear. In the last line, I then use “interp1” to create the new colormap from the original colormap and the transformed indices.
+  x = sign(x).* exp(abs(x));
+  x = x - min(x); x = x*511/max(x)+1; 
+  newMap = interp1(x, cMap, 1:512);
+% Then plot! 
+%   figure; imagesc(X);
+%   figure; imagesc(X); colormap(newMap);
+  figure; imagesc(timeLock,currentSubj(1).periDS.totalDScount,currentSubj(1).periDS.DSzpurpleAllTrials); colorbar; title(strcat('auto colormap rat_ ', num2str(currentSubj(1).rat)));
+  figure; imagesc(timeLock,currentSubj(1).periDS.totalDScount,currentSubj(1).periDS.DSzpurpleAllTrials); colormap(newMap); colorbar;
+  title(strcat('nonlinear colormap; center= ', num2str(centerPoint), '; scaling = ', num2str(scalingIntensity), '; rat_', num2str(currentSubj(1).rat)));
+ 
+  
+    figureCount= figureCount+1;
+end %end subj loop
+
+
+
+
 %% Inferential stats
 
 % I think the data here will be parametric - at least in latter stages of
