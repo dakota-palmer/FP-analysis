@@ -592,6 +592,36 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     figureCount= figureCount+1;
 end %end subject loop
 
+%% Try nonlinear colormap?
+
+% First, I’d pick an existing colormap, such as Parula. Specify the max and min values of your data (e.g. 34 and -350), and then select the value at which you would like more color variation (e.g. perhaps 34 or 0). You can play with the scaling intensity parameter to see what looks nice.
+  cMap = parula(256);
+  dataMax = topAllShared;
+  dataMin = bottomAllShared;
+  centerPoint = 0 %mean(mean(currentSubj(1).DSzpurpleAllTrials,1));
+  scalingIntensity = 1;
+% Then perform some operations to create your colormap. I have done this by altering the indices “x” at which each existing color lives, and then interpolating to expand or shrink certain areas of the spectrum.
+  x = 1:length(cMap); 
+  x = x - (centerPoint-dataMin)*length(x)/(dataMax-dataMin);
+  x = scalingIntensity * x/max(abs(x));
+% Next, select some function or operations to transform the original linear indices into nonlinear. In the last line, I then use “interp1” to create the new colormap from the original colormap and the transformed indices.
+  x = sign(x).* exp(abs(x));
+  x = x - min(x); x = x*511/max(x)+1; 
+  newMap = interp1(x, cMap, 1:512);
+% Then plot! 
+%   figure; imagesc(X);
+%   figure; imagesc(X); colormap(newMap);
+  figure; imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzpurpleAllTrials); colorbar; title('auto colormap');
+  figure; imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzpurpleAllTrials); colormap(newMap); colorbar;
+  title(strcat('nonlinear colormap; center= ', num2str(centerPoint), '; scaling = ', num2str(scalingIntensity)));
+  
+%     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+    
+    
+    figureCount= figureCount+1;
+
+
 
 %% HEAT PLOT OF RESPONSE TO EVERY INDIVIDUAL CUE PRESENTATION- WITH SHARED COLORBAR ACROSS SUBJECTS
 
