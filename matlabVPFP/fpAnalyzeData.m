@@ -991,6 +991,7 @@ close;
     %nan for visualization, could exclude trials where they occur
     
     %% Artifact elimination
+ 
     %define a threshold criteria for the isosbestic channel based on std,
     %and discard frames where the isosbestic signal deviates above this threshold
     
@@ -1103,7 +1104,7 @@ for subj= 1:numel(subjects)
    subplotCount= subplotCount+1;
    hold on;
    plot(repurpleNoArtifact, 'm'); %plot 405 signal
-   title('artifacts removed');
+   title('artifacts removed- this method isnt working');
 
    scatter(dArtifactTimes, ones(numel(dArtifactTimes),1)*artifactThreshold+mean(currentSubj(session).repurple), 'rx'); 
 
@@ -1112,9 +1113,22 @@ for subj= 1:numel(subjects)
 
    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
+   %this method doesn't seem to work well enough- but at least we have
+   %decent timestamps of artifacts... we maybe we can use this to exclude TRIALS
+   %instead of trying to remove the artifacts themselves?
+   
+   %maybe it would be best to just exlucde trials with huge z scores
+   
    end
 end
    
+%% HEAT PLOT WITH ARTIFACT TRIALS EXCLUDED
+
+%Now that we have timestamps of 'artifacts', check if the peri-event window
+%includes an artifact. If so, exclude this trial.
+
+%maybe it would be best to just exlucde trials with huge z scores
+
     
 %% Try nonlinear colormap?
 
