@@ -872,6 +872,7 @@ end
 % % end
 
 %% ** Infinitely looping histogram of z score DS response over time
+%TODO: save to movie
 timeStep= [1:fs:numel(timeLock)]; %create an array containing 1s "steps" in time around the cue (based on fs)
 
 figure(figureCount);
@@ -879,7 +880,7 @@ figureCount=figureCount+1;
 hold on;
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
-histTitle= sgtitle(strcat('z score in response to DS at T= ')) %add big title above all subplots
+histTitle= sgtitle(strcat('z score in response to DS at T= ')); %add big title above all subplots
 
 
 % while 1 %infinite loop while true
@@ -895,7 +896,7 @@ histTitle= sgtitle(strcat('z score in response to DS at T= ')) %add big title ab
         
         for subj= 1:numel(subjectsAnalyzed)
             
-               histTitle.String= strcat('z score in response to DS at T= ', num2str(timeLock(timeStep(timestamp)))) %update the big title above all subplots, need to do it this way otherwise it draws over itself
+               histTitle.String= strcat('z score in response to DS at T= ', num2str(timeLock(timeStep(timestamp)))); %update the big title above all subplots, need to do it this way otherwise it draws over itself
                 
                 currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subjects within the struct
             
@@ -934,8 +935,187 @@ histTitle= sgtitle(strcat('z score in response to DS at T= ')) %add big title ab
 
 close;
 
-    %% SESSION AVG Z SCORE RESPONSE HISTOGRAMS
+    %% Trying to deal with extreme outliers
+    %Rat10 trial 120, rat9 trial 32, and rat 8 trial 117 are all extreme
+    %outliers (all DS presentations) based on their heatplots- lets find out when these cues were and look at
+    %the traces for these days at this time
    
+    
+    figure(figureCount);
+    figureCount=figureCount+1;
+    subplot(2,1,1)
+    hold on;
+    plot(subjDataAnalyzed.rat9(2).periDS.DSblue(:,:,2), 'b'); %plot peri cue blue signal for DS #2 (overall this would be trial 32) on day 2
+    plot(subjDataAnalyzed.rat9(2).periDS.DSpurple(:,:,2), 'm'); %same, but purple signal
+    title('peri DS raw blue & purple');
+    subplot(2,1,2);
+    hold on;
+    plot(subjDataAnalyzed.rat9(2).periDS.DSzblue(:,:,2),'b'); %plot z score response
+    plot(subjDataAnalyzed.rat9(2).periDS.DSzpurple(:,:,2),'m');
+    title('peri DS z score blue & purple');
+    
+    figure(figureCount);
+    figureCount=figureCount+1;
+    subplot(2,1,1)
+    hold on;
+    plot(subjDataAnalyzed.rat10(4).periDS.DSblue(:,:,30), 'b'); %plot peri cue blue signal for DS #2 (overall this would be trial 32) on day 2
+    plot(subjDataAnalyzed.rat10(4).periDS.DSpurple(:,:,30), 'm'); %same, but purple signal
+    title('peri DS raw blue & purple');
+    subplot(2,1,2);
+    hold on;
+    plot(subjDataAnalyzed.rat10(4).periDS.DSzblue(:,:,30),'b'); %plot z score response
+    plot(subjDataAnalyzed.rat10(4).periDS.DSzpurple(:,:,30),'m');
+    title('peri DS z score blue & purple');
+    
+    figure(figureCount);
+    figureCount=figureCount+1;
+    subplot(2,1,1)
+    hold on;
+    plot(subjDataAnalyzed.rat8(4).periDS.DSblue(:,:,27), 'b'); %plot peri cue blue signal for DS #2 (overall this would be trial 32) on day 2
+    plot(subjDataAnalyzed.rat8(4).periDS.DSpurple(:,:,27), 'm'); %same, but purple signal
+    title('peri DS raw blue & purple');
+    subplot(2,1,2);
+    hold on;
+    plot(subjDataAnalyzed.rat8(4).periDS.DSzblue(:,:,27),'b'); %plot z score response
+    plot(subjDataAnalyzed.rat8(4).periDS.DSzpurple(:,:,27),'m');
+    title('peri DS z score blue & purple');
+    
+    %ok, all look noise related, z score exaggerates the shift
+    %if i save the timestamps used in the periDS analyses I should be able
+    %to pull the raw timestamps and look in context of the whole session
+    
+    %noise should be considered fast deflections in both shannels in the same
+    %direction
+    
+    %could find these cases and remove these timestamps, could make them
+    %nan for visualization, could exclude trials where they occur
+    
+    %% Artifact elimination
+    %define a threshold criteria for the isosbestic channel based on std,
+    %and discard frames where the isosbestic signal deviates above this threshold
+    
+    %keep in mind that 405nm signal could vary with ca++ events
+    
+    %this strategy seeems imperfect- good datapoints will be removed due to
+    %bleaching and it doesn't capture all artifacts... should look at rate
+    %of std change over time?
+    
+for subj= 1:numel(subjects)
+    
+    currentSubj= subjData.(subjects{subj});
+    
+    disp(strcat('artifact elimination_', subjects{subj}));
+    
+    
+    figure(figureCount);
+    figureCount=figureCount+1;
+    sgtitle(strcat('Rat #',num2str(currentSubj(1).rat)));
+    
+    subplotCount=1;
+
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+       artifactThreshold = std(currentSubj(session).repurple)*2;
+       
+       subjDataAnalyzed.(subjects{subj})(session).photometrySignals.artifactThreshold= artifactThreshold; %save this value
+      
+    for timestamp= 1:numel(currentSubj(session).repurple)
+        if timestamp== 1
+            currentSubj(session).dPurple(timestamp)= 0; %no change possible on the first timestamp
+        else
+            currentSubj(session).dPurple(timestamp) = currentSubj(session).repurple(timestamp)-currentSubj(session).repurple(timestamp-1);
+        end  
+    end
+    
+    dPurple= currentSubj(session).dPurple;
+    
+    %let's define a threshold beyond which we want to exclude data (noise)
+    dThreshold = std(currentSubj(session).dPurple)*10;
+    dMean= mean(currentSubj(session).dPurple);
+    
+    %identify points that exceed this threshold
+    dArtifactTimes= find(dPurple>dThreshold | dPurple<-dThreshold);
+    
+    dArtifacts= dPurple(dPurple>dThreshold | dPurple<-dThreshold);
+    
+    subplot(numel(currentSubj),3,subplotCount);
+    subplotCount=subplotCount+1;
+    hold on;
+    plot(currentSubj(session).dPurple, 'm');
+    
+    title('dPurple');
+    %overlay threshold
+    plot([1,numel(currentSubj(session).dPurple)], [dMean - dThreshold, dMean - dThreshold], 'k--');
+    plot([1,numel(currentSubj(session).dPurple)], [dMean + dThreshold, dMean + dThreshold], 'k--');
+    %overlay points beyond threshold
+    scatter(dArtifactTimes, dArtifacts, 'rx')
+   
+    
+    % let's put these excluded timestamps over the raw purple trace to compare
+    
+       subplot(numel(currentSubj), 3, subplotCount);
+       subplotCount= subplotCount+1;
+       hold on;
+       plot(currentSubj(session).repurple, 'm'); %plot 405 signal
+       title('repurple, artifact timestamps calculated based on dPurple');
+       
+       %overlay + and - the threshold relative to the mean 405 signal
+       plot([1,numel(currentSubj(session).repurple)], [mean(currentSubj(session).repurple) + artifactThreshold, mean(currentSubj(session).repurple) + artifactThreshold], 'k--')
+       plot([1,numel(currentSubj(session).repurple)], [mean(currentSubj(session).repurple) - artifactThreshold, mean(currentSubj(session).repurple) - artifactThreshold], 'k--')
+
+       scatter(dArtifactTimes, ones(numel(dArtifactTimes),1)*artifactThreshold+mean(currentSubj(session).repurple), 'rx'); 
+    
+       %plot blue too
+       plot(currentSubj(session).reblue);
+    
+
+    
+
+    %conservative threshold works well here- just looking for extreme
+    %artifacts- big, abrupt changes
+    
+    %TODO: this is calculating dF timestamp by timestamp, but maybe we want to reject
+    %rapid increases over a specific time period or do some kind of sliding
+    %calculation
+
+    %Let's actually remove the artifacts now
+    
+    cutTime= currentSubj(session).cutTime;
+    
+    %get the actual timestamp values to be excluded from cutTime
+    excludedTimestamps = cutTime(dArtifactTimes);
+    
+    %extract all timestmap values from cutTime that aren't equal to these
+    %excluded timestamps
+    
+    %make these excluded timestamps NaN
+    cutTime(dArtifactTimes)= NaN;
+    %extract timestamps that aren't NaN
+    timeNoArtifact= cutTime(~isnan(cutTime));
+    
+    disp(strcat('excluded_', num2str(numel(excludedTimestamps)), ' timestamps w/ artifacts '));
+    
+    %now use the same strategy to extract photometry signals
+    reblueNoArtifact= currentSubj(session).reblue(~isnan(cutTime));
+    repurpleNoArtifact= currentSubj(session).repurple(~isnan(cutTime));
+    
+    
+   subplot(numel(currentSubj), 3, subplotCount);
+   subplotCount= subplotCount+1;
+   hold on;
+   plot(repurpleNoArtifact, 'm'); %plot 405 signal
+   title('artifacts removed');
+
+   scatter(dArtifactTimes, ones(numel(dArtifactTimes),1)*artifactThreshold+mean(currentSubj(session).repurple), 'rx'); 
+
+   %plot blue too
+   plot(reblueNoArtifact, 'b');
+
+   set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+   end
+end
+   
+    
 %% Try nonlinear colormap?
 
 
