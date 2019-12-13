@@ -330,7 +330,7 @@ for subj= 1:numel(subjects) %for each subject
 
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurpleMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
 
-                subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean = mean(subjDataAnalyzed.(subjects{subj})(session).NSzblue, 3);
+                subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue, 3);
 
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurpleMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple, 3);
             end % end NS cue loop
@@ -1134,6 +1134,9 @@ for subj= 1:numel(subjects)
    %instead of trying to remove the artifacts themselves?
    
    %maybe it would be best to just exlucde trials with huge z scores
+   
+   %Maybe instead of excluding trials, change the baseline z score calc in
+   %some way (exclude timestamps?)
    
    %save the artifact indices for each session
    subjDataAnalyzed.(subjects{subj})(session).photometrySignals.dArtifactTimes= excludedTimestamps; %this is a list of the excluded timestamps

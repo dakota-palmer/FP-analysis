@@ -48,17 +48,18 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     sesData(file).ratA= excelData{fileIndex,2}(); %assign appropriate metadata...These values must be changed if the spreadsheet column organization is changed
     sesData(file).ratB = excelData{fileIndex,3}();
     
-    sesData(file).boxA= excelData{fileIndex,8}(); %get the actual box identity
-    sesData(file).boxB= excelData{fileIndex,9}();
+    sesData(file).boxA= excelData{fileIndex,9}(); %get the actual box identity
+    sesData(file).boxB= excelData{fileIndex,10}();
     
-    sesData(file).DSidentity = excelData{fileIndex,7}();
+    sesData(file).DSidentity = excelData{fileIndex,8}();
     sesData(file).trainStageA = excelData{fileIndex,4}();
     sesData(file).trainStageB = excelData{fileIndex,5}();
-    sesData(file).trainDay = excelData{fileIndex,6}();
+    sesData(file).trainDayA = excelData{fileIndex,6}();
+    sesData(file).trainDayB = excelData{fileIndex,7}();
     sesData(file).fileName= fName;
 
     
-    disp(strcat('rat A = ', num2str(sesData(file).ratA), ' ; rat B = ', num2str(sesData(file).ratB), '; box A= ', num2str(sesData(file).boxA), '; box B= ', num2str(sesData(file).boxB), ' ;  trainStageA = ', num2str(sesData(file).trainStageA), ' ; trainStageB = ', num2str(sesData(file).trainStageB), ' ; trainDay = ', num2str(sesData(file).trainDay))); 
+    disp(strcat('rat A = ', num2str(sesData(file).ratA), ' ; rat B = ', num2str(sesData(file).ratB), '; box A= ', num2str(sesData(file).boxA), '; box B= ', num2str(sesData(file).boxB), ' ;  trainStageA = ', num2str(sesData(file).trainStageA), ' ; trainStageB = ', num2str(sesData(file).trainStageB), ' ; trainDayA = ', num2str(sesData(file).trainDayA))); 
     
     %% Extract contvars (photometer data)
 
@@ -237,7 +238,7 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).rat= subj;
                 subjData.(subjField)(i).fileName= sesData(i).fileName;
                 subjData.(subjField)(i).DSidentity= sesData(i).DSidentity;
-                subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
+                subjData.(subjField)(i).trainDay= sesData(i).trainDayA; 
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageA;
                 subjData.(subjField)(i).box= sesData(i).boxA;
                 
@@ -266,7 +267,7 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).rat= subj;
                 subjData.(subjField)(i).fileName= sesData(i).fileName;
                 subjData.(subjField)(i).DSidentity= sesData(i).DSidentity;
-                subjData.(subjField)(i).trainDay= sesData(i).trainDay; 
+                subjData.(subjField)(i).trainDay= sesData(i).trainDayB; 
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageB;
                 subjData.(subjField)(i).box= sesData(i).boxB;
 
@@ -296,6 +297,17 @@ for rat = 1:numel(rats)
     end  
 end %end subject loop
 
+%% Sort struct by training day for each subject before saving
+%at times files are loaded out of order, this will organize everything by training day (each row in the struct = 1 session) 
+
+subjects= fieldnames(subjData); %access subjData struct with dynamic fieldnames
+
+for subj = 1:numel(subjects)
+ currentSubj= subjData.(subjects{subj}); 
+ subjTable = struct2table(currentSubj); % convert the struct array to a table
+ subjTableSorted = sortrows(subjTable, 'trainDay'); % sort the table by 'trainDay'
+ subjData.(subjects{subj}) = table2struct(subjTableSorted);
+end
 %% Save .mat
 %save the subjData struct for later analysis
 save(strcat(experimentName,'-', date, 'subjDataRaw'), 'subjData'); %the second argument here is the variable saved, the first is the filename
