@@ -521,17 +521,26 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         if session==1
             currentSubj(1).DSzblueAllTrials= squeeze(currentSubj(session).periDS.DSzblue); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
             currentSubj(1).DSzpurpleAllTrials= squeeze(currentSubj(session).periDS.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-
+            
+            currentSubj(1).NSzblueAllTrials= squeeze(currentSubj(session).periNS.NSzblue); %shape is off here!
+            currentSubj(1).NSzpurpleAllTrials= squeeze(currentSubj(session).periNS.NSzpurple);
         else
             currentSubj(1).DSzblueAllTrials = cat(2, currentSubj.DSzblueAllTrials, (squeeze(currentSubj(session).periDS.DSzblue))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
             currentSubj(1).DSzpurpleAllTrials = cat(2, currentSubj.DSzpurpleAllTrials, (squeeze(currentSubj(session).periDS.DSzpurple))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+        
+            currentSubj(1).NSzblueAllTrials = cat(2, currentSubj.NSzblueAllTrials, (squeeze(currentSubj(session).periNS.NSzblue))); 
+            currentSubj(1).NSzpurpleAllTrials = cat(2, currentSubj.NSzpurpleAllTrials, (squeeze(currentSubj(session).periNS.NSzpurple))); 
+
         end
         
     end %end session loop
     
     %Transpose these data for readability
     currentSubj(1).DSzblueAllTrials= currentSubj(1).DSzblueAllTrials';
-    currentSubj(1).DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials';
+    currentSubj(1).DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials';    
+    currentSubj(1).NSzblueAllTrials= currentSubj(1).NSzblueAllTrials';
+    currentSubj(1).NSzblueAllTrials= currentSubj(1).NSzpurpleAllTrials';
+
     
     %get bottom and top for color axis of DS heatplot
     bottomAllDS = min(min(min(currentSubj(1).DSzblueAllTrials)), min(min(currentSubj(1).DSzpurpleAllTrials))); %find the lowest value 
@@ -539,8 +548,8 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     
     %get bottom and top for color axis of NS heatplot
-    bottomAllNS= []
-    topAllNS= []
+    bottomAllNS= min(min(currentSubj(1).NSzblueAllTrials)), min(min(currentSubj(1).NSzpurpleAllTrials));
+    topAllNS= max(max(currentSubj(1).NSzblueAllTrials)), max(max(currentSubj(1).NSzpurpleAllTrials));
     
     %Establish a shared bottom and top for shared color axis of DS & NS
     if ~isempty(bottomAllNS) %if there is an NS
@@ -554,10 +563,16 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     %get a trial count to use for the heatplot ytick
     currentSubj(1).totalDScount= 1:size(currentSubj(1).DSzblueAllTrials,1); 
+    currentSubj(1).totalNScount= 1:size(currentSubj(1).NSzblueAllTrials,1);
+    
+% size(currentSubj(1).DSzblueAllTrials,1) %debuggning shape
+% size(currentSubj(1).NSzblueAllTrials,1)
+
     %save for later 
     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.totalDScount= currentSubj(1).totalDScount;
     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared= bottomAllShared;
     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllShared= topAllShared;
+    
     
     %TODO: split up yticks by session (this would show any clear differences between days)
     
@@ -603,6 +618,28 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
     saveas(gcf, strcat(figPath, currentSubj(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
 
+    if ~isempty(bottomAllNS) %if there is NS data
+           %   plot purple NS (subplotted for shared colorbar)
+        subplot(2,2,4);
+        heatNSzpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzpurpleAllTrials); 
+
+        title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding every NS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+        xlabel('seconds from cue onset');
+        ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNScount(end)), ')'));
+
+    %     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+
+        caxis manual;
+        caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+        saveas(gcf, strcat(figPath, currentSubj(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
+    end
+    
     
     figureCount= figureCount+1;
 end %end subject loop
@@ -635,8 +672,8 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     
     %get bottom and top for color axis of NS heatplot
-    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllNS= []
-    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllNS= []
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periNS.bottomAllNS= [];
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periNS.topAllNS= [];
     
     %Establish a shared bottom and top for shared color axis of DS & NS
     if ~isempty(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllNS) %if there is an NS
@@ -653,6 +690,8 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
     %get a trial count to use for the heatplot ytick
     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.totalDScount= 1:size(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials,1); 
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).perNS.totalNScount= 1:size(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periNS.NSzblueAllTrials,1);
+
     
     %TODO: split up yticks by session (this would show any clear differences between days)
     
@@ -1236,6 +1275,8 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     %get a trial count to use for the heatplot ytick
     currentSubj(1).totalDScount= 1:size(currentSubj(1).DSzblueAllTrials,1); 
+    currentSubj(1).totalNScount= 1:size(currentSubj(1).NSzblueAllTrials,1); 
+
     %save for later 
     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.totalDScount= currentSubj(1).totalDScount;
     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared= bottomAllShared;
