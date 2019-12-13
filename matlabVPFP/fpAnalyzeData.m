@@ -1162,7 +1162,6 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
                 %if artifact occurs between preEventTime and postEventTime
                 if artifact>preEventTimeDS && artifact<postEventTimeDS
                     disp(strcat('rat_ ', num2str(currentSubj(1).rat), ' session ', num2str(session), ' artifact detected, exluding DS_', num2str(cue), ' from heat plot'))
-                    currentSubj(session).periDS.DSzblue= []; %get rid of values on this trial
                     DSexcluded= [DSexcluded, cue]; %add this cue to the list of excluded cues for this session
                     break; %if this cue has an artifact, we don't need to keep checking anymore
                 end
@@ -1175,8 +1174,17 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         %from included cues
         
         for excludedTrial = DSexcluded
-            currentSubj(session).periDS.DSzblue(:,:,excludedTrial)= [];
+            %make all the dat in excluded trials = nan
+            currentSubj(session).periDS.DSzblue(:,:,excludedTrial)= nan; %first make all these values nan
         end
+        
+        
+        %then remove the nans %this is currently collapsing into 1d,
+        %preserving the structure would be nice... maybe keep nans and just
+        %plot ~nan
+%         currentSubj(session).periDS.DSzblue= currentSubj(session).periDS.DSzblue(~isnan(currentSubj(session).periDS.DSzblue));
+
+        
     end %end session loop
 end%end subj loop
     %% 
