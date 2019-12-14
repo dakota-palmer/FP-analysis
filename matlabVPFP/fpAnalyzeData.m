@@ -571,7 +571,28 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     %TODO: split up yticks by session (this would show any clear differences between days)
     
-     %Heatplots!       
+     %Heatplots!    
+     
+     %First, we'll want to establish boundaries for our colormaps based on
+     %the std of the z score response. We want to have equidistant
+     %color axis max and min so that 0 sits directly in the middle
+     
+     %TODO: should this be a pooled std calculation (pooled blue & purple)?
+     
+     %define DS color axes
+     
+     %get the avg std in the blue and purple z score responses to all cues,
+     %get absolute value and then multiply this by some factor to define a color axis max and min
+     
+     stdFactor= 4;
+     
+     topDSzblue= stdFactor*abs(mean((std(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzpurple= stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+
+     bottomDSzblue = -stdFactor*abs(mean((std(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     bottomDSzpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))))
+    
+     
     %DS z plot
     figure(figureCount);
     hold on;
