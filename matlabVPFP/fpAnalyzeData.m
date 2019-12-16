@@ -930,7 +930,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
 
 end %end subject loop
 
-  %now avg everything across subjects; use nanmean since some NS data may be nan
+  %now avg everything across subjects; use nanmean since some NS dat   a may be nan
   grandMeanEffectDSzblueAllSubjects= nanmean(grandMeanEffectDSzblue); %avg response to DS
   grandMeanEffectNSzblueAllSubjects= nanmean(grandMeanEffectNSzblue); %avg response to NS
 
@@ -948,7 +948,7 @@ end %end subject loop
  %heatplots show response only ~500ms after cue). Could also look for a max
  %response and then use those instead of getting an avg response.
  
- %just for fun, what n would we need for .80 power?
+ %just for fun, what n would we need for .80 power given this effect size?
  nCuePresentationsNeeded = sampsizepwr('t',[grandMeanEffectDSzblueAllSubjects, pooledStdAllSubjects], grandMeanEffectNSzblueAllSubjects, .80,[])
   
  %VPFP-quantneuro: that's a lot of trials... 1398/30 per day ~ 47 days of training
@@ -969,6 +969,41 @@ end %end subject loop
 % Since I'd like to see how the neural cue response changes with training, I would like to
 % use n-way ANOVA to look at the main effect of cue, the main effect of session,
 % and any interaction
+
+%% ANOVA
+% Trying to do N-way anova of peri-DS blue vs. purple avg z score response
+% in a predefined time window of interest following the cue
+% For now, factors of interest: Wavelength (465 blue vs 405 purple) and Session (time)
+
+anovanSessionCount =1; %initialize an iterator for indexing
+
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+    
+   currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+   
+    for session = 1:numel(currentSubj) %for each training session this subject completed'
+
+        %Let's get our data into the right shape
+        %first use squeeze() to flatten the 3d DSzblue data, then linearize this 2d data it into 1d by using (:). Now it should fit into an array
+         anovanDSzblueFlat= (squeeze(currentSubj(session).periDS.DSzblue)); 
+        if session ==1 %for the first session, initialize array and assign data
+%             anovanDSzblueAll= anovanDSzblueFlat(:); %(:) here is used to linearize the 2d data into 1d
+        else %for subsequent sessions, use cat() to append data onto the array
+%             anovanDSzblueAll
+        end
+        anovanSessionCount = anovanSessionCount+1; %iterate this count
+    end %end session loop
+   
+end %end subject loop
+
+% anovanBlueZflat= squeeze(anovanBlueZ);
+
+%example 3 way anova
+% y = [52.7 57.5 45.9 44.5 53.0 57.0 45.9 44.0]'; %raw data
+% g1 = [1 2 1 2 1 2 1 2]; %label 1
+% g2 = {'hi';'hi';'lo';'lo';'hi';'hi';'lo';'lo'}; %label 2
+% g3 = {'may';'may';'may';'may';'june';'june';'june';'june'}; %label 3
+% p = anovan(y,{g1,g2,g3})
 
 %% ~~~Artifact identification/elimination~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %Maybe we should just exclude extreme trials/ trials where artifacts are present
@@ -1498,7 +1533,7 @@ end %end subject loop
 %     
 %     figureCount= figureCount+1;
 
-end%end subj loop
+% end%end subj loop
 
 %% experimenting with nonlinear colormap
 
