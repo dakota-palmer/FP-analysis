@@ -200,6 +200,10 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
 
     cutTime = reTime(numStartExclude:end-numEndExclude);        % define cutTime as a new time axis w/o removed points- remember each intensity value should have a corresponding timestamp
     
+    
+    %% Match event timestamps to resampled time axis (cutTime)
+    
+    
     %% Save all data for a given session to struct for easy access
     
         %Events
