@@ -127,6 +127,10 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
 
        poxBindex= contains(data.events{i,1}.name, 'Pox2');
        loxBindex= contains(data.events{i,1}.name, 'Lox2');
+       
+       outAindex= contains(data.events{i,1}.name, 'Out1');
+       outBindex= contains(data.events{i,1}.name, 'Out2');
+
 
        if(DSindex ==1)  %e.g. if DSindex returns true (1), then define DS as the timestamps within this data.events series
            DS = data.events{i,1}.timestamps;
@@ -159,6 +163,16 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
            loxB = data.events{i,1}.timestamps;
     %        disp(strcat('loxB event index= ', num2str(i)));
       end
+      
+     if(outAindex ==1)
+           outA = data.events{i,1}.timestamps;
+     end
+      
+     if(outBindex ==1)
+           outB = data.events{i,1}.timestamps;
+     end
+      
+     
     end
       
     %% Preprocessing- downsample to 40Hz and remove some datapoints at beginning & end to remove artifacts
@@ -206,9 +220,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     sesData(file).repurpleA = repurpleA;
     sesData(file).repurpleB = repurpleB;
 
-%     if sesData(file).trainStageA==5|sesData(file).trainStageB==5 %only stage 5 has the NS
-        sesData(file).NS= NS; %will just populate with Nan if not present
-%     end   
+    sesData(file).NS= NS; %will just populate with Nan if not present
     
 toc
 
@@ -252,11 +264,8 @@ for rat = 1:numel(rats)
              	subjData.(subjField)(i).pox= sesData(i).poxA;
                 subjData.(subjField)(i).out= sesData(i).outA;
                 subjData.(subjField)(i).lox= sesData(i).loxA;
-
-%                 if subjData.(subjField)(i).trainStage== 5 %NS only on stage 5
                 
-                    subjData.(subjField)(i).NS= sesData(i).NS; %will just populate with nan if not present
-%                 end
+                subjData.(subjField)(i).NS= sesData(i).NS; %will just populate with nan if not present
                 
         %BOX B
             elseif subj ==sesData(i).ratB %if this rat was in boxB, associate session data from boxB with it
@@ -283,10 +292,8 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).out= sesData(i).outB;
                 subjData.(subjField)(i).lox= sesData(i).loxB;
 
-%                 if subjData.(subjField)(i).trainStage== 5 %NS only on stage 5
                 
-                    subjData.(subjField)(i).NS= sesData(i).NS;
-%                 end
+                subjData.(subjField)(i).NS= sesData(i).NS;
 
             end 
         end %end session loop

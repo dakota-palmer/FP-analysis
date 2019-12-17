@@ -170,6 +170,163 @@ end
    end %end session loop
 end %end subject loop
 
+%% ~~~Behavioral Analyses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+%% Identify PEs and licks occuring during the DS 
+
+% Here, we'll loop through every cue in every session, finding the cue
+% onset time and the cue's duration. Then, we'll check for PEs and licks
+% that occur during this duration and assign them to that cue.
+
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+  
+   for session = 1:numel(currentSubj) %for each training session this subject completed    
+  
+        clear cutTime timeDiff poxDS loxDS outDS %this is cleared between sessions to prevent spillover
+
+        cutTime= currentSubj(session).cutTime; %save this as an array, greatly speeds things up because we have to go through each timestamp to find the closest one to the cues
+
+           %initialize cell arrays, so they're all the same size for
+            %convenience
+            currentSubj(session).behavior.poxDS= cell(1,numel(currentSubj(session).DS))
+%             currentSubj(session).behavior.outDS= cell(1,numel(currentSubj(session).DS))
+            currentSubj(session).behavior.loxDS= cell(1,numel(currentSubj(session).DS))
+
+        %First, let's establish the cue duration based on training stage
+        if currentSubj(session).trainStage == 1
+            cueLength= 60*fs; %60s on stage 1, multiply by fs to get #frames
+        elseif currentSubj(session).trainStage ==2
+            cueLength= 30*fs;
+        elseif currentSubj(session).trainStage ==3
+            cueLength= 20*fs;
+        else %on subsequent stages, cueLength is 10s
+            cueLength =10*fs; 
+        end
+        
+        for cue=1:length(currentSubj(session).DS) %for each DS cue in this session
+
+            %each entry in DS is a timestamp of the DS onset before downsampling- this needs to be aligned with our current time axis  
+            DSonset = currentSubj(session).DS(cue,1); 
+
+            %find closest value (min difference) in cutTime (the current time axis) to DSonset by subtraction
+            for ts = 1:length(currentSubj(session).cutTime) %for each timestamp in cutTime 
+                timeDiff(1,ts) = abs(DSonset-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
+            end
+
+            [~,DSonsetShifted] = min(timeDiff); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual DSonset- define this as DSonsetShifted
+        
+            currentSubj(session).behavior.DSonset{1,cue}= cutTime(DSonsetShifted); %save cue onset time
+
+            
+            %Now, look for behaviors that occur during the cue and save
+            %them to a cell array
+                     
+            
+            %find an save pox during the cue duration
+            poxDScount= 1; %counter for indexing
+            
+            for i = 1:numel(currentSubj(session).pox) % for every port entry logged during this session
+               if (cutTime(DSonsetShifted)<currentSubj(session).pox(i)) && (currentSubj(session).pox(i)<cutTime(DSonsetShifted+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
+                    currentSubj(session).behavior.poxDS{1,cue}(poxDScount,1)= currentSubj(session).pox(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
+                    poxDScount=poxDScount+1; %iterate the counter
+               end
+            end
+           
+            
+%             %find and save port exits during the cue
+%             outDScount= 1;
+%             for i = 1:numel(currentSubj(session).out) % for every port entry logged during this session
+%                if (cutTime(DSonsetShifted)<currentSubj(session).out(i)) && (currentSubj(session).out(i)<cutTime(DSonsetShifted+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
+%                     currentSubj(session).behavior.outDS{1,cue}(outDScount,1)= currentSubj(session).out(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
+%                     outDScount=outDScount+1; %iterate the counter
+%                end
+%             end
+            
+            
+            %find and save licks during the cue duration
+            loxDScount= 1; %counter for indexing
+            
+            for i = 1:numel(currentSubj(session).lox) % for every port entry logged during this session
+               if (cutTime(DSonsetShifted)<currentSubj(session).lox(i)) && (currentSubj(session).lox(i)<cutTime(DSonsetShifted+cueLength)) %if the lick occurs between this cue's onset and this cue's onset, assign it to this cue 
+                    currentSubj(session).behavior.loxDS{1,cue}(loxDScount,1)= currentSubj(session).lox(i); %cell array containing all pox during the cue, empty [] if no licks during the cue
+                    loxDScount=loxDScount+1; %iterate the counter
+               end
+            end
+                        
+        end %end cue loop
+               
+        subjDataAnalyzed.(subjects{subj})(session).behavior= currentSubj(session).behavior; %save the results
+
+   end %end session loop
+     
+end %end subject loop
+
+
+%% Identify trials where animal was waiting in port at cue onset- method one, results weird
+
+  %Find trials where the animal was already in the port at cue onset
+  for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+       clear cutTime timeDiff inPortDScount inPortDS %this is cleared between sessions to prevent spillover
+
+        cutTime= currentSubj(session).cutTime; %save this as an array, greatly speeds things up because we have to go through each timestamp to find the closest one to the cues
+
+        %initialize cell arrays so they're the same size for convenience
+        currentSubj(session).behavior.inPortDS= cell(1, numel(currentSubj(session).DS));
+        
+   %ID DS trials where animal was in port at cue onset
+        for cue=1:length(currentSubj(session).DS) %for each DS cue in this session
+
+            %each entry in DS is a timestamp of the DS onset before downsampling- this needs to be aligned with our current time axis  
+            DSonset = currentSubj(session).DS(cue,1); 
+
+            %find closest value (min difference) in cutTime (the current time axis) to DSonset by subtraction
+            for ts = 1:length(currentSubj(session).cutTime) %for each timestamp in cutTime 
+                timeDiff(1,ts) = abs(DSonset-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
+            end
+
+            [~,DSonsetShifted] = min(timeDiff); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual DSonset- define this as DSonsetShifted
+                           
+            %This is one method, but results are weird...
+            inPortDScount= 1; %counter for indexing
+                       
+            
+            for i = 1:numel(currentSubj(session).pox) % for every port entry logged during this session
+                %if the PE happened before the cue onset and the next TTL pulse following cue onset is an out, then
+                %the animal was already in the port
+               if currentSubj(session).pox(i)< cutTime(DSonsetShifted) && currentSubj(session).out(i) > cutTime(DSonsetShifted)
+                   currentSubj(session).behavior.inPortDS{1,cue}(inPortDScount,1)= i;
+                   disp(strcat(subjects{subj}, 'session', num2str(session), '_DS_', num2str(cue), ' inPortADS : ', num2str(currentSubj(session).pox(i)), '_pox_;', num2str(cutTime(DSonsetShifted)), '_DS_;', num2str(currentSubj(session).out(i)), '_out_'));
+                   inPortDScount=inPortDScount+1; %iterate the counter
+               end
+            end
+                                 
+       end %end DS loop
+       
+       subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS= currentSubj(session).behavior.inPortDS;
+       
+   end %end session loop   
+end %end subject loop
+
+%% Identify trials where animal was waiting in port at cue onset- method two
+%reliant on the previous section
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+       %loop through DS cues
+       for cue = 1:numel(currentSubj(session).behavior.DSonset)
+            poxDiff{1,cue}= abs(currentSubj(session).behavior.DSonset{1,cue} - min(currentSubj(session).behavior.poxDS{1,cue}));
+           
+       end %end DS loop
+   end %end session loop
+end %end subject loop
+
+  
+
 %% ~~~Event-Triggered Analyses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %In these sections, we will do an event-triggered analyses by extracting data 
 %from the photometry traces immediately surrounding relevant behavioral events (e.g. cue onset, port entry, lick)
