@@ -179,6 +179,8 @@ end %end subject loop
 % onset time and the cue's duration. Then, we'll check for PEs and licks
 % that occur during this duration and assign them to that cue.
 
+disp('classifying events during cue epoch');
+
 for subj= 1:numel(subjects) %for each subject
    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
   
@@ -190,9 +192,9 @@ for subj= 1:numel(subjects) %for each subject
 
            %initialize cell arrays, so they're all the same size for
             %convenience
-            currentSubj(session).behavior.poxDS= cell(1,numel(currentSubj(session).DS))
-            currentSubj(session).behavior.outDS= cell(1,numel(currentSubj(session).DS))
-            currentSubj(session).behavior.loxDS= cell(1,numel(currentSubj(session).DS))
+            currentSubj(session).behavior.poxDS= cell(1,numel(currentSubj(session).DS));
+            currentSubj(session).behavior.outDS= cell(1,numel(currentSubj(session).DS));
+            currentSubj(session).behavior.loxDS= cell(1,numel(currentSubj(session).DS));
 
         %First, let's establish the cue duration based on training stage
         if currentSubj(session).trainStage == 1
@@ -207,28 +209,17 @@ for subj= 1:numel(subjects) %for each subject
         
         for cue=1:length(currentSubj(session).DS) %for each DS cue in this session
 
-            %each entry in DS is a timestamp of the DS onset before downsampling- this needs to be aligned with our current time axis  
-            DSonset = currentSubj(session).DS(cue,1); 
-
-            %find closest value (min difference) in cutTime (the current time axis) to DSonset by subtraction
-            for ts = 1:length(currentSubj(session).cutTime) %for each timestamp in cutTime 
-                timeDiff(1,ts) = abs(DSonset-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
-            end
-
-            [~,DSonsetShifted] = min(timeDiff); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual DSonset- define this as DSonsetShifted
-        
-            currentSubj(session).behavior.DSonset{1,cue}= cutTime(DSonsetShifted); %save cue onset time
-
-            
-            %Now, look for behaviors that occur during the cue and save
-            %them to a cell array
+            %each entry in DS is a timestamp of the DS onset, let's get its
+            %corresponding index from cutTime and use that to pull
+            %surrounding data
+            DSonset = find(cutTime==currentSubj(session).DS(cue,1));
                      
             
             %find an save pox during the cue duration
             poxDScount= 1; %counter for indexing
             
             for i = 1:numel(currentSubj(session).pox) % for every port entry logged during this session
-               if (cutTime(DSonsetShifted)<currentSubj(session).pox(i)) && (currentSubj(session).pox(i)<cutTime(DSonsetShifted+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
+               if (cutTime(DSonset)<currentSubj(session).pox(i)) && (currentSubj(session).pox(i)<cutTime(DSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
                     currentSubj(session).behavior.poxDS{1,cue}(poxDScount,1)= currentSubj(session).pox(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
                     poxDScount=poxDScount+1; %iterate the counter
                end
@@ -238,7 +229,7 @@ for subj= 1:numel(subjects) %for each subject
             %find and save port exits during the cue
             outDScount= 1;
             for i = 1:numel(currentSubj(session).out) % for every port entry logged during this session
-               if (cutTime(DSonsetShifted)<currentSubj(session).out(i)) && (currentSubj(session).out(i)<cutTime(DSonsetShifted+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
+               if (cutTime(DSonset)<currentSubj(session).out(i)) && (currentSubj(session).out(i)<cutTime(DSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
                     currentSubj(session).behavior.outDS{1,cue}(outDScount,1)= currentSubj(session).out(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
                     outDScount=outDScount+1; %iterate the counter
                end
@@ -249,7 +240,7 @@ for subj= 1:numel(subjects) %for each subject
             loxDScount= 1; %counter for indexing
             
             for i = 1:numel(currentSubj(session).lox) % for every port entry logged during this session
-               if (cutTime(DSonsetShifted)<currentSubj(session).lox(i)) && (currentSubj(session).lox(i)<cutTime(DSonsetShifted+cueLength)) %if the lick occurs between this cue's onset and this cue's onset, assign it to this cue 
+               if (cutTime(DSonset)<currentSubj(session).lox(i)) && (currentSubj(session).lox(i)<cutTime(DSonset+cueLength)) %if the lick occurs between this cue's onset and this cue's onset, assign it to this cue 
                     currentSubj(session).behavior.loxDS{1,cue}(loxDScount,1)= currentSubj(session).lox(i); %cell array containing all pox during the cue, empty [] if no licks during the cue
                     loxDScount=loxDScount+1; %iterate the counter
                end
@@ -275,8 +266,6 @@ end %end subject loop
 %than the closest port entry pulse, then the animal was already in the port
 %on that trial
 
-%reliant on behavior.DSonset and behavior.NSonset
-
 for subj= 1:numel(subjects) %for each subject
    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
    for session = 1:numel(currentSubj) %for each training session this subject completed
@@ -284,12 +273,10 @@ for subj= 1:numel(subjects) %for each subject
        clear poxDiffDS outDiffDS poxDiffNS outDiffNS
        
        %loop through DS cues
-       for cue = 1:numel(subjDataAnalyzed.(subjects{subj})(session).behavior.DSonset)
-            DSonset= subjDataAnalyzed.(subjects{subj})(session).behavior.DSonset{1,cue};
-            
+        for cue = 1:numel(currentSubj(session).DS) %for each DS
             %for each pox timestamp, get the difference between the pox and this DS cue's onset
             for i = 1:numel(currentSubj(session).pox) 
-                poxDiffDS(i) = currentSubj(session).pox(i)- DSonset;
+                poxDiffDS(i) = currentSubj(session).pox(i)- currentSubj(session).DS(cue,1);
             end
             
             %get rid of negative values by making them very large
@@ -301,7 +288,7 @@ for subj= 1:numel(subjects) %for each subject
             currentSubj(session).pox(minPoxInd);
 
             for i= 1:numel(currentSubj(session).out)
-                outDiffDS(i)= currentSubj(session).out(i)- DSonset;
+                outDiffDS(i)= currentSubj(session).out(i)- currentSubj(session).DS(cue,1);
             end
 
             outDiffDS(outDiffDS<0)= 99999; %make any negative differences very large
@@ -319,13 +306,12 @@ for subj= 1:numel(subjects) %for each subject
        end %end DS loop
        
    %Repeat for NS
-       
-        for cue = 1:numel(subjDataAnalyzed.(subjects{subj})(session).behavior.NSonset)
-            NSonset= subjDataAnalyzed.(subjects{subj})(session).behavior.NSonset{1,cue};
+   
+        for cue = 1:numel(currentSubj(session).NS) %for each NS
             
-            %for each pox timestamp, get the difference between the pox and this DS cue's onset
+            %for each pox timestamp, get the difference between the pox and this NS cue's onset
             for i = 1:numel(currentSubj(session).pox) 
-                poxDiffNS(i) = currentSubj(session).pox(i)- NSonset;
+                poxDiffNS(i) = currentSubj(session).pox(i)- currentSubj(session).NS(cue,1);
             end
             
             %get rid of negative values by making them very large
@@ -337,7 +323,7 @@ for subj= 1:numel(subjects) %for each subject
             currentSubj(session).pox(minPoxInd);
 
             for i= 1:numel(currentSubj(session).out)
-                outDiffNS(i)= currentSubj(session).out(i)- NSonset;
+                outDiffNS(i)= currentSubj(session).out(i)- currentSubj(session).NS(cue,1);
             end
 
             outDiffNS(outDiffNS<0)= 99999; %make any negative differences very large
@@ -395,25 +381,12 @@ for subj= 1:numel(subjects) %for each subject
 
         for cue=1:length(currentSubj(session).DS) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
 
-            %each entry in DS is a timestamp of the DS onset before downsampling- this needs to be aligned with our current time axis  
-            DSonset = currentSubj(session).DS(cue,1); 
-
-            %find closest value (min difference) in cutTime (the current time axis) to DSonset by subtraction
-            for ts = 1:length(currentSubj(session).cutTime) %for each timestamp in cutTime 
-                timeDiff(1,ts) = abs(DSonset-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
-            end
-
-            [~,DSonsetShifted] = min(timeDiff); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual DSonset- define this as DSonsetShifted
-
-            %calculate the difference between the shifted onset time and the actual onset time (just for QA- we wouldn't want this to be too large)
-            timeShift= currentSubj(session).cutTime(DSonsetShifted)-currentSubj(session).DS(cue,1);  
-            if abs(timeShift) >0.2 %this will flag cues whose time shift deviates above a threshold (in seconds- 0.5s)
-                disp(strcat('>>Error *big cue time shift cue# ', num2str(cue), 'shifted DS ', num2str(currentSubj(session).cutTime(DSonsetShifted)), ' - actual DS ', num2str(DS(cue,1)), ' = ', num2str(timeShift), '*'));
-            end
+            %each entry in DS is a timestamp of the DS onset 
+            DSonset = find(cutTime==currentSubj(session).DS(cue,1));
 
             %define the frames (datapoints) around each cue to analyze
-            preEventTimeDS = DSonsetShifted-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
-            postEventTimeDS = DSonsetShifted+periCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
+            preEventTimeDS = DSonset-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
+            postEventTimeDS = DSonset+periCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
 
             if preEventTimeDS< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
                 disp(strcat('****DS cue ', num2str(cue), ' too close to beginning, breaking out'));
@@ -429,11 +402,11 @@ for subj= 1:numel(subjects) %for each subject
 
             % Calculate average baseline mean&stdDev 10s prior to DS for z-score
             %blueA
-            baselineMeanblue=mean(currentSubj(session).reblue((DSonsetShifted-slideTime):DSonsetShifted)); %baseline mean blue 10s prior to DS onset for boxA
-            baselineStdblue=std(currentSubj(session).reblue((DSonsetShifted-slideTime):DSonsetShifted)); %baseline stdDev blue 10s prior to DS onset for boxA
+            baselineMeanblue=mean(currentSubj(session).reblue((DSonset-slideTime):DSonset)); %baseline mean blue 10s prior to DS onset for boxA
+            baselineStdblue=std(currentSubj(session).reblue((DSonset-slideTime):DSonset)); %baseline stdDev blue 10s prior to DS onset for boxA
             %purpleA
-            baselineMeanpurple=mean(currentSubj(session).repurple((DSonsetShifted-slideTime):DSonsetShifted)); %baseline mean purple 10s prior to DS onset for boxA
-            baselineStdpurple=std(currentSubj(session).repurple((DSonsetShifted-slideTime):DSonsetShifted)); %baseline stdDev purple 10s prior to DS onset for boxA
+            baselineMeanpurple=mean(currentSubj(session).repurple((DSonset-slideTime):DSonset)); %baseline mean purple 10s prior to DS onset for boxA
+            baselineStdpurple=std(currentSubj(session).repurple((DSonset-slideTime):DSonset)); %baseline stdDev purple 10s prior to DS onset for boxA
 
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
@@ -497,25 +470,13 @@ for subj= 1:numel(subjects) %for each subject
       else %if the NS is present on this session, do the analysis and save results
 
             for cue=1:length(currentSubj(session).NS) %NS CUES %For each NS cue, conduct event-triggered analysis of data surrounding that cue's onset
-                NSonset = currentSubj(session).NS(cue,1); %each entry in NS is a timestamp of the NS onset before downsampling- this needs to be aligned with our current time axis   
+                
+                NSonset = find(cutTime==currentSubj(session).NS(cue,1)); %get the corresponding cutTime index of the NS timestamp
 
-                %find closest value (min difference) in cutTime (the current time axis) to NSonset by subtraction
-                for ts = 1:length(currentSubj(session).cutTime) %for each timestamp in cutTime 
-                    timeDiff(1,ts) = abs(NSonset-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
-                end
-
-                %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual NSonset- define this as NSonsetShifted
-                [~,NSonsetShifted] = min(timeDiff); 
-
-                %calculate the difference between the shifted onset time and the actual onset time (just for QA- we wouldn't want this to be too large)
-                timeShift= currentSubj(session).cutTime(NSonsetShifted)-currentSubj(session).NS(cue,1);  
-                if abs(timeShift) >0.2 %this will flag cues whose time shift deviates above a threshold (in seconds- 0.5s)
-                    disp(strcat('>>Error *big cue time shift cue# ', num2str(cue), 'shifted NS ', num2str(currentSubj(session).cutTime(NSonsetShifted)), ' - actual DS ', num2str(NS(cue,1)), ' = ', num2str(timeShift), '*'));
-                end
 
                 %define the frames (datapoints) around each cue to analyze
-                preEventTimeNS = NSonsetShifted-periCueFrames; %earliest timepoint to examine is the shifted NS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
-                postEventTimeNS = NSonsetShifted+periCueFrames; %latest timepoint to examine is the shifted NS onset time + the # of frames we defined as periCueFrames (now this is equivalent to 20s after the shifted cue onset)
+                preEventTimeNS = NSonset-periCueFrames; %earliest timepoint to examine is the shifted NS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
+                postEventTimeNS = NSonset+periCueFrames; %latest timepoint to examine is the shifted NS onset time + the # of frames we defined as periCueFrames (now this is equivalent to 20s after the shifted cue onset)
 
                if preEventTimeDS< 1 %If cue is too close to beginning, skip over it
                   disp(strcat('****NS cue ', num2str(cue), ' too close to beginning, breaking out'));
@@ -531,11 +492,11 @@ for subj= 1:numel(subjects) %for each subject
 
                 % Calculate average baseline mean&stdDev 10s prior to DS for z-score
                 %blueA
-                baselineMeanblue=mean(currentSubj(session).reblue((NSonsetShifted-slideTime):NSonsetShifted)); %baseline mean blue 10s prior to DS onset for boxA
-                baselineStdblue=std(currentSubj(session).reblue((NSonsetShifted-slideTime):NSonsetShifted)); %baseline stdDev blue 10s prior to DS onset for boxA
+                baselineMeanblue=mean(currentSubj(session).reblue((NSonset-slideTime):NSonset)); %baseline mean blue 10s prior to DS onset for boxA
+                baselineStdblue=std(currentSubj(session).reblue((NSonset-slideTime):NSonset)); %baseline stdDev blue 10s prior to DS onset for boxA
                 %purpleA
-                baselineMeanpurple=mean(currentSubj(session).repurple((NSonsetShifted-slideTime):NSonsetShifted)); %baseline mean purple 10s prior to DS onset for boxA
-                baselineStdpurple=std(currentSubj(session).repurple((NSonsetShifted-slideTime):NSonsetShifted)); %baseline stdDev purple 10s prior to DS onset for boxA
+                baselineMeanpurple=mean(currentSubj(session).repurple((NSonset-slideTime):NSonset)); %baseline mean purple 10s prior to DS onset for boxA
+                baselineStdpurple=std(currentSubj(session).repurple((NSonset-slideTime):NSonset)); %baseline stdDev purple 10s prior to DS onset for boxA
 
                 %save the data in the subjDataAnalyzed struct under the periNS field
                 

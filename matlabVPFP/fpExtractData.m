@@ -10,7 +10,7 @@ close all
 %Make sure experiment name is correct!
 
 
-profile on; %For optimization/tracking performance of the code- this starts the Matlab profiler
+profile on; %For optimization/trackin g performance of the code- this starts the Matlab profiler
 
 %% Use excel spreadsheet as index to load all .NEXs along with subject # and experiment details etc.
 
@@ -328,7 +328,7 @@ end
 %cleanly to our cutTime axis. Here, we shift these timestamps to fit the
 %40hz sampling rate
 
-disp('aligning event timestamps to cutTime axis');
+disp('aligning event timestamps to cutTime axis... this may take awhile (took ~20min for 42 sessions)');
 
 tic
 for subj= 1:numel(subjects) %for each subject
@@ -352,7 +352,7 @@ for subj= 1:numel(subjects) %for each subject
 
             [~,DSonsetShifted] = min(timeDiffDS); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual DSonset- define this as DSonsetShifted
         
-            currentSubj(session).behavior.DSonset{1,cue}= cutTime(DSonsetShifted); %save cue onset time
+            currentSubj(session).behavior.DSonsetShift(cue,1)= cutTime(DSonsetShifted); %save cue onset time
             
              %calculate the difference between the shifted onset time and the actual onset time (just for QA- we wouldn't want this to be too large)
             timeShift= currentSubj(session).cutTime(DSonsetShifted)-currentSubj(session).DS(cue,1);  
@@ -376,14 +376,17 @@ for subj= 1:numel(subjects) %for each subject
 
             [~,NSonsetShifted] = min(timeDiffNS); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual DSonset- define this as DSonsetShifted
         
-            currentSubj(session).behavior.NSonset{1,cue}= cutTime(NSonsetShifted); %save cue onset time
+            currentSubj(session).behavior.NSonsetShift(cue,1)= cutTime(NSonsetShifted); %save cue onset time
             
+            
+            timeShift= currentSubj(session).cutTime(NSonsetShifted)-currentSubj(session).NS(cue,1);  
+
              if abs(timeShift) >0.02 %this will flag cues whose time shift deviates above a threshold (in seconds)
                 disp(strcat('>>Error *big cue time shift cue# ', num2str(cue), 'shifted NS ', num2str(currentSubj(session).cutTime(NSonsetShifted)), ' - actual NS ', num2str(NS(cue,1)), ' = ', num2str(timeShift), '*'));
              end          
                       
           else %if there's no NS data, just make it nan
-             currentSubj(session).behavior.NSonset= nan; 
+             currentSubj(session).behavior.NSonsetShift= nan; 
           end
               
       end %end NS loop
@@ -402,6 +405,8 @@ for subj= 1:numel(subjects) %for each subject
         
             currentSubj(session).behavior.poxShift(i)= cutTime(poxOnsetShifted); %save event onset time
             
+            timeShift= currentSubj(session).cutTime(poxOnsetShifted)-poxT; 
+
              if abs(timeShift) >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
                 disp(strcat('>>Error *big time shift pox# ', num2str(i)));
              end          
@@ -409,7 +414,7 @@ for subj= 1:numel(subjects) %for each subject
       end %end pox loop
       
        %shift lox timestamps
-      for i=1:numel(currentSubj(session).lox) %for each pox in this session
+      for i=1:numel(currentSubj(session).lox) %for each lox in this session
 
             loxT = currentSubj(session).lox(i); 
 
@@ -422,6 +427,9 @@ for subj= 1:numel(subjects) %for each subject
         
             currentSubj(session).behavior.loxShift(i)= cutTime(loxOnsetShifted); %save event onset time
             
+            
+             timeShift= currentSubj(session).cutTime(loxOnsetShifted)-loxT; 
+
              if abs(timeShift) >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
                 disp(strcat('>>Error *big time shift lox# ', num2str(i)));
              end          
@@ -430,7 +438,7 @@ for subj= 1:numel(subjects) %for each subject
       
       
       %shift out timestamps
-      for i=1:numel(currentSubj(session).out) %for each pox in this session
+      for i=1:numel(currentSubj(session).out) %for each out in this session
 
             outT = currentSubj(session).out(i); 
 
@@ -443,22 +451,27 @@ for subj= 1:numel(subjects) %for each subject
         
             currentSubj(session).behavior.outShift(i)= cutTime(outOnsetShifted); %save event onset time
             
+            timeShift= currentSubj(session).cutTime(outOnsetShifted)-outT; 
+
              if abs(timeShift) >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
                 disp(strcat('>>Error *big time shift out# ', num2str(i)));
              end          
             
       end %end out loop
-    end %end session loop
-    
-    subjData.(subjects{subj})(session).DS= currentSubj(session).behavior.DSonset;
-    subjData.(subjects{subj})(session).NS= currentSubj(session).behavior.NSonset;
+      
+          
+    subjData.(subjects{subj})(session).DS= currentSubj(session).behavior.DSonsetShift;
+    subjData.(subjects{subj})(session).NS= currentSubj(session).behavior.NSonsetShift;
     subjData.(subjects{subj})(session).pox= currentSubj(session).behavior.poxShift;
     subjData.(subjects{subj})(session).lox= currentSubj(session).behavior.loxShift;
     subjData.(subjects{subj})(session).out= currentSubj(session).behavior.outShift;    
+      
+      
+    end %end session loop
 end %end subj loop
 
 toc
-
+ 
 
 %% Save .mat
 %save the subjData struct for later analysis
@@ -471,4 +484,6 @@ disp('all done')
 %%  Speed test /optimizing
 
 profile viewer;
-% %things that should be optimized: cleavars seems to take the longest
+% %things that should be optimized: cleavars takes awhile ; timeDifflox
+% takes awhile (prob bc lots of licks happen) took like 7/20min for 42
+% sessions
