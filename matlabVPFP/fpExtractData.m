@@ -382,7 +382,7 @@ for subj= 1:numel(subjects) %for each subject
             timeShift= currentSubj(session).cutTime(NSonsetShifted)-currentSubj(session).NS(cue,1);  
 
              if abs(timeShift) >0.02 %this will flag cues whose time shift deviates above a threshold (in seconds)
-                disp(strcat('>>Error *big cue time shift cue# ', num2str(cue), 'shifted NS ', num2str(currentSubj(session).cutTime(NSonsetShifted)), ' - actual NS ', num2str(NS(cue,1)), ' = ', num2str(timeShift), '*'));
+                disp(strcat('>>Error *big cue time shift cue# ', num2str(cue), 'shifted NS ', num2str(currentSubj(session).cutTime(NSonsetShifted)), ' - actual NS ', num2str(NS(cue,1)), ' = ', num2str(timeShift), '*', ' subj ',num2str(subj), '; session ', num2str(session));
              end          
                       
           else %if there's no NS data, just make it nan
@@ -408,7 +408,7 @@ for subj= 1:numel(subjects) %for each subject
             timeShift= currentSubj(session).cutTime(poxOnsetShifted)-poxT; 
 
              if abs(timeShift) >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
-                disp(strcat('>>Error *big time shift pox# ', num2str(i)));
+                disp(strcat('>>Error *big time shift pox# ', num2str(i), ' subj ',num2str(subj), '; session ', num2str(session)));
              end          
             
       end %end pox loop
@@ -431,7 +431,7 @@ for subj= 1:numel(subjects) %for each subject
              timeShift= currentSubj(session).cutTime(loxOnsetShifted)-loxT; 
 
              if abs(timeShift) >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
-                disp(strcat('>>Error *big time shift lox# ', num2str(i)));
+                disp(strcat('>>Error *big time shift lox# ', num2str(i), ' subj ',num2str(subj), '; session ', num2str(session)));
              end          
             
       end %end lox loop
@@ -454,7 +454,7 @@ for subj= 1:numel(subjects) %for each subject
             timeShift= currentSubj(session).cutTime(outOnsetShifted)-outT; 
 
              if abs(timeShift) >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
-                disp(strcat('>>Error *big time shift out# ', num2str(i)));
+                disp(strcat('>>Error *big time shift out# ', num2str(i), ' subj ',num2str(subj), '; session ', num2str(session)));
              end          
             
       end %end out loop
