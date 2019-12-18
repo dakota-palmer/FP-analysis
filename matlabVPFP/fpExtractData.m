@@ -9,6 +9,9 @@ close all
 %Make sure you have the vpfpIndex excel sheet filled out properly and paths are correct!
 %Make sure experiment name is correct!
 
+
+profile on; %For optimization/tracking performance of the code- this starts the Matlab profiler
+
 %% Use excel spreadsheet as index to load all .NEXs along with subject # and experiment details etc.
 
 % TODO: read whole index and analyze >2 rats at a time
@@ -200,9 +203,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
 
     cutTime = reTime(numStartExclude:end-numEndExclude);        % define cutTime as a new time axis w/o removed points- remember each intensity value should have a corresponding timestamp
     
-    
-    %% Match event timestamps to resampled time axis (cutTime)
-    
+       
     
     %% Save all data for a given session to struct for easy access
     
@@ -319,9 +320,155 @@ for subj = 1:numel(subjects)
  subjTableSorted = sortrows(subjTable, 'trainDay'); % sort the table by 'trainDay'
  subjData.(subjects{subj}) = table2struct(subjTableSorted);
 end
+
+
+%% Match raw timestamps with closest downsampled timestamps
+
+%we downsampled to 40hz, but our behavioral timestamps don't correspond
+%cleanly to our cutTime axis. Here, we shift these timestamps to fit the
+%40hz sampling rate
+
+disp('aligning event timestamps to cutTime axis');
+
+tic
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+  
+   for session = 1:numel(currentSubj) %for each training session this subject completed    
+        clear cutTime timeDiffDS timeDiffNS timeDiffpox timeDifflox timeDiffout  %this is cleared between sessions to prevent spillover
+
+        cutTime= currentSubj(session).cutTime; %save this as an array, greatly speeds things up because we have to go through each timestamp to find the closest one to the cues
+
+    %shift DS timestamps
+        for cue=1:length(currentSubj(session).DS) %for each DS cue in this session
+
+            %each entry in DS is a timestamp of the DS onset before downsampling- this needs to be aligned with our current time axis  
+            DSonset = currentSubj(session).DS(cue,1); 
+
+            %find closest value (min difference) in cutTime (the current time axis) to DSonset by subtraction
+            for ts = 1:length(currentSubj(session).cutTime) %for each timestamp in cutTime 
+                timeDiffDS(1,ts) = abs(DSonset-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
+            end
+
+            [~,DSonsetShifted] = min(timeDiffDS); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual DSonset- define this as DSonsetShifted
+        
+            currentSubj(session).behavior.DSonset{1,cue}= cutTime(DSonsetShifted); %save cue onset time
+            
+             %calculate the difference between the shifted onset time and the actual onset time (just for QA- we wouldn't want this to be too large)
+            timeShift= currentSubj(session).cutTime(DSonsetShifted)-currentSubj(session).DS(cue,1);  
+            if abs(timeShift) >0.02 %this will flag cues whose time shift deviates above a threshold (in seconds)
+                disp(strcat('>>Error *big cue time shift cue# ', num2str(cue), 'shifted DS ', num2str(currentSubj(session).cutTime(DSonsetShifted)), ' - actual DS ', num2str(DS(cue,1)), ' = ', num2str(timeShift), '*'));
+            end           
+            
+        end %end DS loop
+        
+    %shift NS timestamps
+      for cue=1:length(currentSubj(session).NS) %for each DS cue in this session
+
+          if ~isnan(currentSubj(session).NS) %only run this if NS is present
+            %each entry in DS is a timestamp of the DS onset before downsampling- this needs to be aligned with our current time axis  
+            NSonset = currentSubj(session).NS(cue,1); 
+
+            %find closest value (min difference) in cutTime (the current time axis) to DSonset by subtraction
+            for ts = 1:length(currentSubj(session).cutTime) %for each timestamp in cutTime 
+                timeDiffNS(1,ts) = abs(NSonset-cutTime(ts)); %get the absolute difference between this cue's actual timestamp and each resampled timestamp- define this as timeDiff
+            end
+
+            [~,NSonsetShifted] = min(timeDiffNS); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual DSonset- define this as DSonsetShifted
+        
+            currentSubj(session).behavior.NSonset{1,cue}= cutTime(NSonsetShifted); %save cue onset time
+            
+             if abs(timeShift) >0.02 %this will flag cues whose time shift deviates above a threshold (in seconds)
+                disp(strcat('>>Error *big cue time shift cue# ', num2str(cue), 'shifted NS ', num2str(currentSubj(session).cutTime(NSonsetShifted)), ' - actual NS ', num2str(NS(cue,1)), ' = ', num2str(timeShift), '*'));
+             end          
+                      
+          else %if there's no NS data, just make it nan
+             currentSubj(session).behavior.NSonset= nan; 
+          end
+              
+      end %end NS loop
+    
+    %shift pox timestamps
+      for i=1:numel(currentSubj(session).pox) %for each pox in this session
+
+            poxT = currentSubj(session).pox(i); 
+
+            %find closest value (min difference) in cutTime 
+            for ts = 1:length(currentSubj(session).cutTime) 
+                timeDiffpox(1,ts) = abs(poxT-cutTime(ts)); 
+            end
+
+            [~,poxOnsetShifted] = min(timeDiffpox); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual
+        
+            currentSubj(session).behavior.poxShift(i)= cutTime(poxOnsetShifted); %save event onset time
+            
+             if abs(timeShift) >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
+                disp(strcat('>>Error *big time shift pox# ', num2str(i)));
+             end          
+            
+      end %end pox loop
+      
+       %shift lox timestamps
+      for i=1:numel(currentSubj(session).lox) %for each pox in this session
+
+            loxT = currentSubj(session).lox(i); 
+
+            %find closest value (min difference) in cutTime 
+            for ts = 1:length(currentSubj(session).cutTime) 
+                timeDifflox(1,ts) = abs(loxT-cutTime(ts)); 
+            end
+
+            [~,loxOnsetShifted] = min(timeDifflox); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual
+        
+            currentSubj(session).behavior.loxShift(i)= cutTime(loxOnsetShifted); %save event onset time
+            
+             if abs(timeShift) >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
+                disp(strcat('>>Error *big time shift lox# ', num2str(i)));
+             end          
+            
+      end %end lox loop
+      
+      
+      %shift out timestamps
+      for i=1:numel(currentSubj(session).out) %for each pox in this session
+
+            outT = currentSubj(session).out(i); 
+
+            %find closest value (min difference) in cutTime 
+            for ts = 1:length(currentSubj(session).cutTime) 
+                timeDiffout(1,ts) = abs(outT-cutTime(ts)); 
+            end
+
+            [~,outOnsetShifted] = min(timeDiffout); %Find the timestamp with the minimum difference- this is the index of the closest timestamp in cutTime to the actual
+        
+            currentSubj(session).behavior.outShift(i)= cutTime(outOnsetShifted); %save event onset time
+            
+             if abs(timeShift) >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
+                disp(strcat('>>Error *big time shift out# ', num2str(i)));
+             end          
+            
+      end %end out loop
+    end %end session loop
+    
+    subjData.(subjects{subj})(session).DS= currentSubj(session).behavior.DSonset;
+    subjData.(subjects{subj})(session).NS= currentSubj(session).behavior.NSonset;
+    subjData.(subjects{subj})(session).pox= currentSubj(session).behavior.poxShift;
+    subjData.(subjects{subj})(session).lox= currentSubj(session).behavior.loxShift;
+    subjData.(subjects{subj})(session).out= currentSubj(session).behavior.outShift;    
+end %end subj loop
+
+toc
+
+
 %% Save .mat
 %save the subjData struct for later analysis
 save(strcat(experimentName,'-', date, 'subjDataRaw'), 'subjData'); %the second argument here is the variable saved, the first is the filename
 
 
 disp('all done')
+
+
+%%  Speed test /optimizing
+
+profile viewer;
+% %things that should be optimized: cleavars seems to take the longest
