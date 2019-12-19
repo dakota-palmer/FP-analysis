@@ -212,7 +212,7 @@ for subj= 1:numel(subjects) %for each subject
             %each entry in DS is a timestamp of the DS onset, let's get its
             %corresponding index from cutTime and use that to pull
             %surrounding data
-            DSonset = find(cutTime==currentSubj(session).DS(cue,1));
+            DSonset = find(cutTime==currentSubj(session).DSshifted(cue,1));
                      
             
             %find an save pox during the cue duration
@@ -382,7 +382,7 @@ for subj= 1:numel(subjects) %for each subject
         for cue=1:length(currentSubj(session).DS) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
 
             %each entry in DS is a timestamp of the DS onset 
-            DSonset = find(cutTime==currentSubj(session).DS(cue,1));
+            DSonset = find(cutTime==currentSubj(session).DSshifted(cue,1));
 
             %define the frames (datapoints) around each cue to analyze
             preEventTimeDS = DSonset-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
@@ -471,7 +471,7 @@ for subj= 1:numel(subjects) %for each subject
 
             for cue=1:length(currentSubj(session).NS) %NS CUES %For each NS cue, conduct event-triggered analysis of data surrounding that cue's onset
                 
-                NSonset = find(cutTime==currentSubj(session).NS(cue,1)); %get the corresponding cutTime index of the NS timestamp
+                NSonset = find(cutTime==currentSubj(session).NSshifted(cue,1)); %get the corresponding cutTime index of the NS timestamp
 
 
                 %define the frames (datapoints) around each cue to analyze
