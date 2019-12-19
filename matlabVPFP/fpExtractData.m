@@ -17,9 +17,9 @@ profile on; %For optimization/trackin g performance of the code- this starts the
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-metaDataAddress = 'C:\Users\capn1\Desktop\nexFiles_VPFP\vpfp_metadata.xlsx'; % excel file location 
+metaDataAddress = 'Z:\Dakota\Photometry\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
 
-nexAddress =  'C:\Users\capn1\Desktop\nexFiles_VPFP\'; % nex file location 
+nexAddress =  'Z:\Dakota\Photometry\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 %note: assembly of this nex file list is case-sensitive (I had a minor issue
 %where files with subjects in caps were being loaded before uncapitalized
@@ -27,7 +27,7 @@ nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 % figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-experimentName= 'VPFP_quantNeuro'; %change experiment name for automatic naming of figures
+experimentName= 'VP-VTA-FP-round2'; %change experiment name for automatic naming of figures
 
 %% Loop through each nex file, extracting data
 
@@ -369,7 +369,7 @@ for subj= 1:numel(subjects) %for each subject
         timeShift= abs(currentSubj(session).pox-currentSubj(session).poxShifted);
         if timeShift > 0.02% >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
             disp(strcat('>>Error *big pox time shift ', num2str(timeShift(timeShift>0.02)), ' subj ',num2str(subj), '; session ', num2str(session)));
-        end   
+        end     
 
     %Shift lox
         currentSubj(session).loxShifted= interp1(cutTime, cutTime, currentSubj(session).lox, 'nearest');
