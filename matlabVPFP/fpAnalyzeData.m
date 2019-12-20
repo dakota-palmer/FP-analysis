@@ -343,7 +343,7 @@ for subj= 1:numel(subjects) %for each subject
 end %end subject loop
 
 
-%% Identify DS trials where animal was waiting in port at cue onset
+%% Identify trials where animal was waiting in port at cue onset
 
 %here, we'll go through all cues from each session, finding the difference
 %between the cue onset time and every logged port entry and port exit
@@ -435,6 +435,169 @@ for subj= 1:numel(subjects) %for each subject
    end %end session loop
 end %end subject loop
 
+%% Calculate DS PE latency
+%relies on previous behavioral analyses sections
+%here, we will calculate latency to enter port on every DS trial
+
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+       %First, let's exclude trials where there was 1) no PE in the cue
+       %epoch or 2) animal was already in the port at cue onset
+        %get the DS cues
+        DSselected= currentSubj(session).DS;  
+
+       
+        %First, let's exclude trials where animal was already in port
+        %to do so, find indices of subjDataAnalyzed.behavior.inPortDS that
+        %have a non-nan value and use these to exclude DS trials from this
+        %analysis (we'll make them nan)
+                
+        DSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS)) = nan;
+
+        %Then, let's exclude trials where animal didn't make a PE during
+        %the cue epoch. To do so, get indices of empty cells in
+        %subjDataAnalyzed.behavior.poxDS (these are trials where no PE
+        %happened during the cue epoch) and then use these to set that DS =
+        %nan
+        DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
+       
+       
+       for cue = 1:numel(DSselected)
+            
+           if ~isnan(DSselected(cue)) %skip over trials where animal was in port at cue onset or did not make a PE during cue epoch
+                DSonset= DSselected(cue);
+                firstPox = min(subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS{cue}); %min of poxDS= first PE after DS onset
+                
+                currentSubj(session).DSpeLatency(1,cue)= firstPox-DSonset;
+                
+           else %else if we want to skip over this cue, make latency nan
+               currentSubj(session).DSpeLatency(1,cue) = nan;
+           end               
+       end %end DSselected loop
+   end %end session loop
+   
+   
+   subjDataAnalyzed(session).behavior.DSpeLatency= currentSubj(session).DSpeLatency;
+   
+end %end subject loop
+
+
+%% Calculate NS PE latency
+%relies on previous behavioral analyses sections
+%here, we will calculate latency to enter port on every NS trial
+
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+       %First, let's exclude trials where there was 1) no PE in the cue
+       %epoch or 2) animal was already in the port at cue onset
+        %get the NS cues
+        NSselected= currentSubj(session).NS;  
+
+       
+        %First, let's exclude trials where animal was already in port
+        %to do so, find indices of subjDataAnalyzed.behavior.inPortNS that
+        %have a non-nan value and use these to exclude NS trials from this
+        %analysis (we'll make them nan)
+                
+        NSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS)) = nan;
+
+        %Then, let's exclude trials where animal didn't make a PE during
+        %the cue epoch. To do so, get indices of empty cells in
+        %subjDataAnalyzed.behavior.poxNS (these are trials where no PE
+        %happened during the cue epoch) and then use these to set that NS =
+        %nan
+        NSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS)) = nan;
+       
+       
+       for cue = 1:numel(NSselected)
+            
+           if ~isnan(NSselected(cue)) %skip over trials where animal was in port at cue onset or did not make a PE during cue epoch
+                NSonset= NSselected(cue);
+                firstPox = min(subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS{cue}); %min of poxNS= first PE after NS onset
+                
+                currentSubj(session).NSpeLatency(1,cue)= firstPox-NSonset;
+                
+           else %else if we want to skip over this cue, make latency nan
+               currentSubj(session).NSpeLatency(1,cue) = nan;
+           end               
+       end %end NSselected loop
+   end %end session loop
+   
+   
+   subjDataAnalyzed(session).behavior.NSpeLatency= currentSubj(session).NSpeLatency;
+   
+end %end subject loop
+
+%% Calculate DS PE ratio
+%relies on previous behavioral analyses sections
+%here, we will calculate DS pe ratio
+
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+        DSselected= currentSubj(session).DS;  
+
+       
+        %We could exclude trials where animal was already in port, but
+        %won't due this because they still receive a reward and MEDPC still
+        %counts it toward the ratio
+%         DSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS)) = nan;
+
+        %Let's exclude trials where animal didn't make a PE during
+        %the cue epoch. To do so, get indices of empty cells in
+        %subjDataAnalyzed.behavior.poxDS (these are trials where no PE
+        %happened during the cue epoch) and then use these to set that DS =
+        %nan
+        DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
+        
+        currentSubj(session).DSpeRatio= numel(DSselected(~isnan(DSselected)))/numel(currentSubj(session).DS);
+        
+   end %end session loop
+   
+   subjDataAnalyzed.subjects{subj}(session).behavior.DSpeRatio= currentSubj(session).DSpeRatio;
+   
+end %end subj loop
+
+%% Calculate NS PE ratio
+%relies on previous behavioral analyses sections
+%here, we will calculate NS pe ratio
+
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+        NSselected= currentSubj(session).NS;  
+
+       
+        %We could exclude trials where animal was already in port, but
+        %won't due this because they still receive a reward and MEDPC still
+        %counts it toward the ratio
+%         NSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS)) = nan;
+
+        %Let's exclude trials where animal didn't make a PE during
+        %the cue epoch. To do so, get indices of empty cells in
+        %subjDataAnalyzed.behavior.poxNS (these are trials where no PE
+        %happened during the cue epoch) and then use these to set that NS =
+        %nan
+        NSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS)) = nan;
+        
+        if ~isnan(currentSubj(session).NS) %if there's NS data present, calculate ratio
+            currentSubj(session).NSpeRatio= numel(NSselected(~isnan(NSselected)))/numel(currentSubj(session).NS);
+        else % if no NS data present, make ratio nan
+            currentSubj(session).NSpeRatio= nan;
+        end %end ns conditional
+        
+   end %end session loop
+   
+   subjDataAnalyzed.subjects{subj}(session).behavior.NSpeRatio= currentSubj(session).NSpeRatio;
+   
+end %end subj loop
+
 
 %% ~~~Event-Triggered Analyses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %In these sections, we will do an event-triggered analyses by extracting data 
@@ -521,6 +684,13 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblueMean = mean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue, 3);
 
             subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurpleMean = mean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple, 3);
+            
+            %lets save the baseline mean and std used for z score calc- so
+            %that we can use this same baseline for other analyses
+            subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanblue(1,cue)= baselineMeanblue;
+            subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdblue(1,cue)= baselineStdblue;
+            subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanpurple(1,cue)= baselineMeanpurple;
+            subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdpurple(1,cue)= baselineStdpurple;
 
         end %end DS cue loop
    end %end session loop
@@ -607,6 +777,16 @@ for subj= 1:numel(subjects) %for each subject
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurpleMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue, 3);
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurpleMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple, 3);
+                
+
+                %lets save the baseline mean and std used for z score calc- so
+                %that we can use this same baseline for other analyses
+                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanblue(1,cue)= baselineMeanblue;
+                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdblue(1,cue)= baselineStdblue;
+                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanpurple(1,cue)= baselineMeanpurple;
+                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdpurple(1,cue)= baselineStdpurple;
+
+             
             end % end NS cue loop
       end %end if NS ~nan conditional 
    end %end session loop
@@ -677,12 +857,15 @@ for subj= 1:numel(subjects) %for each subject
             end
 
             % Calculate average baseline mean&stdDev 10s prior to DS for z-score
+            %we'll retrieve the baselines calculated when we timelocked to
+            %DS, so our z score is relative to a baseline prior to any
+            %cue-related activity
             %blueA
-            baselineMeanblue=mean(currentSubj(session).reblue((firstPoxind-slideTime):firstPoxind)); %baseline mean blue 10s prior to DS onset for boxA
-            baselineStdblue=std(currentSubj(session).reblue((firstPoxind-slideTime):firstPoxind)); %baseline stdDev blue 10s prior to DS onset for boxA
+            baselineMeanblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanblue(1,cue); %baseline mean blue 10s prior to DS onset for boxA
+            baselineStdblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdblue(1,cue); %baseline stdDev blue 10s prior to DS onset for boxA
             %purpleA
-            baselineMeanpurple=mean(currentSubj(session).repurple((firstPoxind-slideTime):firstPoxind)); %baseline mean purple 10s prior to DS onset for boxA
-            baselineStdpurple=std(currentSubj(session).repurple((firstPoxind-slideTime):firstPoxind)); %baseline stdDev purple 10s prior to DS onset for boxA
+            baselineMeanpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanpurple(1,cue); %baseline mean purple 10s prior to DS onset for boxA
+            baselineStdpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdpurple(1,cue); %baseline stdDev purple 10s prior to DS onset for boxA
 
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
@@ -795,13 +978,16 @@ for subj= 1:numel(subjects) %for each subject
             continue %continue out of the loop and move onto the next DS cue
             end
 
-            % Calculate average baseline mean&stdDev 10s prior to DS for z-score
+              % Calculate average baseline mean&stdDev 10s prior to DS for z-score
+            %we'll retrieve the baselines calculated when we timelocked to
+            %DS, so our z score is relative to a baseline prior to any
+            %cue-related activity
             %blueA
-            baselineMeanblue=mean(currentSubj(session).reblue((firstPoxind-slideTime):firstPoxind)); %baseline mean blue 10s prior to DS onset for boxA
-            baselineStdblue=std(currentSubj(session).reblue((firstPoxind-slideTime):firstPoxind)); %baseline stdDev blue 10s prior to DS onset for boxA
+            baselineMeanblue= subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanblue(1,cue); %baseline mean blue 10s prior to DS onset for boxA
+            baselineStdblue= subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdblue(1,cue); %baseline stdDev blue 10s prior to DS onset for boxA
             %purpleA
-            baselineMeanpurple=mean(currentSubj(session).repurple((firstPoxind-slideTime):firstPoxind)); %baseline mean purple 10s prior to DS onset for boxA
-            baselineStdpurple=std(currentSubj(session).repurple((firstPoxind-slideTime):firstPoxind)); %baseline stdDev purple 10s prior to DS onset for boxA
+            baselineMeanpurple= subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanpurple(1,cue); %baseline mean purple 10s prior to DS onset for boxA
+            baselineStdpurple= subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdpurple(1,cue); %baseline stdDev purple 10s prior to DS onset for boxA
 
             %save all of the following data in the subjDataAnalyzed struct under the periNS field
 
@@ -1332,7 +1518,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
-    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding PE');
+    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding DS');
 
 
     %   plot purple DS (subplotted for shared colorbar)
@@ -1349,7 +1535,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
     
     c= colorbar; %colorbar legend
-    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding PE');
+    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding DS');
 
     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
@@ -1369,7 +1555,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
 
         c= colorbar; %colorbar legend
-        c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding PE');
+        c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding NS');
         
         
            %   plot purple NS (subplotted for shared colorbar)
@@ -1386,7 +1572,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
 
         c= colorbar; %colorbar legend
-        c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding PE');
+        c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding NS');
 
         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
@@ -1396,116 +1582,6 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     figureCount= figureCount+1;
 end %end subject loop
-
-
-%% HEAT PLOT OF RESPONSE TO EVERY INDIVIDUAL CUE PRESENTATION- WITH SHARED COLORBAR ACROSS SUBJECTS
-% %This probably isn't useful 
-%
-% for subj= 1:numel(subjectsAnalyzed) %for each subject
-% currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
-%     for session = 1:numel(currentSubj) %for each training session this subject completed
-%         
-%         %collect all z score responses to every single DS across all sessions (and the latency to PE in response to every single DS)
-%         if session==1
-%             subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials= squeeze(currentSubj(session).periDS.DSzblue); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-%             subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials= squeeze(currentSubj(session).periDS.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-% 
-%         else
-%             subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials = cat(2, subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials, (squeeze(currentSubj(session).periDS.DSzblue))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-%             subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials = cat(2, subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials, (squeeze(currentSubj(session).periDS.DSzpurple))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-%         end
-%         
-%     end %end session loop
-%     
-%     %Transpose these data for readability
-%     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials';
-%     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials';
-%     
-%     %get bottom and top for color axis of DS heatplot
-%     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllDS = min(min(min(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials)), min(min(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials))); %find the lowest value 
-%     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllDS = max(max(max(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials)), max(max(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzpurpleAllTrials))); %find the highest value
-%     
-%     
-%     %get bottom and top for color axis of NS heatplot
-%     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periNS.bottomAllNS= [];
-%     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periNS.topAllNS= [];
-%     
-%     %Establish a shared bottom and top for shared color axis of DS & NS
-%     if ~isempty(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periNS.bottomAllNS) %if there is an NS
-%         subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared= min(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllDS, subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllNS); %find the absolute min value
-%         subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllShared= max(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllDS, subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllNS); %find the absolute min value
-%     else
-%        subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllDS;
-%        subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllShared= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllDS;
-%     end
-%         
-%     %This time, save the bottom & top for this subject in an array to compare between all subjects
-%     bottomAllBetweenSubjects(1,subj)= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared;
-%     topAllBetweenSubjects(1,subj)= subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllShared;
-% 
-%     %get a trial count to use for the heatplot ytick
-%     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.totalDScount= 1:size(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.DSzblueAllTrials,1); 
-%     subjDataAnalyzed.(subjectsAnalyzed{subj})(1).perNS.totalNScount= 1:size(subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periNS.NSzblueAllTrials,1);
-% 
-%     
-%     %TODO: split up yticks by session (this would show any clear differences between days)
-%     
-% end %end subj loop
-% 
-% %This time, find the min and max values between all subjects for
-% %colormap before making heatplots for each subject
-% 
-% bottomAllBetweenSubjects= min(bottomAllBetweenSubjects);
-% topAllBetweenSubjects= max(topAllBetweenSubjects);
-% 
-% 
-% for subj= 1:numel(subjectsAnalyzed) %for each subject
-%     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
-%     
-%      %Heatplots!       
-%     %DS z plot
-%     figure(figureCount);
-%     hold on;
-%     subplot(2,2,1); %subplot for shared colorbar
-% 
-%     %plot blue DS
-% 
-%     timeLock = [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-% 
-%     heatDSzblueAllTrials= imagesc(timeLock,currentSubj(1).periDS.totalDScount,currentSubj(1).periDS.DSzblueAllTrials);
-%     title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding every DS- colormap normalized between subjects ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%     xlabel('seconds from cue onset');
-%     ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).periDS.totalDScount(end)), ')'));
-% %     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
-%     caxis manual;
-%     caxis([bottomAllBetweenSubjects topAllBetweenSubjects]); %use a shared color axis to encompass all values
-% 
-%     c= colorbar; %colorbar legend
-%     c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-% 
-% 
-%     %   plot purple DS (subplotted for shared colorbar)
-%     subplot(2,2,3);
-%     heatDSzpurpleAllTrials= imagesc(timeLock,currentSubj(1).periDS.totalDScount,currentSubj(1).periDS.DSzpurpleAllTrials); 
-% 
-%     title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding every DS- colormap normalized between subjects ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
-%     xlabel('seconds from cue onset');
-%     ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).periDS.totalDScount(end)), ')'));
-% 
-% %     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
-% 
-%     caxis manual;
-%     caxis([bottomAllBetweenSubjects topAllBetweenSubjects]); %use a shared color axis to encompass all values
-%     
-%     c= colorbar; %colorbar legend
-%     c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-% 
-%     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-% 
-%     
-%     
-%     figureCount= figureCount+1;
-% end %end subject loop
 
 %% ~~~Power analysis~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %Try to estimate effect size. Effect we're looking at is the difference in
