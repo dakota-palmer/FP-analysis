@@ -1764,40 +1764,45 @@ end %end subject loop
 
 %% ~~~Behavioral plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-%% PLOT PORT ENTRY COUNT ACROSS DAYS FOR ALL SUBJECTS - not very meaningful,  but good template for DS PE ratio or latency
-
-%In this section, we'll loop through our subjData struct, extracting a port entry
-%count for each session. Then we'll plot # of port entries as training
-%progresses.
-
-disp('plotting port entry counts')
-
-figure(figureCount) %one figure with poxCount across sessions for all subjects
-
-figureCount= figureCount+1; %iterate the figure count
-for subj= 1:numel(subjects) %for each subject
-   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
-       
-       currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-      
-       %Plot number of port entries across all sessions
-       
-        poxCount(session)= numel(currentSubj(session).pox); %get the total number of port entries across days
-        days(session)= currentSubj(session).trainDay; %keep track of days to associate with poxCount
-   end
-   hold on;
-   plot(days, poxCount)
-end
-
-title(strcat(currentSubj(session).experiment,' port entry count across days'));
-xlabel('training day');
-ylabel('port entry count');
-legend(subjects); %add rats to legend
-
-%make figure full screen, save, and close this figure
-set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'port_entries_by_session','.fig'));
-%         close; %close 
+% %% PLOT PORT ENTRY COUNT ACROSS DAYS FOR ALL SUBJECTS - not very meaningful,  but good template for DS PE ratio or latency
+% 
+% %In this section, we'll loop through our subjData struct, extracting a port entry
+% %count for each session. Then we'll plot # of port entries as training
+% %progresses.
+% 
+% disp('plotting port entry counts')
+% 
+% figure(figureCount) %one figure with poxCount across sessions for all subjects
+% 
+% figureCount= figureCount+1; %iterate the figure count
+% for subj= 1:numel(subjects) %for each subject
+%     
+%     %initialize
+%     poxCount = [];
+%     days = [];
+%     
+%    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+%        
+%        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+%       
+%        %Plot number of port entries across all sessions
+%        
+%         poxCount(session)= numel(currentSubj(session).pox); %get the total number of port entries across days
+%         days(session)= currentSubj(session).trainDay; %keep track of days to associate with poxCount
+%    end
+%    hold on;
+%    plot(days, poxCount)
+% end
+% 
+% title(strcat(currentSubj(session).experiment,' port entry count across days'));
+% xlabel('training day');
+% ylabel('port entry count');
+% legend(subjects); %add rats to legend
+% 
+% %make figure full screen, save, and close this figure
+% set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'port_entries_by_session','.fig'));
+% %         close; %close 
 
 %% PLOT AVERAGE PORT ENTRY COUNT BETWEEN DAYS FOR ALL ANIMALS
 
@@ -1865,6 +1870,12 @@ figure(figureCount) %one figure with poxCount across sessions for all subjects
 
 figureCount= figureCount+1; %iterate the figure count
 for subj= 1:numel(subjects) %for each subject
+    
+    %initialize
+    days = []; 
+    DSpeRatio= [];
+    NSpeRatio= [];
+   
    for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
        
        currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
@@ -1909,9 +1920,74 @@ legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outsi
 
 %make figure full screen, save, and close this figure
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'port_entries_by_session','.fig'));
+saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'pe_ratio_by_session','.fig'));
 %         close; %close 
 
+
+%% PLOT AVG DS & NS PE LATENCY BY DAY
+
+%In this section, we'll loop through our subjData struct, extracting an avg port entry
+%latency for each session. Then we'll plot # of port entries as training
+%progresses.
+
+disp('plotting port entry latencies')
+
+figure(figureCount) %one figure with poxCount across sessions for all subjects
+
+figureCount= figureCount+1; %iterate the figure count
+for subj= 1:numel(subjects) %for each subject
+    
+    %initialize
+    days = []; 
+    meanDSpeLat= [];
+    meanNSpeLat= [];
+   
+   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
+       
+       currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+      
+       %Plot number of port entries across all sessions
+       
+        days(session)= currentSubj(session).trainDay; %keep track of days to associate with PE lat
+       
+        meanDSpeLat(session)= nanmean(currentSubj(session).behavior.DSpeLatency); %get the mean DS PE lat
+       
+        meanNSpeLat(session)= nanmean(currentSubj(session).behavior.NSpeLatency); %get the mean NS PE lat
+   end
+   subplot(2,1,1)
+   hold on;
+   h= plot(days, meanDSpeLat); %save a handle so we can get the color of this plot and use it for NS
+   
+   %get this plot's color and x axis so we can use the same color for the NS plot
+   c= get(h,'Color');
+   x= xlim;
+   y=ylim;
+   
+   subplot(2,1,2)
+   hold on;
+   plot(days, meanNSpeLat, 'Color', c, 'LineStyle','--');
+   xlim(x);
+   ylim(y);
+   
+end
+
+subplot(2,1,1)
+title(strcat(currentSubj(session).experiment,'Mean DS PE latency across days'));
+xlabel('training day');
+ylabel('mean latency to PE after cue onset (s)');
+legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outside of plot
+
+subplot(2,1,2)
+title(strcat(currentSubj(session).experiment,'Mean NS PE latency across days'));
+xlabel('training day');
+ylabel('mean latency to PE after cue onset (s)');
+legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outside of plot
+
+
+%make figure full screen, save, and close this figure
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'pe_latency_by_session','.fig'));
+%         close; %close 
 
 
 %% ~~~Power analysis~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
