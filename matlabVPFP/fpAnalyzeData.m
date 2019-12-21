@@ -212,7 +212,6 @@ for subj= 1:numel(subjects) %for each subject
 
                 %find an save pox during the cue duration
                 poxNScount= 1; %counter for indexing
-
                 for i = 1:numel(currentSubj(session).pox) % for every port entry logged during this session
                    if (cutTime(NSonset)<currentSubj(session).pox(i)) && (currentSubj(session).pox(i)<cutTime(NSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
                         currentSubj(session).behavior.poxNS{1,cue}(poxNScount,1)= currentSubj(session).pox(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
@@ -245,9 +244,16 @@ for subj= 1:numel(subjects) %for each subject
         end %end NS conditional
 
         %save the results
-        subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS= currentSubj(session).behavior.poxNS; 
+        subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS= currentSubj(session).behavior.poxNS'; 
         subjDataAnalyzed.(subjects{subj})(session).behavior.loxNS= currentSubj(session).behavior.outNS;
         subjDataAnalyzed.(subjects{subj})(session).behavior.loxNS= currentSubj(session).behavior.loxNS;
+        
+        %debugging - view these side by side to verify pox during NS epoch
+        %are being assigned
+%         openvar('currentSubj(session).NS')
+%         openvar('currentSubj(session).pox')
+%         openvar('subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS')
+
         
    end %end session loop
      
@@ -486,7 +492,6 @@ for subj= 1:numel(subjects) %for each subject
    for session = 1:numel(currentSubj) %for each training session this subject completed
        
         NSselected= currentSubj(session).NS;  
-
        
         %We could exclude trials where animal was already in port, but
         %won't due this because they still receive a reward and MEDPC still
@@ -500,14 +505,14 @@ for subj= 1:numel(subjects) %for each subject
         %nan
         NSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS)) = nan;
         
-        if ~isnan(currentSubj(session).NS) %if there's NS data present, calculate ratio
+   if ~isnan(currentSubj(session).NS) %if there's NS data present, calculate ratio
             currentSubj(session).NSpeRatio= numel(NSselected(~isnan(NSselected)))/numel(currentSubj(session).NS);
         else % if no NS data present, make ratio nan
             currentSubj(session).NSpeRatio= nan;
         end %end ns conditional
         
        subjDataAnalyzed.(subjects{subj})(session).behavior.NSpeRatio= currentSubj(session).NSpeRatio;
-
+       disp(currentSubj(session).NSpeRatio);
         
    end %end session loop
       
@@ -1846,6 +1851,65 @@ end
 %make figure full screen, save, and close this figure
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'average_port_entries_by_subject','.fig'));
+%         close; %close 
+
+%% PLOT DS & NS PE RATIO ACROSS DAYS
+
+%In this section, we'll loop through our subjData struct, extracting a port entry
+%count for each session. Then we'll plot # of port entries as training
+%progresses.
+
+disp('plotting port entry ratios')
+
+figure(figureCount) %one figure with poxCount across sessions for all subjects
+
+figureCount= figureCount+1; %iterate the figure count
+for subj= 1:numel(subjects) %for each subject
+   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
+       
+       currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+      
+       %Plot number of port entries across all sessions
+       
+        days(session)= currentSubj(session).trainDay; %keep track of days to associate with PE ratios
+       
+        DSpeRatio(session)= currentSubj(session).behavior.DSpeRatio; %get the DSpeRatio
+       
+        NSpeRatio(session)= currentSubj(session).behavior.NSpeRatio; %get NSpeRatio
+   end
+   subplot(2,1,1)
+   hold on;
+   h= plot(days, DSpeRatio); %save a handle so we can get the color of this plot and use it for NS
+   
+   %get this plot's color and x axis so we can use the same color for the NS plot
+   c= get(h,'Color');
+   x= xlim;
+   y=ylim;
+   
+   subplot(2,1,2)
+   hold on;
+   plot(days, NSpeRatio, 'Color', c, 'LineStyle','--');
+   xlim(x);
+   ylim(y);
+   
+end
+
+subplot(2,1,1)
+title(strcat(currentSubj(session).experiment,' DS PE Ratio across days'));
+xlabel('training day');
+ylabel('port entry ratio (# of trials with PE / total # of trials)');
+legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outside of plot
+
+subplot(2,1,2)
+title(strcat(currentSubj(session).experiment,' NS PE Ratio across days'));
+xlabel('training day');
+ylabel('port entry ratio (# of trials with PE / total # of trials)');
+legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outside of plot
+
+
+%make figure full screen, save, and close this figure
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'port_entries_by_session','.fig'));
 %         close; %close 
 
 
