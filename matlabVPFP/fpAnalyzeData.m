@@ -1313,7 +1313,53 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         saveas(gcf, strcat(figPath, currentSubj(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
     end
     
+     %overlay plot of transitions between training stages
+    clear transitionCue
     
+    cueCount = 1;
+    
+    for session= 1:numel(currentSubj)
+       
+        if session ==1 
+            trainStage = currentSubj(session).trainStage;
+        end
+       if currentSubj(session).trainStage ~= trainStage
+           %if the trainStage changes, save this day as a transision
+           trainStage = currentSubj(session).trainStage;
+           transitionDay(session) = currentSubj(session).trainDay;
+           
+%            disp(strcat('transition day ', num2str(transitionDay(session))));
+           
+           %since we are plotting individual trials and not days, 
+           %find the cue corresponding to the transition
+           %to do so,loop over all cues in the session, finding the
+           %matching saved to DSzblueAllTrials
+           for cue = 1:numel(currentSubj(session).periDS.DS) %for each cue in this session
+                cueCount=cueCount+1;                                
+                if find(currentSubj(1).DSzblueAllTrials'==currentSubj(session).periDS.DSzblue(:,:,cue),1)% currentSubj(1).DSzblueAllTrials(cue,:)' == currentSubj(session).periDS.DSzblue(:,:,cue)
+                    
+%                     [~, cueInd] =  find(currentSubj(1).DSzblueAllTrials'==currentSubj(session).periDS.DSzblue(:,:,cue),1);
+                    transitionCue(session)= cueCount;
+                end
+           end
+%            disp(strcat('transition Cue', num2str(transitionCue(session))))
+       end %end stage transition conditional
+    end %end session loop
+ 
+    
+    for i= 1:numel(transitionCue)
+        if transitionCue(i) ~= 0
+            subplot(2,2,1) %DS blue
+            hold on;
+            plot([timeLock(1), timeLock(end)], [transitionCue(i), transitionCue(i)], 'k--')  
+            
+            subplot(2,2,3) %DS puprle
+            hold on;
+            plot([timeLock(1), timeLock(end)], [transitionCue(i), transitionCue(i)], 'k--')
+            
+        end
+    end
+       
     figureCount= figureCount+1;
 end %end subject loop
 
@@ -1593,6 +1639,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
    end
     
     figureCount= figureCount+1;
+   
 end %end subject loop
 
 %% HEAT PLOT OF RESPONSE TO FIRST PE IN CUE EPOCH
