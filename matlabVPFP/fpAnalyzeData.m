@@ -125,38 +125,38 @@ for subj= 1:numel(subjects) %for each subject
             %surrounding data
             DSonset = find(cutTime==currentSubj(session).DSshifted(cue,1));
                      
-            
-            %find an save pox during the cue duration
-            poxDScount= 1; %counter for indexing
-            
-            for i = 1:numel(currentSubj(session).pox) % for every port entry logged during this session
-               if (cutTime(DSonset)<currentSubj(session).pox(i)) && (currentSubj(session).pox(i)<cutTime(DSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
-                    currentSubj(session).behavior.poxDS{1,cue}(poxDScount,1)= currentSubj(session).pox(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
-                    poxDScount=poxDScount+1; %iterate the counter
-               end
-            end
-           
-            
-            %find and save port exits during the cue
-            outDScount= 1;
-            for i = 1:numel(currentSubj(session).out) % for every port entry logged during this session
-               if (cutTime(DSonset)<currentSubj(session).out(i)) && (currentSubj(session).out(i)<cutTime(DSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
-                    currentSubj(session).behavior.outDS{1,cue}(outDScount,1)= currentSubj(session).out(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
-                    outDScount=outDScount+1; %iterate the counter
-               end
-            end
-            
-            
-            %find and save licks during the cue duration
-            loxDScount= 1; %counter for indexing
-            
-            for i = 1:numel(currentSubj(session).lox) % for every port entry logged during this session
-               if (cutTime(DSonset)<currentSubj(session).lox(i)) && (currentSubj(session).lox(i)<cutTime(DSonset+cueLength)) %if the lick occurs between this cue's onset and this cue's onset, assign it to this cue 
-                    currentSubj(session).behavior.loxDS{1,cue}(loxDScount,1)= currentSubj(session).lox(i); %cell array containing all pox during the cue, empty [] if no licks during the cue
-                    loxDScount=loxDScount+1; %iterate the counter
-               end
-            end
-                        
+          if DSonset + cueLength < numel(cutTime) %make sure cue isn't too close to the end of session  
+                %find an save pox during the cue duration
+                poxDScount= 1; %counter for indexing
+
+                for i = 1:numel(currentSubj(session).pox) % for every port entry logged during this session
+                   if (cutTime(DSonset)<currentSubj(session).pox(i)) && (currentSubj(session).pox(i)<cutTime(DSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
+                        currentSubj(session).behavior.poxDS{1,cue}(poxDScount,1)= currentSubj(session).pox(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
+                        poxDScount=poxDScount+1; %iterate the counter
+                   end
+                end
+
+
+                %find and save port exits during the cue
+                outDScount= 1;
+                for i = 1:numel(currentSubj(session).out) % for every port entry logged during this session
+                   if (cutTime(DSonset)<currentSubj(session).out(i)) && (currentSubj(session).out(i)<cutTime(DSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
+                        currentSubj(session).behavior.outDS{1,cue}(outDScount,1)= currentSubj(session).out(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
+                        outDScount=outDScount+1; %iterate the counter
+                   end
+                end
+
+
+                %find and save licks during the cue duration
+                loxDScount= 1; %counter for indexing
+
+                for i = 1:numel(currentSubj(session).lox) % for every port entry logged during this session
+                   if (cutTime(DSonset)<currentSubj(session).lox(i)) && (currentSubj(session).lox(i)<cutTime(DSonset+cueLength)) %if the lick occurs between this cue's onset and this cue's onset, assign it to this cue 
+                        currentSubj(session).behavior.loxDS{1,cue}(loxDScount,1)= currentSubj(session).lox(i); %cell array containing all pox during the cue, empty [] if no licks during the cue
+                        loxDScount=loxDScount+1; %iterate the counter
+                   end
+                end
+          end %end cue too close to end conditional
         end %end cue loop
                
         subjDataAnalyzed.(subjects{subj})(session).behavior= currentSubj(session).behavior; %save the results
@@ -661,7 +661,7 @@ for subj= 1:numel(subjects) %for each subject
                 preEventTimeNS = NSonset-periCueFrames; %earliest timepoint to examine is the shifted NS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
                 postEventTimeNS = NSonset+periCueFrames; %latest timepoint to examine is the shifted NS onset time + the # of frames we defined as periCueFrames (now this is equivalent to 20s after the shifted cue onset)
 
-               if preEventTimeDS< 1 %If cue is too close to beginning, skip over it
+               if preEventTimeNS< 1 %If cue is too close to beginning, skip over it
                   disp(strcat('****NS cue ', num2str(cue), ' too close to beginning, continuing'));
                   NSskipped= NSskipped+1;%iterate the counter for skipped NS cues
                   continue%continue out of the loop and move onto the next NS cue
@@ -1386,22 +1386,34 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         %selectively extract these data first
         
             %get the DS cues
-        DSselected= currentSubj(session).periDS.DS;  %this alone is working
+        DSselected= currentSubj(session).periDS.DS;  % all the DS cues
 
         %First, let's exclude trials where animal was already in port
         %to do so, find indices of subjDataAnalyzed.behavior.inPortDS that
         %have a non-nan value and use these to exclude DS trials from this
         %analysis (we'll make them nan)
-                
-        DSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS)) = nan;
-
+            
+        %We have to throw in an extra conditional in case we've excluded
+        %cues in our peri cue analysis due to being too close to the
+        %beginning or end. Otherwise, we can get an out of range error
+        %because the inPortDS array doesn't exclude these cues.
+        for inPortTrial = find(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS))
+            if inPortTrial < numel(DSselected) 
+                DSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS)) = nan;
+            end
+        end
         %Then, let's exclude trials where animal didn't make a PE during
         %the cue epoch. To do so, get indices of empty cells in
         %subjDataAnalyzed.behavior.poxDS (these are trials where no PE
         %happened during the cue epoch) and then use these to set that DS =
         %nan
-        DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
         
+        %same here, we need an extra conditional in case cues were excluded
+        for noPEtrial = find(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS))
+            if noPEtrial < numel(DSselected)
+                DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
+            end
+        end
         %lets convert this to an index of trials with a valid value 
         DSselected= find(~isnan(DSselected));
         
@@ -1455,15 +1467,15 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
             else
                 continue %continue if nos NS data
             end
-        end
-        
-        %Sort PE latencies and retrieve an index of the sorted order that
-        %we'll use to sort the photometry data
-        [DSpeLatencySorted,DSsortInd] = sort(currentSubj(1).DSpeLatencyAllTrials);       
-        
-        [NSpeLatencySorted,NSsortInd] = sort(currentSubj(1).NSpeLatencyAllTrials);
-        
+        end        
     end %end session loop
+    
+    
+    %Sort PE latencies and retrieve an index of the sorted order that
+    %we'll use to sort the photometry data
+    [DSpeLatencySorted,DSsortInd] = sort(currentSubj(1).DSpeLatencyAllTrials);       
+
+    [NSpeLatencySorted,NSsortInd] = sort(currentSubj(1).NSpeLatencyAllTrials);
     
     %Sort all trials by PE latency
     currentSubj(1).DSzblueAllTrials= currentSubj(1).DSzblueAllTrials(:,DSsortInd);
