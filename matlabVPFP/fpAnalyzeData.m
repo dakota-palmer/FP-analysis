@@ -1134,7 +1134,167 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
 
 end %end subject loop
+%% BETWEEN SUBJECTS HEATPLOTS- Avg response to cue (by session)
+ 
+ %gathering all mean data from time window around cue 
+ for subj= 1:numel(subjectsAnalyzed) %for each subject
+     
+     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
 
+     for session = 1:numel(currentSubj) %for each session this subject completed
+
+         allRats.meanDSzblue(:,session,subj)= currentSubj(session).periDS.DSzblueMean;
+         allRats.meanDSzpurple(:,session,subj)= currentSubj(session).periDS.DSzpurpleMean;
+
+         if ~isempty(currentSubj(session).periNS.NS) %only run if NS data present
+            allRats.meanNSzblue(:,session,subj)= currentSubj(session).periNS.NSzblueMean;
+            allRats.meanNSzpurple(:,session,subj)= currentSubj(session).periNS.NSzpurpleMean;
+            
+         else %if there's no NS data present, fill with nan (otherwise will fill with zeros)
+            allRats.meanNSzblue(:,session, subj)= nan(size(currentSubj(session).periDS.DSzblueMean));
+            allRats.meanNSzpurple(:,session,subj)= nan(size(currentSubj(session).periDS.DSzblueMean));        
+         end %end NS conditional
+     end %end session loop
+          
+ end %end subj loop
+
+ % mean of all rats per training day ( each column is a training day , each 3d page is a subject)
+allRats.grandDSzblue=nanmean(allRats.meanDSzblue(:,:,:),3)'; %(:,:,1:4),3)' % doing 1:4 in 3rd dmension because rat8 is a GFP animal but need to find more robust way to do this
+allRats.grandDSzpurple=nanmean(allRats.meanDSzpurple(:,:, :),3)'; %1:4),3)'
+allRats.grandNSzblue=nanmean(allRats.meanNSzblue(:,:,:),3)';%'; %1:4),3)'
+allRats.grandNSzpurple=nanmean(allRats.meanNSzpurple(:,:,:),3)'; %,1:4),3)'
+
+ %get bottom and top for color axis of DS heatplot
+ allRats.bottomMeanallDS = min(min(min(allRats.grandDSzblue)), min(min(allRats.grandDSzpurple))); %find the lowest value 
+ allRats.topMeanallDS = max(max(max(allRats.grandDSzblue)), max(max(allRats.grandDSzpurple))); %find the highest value
+
+ %get bottom and top for color axis of NS heatplot
+ allRats.bottomMeanallNS = min(min(min(allRats.grandNSzblue)), min(min(allRats.grandNSzpurple)));
+ allRats.topMeanallNS = max(max(max(allRats.grandNSzblue)), max(max(allRats.grandNSzpurple)));
+
+
+%Establish a shared bottom and top for shared color axis of DS & NS means
+    if ~isnan(allRats.bottomMeanallNS) %if there is an NS
+        allRats.bottomMeanallShared= min(allRats.bottomMeanallDS, allRats.bottomMeanallNS); %find the absolute min value
+        allRats.topMeanallShared= max(allRats.topMeanallDS, allRats.topMeanallNS); %find the absolute min value
+    else
+        allRats.bottomMeanallShared= allRats.bottomMeanallDS;
+        allRats.topMeanallShared= allRats.topMeanallDS;
+    end
+    
+ %get list of session days for heatplot y axis
+ for day= 1:size(allRats.grandDSzblue,1)   
+    allRats.subjTrial(day,1)= day;
+ end
+ 
+%get list of NS session days for heatplot y axis
+
+% need to loop through all subjects and sessions, find unique trials with
+% NS data
+allRats.subjTrialNS=[];
+ for subj = 1:numel(subjectsAnalyzed)
+%      for session = 1:numel(currentSubj)
+%         if ~isempty(currentSubj(session).periNS.NSzblueMean) %if there's an NS trial in this session
+%              allRats.subjTrialNS(day,1)= currentSubj(session).trainDay;
+%         end
+%      end %end session loop
+%      
+     
+    for session = 1:numel(currentSubj) %for each training session this subject completed
+        if ~isempty(currentSubj(session).periNS.NS) %if there's an NS trial in this session, add it to the array that will mark the y axis
+             allRats.subjTrialNS= cat(2, allRats.subjTrialNS, currentSubj(session).trainDay);
+        end
+    end %end session loop
+     
+     
+ end %end subj loop
+   
+allRats.subjTrialNS= unique(subjTrialNS)
+
+% HEATPLOT
+
+ %DS z plot
+    figure(figureCount);
+    figureCount=figureCount+1;
+    hold on;
+    subplot(2,2,1); %subplot for shared colorbar
+
+    %plot blue DS
+
+    timeLock = [-periCueFrames:periCueFrames]/fs;% [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+
+    heatDSzblueMeanall= imagesc(timeLock,allRats.subjTrial,allRats.grandDSzblue);
+    title(' All rats avg blue z score response to DS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+    set(gca, 'ytick', subjTrial); %label trials appropriately
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+
+    %   plot purple DS (subplotted for shared colorbar)
+    subplot(2,2,3);
+    heatDSzpurpleMeanall= imagesc(timeLock,allRats.subjTrial,allRats.grandDSzpurple); 
+
+    title(' All rats avg purple z score response to DS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+
+    set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
+
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+    
+%     %% TODO: try linspace with caxis
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+
+
+
+    %     %NS z plot
+    %         figure(figureCount-1); %subplotting on the same figure as the DS heatplots
+    hold on;
+    subplot(2,2,2); %subplot for shared colorbar
+
+    timeLock = [-periCueFrames:periCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+
+    heatNSzblueMeanall= imagesc(timeLock,allRats.subjTrialNS,allRats.grandNSzblue);
+    title(' All rats avg blue z score response to NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+    set(gca, 'ytick', subjTrialNS); %label trials appropriately
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+
+    %   plot purple NS (subplotted for shared colorbar)
+    subplot(2,2,4);
+    heatNSzpurpleMean= imagesc(timeLock,allRats.subjTrialNS,allRats.grandNSzpurple); 
+
+    title(' All rats avg purple z score response to NS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+
+    set(gca, 'ytick', subjTrialNS); %TODO: NS trial labels must be different, only stage 5 trials
+
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+    
 %% HEAT PLOT OF RESPONSE TO EVERY INDIVIDUAL CUE PRESENTATION- sorted by trial 
 
 %Here, we'll make a figure for each subject with 4 subplots- blue z score
@@ -2784,17 +2944,17 @@ end %end subject loop
 %     
 %   currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
 %   
-% % First, I’d pick an existing colormap, such as Parula. Specify the max and min values of your data (e.g. 34 and -350), and then select the value at which you would like more color variation (e.g. perhaps 34 or 0). You can play with the scaling intensity parameter to see what looks nice.
+% % First, Iï¿½d pick an existing colormap, such as Parula. Specify the max and min values of your data (e.g. 34 and -350), and then select the value at which you would like more color variation (e.g. perhaps 34 or 0). You can play with the scaling intensity parameter to see what looks nice.
 %   cMap = parula(256);
 %   dataMax = topAllShared;
 %   dataMin = bottomAllShared;
 %   centerPoint = 1; %mean(mean(currentSubj(1).periDS.DSzpurpleAllTrials,1));
 %   scalingIntensity = 1; %mean(std(currentSubj(1).periDS.DSzpurpleAllTrials));
-% % Then perform some operations to create your colormap. I have done this by altering the indices “x” at which each existing color lives, and then interpolating to expand or shrink certain areas of the spectrum.
+% % Then perform some operations to create your colormap. I have done this by altering the indices ï¿½xï¿½ at which each existing color lives, and then interpolating to expand or shrink certain areas of the spectrum.
 %   x = 1:length(cMap); 
 %   x = x - (centerPoint-dataMin)*length(x)/(dataMax-dataMin);
 %   x = scalingIntensity * x/max(abs(x));
-% % Next, select some function or operations to transform the original linear indices into nonlinear. In the last line, I then use “interp1” to create the new colormap from the original colormap and the transformed indices.
+% % Next, select some function or operations to transform the original linear indices into nonlinear. In the last line, I then use ï¿½interp1ï¿½ to create the new colormap from the original colormap and the transformed indices.
 %   x = sign(x).* exp(abs(x));
 %   x = x - min(x); x = x*511/max(x)+1; 
 %   newMap = interp1(x, cMap, 1:512);
