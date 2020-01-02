@@ -124,14 +124,29 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 %signal over time
 for subj= 1:numel(subjects) %for each subject
    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   
+   figure(figureCount); %1 fig per subject
+   figureCount= figureCount+1;
+   
    for session = 1:numel(currentSubj) %for each training session this subject completed
        
-       currentSubj(session).signalCorrelation= xcorr(currentSubj(session).reblue,currentSubj(session).repurple,0,'coeff');
+%        currentSubj(session).signalCorrelation= xcorr(currentSubj(session).reblue,currentSubj(session).repurple,0,'coeff');
 
-       figure(figureCount);
-       figureCount= figureCount+1;
+       %there is something wrong with recording from 1/1/19, repurple for 10 & reblue for 11 has 5
+       %extra datapoints somehow, so making an exception for now-- did they get
+       %mixed up? they should be the same size anyway
+
+       if subj==3 && session == 18 || subj==4 && session==19
+           continue;
+       end
        
-       plot(currentSubj(session).cutTime,currentSubj(session).signalCorrelation);
+
+
+        currentSubj(session).signalCorrelation= corrcoef(currentSubj(session).reblue,currentSubj(session).repurple);
+
+        hold on;
+       
+       scatter(currentSubj(session).trainDay,currentSubj(session).signalCorrelation(2));
    end %end session loop
 end %end subject loop
 
