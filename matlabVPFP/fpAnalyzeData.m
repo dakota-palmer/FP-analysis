@@ -84,6 +84,9 @@ end %end subject loop
 %% ~~~Behavioral Analyses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+%% Lick bout classification
+
+
 %% Identify PEs and licks occuring during the DS 
 
 % Here, we'll loop through every cue in every session, finding the cue
@@ -1161,7 +1164,7 @@ end %end subject loop
             allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
             
             NStrialCount= NStrialCount+1;
-            % zeros are appearing in sessions where there's no data (e.g.
+            % zeros are appearing in sessions where there's no data! (e.g.
             % rats are on different training days, so one can be on day 14
             % ahead of others that are on day 13)
                        %skipping from 6->10
@@ -2170,7 +2173,6 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before s
 saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'pe_ratio_by_session','.fig'));
 %         close; %close 
 
-
 %% PLOT AVG DS & NS PE LATENCY BY DAY
 
 %In this section, we'll loop through our subjData struct, extracting an avg port entry
@@ -2235,6 +2237,85 @@ legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outsi
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'pe_latency_by_session','.fig'));
 %         close; %close 
+
+%% PLOT DS & NS LICKS ACROSS DAYS
+
+%In this section, we'll loop through our subjData struct, extracting a port entry
+%count for each session. Then we'll plot # of port entries as training
+%progresses.
+
+disp('plotting DS & NS licks')
+
+figure(figureCount) %one figure with poxCount across sessions for all subjects
+
+figureCount= figureCount+1; %iterate the figure count
+for subj= 1:numel(subjects) %for each subject
+    
+    %initialize
+    days = []; 
+    DSlicks= [];
+    NSlicks= [];
+   
+   for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
+       
+       currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+      
+       %Plot number of port entries across all sessions
+       
+        days(session)= currentSubj(session).trainDay; %keep track of days to associate with PE ratios
+       
+        
+        %we have saved timestamps of each lick during the cue saved in
+        %SubjDataAnalyzed.behavior. We'll use cellfun to get the length of
+        %each cell (the number of licks in each cue presentation), then
+        %we'll sum this to get a total lick count during cues in that
+        %session
+        DSlicks(session)= sum(cellfun('length', currentSubj(session).behavior.loxDS)); %get the DS licks
+       
+        if isempty(currentSubj(session).periNS.NS) %if this is a trial without NS data, make lick count nan (just makes plot nicer)
+            NSlicks(session)=nan;
+        else %otherwise, if there's valid NS data get the lick count
+            NSlicks(session)= sum(cellfun('length',currentSubj(session).behavior.loxNS)); %get NS licks
+        end   
+        
+        
+   end
+   subplot(2,1,1)
+   hold on;
+   h= plot(days, DSlicks); %save a handle so we can get the color of this plot and use it for NS
+   
+   %get this plot's color and x axis so we can use the same color for the NS plot
+   c= get(h,'Color');
+   x= xlim;
+%    y=ylim;
+   
+   subplot(2,1,2)
+   hold on;
+   plot(days, NSlicks, 'Color', c, 'LineStyle','--');
+   xlim(x);
+%    ylim(y);
+   
+end
+
+subplot(2,1,1)
+title(strcat(currentSubj(session).experiment,' DS licks across days'));
+xlabel('training day');
+ylabel('# of licks in DS epoch (cue onset+ cue duration)');
+legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outside of plot
+
+subplot(2,1,2)
+title(strcat(currentSubj(session).experiment,' NS licks across days'));
+xlabel('training day');
+ylabel('# of licks in NS epoch (cue onset+ cue duration)');
+legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outside of plot
+
+
+%make figure full screen, save, and close this figure
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'cueLicks','.fig'));
+%         close; %close 
+
+
 
 
 %% ~~~Power analysis~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
