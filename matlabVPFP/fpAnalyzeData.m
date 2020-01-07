@@ -129,8 +129,12 @@ for subj= 1:numel(subjects) %for each subject
    figureCount= figureCount+1;
    
    for session = 1:numel(currentSubj) %for each training session this subject completed
-       
+
 %        currentSubj(session).signalCorrelation= xcorr(currentSubj(session).reblue,currentSubj(session).repurple,0,'coeff');
+        
+        cutTime = currentSubj(session).cutTime;
+        r= [];
+        p= [];
 
        %there is something wrong with recording from 1/1/19, repurple for 10 & reblue for 11 has 5
        %extra datapoints somehow, so making an exception for now-- did they get
@@ -140,13 +144,47 @@ for subj= 1:numel(subjects) %for each subject
            continue;
        end
        
+%         for ts = 1:numel(cutTime) %for each timestamp
+%             [R,P] = corrcoef(currentSubj(session).reblue(ts), currentSubj(session).repurple(ts));
+%             r(ts)= R(2);
+%             p(ts)= P(2);
+%         end
+        
+%         currentSubj(session).signalCorrelation= corrcoef(currentSubj(session).reblue,currentSubj(session).repurple);
+%         [r, lags]= xcorr(currentSubj(session).reblue, currentSubj(session).repurple, 'unbiased');
+%         hold on;
+%         
 
 
-        currentSubj(session).signalCorrelation= corrcoef(currentSubj(session).reblue,currentSubj(session).repurple);
+        %xcorr on the raw signals returns a triangle shaped plot with a
+        %peak at 0, possibly due to DC offset component in signals... Will
+        %try to remove this by subtracting mean
 
-        hold on;
+%         [r, lags]= xcorr(currentSubj(session).reblue-mean(currentSubj(session).reblue), currentSubj(session).repurple-mean(currentSubj(session).repurple), 'coeff');
+    
+% %trying movcorr function
+%     [r, p, n]=movcorr(currentSubj(session).reblue, currentSubj(session).repurple, 400); %sliding 10s pearson
+% 
+%     subplot(4,1,1);
+%     plot(cutTime, currentSubj(session).reblue, 'b');
+%     subplot(4,1,2);
+%     plot(cutTime, currentSubj(session).repurple, 'm');
+%     subplot(4,1,3);
+%     plot(cutTime, r, 'k');
+%     title('sliding r')
+%     hold on
+%     plot([1, cutTime(end)], [0, 0], 'k--');
+%     hold off
+%     subplot(4,1,4);
+%     plot(cutTime,p, 'r');
+%     title('p value');
+%     hold on
+%     plot([1, cutTime(end)], [0.05, 0.05], 'k--');
+%     hold off
+%     
+%         stem(lags, r);
        
-       scatter(currentSubj(session).trainDay,currentSubj(session).signalCorrelation(2));
+%        scatter(currentSubj(session).trainDay,currentSubj(session).signalCorrelation(2));
    end %end session loop
 end %end subject loop
 
@@ -2239,7 +2277,7 @@ for subj= 1:numel(subjects) %for each subject
    %get this plot's color and x axis so we can use the same color for the NS plot
    c= get(h,'Color');
    x= xlim;
-   y=ylim;
+   y=[0,1];
    
    subplot(2,1,2)
    hold on;
@@ -2528,7 +2566,7 @@ end %end subject loop
 % use n-way ANOVA to look at the main effect of cue, the main effect of session,
 % and any interaction
 
-%% ANOVA blueZ
+%% ANOVA of blueZ in response to cue
 % Trying to do N-way anova of blue z score response to DS vs. NS
 % in a predefined time window of interest following the cue
 %The time window is the same as in the power analysis above, and we'll pull
