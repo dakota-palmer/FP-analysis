@@ -1683,7 +1683,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         currentSubj(1).NSpeLatencyAllTrials= [];
 
     for session = 1:numel(currentSubj) %for each training session this subject completed
-        
+       
         clear NSselected
         
         %We can only include trials that have a PE latency, so we need to
@@ -1718,6 +1718,10 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
                 DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
             end
         end
+        
+        %this may create some zeros, so let's make those nan as well
+        DSselected(DSselected==0) = nan;
+        
         %lets convert this to an index of trials with a valid value 
         DSselected= find(~isnan(DSselected));
         
