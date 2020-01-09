@@ -117,7 +117,99 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 % end
 
 
+%% ~~~Photometry Signal processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+%% Photobleach correction
+ %Going for something like (Patel et al 2019 bioRxiv)
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+       clear cutTime reblue repurple
+       
+       cutTime= currentSubj(session).cutTime;
+       reblue= currentSubj(session).reblue;
+       repurple= currentSubj(session).repurple;
+       
+       
+          %there is something wrong with recording from 1/1/19, repurple for 10 & reblue for 11 has 5
+       %extra datapoints somehow, so making an exception for now-- did they get
+       %mixed up? they should be the same size anyway
+
+       if subj==3 && session == 18 || subj==4 && session==19
+           continue;
+       end
+       
+     %let's fit an exponential function to the blue and purple signals
+
+     %First order exponential fit
+% ft=fittype('exp1');
+% currentSubj(session).blueFit=fit(cutTime',reblue,ft);
+% currentSubj(session).purpleFit=fit(cutTime',repurple,ft);
+
+    %matlab's built in detrend function 
+% detrendblue= detrend(reblue, 2);
+% detrendpurple= detrend(repurple, 2);
+%      
+%      figure(figureCount);
+%      figureCount=figureCount+1;
+%      subplot(2,1,1);
+%      plot(currentSubj(session).blueFit, cutTime, reblue)
+%      hold on;
+% %      plot(cutTime,detrendblue,'k');
+%      subplot(2,1,2);
+%      plot(currentSubj(session).purpleFit, 'k', cutTime, repurple, 'm')
+%      hold on;
+% %      plot(cutTime,detrendpurple,'k');
+%      
+%      set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving/closing
+%      
+% %      waitforbuttonpress;
+%      close;
+
+     
+         %matlab's built in moving median function
+    medianblue= movmedian(reblue,800);
+    medianpurple= movmedian(repurple, 800); %40=1s %800 = 20s
+    
+    dffblue= (reblue-medianblue)./medianblue;
+    dffpurple= (repurple-medianpurple)./medianpurple;
+    
+    figure(figureCount);
+    figureCount= figureCount+1;
+    subplot(4,1,1);
+    title('blue moving median')
+    hold on;
+    plot(cutTime,reblue);
+    plot(cutTime,medianblue, 'k');
+    subplot(4,1,2);
+    hold on;
+    title('blue dF/F (value-median/median)');
+    plot(cutTime,dffblue);
+    subplot(4,1,3);
+    title('purple moving median')
+    hold on;
+    plot(cutTime, repurple, 'm');
+    plot(cutTime, medianpurple, 'k');
+    subplot(4,1,4);
+    hold on;
+    title('purple dF/F (value-median/median)');
+    plot(cutTime,dffpurple, 'm');
+    
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving/closing
+    
+%     waitforbuttonpress;
+    close;
+    
+          
+    subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff= dffblue;
+    subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff= dffpurple;
+   end %end session loop
+end %end subject loop
+ 
+ 
 %% ~~~Photometry Analysis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 %% CROSS CORRELATION OF PHOTOMETRY SIGNALS
 
 %For a given session, let's get a correlation coefficient of Blue & Purple
@@ -125,8 +217,8 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 for subj= 1:numel(subjects) %for each subject
    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
    
-   figure(figureCount); %1 fig per subject
-   figureCount= figureCount+1;
+%    figure(figureCount); %1 fig per subject
+%    figureCount= figureCount+1;
    
    for session = 1:numel(currentSubj) %for each training session this subject completed
 
@@ -160,8 +252,12 @@ for subj= 1:numel(subjects) %for each subject
         %peak at 0, possibly due to DC offset component in signals... Will
         %try to remove this by subtracting mean
 
+        
 %         [r, lags]= xcorr(currentSubj(session).reblue-mean(currentSubj(session).reblue), currentSubj(session).repurple-mean(currentSubj(session).repurple), 'coeff');
-    
+%         stem(lags, r);
+
+        %still getting a weird shape, let's try this on a rolling z score?
+               
 % %trying movcorr function
 %     [r, p, n]=movcorr(currentSubj(session).reblue, currentSubj(session).repurple, 400); %sliding 10s pearson
 % 
@@ -181,12 +277,64 @@ for subj= 1:numel(subjects) %for each subject
 %     hold on
 %     plot([1, cutTime(end)], [0.05, 0.05], 'k--');
 %     hold off
-%     
-%         stem(lags, r);
-       
+%            
 %        scatter(currentSubj(session).trainDay,currentSubj(session).signalCorrelation(2));
    end %end session loop
 end %end subject loop
+
+
+%% Trying correlation with dff calculated in previous section
+for subj= 1:numel(subjects)
+    for session= 1:numel(subjDataAnalyzed.(subjects{subj}))
+        
+        cutTime= subjData.(subjects{subj})(session).cutTime;
+        currentSubj= subjDataAnalyzed.(subjects{subj}); %easy indexing into subject
+              %going to try on dff calculated by previous section
+%         [r, lags]= xcorr(currentSubj(session).photometry.bluedff,currentSubj(session).photometry.purpledff, 'coeff');
+%         stem(lags, r);
+        
+          %there is something wrong with recording from 1/1/19, repurple for 10 & reblue for 11 has 5
+       %extra datapoints somehow, so making an exception for now-- did they get
+       %mixed up? they should be the same size anyway
+
+       if subj==3 && session == 18 || subj==4 && session==19
+           continue;
+       end
+       
+        
+        %trying movcorr function
+%     [r, p, n]=movcorr(currentSubj(session).photometry.bluedff, currentSubj(session).photometry.purpledff, 400); %sliding 10s pearson
+% 
+%     figure(figureCount);
+%     figureCount= figureCount+1;
+%     
+%     subplot(4,1,1);
+%     plot(cutTime, currentSubj(session).photometry.bluedff, 'b');
+%     hold on;
+%     title('blue dff');
+%     subplot(4,1,2);
+%     plot(cutTime, currentSubj(session).photometry.purpledff, 'm');
+%     hold on;
+%     title('purple dff');
+%     subplot(4,1,3);
+%     plot(cutTime, r, 'k');
+%     title('sliding r')
+%     hold on
+%     plot([1, cutTime(end)], [0, 0], 'k--');
+%     hold off
+%     subplot(4,1,4);
+%     plot(cutTime,p, 'r');
+%     title('p value');
+%     hold on
+%     plot([1, cutTime(end)], [0.05, 0.05], 'k--');
+%     hold off
+%     
+%     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving/closing
+%     waitforbuttonpress;
+%     close;
+
+    end %end session loop
+end %end subj loop
 
 
 %% Create subjDataAnalyzed struct to hold analyzed data
