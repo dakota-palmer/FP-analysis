@@ -34,10 +34,10 @@ experimentName= 'VP-VTA-FP-round2'; %change experiment name for automatic naming
 sesNum= 0;
 
 for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile  
-    
+      
     tic;
     
-    clearvars -except file nexFiles metaDataAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
+    clearvars -except fs file nexFiles metaDataAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
     
     fName = nexFiles(file).name; %define the nex file name to load
     data = readNexFile([nexAddress,'//',fName]); %load the nex file data
@@ -53,13 +53,18 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     
     sesData(file).boxA= excelData{fileIndex,9}(); %get the actual box identity
     sesData(file).boxB= excelData{fileIndex,10}();
-    
+        
     sesData(file).DSidentity = excelData{fileIndex,8}();
     sesData(file).trainStageA = excelData{fileIndex,4}();
     sesData(file).trainStageB = excelData{fileIndex,5}();
     sesData(file).trainDayA = excelData{fileIndex,6}();
     sesData(file).trainDayB = excelData{fileIndex,7}();
     sesData(file).fileName= fName;
+    
+    %Variable reward info
+    sesData(file).pump1= excelData{fileIndex,11}();
+    sesData(file).pump2= excelData{fileIndex,12}();
+    sesData(file).pump3= excelData{fileIndex,13}();
 
     
     disp(strcat('rat A = ', num2str(sesData(file).ratA), ' ; rat B = ', num2str(sesData(file).ratB), '; box A= ', num2str(sesData(file).boxA), '; box B= ', num2str(sesData(file).boxB), ' ;  trainStageA = ', num2str(sesData(file).trainStageA), ' ; trainStageB = ', num2str(sesData(file).trainStageB), ' ; trainDayA = ', num2str(sesData(file).trainDayA))); 
@@ -77,6 +82,9 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
        if(blueAindex ==1)  %e.g. if DSindex returns true (1), then define DS as the timestamps within this data.events series
            blueA = data.contvars{i,1}.data;
     %        disp(strcat('465A contvar index= ', num2str(i))); %keep for debugs
+            
+            %Let's define the frequency of sampling (fs) using this channel here!
+            fs= data.contvars{i,1}.ADFrequency;
        end
 
 
@@ -111,7 +119,9 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
 
     %% Extract events; Since nexfile organization differs, search the nexfile and define events programmatically
     %Define timescale for each event in seconds
-    fs = data.contvars{1,1}.ADFrequency; %Frequency of sampling- todo: double check this (should not be a fraction?)
+    
+    %fs is defined with contvars above
+    
     sesData(file).fs = fs; %may be useful for debugging/comparing fs between sessions
 
     rawTime = linspace(data.tbeg, data.tend, length(blueA)); %define a time axis based on the beginning time and end time with length(blueA) timestamps
@@ -179,9 +189,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     end
       
     %% Preprocessing- downsample to 40Hz and remove some datapoints at beginning & end to remove artifacts
-    %Downsample to 40hz from fs
-    fs = data.contvars{1,1}.ADFrequency; %Frequency of sampling- todo: double check this (should not be a fraction?)
-
+    %Downsample to 40hz from fs (fs is defined with contvars in the beginning)
     reblueA=resample(blueA,40,round(fs));       %Downsample to 40Hz from fs %consider using downsample() function here instead of resample()?
     repurpleA=resample(purpleA,40,round(fs));
 
@@ -259,6 +267,11 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageA;
                 subjData.(subjField)(i).box= sesData(i).boxA;
                 
+                %Variable reward
+                 subjData.(subjField)(i).pump1= sesData(i).pump1;
+                 subjData.(subjField)(i).pump2= sesData(i).pump2;
+                 subjData.(subjField)(i).pump3= sesData(i).pump3;
+                
                 %Photometry signals
                 subjData.(subjField)(i).cutTime= sesData(i).cutTime;
                 subjData.(subjField)(i).reblue= sesData(i).reblueA;
@@ -284,6 +297,11 @@ for rat = 1:numel(rats)
                 subjData.(subjField)(i).trainDay= sesData(i).trainDayB; 
                 subjData.(subjField)(i).trainStage= sesData(i).trainStageB;
                 subjData.(subjField)(i).box= sesData(i).boxB;
+                
+                %Variable reward
+                 subjData.(subjField)(i).pump1= sesData(i).pump1;
+                 subjData.(subjField)(i).pump2= sesData(i).pump2;
+                 subjData.(subjField)(i).pump3= sesData(i).pump3;
 
                 %Photometry signals
                 subjData.(subjField)(i).cutTime= sesData(i).cutTime;
@@ -362,40 +380,40 @@ for subj= 1:numel(subjects) %for each subject
             disp(strcat('>>Error *big NS time shift ', num2str(timeShift(timeShift>0.02)), 'shifted NS ', num2str(currentSubj(session).cutTime(NSonsetShifted))));
         end         
 
-    %Shift pox
-        currentSubj(session).poxShifted= interp1(cutTime, cutTime, currentSubj(session).pox, 'nearest');
-
-        %quality control
-        timeShift= abs(currentSubj(session).pox-currentSubj(session).poxShifted);
-        if timeShift > 0.02% >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
-            disp(strcat('>>Error *big pox time shift ', num2str(timeShift(timeShift>0.02)), ' subj ',num2str(subj), '; session ', num2str(session)));
-        end     
-
-    %Shift lox
-        currentSubj(session).loxShifted= interp1(cutTime, cutTime, currentSubj(session).lox, 'nearest');
-
-        %quality control
-        timeShift= abs(currentSubj(session).lox-currentSubj(session).loxShifted);
-        if timeShift > 0.02% >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
-        disp(strcat('>>Error *big lox time shift ', num2str(timeShift(timeShift>0.02)), ' subj ',num2str(subj), '; session ', num2str(session)));
-        end   
-
-    %Shift outs
-        currentSubj(session).outShifted= interp1(cutTime, cutTime, currentSubj(session).out, 'nearest');
-
-        %quality control
-        timeShift= abs(currentSubj(session).out-currentSubj(session).outShifted);
-        if timeShift > 0.02% >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
-        disp(strcat('>>Error *big out time shift ', num2str(timeShift(timeShift>0.02)), ' subj ',num2str(subj), '; session ', num2str(session)));
-        end  
-          
+%     %Shift pox
+%         currentSubj(session).poxShifted= interp1(cutTime, cutTime, currentSubj(session).pox, 'nearest');
+% 
+%         %quality control
+%         timeShift= abs(currentSubj(session).pox-currentSubj(session).poxShifted);
+%         if timeShift > 0.02% >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
+%             disp(strcat('>>Error *big pox time shift ', num2str(timeShift(timeShift>0.02)), ' subj ',num2str(subj), '; session ', num2str(session)));
+%         end     
+% 
+%     %Shift lox
+%         currentSubj(session).loxShifted= interp1(cutTime, cutTime, currentSubj(session).lox, 'nearest');
+% 
+%         %quality control
+%         timeShift= abs(currentSubj(session).lox-currentSubj(session).loxShifted);
+%         if timeShift > 0.02% >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
+%         disp(strcat('>>Error *big lox time shift ', num2str(timeShift(timeShift>0.02)), ' subj ',num2str(subj), '; session ', num2str(session)));
+%         end   
+% 
+%     %Shift outs
+%         currentSubj(session).outShifted= interp1(cutTime, cutTime, currentSubj(session).out, 'nearest');
+% 
+%         %quality control
+%         timeShift= abs(currentSubj(session).out-currentSubj(session).outShifted);
+%         if timeShift > 0.02% >0.02 %this will flag events whose time shift deviates above a threshold (in seconds)
+%         disp(strcat('>>Error *big out time shift ', num2str(timeShift(timeShift>0.02)), ' subj ',num2str(subj), '; session ', num2str(session)));
+%         end  
+%           
     subjData.(subjects{subj})(session).DSshifted= currentSubj(session).DSshifted;
     subjData.(subjects{subj})(session).NSshifted= currentSubj(session).NSshifted;
-    subjData.(subjects{subj})(session).poxShifted= currentSubj(session).poxShifted;
-    subjData.(subjects{subj})(session).loxShifted= currentSubj(session).loxShifted;
-    subjData.(subjects{subj})(session).outShifted= currentSubj(session).outShifted;    
-      
-      
+%     subjData.(subjects{subj})(session).poxShifted= currentSubj(session).poxShifted;
+%     subjData.(subjects{subj})(session).loxShifted= currentSubj(session).loxShifted;
+%     subjData.(subjects{subj})(session).outShifted= currentSubj(session).outShifted;    
+%       
+%       
     end %end session loop
 end %end subj loop
  

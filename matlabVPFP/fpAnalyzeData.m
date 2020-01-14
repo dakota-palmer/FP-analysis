@@ -169,6 +169,8 @@ for subj= 1:numel(subjects) %for each subject
 
      
          %matlab's built in moving median function
+         %inspired by(Patel, McAlinden, Matheison, &
+         %Sakata, 2019 BioRxiv) but not really what they did
     medianblue= movmedian(reblue,800);
     medianpurple= movmedian(repurple, 800); %40=1s %800 = 20s
     
@@ -359,6 +361,86 @@ end %end subj loop
        subjDataAnalyzed.(subjects{subj})(session).box= currentSubj(session).box;       
    end %end session loop
 end %end subject loop
+
+%% ~~~Reward identification ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    %fpr stages with variable reward identity (3 pumps, 3 rewards)
+    %indicated by 1, 2, or 3 DS TTL pulses in rapid succession
+    
+    ttlWindow= 2; %time window within which to look for DS TTL pulse bursts ... %2s should be enough
+    
+ for subj= 1:numel(subjects) %for each subject
+       for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+           currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+                      
+           if ~isnan(currentSubj(session).pump2)
+               
+                %first lets save reward identity for each pump
+               subjDataAnalyzed.(subjects{subj})(session).reward.pump1= currentSubj(session).pump1;
+               subjDataAnalyzed.(subjects{subj})(session).reward.pump2= currentSubj(session).pump2;
+               subjDataAnalyzed.(subjects{subj})(session).reward.pump3= currentSubj(session).pump3;
+               
+               %now we've got to classify DS trials as either pump1,2,or 3
+               %based on ttl pulses
+               
+%                DSttl= currentSubj(session).DS;
+               
+               DScount = 1; %keep track of the actual ds trial count (because we'll have a bunch of extra TTL pulses simply denoting reward identity)
+               
+               ttlCount= 1; %use this to skip over TTL pulses in the same trial
+              
+               for cue= 1:numel(currentSubj(session).DS) %for each DS TTL pulse
+                   
+                   if ttlCount < numel(currentSubj(session).DS) %since we are adding to ttlCount this just prevents us from going beyond the max index
+                   
+                       ttlWindowStartTime= currentSubj(session).DS(ttlCount)-ttlWindow;
+                       ttlWindowEndTime= currentSubj(session).DS(ttlCount)+ttlWindow;
+
+                       ttlPump= currentSubj(session).DS(currentSubj(session).DS > ttlWindowStartTime & currentSubj(session).DS < ttlWindowEndTime);
+
+                       %save the DS onset as the first TTL pulse in this window (the minimum timestamp)
+                       subjDataAnalyzed.(subjects{subj})(session).reward.DS(DScount,1)= min(ttlPump); 
+                       
+                       %get this shifted timestamp too (because its used in timelocking)
+                       subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted(DScount,1)= subjData.(subjects{subj})(session).DSshifted(ttlCount);
+
+
+                       %save the pump identity based on the # of TTL pulses in this window (numel)
+
+                        if numel(ttlPump) == 1
+                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 1;                                                       
+                            DScount= DScount+1;
+                            ttlCount= ttlCount+1;
+                        elseif numel(ttlPump) ==2
+                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 2;
+                            DScount= DScount+1;
+                            ttlCount = ttlCount+2; %skip over the next cue ttl pulse because it is in the same trial
+                        elseif numel(ttlPump) ==3
+                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 3;
+                            DScount= DScount+1;
+                            ttlCount = ttlCount+3; %skip over the next two cue ttl pulses because these are in the same trial 
+                        end
+                   end %end ttlCount conditional
+               end %end cue loop
+          
+                  
+               %for simplicity let's overwrite the original DS trial record with
+               %the updated one %TODO: think about other ways to address this
+               subjData.(subjects{subj})(session).DS= subjDataAnalyzed.(subjects{subj})(session).reward.DS;
+               subjData.(subjects{subj})(session).DSreward= subjDataAnalyzed.(subjects{subj})(session).reward.DSreward;
+               subjData.(subjects{subj})(session).DSshifted= subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted;
+
+         
+               
+               
+            end %end if pump 2 isnan conditional (alternative to stage conditional)
+
+       
+       end %end session loop
+
+       
+end %end subject loop
+
+
 
 %% ~~~Behavioral Analyses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
