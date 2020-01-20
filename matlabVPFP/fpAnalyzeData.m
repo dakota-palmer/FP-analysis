@@ -1,5 +1,5 @@
 %fp data analysis 
-%12/4/19
+%1/20/20
 clear
 clc
 close all
@@ -452,6 +452,117 @@ end %end subject loop
 
 
 %% Lick bout classification
+
+%In this section, we will loop through all licks for each session and
+%define lick bouts based on the parameters below. We will use lickInd as a
+%counter to keep track of which lick we should be on as we loop through,
+%since bout size differs. We will look for licks within a certain interlick
+%interval (ILI) of each lick. If we find any, they'll be saved to the bout
+%array. We will then keep looking for licks within the ILI of the final
+%lick in the bout until we don't find any more, at which point we'll change
+%the boutDone conditional to finish evaluating this bout. If this bout
+%meets some criteria (e.g. has at least 3 bouts), we will save it and
+%advance onto the next bout.
+
+%first let's define some parameters 
+interLickThreshold = 1.0; %threshold in seconds between licks beyond which = new bout
+licksPerBoutThreshold= 3; %need this many licks to be called a bout
+
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+      
+   
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+     
+      boutCount=1; %counter for bouts
+      lickInd= 1; %counter used to skip over licks in the current bout
+
+      bout= []; %array containing licks for the current bout
+      lickBouts= {}; %cell array containing lick bouts
+       
+      boutDone= 0; %logic gate between bouts
+      
+       for lick = 1:numel(currentSubj(session).lox)
+           
+           if lickInd< numel(currentSubj(session).lox) %make sure the index is valid (since we're adding to lickInd)
+            
+               if boutDone ==0 %if we are still filling the current bout
+               
+             
+                       if isempty(bout) %start assigning licks to this bout if bout is empty
+                           boutStart= currentSubj(session).lox(lickInd); %-interBoutThreshold;
+                           boutEnd= currentSubj(session).lox(lickInd)+interLickThreshold;
+
+                           %extract licks that occur between the bout start and end
+                           %because we are using >= boutStart, there will
+                           %always be at least 1 lick (the first one at boutStart)
+                           %included in the bout... that is why we'll be
+                           %using numel(bout>1) as a logic gate instead of
+                           %~isempty
+                           bout= currentSubj(session).lox(currentSubj(session).lox >=boutStart & currentSubj(session).lox <boutEnd);
+                       end
+                       
+                       if  numel(bout>1) %if the bout has already been started and licks were found beyond the initial lick, continue filling the bout with licks
+                           %now use bout(end) to see if there are more
+                           %licks within the desired interlick interval
+                           %(ili) threshold of the final lick in the bout
+                           boutStart= bout(end);
+                           boutEnd= bout(end)+interLickThreshold;
+                           
+                           bout= cat(1, bout,currentSubj(session).lox(currentSubj(session).lox>boutStart & currentSubj(session).lox<boutEnd)); 
+                           lickInd = find(currentSubj(session).lox==bout(end)); %as the loop continues, skip over licks already assigned to a bout
+
+
+                            %if there are no more licks within the desired
+                            %ILI, make the bout complete
+                            if isempty(currentSubj(session).lox(currentSubj(session).lox>boutStart & currentSubj(session).lox<boutEnd))
+                                boutDone=1; 
+                            end
+                       end
+                       
+                       if numel(bout)==1 %if there aren't any licks except for the first one in this bout time window, advance lickInd by 1 and make the bout complete
+                           lickInd=lickInd+1;
+                           boutDone=1;
+                       end                      
+               end %end boutDone=0 conditional
+               
+               if boutDone==1 %if this bout is complete, let's save it and advance the boutCount
+                   
+                       if numel(bout) > licksPerBoutThreshold %Only if this 'bout' contains at least the number of licks required, call it a bout and save it
+                          lickBouts{boutCount}= bout;
+                          boutCount=boutCount+1;
+                          bout=[];
+                       
+                       else %if there aren't enough licks to consider this a real bout, make bout empty again for the next loop
+                           bout=[];
+                       end
+                       
+                       boutDone=0; %reset the boutDone conditional
+               end %end boutDone conditional
+           end %end index check conditional
+       end %end lick loop
+       
+       currentSubj(session).lickBouts= lickBouts;
+       
+   end %end session loop
+   
+   %save the lick bout data
+   subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts= currentSubj(session).lickBouts;
+   
+  % %    %visualization
+   figure(figureCount);
+   figureCount= figureCount+1;
+   
+   for currentBout = 1:numel(currentSubj(session).lickBouts)
+       hold on;
+       title('lick bout # over time');
+       scatter(currentSubj(session).lickBouts{currentBout},ones(size(currentSubj(session).lickBouts{currentBout}))*currentBout);
+   end
+   
+end %end subject loop
+
+
+
 
 
 %% Identify PEs and licks occuring during the DS 
@@ -2220,7 +2331,7 @@ end %end subject loop
 %response to DS firstPox, blue z score response to NS firstPox, purple z score response to
 %DS firstPox, purple z score response to NS firstPox.
 
-%we'll pull from the subjDataAnalyzed struct to make our heatplots
+%we'll pull from the subjDataAnalyzed struct to make our heatplots 
 
 for subj= 1:numel(subjectsAnalyzed) %for each subject
 currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
@@ -2458,7 +2569,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
      %get the avg std in the blue and purple z score responses to all cues,
      %get absolute value and then multiply this by some factor to define a color axis max and min
      
-     stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
+     stdFactor= 8; %multiplicative factor- how many stds away do we want our color max & min?
      
      topDSdffblue= stdFactor*abs(mean((std(currentSubj(1).DSbluedffAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
      topDSdffpurple= stdFactor*abs(mean((std(currentSubj(1).DSpurpledffAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
