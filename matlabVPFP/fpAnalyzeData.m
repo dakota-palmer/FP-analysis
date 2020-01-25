@@ -44,15 +44,7 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 %        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
 %       
 %        
-%         %there is something wrong with recording from 1/1/19, repurple for 10 & reblue for 11 has 5
-%        %extra datapoints somehow, so making an exception for now-- did they get
-%        %mixed up? they should be the same size anyway
-% 
-%        if subj==3 && session == 18 || subj==4 && session==19
-%            continue;
-%        end
-%        
-%        
+%      
 %        
 %        % Raw session plots- within subjects
 %         subplot(numel(subjData.(subjects{subj})),1,session); %one subplot per session
@@ -88,15 +80,7 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 %        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
 %       
 %        
-%         %there is something wrong with recording from 1/1/19, repurple for 10 & reblue for 11 has 5
-%        %extra datapoints somehow, so making an exception for now-- did they get
-%        %mixed up? they should be the same size anyway
-% 
-%        if subj==3 && session == 18 || subj==4 && session==19
-%            continue;
-%        end
-%        
-%        
+%       
 %        
 %        % Raw session plots- within subjects
 %         hold on;
@@ -132,13 +116,6 @@ for subj= 1:numel(subjects) %for each subject
        repurple= currentSubj(session).repurple;
        
        
-%           %there is something wrong with recording from 1/1/19, repurple for 10 & reblue for 11 has 5
-%        %extra datapoints somehow, so making an exception for now-- did they get
-%        %mixed up? they should be the same size anyway
-% 
-%        if subj==3 && session == 18 || subj==4 && session==19
-%            continue;
-%        end
 %        
      %let's fit an exponential function to the blue and purple signals
 
@@ -230,14 +207,6 @@ for subj= 1:numel(subjects) %for each subject
         r= [];
         p= [];
 
-       %there is something wrong with recording from 1/1/19, repurple for 10 & reblue for 11 has 5
-       %extra datapoints somehow, so making an exception for now-- did they get
-       %mixed up? they should be the same size anyway
-
-       if subj==3 && session == 18 || subj==4 && session==19
-           continue;
-       end
-       
 %         for ts = 1:numel(cutTime) %for each timestamp
 %             [R,P] = corrcoef(currentSubj(session).reblue(ts), currentSubj(session).repurple(ts));
 %             r(ts)= R(2);
@@ -248,6 +217,7 @@ for subj= 1:numel(subjects) %for each subject
 %         [r, lags]= xcorr(currentSubj(session).reblue, currentSubj(session).repurple, 'unbiased');
 %         hold on;
 %         
+%         [r, lags]= xcorr(currentSubj(session).reblue, currentSubj(session).repurple, 'coeff');
 
 
         %xcorr on the raw signals returns a triangle shaped plot with a
@@ -295,16 +265,9 @@ for subj= 1:numel(subjects)
 %         [r, lags]= xcorr(currentSubj(session).photometry.bluedff,currentSubj(session).photometry.purpledff, 'coeff');
 %         stem(lags, r);
         
-          %there is something wrong with recording from 1/1/19, repurple for 10 & reblue for 11 has 5
-       %extra datapoints somehow, so making an exception for now-- did they get
-       %mixed up? they should be the same size anyway
-
-       if subj==3 && session == 18 || subj==4 && session==19
-           continue;
-       end
        
         
-        %trying movcorr function
+%         %trying movcorr function
 %     [r, p, n]=movcorr(currentSubj(session).photometry.bluedff, currentSubj(session).photometry.purpledff, 400); %sliding 10s pearson
 % 
 %     figure(figureCount);
@@ -549,16 +512,16 @@ for subj= 1:numel(subjects) %for each subject
    %save the lick bout data
    subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts= currentSubj(session).lickBouts;
    
-  % %    %visualization
-   figure(figureCount);
-   figureCount= figureCount+1;
-   
-   for currentBout = 1:numel(currentSubj(session).lickBouts)
-       hold on;
-       title('lick bout # over time');
-       scatter(currentSubj(session).lickBouts{currentBout},ones(size(currentSubj(session).lickBouts{currentBout}))*currentBout);
-   end
-   
+% %   % %    %visualization
+% %    figure(figureCount);
+% %    figureCount= figureCount+1;
+% %    
+% %    for currentBout = 1:numel(currentSubj(session).lickBouts)
+% %        hold on;
+% %        title('lick bout # over time');
+% %        scatter(currentSubj(session).lickBouts{currentBout},ones(size(currentSubj(session).lickBouts{currentBout}))*currentBout);
+% %    end
+% %    
 end %end subject loop
 
 
@@ -570,6 +533,10 @@ end %end subject loop
 % Here, we'll loop through every cue in every session, finding the cue
 % onset time and the cue's duration. Then, we'll check for PEs and licks
 % that occur during this duration and assign them to that cue.
+
+%TODO: for licks, maybe not the best way to see licks for a particular reward
+%since it's only getting licks in the cue duration... May be better to
+%collect all licks between the current cue onset and the next cue's onset
 
 disp('classifying events during cue epoch');
 
@@ -1981,19 +1948,26 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
 %      %overlay plot of transitions between training stages - TODO: this
 %      %stopped working after stage 6 I think
-%     clear transitionCue
+%     transitionCue= [];
+%     transitionDay=[];
 %     
 %     cueCount = 1;
 %     
+%     stageCount= 1;
+%     
 %     for session= 1:numel(currentSubj)
 %        
-%         if session ==1 
-%             trainStage = currentSubj(session).trainStage;
-%         end
+%        if session ==1 
+%            trainStage = currentSubj(session).trainStage;
+%        end
+%         
 %        if currentSubj(session).trainStage ~= trainStage
 %            %if the trainStage changes, save this day as a transision
 %            trainStage = currentSubj(session).trainStage;
-%            transitionDay(session) = currentSubj(session).trainDay;
+%            
+%            %iterate stageCount
+%            stageCount=stageCount+1
+%            transitionDay(stageCount) = currentSubj(session).trainDay;
 %            
 % %            disp(strcat('transition day ', num2str(transitionDay(session))));
 %            
@@ -2006,7 +1980,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 %                 if find(currentSubj(1).DSzblueAllTrials'==currentSubj(session).periDS.DSzblue(:,:,cue),1)% currentSubj(1).DSzblueAllTrials(cue,:)' == currentSubj(session).periDS.DSzblue(:,:,cue)
 %                     
 % %                     [~, cueInd] =  find(currentSubj(1).DSzblueAllTrials'==currentSubj(session).periDS.DSzblue(:,:,cue),1);
-%                     transitionCue(session)= cueCount;
+%                     transitionCue(stageCount)= cueCount;
 %                 end
 %            end
 % %            disp(strcat('transition Cue', num2str(transitionCue(session))))
@@ -2026,7 +2000,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 %             
 %         end
 %     end
-       
+%        
     figureCount= figureCount+1;
 end %end subject loop
 
@@ -2692,7 +2666,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     figureCount= figureCount+1;
 end %end subj loop
 
-%% Variable reward z score heatplot
+%% Variable reward z score heatplot- timlocked to CUE
 %here we will make a figure with subplotted heatplots of the z score
 %response to all Pump1, Pump2, and Pump3 DS trials
 
@@ -2891,66 +2865,244 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
         c= colorbar; %colorbar legend
         c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
 
+        %TODO: add purple plot
         
+               set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
-%         %   plot purple DS (subplotted for shared colorbar)
-%         subplot(1,2,3);
-%         heatDSzpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzpurpleAllTrials); 
+    end %end variable reward conditional
+end %end subject loop
+
+
+%% Variable reward z-score heatplot- timelocked to FIRST PE after cue
+
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+
+
+rewardSessionCount= 0; %counter for sessions with valid variable reward data 
+
+
+    for session = 1:numel(currentSubj) %for each training session this subject completed
+                
+        %clear between sessions
+        indPump1= [];
+        indPump2= [];
+        indPump3= [];
+        
+        
+        if ~isempty(currentSubj(session).reward) %make sure this is a valid stage with multiple rewards
+            
+            rewardSessionCount= rewardSessionCount+1; %counter for sessions with valid variable reward data 
+
+            
+            %first we need to get the z score data surrounding either pump1,
+            %pump2, or pump3 DS trials. To do this, we'll use the reward
+            %identities (reward.DSreward) as an indidices to get the right DS trials
+           
+
+            indPump1= find(currentSubj(session).reward.DSreward==1);
+            indPump2= find(currentSubj(session).reward.DSreward==2);
+            indPump3= find(currentSubj(session).reward.DSreward==3);
+            
+            %it's possible that indPump1,2, or 3 will result in an invalid
+            %index (for a cue that was excluded in the peri cue analyses)
+            %so let's check for that and exclude these (this may not be the
+            %best method)
+           
+            for i= 1:numel(indPump1)
+                if indPump1(i) > size(currentSubj(session).periDSpox.DSzpoxblue,3)
+                   indPump1(i:end) = [];
+                   break;
+                end
+            end
+            
+            for i= 1:numel(indPump2)
+                if indPump2(i) > size(currentSubj(session).periDSpox.DSzpoxblue,3)
+                   indPump2(i:end) = []; 
+                  break;
+                end
+            end
+
+            for i= 1:numel(indPump3)
+                if indPump3(i) > size(currentSubj(session).periDSpox.DSzpoxblue,3)
+                   indPump3(i:end) = []; 
+                   break;
+                end
+            end
+
+            %collect all z score responses to every single DS across all sessions
+            if rewardSessionCount==1 %for first session, initialize 
+                
+                %now we'll use the reward identity (pump) indices to get only responses to those specific trials 
+                currentSubj(1).DSzbluePump1= squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump1)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+                currentSubj(1).DSzbluePump2= squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump2)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+                currentSubj(1).DSzbluePump3= squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump3)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+
+                rewardSessionCount= rewardSessionCount+1;
+                
+%                 currentSubj(1).DSzpurpleAllTrials= squeeze(currentSubj(session).periDS.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
 % 
-%         title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding every DS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
-%         xlabel('seconds from cue onset');
-%         ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
+%                 currentSubj(1).NSzblueAllTrials= squeeze(currentSubj(session).periNS.NSzblue); 
+%                 currentSubj(1).NSzpurpleAllTrials= squeeze(currentSubj(session).periNS.NSzpurple);
+            else %add subsequent sessions using cat()
+                currentSubj(1).DSzbluePump1 = cat(2, currentSubj(1).DSzbluePump1, squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump1))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+                currentSubj(1).DSzbluePump2 = cat(2, currentSubj(1).DSzbluePump2, squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump2))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+                currentSubj(1).DSzbluePump3 = cat(2, currentSubj(1).DSzbluePump3, squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump3))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+
+                rewardSessionCount= rewardSessionCount+1;
+
+% currentSubj(1).DSzpurpleAllTrials = cat(2, currentSubj.DSzpurpleAllTrials, (squeeze(currentSubj(session).periDS.DSzpurple))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
 % 
-%     %     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
-% 
-%         caxis manual;
-%         caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
-% 
-%         c= colorbar; %colorbar legend
-%         c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-% 
-%         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-% 
-%     %     saveas(gcf, strcat(figPath, currentSubj(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
-% 
-%         if ~isempty(currentSubj(1).NSzblueAllTrials) %if there is NS data
-% 
-%             %plot blue NS
-%             subplot(2,2,2); %subplot for shared colorbar
-% 
-%             heatNSzblueAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzblueAllTrials);
-%             title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding every NS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNScount(end)), ')'));
-%         %     set(gca, 'ytick', currentSubj(1).totalNScount); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-% 
-% 
-%                %   plot purple NS (subplotted for shared colorbar)
-%             subplot(2,2,4);
-%             heatNSzpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzpurpleAllTrials); 
-% 
-%             title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding every NS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
-%             xlabel('seconds from cue onset');
-%             ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNScount(end)), ')'));
-% 
-%         %     set(gca, 'ytick', currentSubj(1).totalNScount); %label trials appropriately
-% 
-%             caxis manual;
-%             caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-% 
-%             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-% 
-%             saveas(gcf, strcat(figPath, currentSubj(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
-%         end
+%                 currentSubj(1).NSzblueAllTrials = cat(2, currentSubj.NSzblueAllTrials, (squeeze(currentSubj(session).periNS.NSzblue))); 
+%                 currentSubj(1).NSzpurpleAllTrials = cat(2, currentSubj.NSzpurpleAllTrials, (squeeze(currentSubj(session).periNS.NSzpurple))); 
+
+            end
+        end %end session loop
+    end %end ~isempty reward conditional (alternative to stage conditional)
+    
        
+    if rewardSessionCount ~=0 %if this subject had a session with valid variable reward data
+
+        %Transpose these data for readability
+        currentSubj(1).DSzbluePump1= currentSubj(1).DSzbluePump1';
+        currentSubj(1).DSzbluePump2= currentSubj(1).DSzbluePump2';
+        currentSubj(1).DSzbluePump3= currentSubj(1).DSzbluePump3';
+
+
+    %     currentSubj(1).DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials';    
+    %     currentSubj(1).NSzblueAllTrials= currentSubj(1).NSzblueAllTrials';
+    %     currentSubj(1).NSzpurpleAllTrials= currentSubj(1).NSzpurpleAllTrials';
+    %       
+
+        %get a trial count to use for the heatplot ytick
+        currentSubj(1).DScountPump1= 1:size(currentSubj(1).DSzbluePump1,1); 
+        currentSubj(1).DScountPump2= 1:size(currentSubj(1).DSzbluePump2,1); 
+        currentSubj(1).DScountPump3= 1:size(currentSubj(1).DSzbluePump3,1); 
+
+
+ 
+        %TODO: split up yticks by session (this would show any clear differences between days)
+
+%          Color axes   
+
+         %First, we'll want to establish boundaries for our colormaps based on
+         %the std of the z score response. We want to have equidistant
+         %color axis max and min so that 0 sits directly in the middle
+
+         %TODO: should this be a pooled std calculation (pooled blue & purple)?
+
+         %define DS color axes
+
+         %get the avg std in the blue and purple z score responses to all cues,
+         %get absolute value and then multiply this by some factor to define a color axis max and min
+
+         stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
+
+         topDSzbluePump1= stdFactor*abs(mean((std(currentSubj(1).DSzbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzbluePump2= stdFactor*abs(mean((std(currentSubj(1).DSzbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzbluePump3= stdFactor*abs(mean((std(currentSubj(1).DSzbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+
+         
+         
+%          topDSzpurple= stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+
+         bottomDSzbluePump1 = -stdFactor*abs(mean((std(currentSubj(1).DSzbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzbluePump2 = -stdFactor*abs(mean((std(currentSubj(1).DSzbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzbluePump3 = -stdFactor*abs(mean((std(currentSubj(1).DSzbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+
+         
+%          bottomDSzpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));
+
+         %now choose the most extreme of these two (between blue and
+         %purple)to represent the color axis 
+         bottomAllDS= min([bottomDSzbluePump1, bottomDSzbluePump2, bottomDSzbluePump3]);
+         topAllDS= max([topDSzbluePump1, topDSzbluePump2, topDSzbluePump3]);
+
+%         %same, but defining color axes for NS
+%         if ~isempty(currentSubj(1).NSzblueAllTrials) %only run this if there's NS data
+%             topNSzblue= stdFactor*abs(mean((std(currentSubj(1).NSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%             topNSzpurple= stdFactor*abs(mean((std(currentSubj(1).NSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%             bottomNSzblue= -stdFactor*abs(mean((std(currentSubj(1).NSzblueAllTrials, 0, 2))));
+%             bottomNSzpurple= -stdFactor*abs(mean((std(currentSubj(1).NSzpurpleAllTrials, 0, 2))));
+% 
+%             bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
+%             topAllNS= max(topNSzblue, topNSzpurple);
+%         end
+
+%         %Establish a shared bottom and top for shared color axis of DS & NS
+%         if ~isempty(currentSubj(1).NSzblueAllTrials) %if there is an NS
+%             bottomAllShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
+%             topAllShared= max(topAllDS, topAllNS); %find the absolute min value
+%         else
+            bottomAllShared= bottomAllDS;
+            topAllShared= topAllDS;
+%         end
+% 
+%         %save for later 
+%         subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.totalDScount= currentSubj(1).totalDScount;
+%         subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.bottomAllShared= bottomAllShared;
+%         subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDS.topAllShared= topAllShared;
+
+        %Heatplots!  
+
+        %DS z plot
+        figure(figureCount);
+        figureCount=figureCount+1;
+        hold on;
+
+        timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+
+        %plot pump1 blue DSz
+
+        subplot(3,1,1); %subplot for shared colorbar
+
+        heatDSzbluePump1= imagesc(timeLock,currentSubj(1).DScountPump1,currentSubj(1).DSzbluePump1);
+        title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding first PE- Pump1 DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+        xlabel('seconds from PE');
+%         ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
+    %     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+        caxis manual;
+        caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+
+        c= colorbar; %colorbar legendsd
+        c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+        
+                %plot pump2 blue DSz
+
+        subplot(3,1,2); %subplot for shared colorbar
+
+        heatDSzbluePump1= imagesc(timeLock,currentSubj(1).DScountPump2,currentSubj(1).DSzbluePump2);
+        title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding first PE- Pump2 DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+        xlabel('seconds from PE');
+%         ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
+    %     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+        caxis manual;
+        caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+                %plot pump3 blue DSz
+
+        subplot(3,1,3); %subplot for shared colorbar
+
+        heatDSzbluePump3= imagesc(timeLock,currentSubj(1).DScountPump3,currentSubj(1).DSzbluePump3);
+        title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding first PE- Pump3 DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+        xlabel('seconds from PE');
+%         ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
+    %     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+        caxis manual;
+        caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+        %TODO: add purple plot
+        
+               set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
     end %end variable reward conditional
 end %end subject loop
 
@@ -4011,7 +4163,6 @@ save(strcat(experimentName,'-', date, 'subjDataAnalyzed'), 'subjDataAnalyzed'); 
 
 disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
 figureCount=1;
-
 
 %%  Speed test /optimizing
 
