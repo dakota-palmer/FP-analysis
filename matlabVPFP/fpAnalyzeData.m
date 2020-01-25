@@ -317,6 +317,9 @@ end %end subj loop
        experimentName= currentSubj(session).experiment; 
        
        subjDataAnalyzed.(subjects{subj})(session).experiment= currentSubj(session).experiment;
+       
+       subjDataAnalyzed.(subjects{subj})(session).date= currentSubj(session).date;
+       
        subjDataAnalyzed.(subjects{subj})(session).rat= currentSubj(session).rat;
        subjDataAnalyzed.(subjects{subj})(session).fileName= currentSubj(session).fileName;
        subjDataAnalyzed.(subjects{subj})(session).trainDay= currentSubj(session).trainDay;
@@ -1409,6 +1412,33 @@ end %end subject loop
 subjectsAnalyzed = fieldnames(subjDataAnalyzed); %now, let's save an array containing all of the analyzed subject IDs (may be useful later if we decide to exclude subjects from analysis)
 %% ~~~Heat plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+%% Establish common date axis across subjects
+ %since training day may vary between subjects, we want to arrange
+%all these data by the actual recording date. If a subject did not run a
+%session on a date we should be able to make values on this date nan later 
+
+
+for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
+    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+
+    for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+%       So save the dates in a cell array
+        allDates(session,subj) = currentSubj(session).date;
+        allDates(session)= currentSubj(session).date;
+        
+        
+    end %end session loop
+    
+    %remove invalid dates (empty spots were filled with zero, let's make
+    %these empty)
+    allDates(allDates==0) = [];
+    
+    %retain only unique dates 
+    allDates= unique(allDates); 
+end
+
+
 %% HEAT PLOT OF AVG RESPONSE TO CUE (by session)
 
 %Here, we'll make a figure for each subject with 4 subplots based on avg daily 
@@ -1431,7 +1461,23 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
                 currentSubj(1).DSzblueSessionMean= cat(2, currentSubj(1).DSzblueSessionMean, currentSubj(session).periDS.DSzblueMean);
                 currentSubj(1).DSzpurpleSessionMean= cat(2, currentSubj(1).DSzpurpleSessionMean, currentSubj(session).periDS.DSzpurpleMean);
         end
+        
+        %since training day may vary between subjects, we want to arrange
+        %all these data by the actual recording date. So save the dates in
+        %a cell array
+        allDates(session,subj) = currentSubj(session).date;
+        allDates(session)= currentSubj(session).date;
+        
+        
     end %end session loop
+    
+    %remove invalid dates (empty spots were filled with zero, let's make
+    %these empty)
+    allDates(allDates==0) = [];
+    
+    %retain only unique dates 
+    allDates= unique(allDates); 
+    
     
     %Transpose for readability
     currentSubj(1).DSzblueSessionMean= currentSubj(1).DSzblueSessionMean';
@@ -4159,7 +4205,7 @@ end %end subject loop
 
 %% Save the analyzed data 
 %save the subjDataAnalyzed struct for later analysis
-save(strcat(experimentName,'-', date, 'subjDataAnalyzed'), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
+save(strcat(experimentName,'-', allDates, 'subjDataAnalyzed'), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
 
 disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
 figureCount=1;

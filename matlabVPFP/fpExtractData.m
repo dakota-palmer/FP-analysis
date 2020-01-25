@@ -48,23 +48,25 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     [~,~,excelData] = xlsread(metaDataAddress); %import metadata from excel spreadsheet
     fileIndex= find(strcmp(excelData(:,1),fName)); %search the spreadsheet data for the matching fileName to get index for matching metadata
     
-    sesData(file).ratA= excelData{fileIndex,2}(); %assign appropriate metadata...These values must be changed if the spreadsheet column organization is changed
-    sesData(file).ratB = excelData{fileIndex,3}();
+    sesData(file).date= excelData{fileIndex,2}();
     
-    sesData(file).boxA= excelData{fileIndex,9}(); %get the actual box identity
-    sesData(file).boxB= excelData{fileIndex,10}();
+    sesData(file).ratA= excelData{fileIndex,3}(); %assign appropriate metadata...These values must be changed if the spreadsheet column organization is changed
+    sesData(file).ratB = excelData{fileIndex,4}();
+    
+    sesData(file).boxA= excelData{fileIndex,10}(); %get the actual box identity
+    sesData(file).boxB= excelData{fileIndex,11}();
         
-    sesData(file).DSidentity = excelData{fileIndex,8}();
-    sesData(file).trainStageA = excelData{fileIndex,4}();
-    sesData(file).trainStageB = excelData{fileIndex,5}();
-    sesData(file).trainDayA = excelData{fileIndex,6}();
-    sesData(file).trainDayB = excelData{fileIndex,7}();
+    sesData(file).DSidentity = excelData{fileIndex,9}();
+    sesData(file).trainStageA = excelData{fileIndex,5}();
+    sesData(file).trainStageB = excelData{fileIndex,6}();
+    sesData(file).trainDayA = excelData{fileIndex,7}();
+    sesData(file).trainDayB = excelData{fileIndex,8}();
     sesData(file).fileName= fName;
     
     %Variable reward info
-    sesData(file).pump1= excelData{fileIndex,11}();
-    sesData(file).pump2= excelData{fileIndex,12}();
-    sesData(file).pump3= excelData{fileIndex,13}();
+    sesData(file).pump1= excelData{fileIndex,12}();
+    sesData(file).pump2= excelData{fileIndex,13}();
+    sesData(file).pump3= excelData{fileIndex,14}();
 
     
     disp(strcat('rat A = ', num2str(sesData(file).ratA), ' ; rat B = ', num2str(sesData(file).ratB), '; box A= ', num2str(sesData(file).boxA), '; box B= ', num2str(sesData(file).boxB), ' ;  trainStageA = ', num2str(sesData(file).trainStageA), ' ; trainStageB = ', num2str(sesData(file).trainStageB), ' ; trainDayA = ', num2str(sesData(file).trainDayA))); 
@@ -260,6 +262,9 @@ for rat = 1:numel(rats)
                 
                 %Metadata
                 subjData.(subjField)(i).experiment= experimentName;
+                
+                subjData.(subjField)(i).date= sesData(i).date;
+                
                 subjData.(subjField)(i).rat= subj;
                 subjData.(subjField)(i).fileName= sesData(i).fileName;
                 subjData.(subjField)(i).DSidentity= sesData(i).DSidentity;
@@ -291,6 +296,10 @@ for rat = 1:numel(rats)
 
                 %Metadata
                 subjData.(subjField)(i).experiment= experimentName;
+                
+                subjData.(subjField)(i).date= sesData(i).date;
+
+                
                 subjData.(subjField)(i).rat= subj;
                 subjData.(subjField)(i).fileName= sesData(i).fileName;
                 subjData.(subjField)(i).DSidentity= sesData(i).DSidentity;
