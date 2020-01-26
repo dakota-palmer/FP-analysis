@@ -1413,10 +1413,12 @@ subjectsAnalyzed = fieldnames(subjDataAnalyzed); %now, let's save an array conta
 %% ~~~Heat plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 %% Establish common date axis across subjects
- %since training day may vary between subjects, we want to arrange
+ %since training day may vary between subjects, we want to eventually arrange
 %all these data by the actual recording date. If a subject did not run a
 %session on a date we should be able to make values on this date nan later 
 
+%this section will simply collect all of the unique recording dates from
+%all subjects into an array (allDates)
 
 for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
@@ -1426,18 +1428,17 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 %       So save the dates in a cell array
         allDates(session,subj) = currentSubj(session).date;
         allDates(session)= currentSubj(session).date;
-        
-        
+                
     end %end session loop
-    
+   
+end
+
     %remove invalid dates (empty spots were filled with zero, let's make
     %these empty)
     allDates(allDates==0) = [];
     
     %retain only unique dates 
     allDates= unique(allDates); 
-end
-
 
 %% HEAT PLOT OF AVG RESPONSE TO CUE (by session)
 
@@ -1452,39 +1453,58 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
     %DS - extract data for plots
     %avg cue response sorted by trial, timelocked to DS
-
-    for session = 1:numel(currentSubj) %for each training session this subject completed
-        if session ==1 %for the first session, get this sessions periDS blue z score response
-                currentSubj(1).DSzblueSessionMean= currentSubj(session).periDS.DSzblueMean; 
-                currentSubj(1).DSzpurpleSessionMean= currentSubj(session).periDS.DSzpurpleMean;
-        else % add on periDS response for subsequent sessions
-                currentSubj(1).DSzblueSessionMean= cat(2, currentSubj(1).DSzblueSessionMean, currentSubj(session).periDS.DSzblueMean);
-                currentSubj(1).DSzpurpleSessionMean= cat(2, currentSubj(1).DSzpurpleSessionMean, currentSubj(session).periDS.DSzpurpleMean);
-        end
-        
-        %since training day may vary between subjects, we want to arrange
-        %all these data by the actual recording date. So save the dates in
-        %a cell array
-        allDates(session,subj) = currentSubj(session).date;
-        allDates(session)= currentSubj(session).date;
-        
-        
+    
+    subjDates= zeros(1,numel(allDates));
+    emptyDates= [];
+    
+    timeLock= [-periCueFrames:periCueFrames]/fs;
+    
+    %First find out which dates this subj has data for
+    %get all dates for this subj
+    for session= 1:numel(currentSubj)
+        subjDates(session)= currentSubj(session).date;
     end %end session loop
     
-    %remove invalid dates (empty spots were filled with zero, let's make
-    %these empty)
-    allDates(allDates==0) = [];
+    %now find out which dates from allDates this subj has data for 
+    for thisDate = allDates %loop through all dates
+        if isempty(subjDates(subjDates==thisDate)) %if this subj doesn't have valid data on this date
+%                 emptyDates= cat(1, emptyDates,thisDate); %save this empty date to an array (add onto array by using cat())
+                currentSubj(end+1).date= thisDate; %use end+1 to add a new empty session
+                
+                %fill relevant fields with NaN for later 
+                currentSubj(end).periDS.DSzblueMean= NaN(size(timeLock'));
+                currentSubj(end).periDS.DSzpurpleMean= NaN(size(timeLock'));
+                currentSubj(end).periNS.NSzblueMean= NaN(size(timeLock'));
+                currentSubj(end).periNS.NSzpurpleMean= NaN(size(timeLock'));
+
+        end
+    end
     
-    %retain only unique dates 
-    allDates= unique(allDates); 
+    %now let's resort the struct with empty sessions by date
+     subjTable = struct2table(currentSubj); % convert the struct array to a table
+     subjTableSorted = sortrows(subjTable, 'date'); % sort the table by 'date'
+     currentSubj = table2struct(subjTableSorted); %convert back to struct
+
     
+    %now get the actual photometry data
+    for session = 1:numel(currentSubj) %for each training session this subject completed       
+            if session ==1 %for the first session, get this sessions periDS blue z score response
+                        currentSubj(1).DSzblueSessionMean= currentSubj(session).periDS.DSzblueMean; 
+                        currentSubj(1).DSzpurpleSessionMean= currentSubj(session).periDS.DSzpurpleMean;
+                else % add on periDS response for subsequent sessions
+                        currentSubj(1).DSzblueSessionMean= cat(2, currentSubj(1).DSzblueSessionMean, currentSubj(session).periDS.DSzblueMean);
+                        currentSubj(1).DSzpurpleSessionMean= cat(2, currentSubj(1).DSzpurpleSessionMean, currentSubj(session).periDS.DSzpurpleMean);
+            end
+    end %end session loop
+ 
     
     %Transpose for readability
     currentSubj(1).DSzblueSessionMean= currentSubj(1).DSzblueSessionMean';
     currentSubj(1).DSzpurpleSessionMean= currentSubj(1).DSzpurpleSessionMean';
 
     %get list of session days for heatplot y axis (transposed for readability)
-    subjTrial= cat(2, currentSubj.trainDay).';
+%     subjTrial= cat(2, currentSubj.trainDay).'; %this is only training days for this subj
+    subjTrial= 1:numel(allDates); %let's just number each training day starting at 1
 
     %NS- extract data for plots
     %session axis (Y) is handled a bit differently because we only want to show sessions that have NS cues
@@ -1508,12 +1528,19 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
    
     %get list of session days for heatplot y axis
     subjTrialNS=[]; %keep track of sessions that have valid NS trials
-    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+    dateNS= [];
+    for session = 1:numel(currentSubj) %for each training session this subject completed
         if ~isempty(currentSubj(session).periNS.NSzblueMean) %if there's an NS trial in this session, add it to the array that will mark the y axis
-             subjTrialNS= cat(2, subjTrialNS, currentSubj(session).trainDay);
+%              subjTrialNS= cat(2, subjTrialNS, currentSubj(session).trainDay); %old method based on trainDay
+                dateNS= cat(2, dateNS, currentSubj(session).date);
         end
     end %end session loop
     
+    %search NS dates for the appropriate index in allDates, then label it
+    %similar to subjTrial
+    for thisDate = 1:numel(dateNS) 
+        subjTrialNS(thisDate)= find(allDates==dateNS(thisDate)); %returns the index in allDates that matches the date of this NS session
+    end
      %Color axes   
      
      %First, we'll want to establish boundaries for our colormaps based on
@@ -1528,11 +1555,11 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
      
      stdFactor= 4; %multiplicative factor- how many stds away should we set our max & min color value? 
      
-     topDSzblue= stdFactor*abs(mean((std(currentSubj(1).DSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurple= stdFactor*abs(mean((std(currentSubj(1).DSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzblue= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-     bottomDSzblue = -stdFactor*abs(mean((std(currentSubj(1).DSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzpurpleSessionMean, 0, 2))));
+     bottomDSzblue = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     bottomDSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMean, 0, 2))));
      
      %now choose the most extreme of these two (between blue and
      %purple)to represent the color axis 
@@ -1541,11 +1568,11 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
      
     %same, but defining color axes for NS
     if ~isempty(currentSubj(1).NSzblueSessionMean) %only run this if there's NS data
-        topNSzblue= stdFactor*abs(mean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-        topNSzpurple= stdFactor*abs(mean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+        topNSzblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+        topNSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-        bottomNSzblue= -stdFactor*abs(mean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));
-        bottomNSzpurple= -stdFactor*abs(mean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));
+        bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));
+        bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));
 
         bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
         topAllNS= max(topNSzblue, topNSzpurple);
@@ -1570,7 +1597,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
-    heatDSzblueMean= imagesc(timeLock,subjTrial,currentSubj(1).DSzblueSessionMean);
+    heatDSzblueMean= imagesc(timeLock,subjTrial,currentSubj(1).DSzblueSessionMean, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
     title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' daily avg blue z score response surrounding DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from cue onset');
     ylabel('training day');
@@ -1584,7 +1611,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     %   plot purple DS (subplotted for shared colorbar)
     subplot(2,2,3);
-    heatDSzpurpleMean= imagesc(timeLock,subjTrial,currentSubj(1).DSzpurpleSessionMean); 
+    heatDSzpurpleMean= imagesc(timeLock,subjTrial,currentSubj(1).DSzpurpleSessionMean,  'AlphaData', ~isnan(currentSubj(1).DSzpurpleSessionMean)); 
 
     title(strcat(currentSubj(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' daily avg purple z score response surrounding DS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from cue onset');
@@ -1610,11 +1637,11 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
-    heatNSzblueMean= imagesc(timeLock,subjTrialNS,currentSubj(1).NSzblueSessionMean);
+    heatNSzblueMean= imagesc(timeLock,subjTrial,currentSubj(1).NSzblueSessionMean, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
     title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to NS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from cue onset');
     ylabel('training day');
-    set(gca, 'ytick', subjTrialNS); %label trials appropriately
+    set(gca, 'ytick', subjTrial); %label trials appropriately
     caxis manual;
     caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
 
@@ -1624,13 +1651,13 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     %   plot purple NS (subplotted for shared colorbar)
     subplot(2,2,4);
-    heatNSzpurpleMean= imagesc(timeLock,subjTrialNS,currentSubj(1).NSzpurpleSessionMean); 
+    heatNSzpurpleMean= imagesc(timeLock,subjTrial,currentSubj(1).NSzpurpleSessionMean, 'AlphaData', ~isnan(currentSubj(1).NSzpurpleSessionMean)); 
 
     title(strcat('rat ', num2str(subjectsAnalyzed{subj}), ' avg purple z score response to NS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from cue onset');
     ylabel('training day');
 
-    set(gca, 'ytick', subjTrialNS); %TODO: NS trial labels must be different, only stage 5 trials
+    set(gca, 'ytick', subjTrial); %TODO: NS trial labels must be different, only stage 5 trials
 
     caxis manual;
     caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
