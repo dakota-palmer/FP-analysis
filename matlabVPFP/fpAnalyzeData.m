@@ -1527,20 +1527,20 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     currentSubj(1).NSzpurpleSessionMean= currentSubj(1).NSzpurpleSessionMean';
    
     %get list of session days for heatplot y axis
-    subjTrialNS=[]; %keep track of sessions that have valid NS trials
-    dateNS= [];
-    for session = 1:numel(currentSubj) %for each training session this subject completed
-        if ~isempty(currentSubj(session).periNS.NSzblueMean) %if there's an NS trial in this session, add it to the array that will mark the y axis
-%              subjTrialNS= cat(2, subjTrialNS, currentSubj(session).trainDay); %old method based on trainDay
-                dateNS= cat(2, dateNS, currentSubj(session).date);
-        end
-    end %end session loop
-    
-    %search NS dates for the appropriate index in allDates, then label it
-    %similar to subjTrial
-    for thisDate = 1:numel(dateNS) 
-        subjTrialNS(thisDate)= find(allDates==dateNS(thisDate)); %returns the index in allDates that matches the date of this NS session
-    end
+%     subjTrialNS=[]; %keep track of sessions that have valid NS trials
+%     dateNS= [];
+%     for session = 1:numel(currentSubj) %for each training session this subject completed
+%         if ~isempty(currentSubj(session).periNS.NSzblueMean) %if there's an NS trial in this session, add it to the array that will mark the y axis
+% %              subjTrialNS= cat(2, subjTrialNS, currentSubj(session).trainDay); %old method based on trainDay
+%                 dateNS= cat(2, dateNS, currentSubj(session).date);
+%         end
+%     end %end session loop
+%     
+%     %search NS dates for the appropriate index in allDates, then label it
+%     %similar to subjTrial
+%     for thisDate = 1:numel(dateNS) 
+%         subjTrialNS(thisDate)= find(allDates==dateNS(thisDate)); %returns the index in allDates that matches the date of this NS session
+%     end
      %Color axes   
      
      %First, we'll want to establish boundaries for our colormaps based on
@@ -1684,8 +1684,42 @@ end %end subject loop
      
      currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
  
+     %we'll want to organize these by common date instead of relative
+     %training day as well
+     
+     %First find out which dates this subj has data for
+    %get all dates for this subj
+    for session= 1:numel(currentSubj)
+        subjDates(session)= currentSubj(session).date;
+    end %end session loop
+    
+    %now find out which dates from allDates this subj has data for 
+    for thisDate = allDates %loop through all dates
+        if isempty(subjDates(subjDates==thisDate)) %if this subj doesn't have valid data on this date
+%                 emptyDates= cat(1, emptyDates,thisDate); %save this empty date to an array (add onto array by using cat())
+                currentSubj(end+1).date= thisDate; %use end+1 to add a new empty session
+                
+                %fill relevant fields with NaN for later 
+                currentSubj(end).periDS.DSzblueMean= NaN(size(timeLock'));
+                currentSubj(end).periDS.DSzpurpleMean= NaN(size(timeLock'));
+                currentSubj(end).periNS.NSzblueMean= NaN(size(timeLock'));
+                currentSubj(end).periNS.NSzpurpleMean= NaN(size(timeLock'));
+                
+                currentSubj(end).periNS.NS= nan;
+
+        end
+    end
+    
+    %now let's resort the struct with empty sessions by date
+     subjTable = struct2table(currentSubj); % convert the struct array to a table
+     subjTableSorted = sortrows(subjTable, 'date'); % sort the table by 'date'
+     currentSubj = table2struct(subjTableSorted); %convert back to struct
+
+     
+     
      NStrialCount= 1; %counter for ns trials
      
+     %now get the actual photometry data
      for session = 1:numel(currentSubj) %for each session this subject completed
 
          allRats.meanDSzblue(:,session,subj)= currentSubj(session).periDS.DSzblueMean;
@@ -1695,9 +1729,9 @@ end %end subject loop
             allRats.meanNSzblue(:,NStrialCount,subj)= currentSubj(session).periNS.NSzblueMean;
             allRats.meanNSzpurple(:,NStrialCount,subj)= currentSubj(session).periNS.NSzpurpleMean;
              
-            allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
+%             allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
             
-            NStrialCount= NStrialCount+1;
+%             NStrialCount= NStrialCount+1;
             % zeros are appearing in sessions where there's no data! (e.g.
             % rats are on different training days, so one can be on day 14
             % ahead of others that are on day 13)
@@ -1735,9 +1769,12 @@ allRats.grandNSzpurple=nanmean(allRats.meanNSzpurple(:,:,:),3)'; %,1:4),3)'
     end
     
  %get list of session days for heatplot y axis
- for day= 1:size(allRats.grandDSzblue,1)   
-    allRats.subjTrialDS(day,1)= day;
- end
+%  for day= 1:size(allRats.grandDSzblue,1)   
+%     allRats.subjTrialDS(day,1)= day;
+%  end
+
+    subjTrial= 1:numel(allDates); %let's just number each training day starting at 1
+
  
 %get list of NS session days for heatplot y axis
 % need to loop through all subjects and sessions, find unique trials with NS data
@@ -1770,11 +1807,11 @@ allRats.subjTrialNS=[];
 
     timeLock = [-periCueFrames:periCueFrames]/fs;% [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
-    heatDSzblueMeanall= imagesc(timeLock,allRats.subjTrialDS,allRats.grandDSzblue);
+    heatDSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzblue);
     title(' All rats avg blue z score response to DS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from cue onset');
     ylabel('training day');
-    set(gca, 'ytick', allRats.subjTrialDS); %label trials appropriately
+    set(gca, 'ytick', subjTrial); %label trials appropriately
     caxis manual;
     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
 
@@ -1784,13 +1821,13 @@ allRats.subjTrialNS=[];
 
     %   plot purple DS (subplotted for shared colorbar)
     subplot(2,2,3);
-    heatDSzpurpleMeanall= imagesc(timeLock,allRats.subjTrialDS,allRats.grandDSzpurple); 
+    heatDSzpurpleMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzpurple); 
 
     title(' All rats avg purple z score response to DS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from cue onset');
     ylabel('training day');
 
-    set(gca, 'ytick', allRats.subjTrialDS); 
+    set(gca, 'ytick', subjTrial); 
 
     caxis manual;
     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
@@ -1812,11 +1849,11 @@ allRats.subjTrialNS=[];
 
     timeLock = [-periCueFrames:periCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
-    heatNSzblueMeanall= imagesc(timeLock,allRats.subjTrialNS,allRats.grandNSzblue);
+    heatNSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandNSzblue);
     title(' All rats avg blue z score response to NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from cue onset');
     ylabel('training day');
-    set(gca, 'ytick', allRats.subjTrialNS); %label trials appropriately
+    set(gca, 'ytick', subjTrial); %label trials appropriately
     caxis manual;
     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
 
@@ -1826,13 +1863,13 @@ allRats.subjTrialNS=[];
 
     %   plot purple NS (subplotted for shared colorbar)
     subplot(2,2,4);
-    heatNSzpurpleMean= imagesc(timeLock,allRats.subjTrialNS,allRats.grandNSzpurple); 
+    heatNSzpurpleMean= imagesc(timeLock,subjTrial,allRats.grandNSzpurple); 
 
     title(' All rats avg purple z score response to NS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from cue onset');
     ylabel('training day');
 
-    set(gca, 'ytick', allRats.subjTrialNS); 
+    set(gca, 'ytick', subjTrial); 
     caxis manual;
     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
 
