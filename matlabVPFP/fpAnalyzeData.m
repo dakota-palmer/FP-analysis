@@ -1732,21 +1732,29 @@ end %end subject loop
          allRats.meanDSzblue(:,session,subj)= currentSubj(session).periDS.DSzblueMean;
          allRats.meanDSzpurple(:,session,subj)= currentSubj(session).periDS.DSzpurpleMean;
 
-         if ~isempty(currentSubj(session).periNS.NS) %only run if NS data present
-            allRats.meanNSzblue(:,NStrialCount,subj)= currentSubj(session).periNS.NSzblueMean;
-            allRats.meanNSzpurple(:,NStrialCount,subj)= currentSubj(session).periNS.NSzpurpleMean;
-             
-%             allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
-            
-            NStrialCount= NStrialCount+1;
-            % zeros are appearing in sessions where there's no data! (e.g.
-            % rats are on different training days, so one can be on day 14
-            % ahead of others that are on day 13)
-                       %skipping from 6->10
-         else %if there's no NS data present, fill with nan (otherwise will fill with zeros)
+         if isempty(currentSubj(session).periNS.NS) %if there's no NS data, fill with NaNs
+            currentSubj(session).periNS.NSzblueMean= NaN(size(timeLock'));
+            currentSubj(session).periNS.NSzpurpleMean=  NaN(size(timeLock'));
+         end
+         
+         allRats.meanNSzblue(:,session,subj)= currentSubj(session).periNS.NSzblueMean;
+         allRats.meanNSzpurple(:,session,subj)= currentSubj(session).periNS.NSzpurpleMean;
+         
+%          if ~isempty(currentSubj(session).periNS.NS) %only run if NS data present
+%             allRats.meanNSzblue(:,NStrialCount,subj)= currentSubj(session).periNS.NSzblueMean;
+%             allRats.meanNSzpurple(:,NStrialCount,subj)= currentSubj(session).periNS.NSzpurpleMean;
+%              
+% %             allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
+%             
+%             NStrialCount= NStrialCount+1;
+%             % zeros are appearing in sessions where there's no data! (e.g.
+%             % rats are on different training days, so one can be on day 14
+%             % ahead of others that are on day 13)
+%                        %skipping from 6->10
+%          else %if there's no NS data present, fill with nan (otherwise will fill with zeros)
 %             allRats.meanNSzblue(:,session, subj)= nan(size(currentSubj(session).periDS.DSzblueMean));
 %             allRats.meanNSzpurple(:,session,subj)= nan(size(currentSubj(session).periDS.DSzblueMean));        
-         end %end NS conditional
+%          end %end NS conditional
      end %end session loop
           
  end %end subj loop
@@ -1819,8 +1827,8 @@ allRats.subjTrialNS=[];
     xlabel('seconds from cue onset');
     ylabel('training day');
     set(gca, 'ytick', subjTrial); %label trials appropriately
-%     caxis manual;
-%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -1836,8 +1844,8 @@ allRats.subjTrialNS=[];
 
     set(gca, 'ytick', subjTrial); 
 
-%     caxis manual;
-%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
     
 %     %% TODO: try linspace with caxis
 
@@ -1856,13 +1864,13 @@ allRats.subjTrialNS=[];
 
     timeLock = [-periCueFrames:periCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
-    heatNSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandNSzblue);
+    heatNSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandNSzblue, 'AlphaData', ~isnan(allRats.grandNSzpurple));
     title(' All rats avg blue z score response to NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from cue onset');
     ylabel('training day');
     set(gca, 'ytick', subjTrial); %label trials appropriately
-%     caxis manual;
-%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -1870,15 +1878,15 @@ allRats.subjTrialNS=[];
 
     %   plot purple NS (subplotted for shared colorbar)
     subplot(2,2,4);
-    heatNSzpurpleMean= imagesc(timeLock,subjTrial,allRats.grandNSzpurple); 
+    heatNSzpurpleMean= imagesc(timeLock,subjTrial,allRats.grandNSzpurple, 'AlphaData', ~isnan(allRats.grandNSzpurple)); 
 
     title(' All rats avg purple z score response to NS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from cue onset');
     ylabel('training day');
 
     set(gca, 'ytick', subjTrial); 
-%     caxis manual;
-%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
