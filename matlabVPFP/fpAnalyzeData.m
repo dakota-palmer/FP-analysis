@@ -1512,13 +1512,20 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     %photometry signals sorted by trial, timelocked to NS
     
     for session = 1:numel(currentSubj) %for each training session this subject completed
-        if session ==1 %for the first session, get this sessions periDS blue z score response
-            currentSubj(1).NSzblueSessionMean= currentSubj(session).periNS.NSzblueMean; 
-            currentSubj(1).NSzpurpleSessionMean= currentSubj(session).periNS.NSzpurpleMean;
-        else % add on periDS response for subsequent sessions
-            currentSubj(1).NSzblueSessionMean= cat(2, currentSubj(1).NSzblueSessionMean, currentSubj(session).periNS.NSzblueMean);
-            currentSubj(1).NSzpurpleSessionMean= cat(2, currentSubj(1).NSzpurpleSessionMean, currentSubj(session).periNS.NSzpurpleMean);
+        %if there's no NS data, fill with NaNs first
+        if isempty(currentSubj(session).periNS.NSzblueMean)
+            currentSubj(session).periNS.NSzblueMean= NaN(size(timeLock'));
+            currentSubj(session).periNS.NSzpurpleMean= NaN(size(timeLock'));
         end
+        
+        if session ==1 %for the first session, get this sessions periDS blue z score response
+                currentSubj(1).NSzblueSessionMean= currentSubj(session).periNS.NSzblueMean; 
+                currentSubj(1).NSzpurpleSessionMean= currentSubj(session).periNS.NSzpurpleMean;
+        else % add on periDS response for subsequent sessions
+                currentSubj(1).NSzblueSessionMean= cat(2, currentSubj(1).NSzblueSessionMean, currentSubj(session).periNS.NSzblueMean);
+                currentSubj(1).NSzpurpleSessionMean= cat(2, currentSubj(1).NSzpurpleSessionMean, currentSubj(session).periNS.NSzpurpleMean);
+        end
+
     end %end session loop
     
     
@@ -1717,7 +1724,7 @@ end %end subject loop
 
      
      
-     NStrialCount= 1; %counter for ns trials
+     NStrialCount= 1; %counter for ns sessions
      
      %now get the actual photometry data
      for session = 1:numel(currentSubj) %for each session this subject completed
@@ -1731,7 +1738,7 @@ end %end subject loop
              
 %             allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
             
-%             NStrialCount= NStrialCount+1;
+            NStrialCount= NStrialCount+1;
             % zeros are appearing in sessions where there's no data! (e.g.
             % rats are on different training days, so one can be on day 14
             % ahead of others that are on day 13)
@@ -1812,8 +1819,8 @@ allRats.subjTrialNS=[];
     xlabel('seconds from cue onset');
     ylabel('training day');
     set(gca, 'ytick', subjTrial); %label trials appropriately
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+%     caxis manual;
+%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -1829,8 +1836,8 @@ allRats.subjTrialNS=[];
 
     set(gca, 'ytick', subjTrial); 
 
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+%     caxis manual;
+%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
     
 %     %% TODO: try linspace with caxis
 
@@ -1854,8 +1861,8 @@ allRats.subjTrialNS=[];
     xlabel('seconds from cue onset');
     ylabel('training day');
     set(gca, 'ytick', subjTrial); %label trials appropriately
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+%     caxis manual;
+%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
@@ -1870,8 +1877,8 @@ allRats.subjTrialNS=[];
     ylabel('training day');
 
     set(gca, 'ytick', subjTrial); 
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+%     caxis manual;
+%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
 
     c= colorbar; %colorbar legend
     c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
