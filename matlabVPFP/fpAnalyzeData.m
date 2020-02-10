@@ -543,8 +543,8 @@ end %end subject loop
 %collect all licks between the current cue onset and the next cue's onset
 
 %Parameters
-preCueTime= 1; %t in seconds to examine before cue
-postCueTime= 2; %t in seconds to examine after cue
+preCueTime= 5; %t in seconds to examine before cue
+postCueTime= 10; %t in seconds to examine after cue
 
 preCueFrames= preCueTime*fs;
 postCueFrames= postCueTime*fs;
@@ -1961,11 +1961,9 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
                 currentSubj(1).NSzblueAllTrials = cat(2, currentSubj.NSzblueAllTrials, (squeeze(currentSubj(session).periNS.NSzblue))); 
                 currentSubj(1).NSzpurpleAllTrials = cat(2, currentSubj.NSzpurpleAllTrials, (squeeze(currentSubj(session).periNS.NSzpurple))); 
+            end
+        sesCount=sesCount+1;   
 
-%             end
-            sesCount=sesCount+1   
-
-        end
     end %end session loop
     
     %Transpose these data for readability
@@ -3059,7 +3057,7 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
         indPump2= [];
         indPump3= [];
         
-        
+                
         if ~isempty(currentSubj(session).reward) %make sure this is a valid stage with multiple rewards
             
             rewardSessionCount= rewardSessionCount+1; %counter for sessions with valid variable reward data 
@@ -3127,11 +3125,14 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
 %                 currentSubj(1).NSzpurpleAllTrials = cat(2, currentSubj.NSzpurpleAllTrials, (squeeze(currentSubj(session).periNS.NSzpurple))); 
 
             end
-        end %end session loop
-    end %end ~isempty reward conditional (alternative to stage conditional)
+        end %end ~isempty reward conditional (alternative to stage conditional)
+    end %end session loop
     
        
     if rewardSessionCount ~=0 %if this subject had a session with valid variable reward data
+        
+        %some values were filled
+        
 
         %Transpose these data for readability
         currentSubj(1).DSzbluePump1= currentSubj(1).DSzbluePump1';
@@ -3273,6 +3274,29 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
         
                set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
+               
+                   % ~~~~ 2d plot of all session means ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        %plot of response on Pump1, Pump2, and Pump3 DS trials
+%        figure(figureCount);
+%        figureCount=figureCount+1;
+%        
+%           hold on;
+%           plot(timeLock,currentSubj(1).DSzbluePump1, 'k');
+%           plot(timeLock,currentSubj(1).DSzbluePump2, 'r');
+%           plot(timeLock,currentSubj(1).DSzbluePump3, 'g');
+%           set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+%           
+          
+      %~~~ 2d plot of grand mean of trials with valid PE
+      
+      figure(figureCount);
+      figureCount= figureCount+1;
+      hold on;
+      plot(timeLock,mean(currentSubj(1).DSzbluePump1, 1), 'k');
+      plot(timeLock,mean(currentSubj(1).DSzbluePump2, 1), 'r');
+      plot(timeLock,mean(currentSubj(1).DSzbluePump3, 1), 'g');
+      set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving               
+               
     end %end variable reward conditional
 end %end subject loop
 
@@ -3511,10 +3535,42 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
         
                set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
+               
+               
+       % ~~~~ 2d plot of all session means ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        %plot of response on Pump1, Pump2, and Pump3 DS trials
+       figure(figureCount);
+       figureCount=figureCount+1;
+       
+          hold on;
+          plot(timeLock,currentSubj(1).DSzbluePump1mean, 'k');
+          plot(timeLock,currentSubj(1).DSzbluePump2mean, 'r');
+          plot(timeLock,currentSubj(1).DSzbluePump3mean, 'g');
+          set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+          
+          
+      %~~~ 2d plot of grand mean of session mean
+      
+      figure(figureCount);
+      figureCount= figureCount+1;
+      hold on;
+      plot(timeLock,mean(currentSubj(1).DSzbluePump1mean, 1), 'k');
+      plot(timeLock,mean(currentSubj(1).DSzbluePump2mean, 1), 'r');
+      plot(timeLock,mean(currentSubj(1).DSzbluePump3mean, 1), 'g');
+      set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving               
+               
     end %end variable reward conditional
 end %end subject loop
 
 
+
+
+%% ~~~~~~~~~~~~~~2D plots~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+%heatplots can make it difficult to see response magnitude differences
+%between groups (e.g. variable reward) , so let's look at these data in a
+%different way
+ 
 
 %% ~~~Behavioral plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -3650,6 +3706,7 @@ for subj= 1:numel(subjects) %for each subject
    c= get(h,'Color');
    x= xlim;
    y=[0,1];
+   ylim(y);
    
    subplot(2,1,2)
    hold on;
@@ -3720,7 +3777,8 @@ for subj= 1:numel(subjects) %for each subject
    hold on;
    plot(days, meanNSpeLat, 'Color', c, 'LineStyle','--');
    xlim(x);
-   ylim(y);
+%    ylim(y);
+    ylim([0,30]);
    
 end
 
@@ -6423,107 +6481,107 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
            subplot(2,4,8) %condC NS blue 
            hold on
            scatter(NSpeLatencySortedD,currentSubj(1).totalNScountD', 'm.');
-            
-    %overlay scatter of Licks- 
-           licksToPlot= 3;
-           lickAlpha= 0.15;
-
-           subplot(2,4,1) %condA DS blue 
-           hold on
-           for trial= (currentSubj(1).totalDScountA)
-               %scatter all licks
-                   s= scatter(currentSubj(1).DSloxAllTrialsA{trial},ones(numel(currentSubj(1).DSloxAllTrialsA{trial}),1)*currentSubj(1).totalDScountA(trial), 'k.');
-               %scatter # of licksToPlot
-%                if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
-%                     s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
-                    s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%                end
-           end
-
-           subplot(2,4,2) %condB DS blue 
-           hold on
-           for trial= (currentSubj(1).totalDScountB)
-               %scatter all licks
-               s= scatter(currentSubj(1).DSloxAllTrialsB{trial},ones(numel(currentSubj(1).DSloxAllTrialsB{trial}),1)*currentSubj(1).totalDScountB(trial), 'k.');
-
-                   %scatter # of licksToPlot
-%                if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
-%                     s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
-                    s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%                end
-           end
-
-           subplot(2,4,3) %condC DS blue 
-           hold on
-           for trial= (currentSubj(1).totalDScountC)
-               %scatter all licks
-               s= scatter(currentSubj(1).DSloxAllTrialsC{trial},ones(numel(currentSubj(1).DSloxAllTrialsC{trial}),1)*currentSubj(1).totalDScountC(trial), 'k.');
-
-                    %scatter # of licksToPlot
-%                if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
-%                     s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
-                    s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%                end
-           end
-
-          subplot(2,4,4) %condD DS blue 
-           hold on
-           for trial= (currentSubj(1).totalDScountD)
-               %scatter all licks
-               s= scatter(currentSubj(1).DSloxAllTrialsD{trial},ones(numel(currentSubj(1).DSloxAllTrialsD{trial}),1)*currentSubj(1).totalDScountD(trial), 'k.');
-
-                    %scatter # of licksToPlot
-%                if numel(currentSubj(1).DSloxAllTrialsD{trial}) >= licksToPlot
-%                     s= scatter(currentSubj(1).DSloxAllTrialsD{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountD(trial), 'k.');
-                    s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%                end
-           end
-
-           
-           
-           subplot(2,4,6) %condB NS blue 
-           hold on
-           for trial= (currentSubj(1).totalNScountB)
-              
-               %scatter all licks
-               s= scatter(currentSubj(1).NSloxAllTrialsB{trial},ones(numel(currentSubj(1).NSloxAllTrialsB{trial}),1)*currentSubj(1).totalNScountB(trial), 'k.');
-
-               
-                   %scatter # of licksToPlot
-%                if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
-%                     s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
-                    s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%                end
-           end
-
-           subplot(2,4,7) %condC NS blue 
-           hold on
-           for trial= (currentSubj(1).totalNScountC)
-                %scatter all licks
-               s= scatter(currentSubj(1).NSloxAllTrialsC{trial},ones(numel(currentSubj(1).NSloxAllTrialsC{trial}),1)*currentSubj(1).totalNScountC(trial), 'k.');
-
-               
-                    %scatter # of licksToPlot
-%                if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
-%                     s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
-                    s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%                end
-           end
-           
-           subplot(2,4,8) %condD NS blue 
-           hold on
-           for trial= (currentSubj(1).totalNScountD)
-               
-                   %scatter all licks
-               s= scatter(currentSubj(1).NSloxAllTrialsD{trial},ones(numel(currentSubj(1).NSloxAllTrialsD{trial}),1)*currentSubj(1).totalNScountD(trial), 'k.');
-
-                    %scatter # of licksToPlot
-%                if numel(currentSubj(1).NSloxAllTrialsD{trial}) >= licksToPlot
-%                     s= scatter(currentSubj(1).NSloxAllTrialsD{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountD(trial), 'k.');
-                    s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%                end
-           end
-           
+%             
+%     %overlay scatter of Licks- 
+%            licksToPlot= 3;
+%            lickAlpha= 0.15;
+% 
+%            subplot(2,4,1) %condA DS blue 
+%            hold on
+%            for trial= (currentSubj(1).totalDScountA)
+%                %scatter all licks
+%                    s= scatter(currentSubj(1).DSloxAllTrialsA{trial},ones(numel(currentSubj(1).DSloxAllTrialsA{trial}),1)*currentSubj(1).totalDScountA(trial), 'k.');
+%                %scatter # of licksToPlot
+% %                if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
+% %                     s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
+%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %                end
+%            end
+% 
+%            subplot(2,4,2) %condB DS blue 
+%            hold on
+%            for trial= (currentSubj(1).totalDScountB)
+%                %scatter all licks
+%                s= scatter(currentSubj(1).DSloxAllTrialsB{trial},ones(numel(currentSubj(1).DSloxAllTrialsB{trial}),1)*currentSubj(1).totalDScountB(trial), 'k.');
+% 
+%                    %scatter # of licksToPlot
+% %                if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
+% %                     s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
+%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %                end
+%            end
+% 
+%            subplot(2,4,3) %condC DS blue 
+%            hold on
+%            for trial= (currentSubj(1).totalDScountC)
+%                %scatter all licks
+%                s= scatter(currentSubj(1).DSloxAllTrialsC{trial},ones(numel(currentSubj(1).DSloxAllTrialsC{trial}),1)*currentSubj(1).totalDScountC(trial), 'k.');
+% 
+%                     %scatter # of licksToPlot
+% %                if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
+% %                     s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
+%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %                end
+%            end
+% 
+%           subplot(2,4,4) %condD DS blue 
+%            hold on
+%            for trial= (currentSubj(1).totalDScountD)
+%                %scatter all licks
+%                s= scatter(currentSubj(1).DSloxAllTrialsD{trial},ones(numel(currentSubj(1).DSloxAllTrialsD{trial}),1)*currentSubj(1).totalDScountD(trial), 'k.');
+% 
+%                     %scatter # of licksToPlot
+% %                if numel(currentSubj(1).DSloxAllTrialsD{trial}) >= licksToPlot
+% %                     s= scatter(currentSubj(1).DSloxAllTrialsD{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountD(trial), 'k.');
+%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %                end
+%            end
+% 
+%            
+%            
+%            subplot(2,4,6) %condB NS blue 
+%            hold on
+%            for trial= (currentSubj(1).totalNScountB)
+%               
+%                %scatter all licks
+%                s= scatter(currentSubj(1).NSloxAllTrialsB{trial},ones(numel(currentSubj(1).NSloxAllTrialsB{trial}),1)*currentSubj(1).totalNScountB(trial), 'k.');
+% 
+%                
+%                    %scatter # of licksToPlot
+% %                if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
+% %                     s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
+%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %                end
+%            end
+% 
+%            subplot(2,4,7) %condC NS blue 
+%            hold on
+%            for trial= (currentSubj(1).totalNScountC)
+%                 %scatter all licks
+%                s= scatter(currentSubj(1).NSloxAllTrialsC{trial},ones(numel(currentSubj(1).NSloxAllTrialsC{trial}),1)*currentSubj(1).totalNScountC(trial), 'k.');
+% 
+%                
+%                     %scatter # of licksToPlot
+% %                if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
+% %                     s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
+%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %                end
+%            end
+%            
+%            subplot(2,4,8) %condD NS blue 
+%            hold on
+%            for trial= (currentSubj(1).totalNScountD)
+%                
+%                    %scatter all licks
+%                s= scatter(currentSubj(1).NSloxAllTrialsD{trial},ones(numel(currentSubj(1).NSloxAllTrialsD{trial}),1)*currentSubj(1).totalNScountD(trial), 'k.');
+% 
+%                     %scatter # of licksToPlot
+% %                if numel(currentSubj(1).NSloxAllTrialsD{trial}) >= licksToPlot
+% %                     s= scatter(currentSubj(1).NSloxAllTrialsD{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountD(trial), 'k.');
+%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %                end
+%            end
+%            
            set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
            
