@@ -1183,7 +1183,7 @@ for subj= 1:numel(subjects) %for each subject
                 preEventTimeNS = NSonset-preCueFrames; %earliest timepoint to examine is the shifted NS onset time - the # of frames we defined as periCueFrames (now this is equivalent to 20s before the shifted cue onset)
                 postEventTimeNS = NSonset+postCueFrames; %latest timepoint to examine is the shifted NS onset time + the # of frames we defined as periCueFrames (now this is equivalent to 20s after the shifted cue onset)
 
-               if preEventTimeNS< 1 %If cue is too close to beginning, skip over it
+               if NSonset-slideTime< 1 %If cue is too close to beginning, skip over it
                   disp(strcat('****NS cue ', num2str(cue), ' too close to beginning, continuing'));
                   NSskipped= NSskipped+1;%iterate the counter for skipped NS cues
                   continue%continue out of the loop and move onto the next NS cue
@@ -3623,10 +3623,28 @@ end %end subject loop
 
 %% ~~ Data vis- photometry & behavior ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+%% Scatter of cue-elicited response vs. port entry probability (does cue elicited response predict PE?)
 
+%first set parameters
+cueResponseFrames=1*fs; %time after cue over which to take avg activity 
+cueOnsetFrame= (periCueFrames-postCueFrames)+1;
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    for session= 1:numel(currentSubj)
+
+        for cue = 1:numel(currentSubj(session).behavior.poxDS)
+            
+        end
+        
+    end %end session loop
+end %end subj loop
+    
 %% Scatter of cue-elicited response vs. port entry latency
+%This only includes trials that had a valid PE
 
-cueResponseFrames=1*fs;
+%first set parameters
+cueResponseFrames=1*fs; %time after cue over which to take avg activity 
 cueOnsetFrame= (periCueFrames-postCueFrames)+1;
 
 for subj= 1:numel(subjects) %for each subject
