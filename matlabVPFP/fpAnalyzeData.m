@@ -21,6 +21,15 @@ figureCount= 1 ; %keep track of figure # throughout to prevent overwriting
 
 fs= 40; %This is important- if you change sampling frequency of photometry recordings for some reason, change this too! TODO: just save this in subjData as more metadata
 
+%% Remove excluded subjects
+
+excludedSubjs= {'rat10'}; %cell array with strings of excluded subj fieldnames
+
+subjData= rmfield(subjData,excludedSubjs);
+
+subjects= fieldnames(subjData); %get an updated list of included subjs
+
+
 %% ~~~Photometry plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Within-subjects raw photometry plots - all in 1 figure
 %In this section, we'll plot the "raw" (it's been preprocessed and
@@ -1394,10 +1403,10 @@ for subj= 1:numel(subjects) %for each subject
 %                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurple= [];
 %                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblue= [];
 %                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurple= [];
-                subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblueMean = [];
-                subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurpleMean = [];
-                subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblueMean = [];
-                subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurpleMean = [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblueMean(1:periCueFrames+1,1,cue) = nan;
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurpleMean(1:periCueFrames+1,1,cue) = nan;
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblueMean(1:periCueFrames+1,1,cue) = nan;
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurpleMean(1:periCueFrames+1,1,cue) = nan;
                 
            else %if this is a selected NS
                
@@ -1449,19 +1458,21 @@ for subj= 1:numel(subjects) %for each subject
                 %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
             subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
             subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
-
-                %get the mean response to the DS for this session
-            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblueMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
-
-            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurpleMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurple, 3); 
-
-            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblueMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblue, 3);
-
-            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurpleMean = mean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurple, 3);
+ 
            end
        
        end %end DSselected loop
        end %end NS conditional
+       
+                 %get the mean response to the NS for this session
+            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
+
+            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurple, 3); 
+
+            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblue, 3);
+
+            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurple, 3);
+       
    end %end session loop
 end %end subject loop
 
@@ -1470,10 +1481,10 @@ end %end subject loop
 
 
 subjectsAnalyzed = fieldnames(subjDataAnalyzed); %now, let's save an array containing all of the analyzed subject IDs (may be useful later if we decide to exclude subjects from analysis)
-%% ~~~Heat plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%% ~~~Individual subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 %% Establish common date axis across subjects
- %since training day may vary between subjects, we want to eventually arrange
+%since training day may vary between subjects, we want to eventually arrange
 %all these data by the actual recording date. If a subject did not run a
 %session on a date we should be able to make values on this date nan later 
 
@@ -1487,18 +1498,18 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
        
 %       So save the dates in a cell array
         allDates(session,subj) = currentSubj(session).date;
-        allDates(session)= currentSubj(session).date;
-                
+%         allDates(session)= currentSubj(session).date;
+%                 
     end %end session loop
    
 end
 
-    %remove invalid dates (empty spots were filled with zero, let's make
+    %remove invalid dates (empty sessions were filled with zero, let's make
     %these empty)
     allDates(allDates==0) = [];
     
     %retain only unique dates 
-    allDates= unique(allDates); 
+%     allDates= unique(allDates); 
 
 %% HEAT PLOT OF AVG RESPONSE TO CUE (by session)
 
@@ -1780,217 +1791,6 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
 
 end %end subject loop
-%% BETWEEN SUBJECTS HEATPLOTS- Avg response to cue (by date)
- 
- %gathering all mean data from time window around cue 
- 
- 
- for subj= 1:numel(subjectsAnalyzed) %for each subject
-     
-     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
- 
-     %we'll want to organize these by common date instead of relative
-     %training day as well
-     
-     %First find out which dates this subj has data for
-    %get all dates for this subj
-    for session= 1:numel(currentSubj)
-        subjDates(session)= currentSubj(session).date;
-    end %end session loop
-    
-    %now find out which dates from allDates this subj has data for 
-    for thisDate = allDates %loop through all dates
-        if isempty(subjDates(subjDates==thisDate)) %if this subj doesn't have valid data on this date
-%                 emptyDates= cat(1, emptyDates,thisDate); %save this empty date to an array (add onto array by using cat())
-                currentSubj(end+1).date= thisDate; %use end+1 to add a new empty session
-                
-                %fill relevant fields with NaN for later 
-                currentSubj(end).periDS.DSzblueMean= NaN(size(timeLock'));
-                currentSubj(end).periDS.DSzpurpleMean= NaN(size(timeLock'));
-                currentSubj(end).periNS.NSzblueMean= NaN(size(timeLock'));
-                currentSubj(end).periNS.NSzpurpleMean= NaN(size(timeLock'));
-                
-                currentSubj(end).periNS.NS= nan;
-
-        end
-    end
-    
-    %now let's resort the struct with empty sessions by date
-     subjTable = struct2table(currentSubj); % convert the struct array to a table
-     subjTableSorted = sortrows(subjTable, 'date'); % sort the table by 'date'
-     currentSubj = table2struct(subjTableSorted); %convert back to struct
-
-     
-     
-     NStrialCount= 1; %counter for ns sessions
-     
-     %now get the actual photometry data
-     
-     for session = 1:numel(currentSubj) %for each session this subject completed
-
-         allRats.meanDSzblue(:,session,subj)= currentSubj(session).periDS.DSzblueMean;
-         allRats.meanDSzpurple(:,session,subj)= currentSubj(session).periDS.DSzpurpleMean;
-
-         if isempty(currentSubj(session).periNS.NS) %if there's no NS data, fill with NaNs
-            currentSubj(session).periNS.NSzblueMean= NaN(size(timeLock'));
-            currentSubj(session).periNS.NSzpurpleMean=  NaN(size(timeLock'));
-         end
-         
-         allRats.meanNSzblue(:,session,subj)= currentSubj(session).periNS.NSzblueMean;
-         allRats.meanNSzpurple(:,session,subj)= currentSubj(session).periNS.NSzpurpleMean;
-         
-%          if ~isempty(currentSubj(session).periNS.NS) %only run if NS data present
-%             allRats.meanNSzblue(:,NStrialCount,subj)= currentSubj(session).periNS.NSzblueMean;
-%             allRats.meanNSzpurple(:,NStrialCount,subj)= currentSubj(session).periNS.NSzpurpleMean;
-%              
-% %             allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
-%             
-%             NStrialCount= NStrialCount+1;
-%             % zeros are appearing in sessions where there's no data! (e.g.
-%             % rats are on different training days, so one can be on day 14
-%             % ahead of others that are on day 13)
-%                        %skipping from 6->10
-%          else %if there's no NS data present, fill with nan (otherwise will fill with zeros)
-%             allRats.meanNSzblue(:,session, subj)= nan(size(currentSubj(session).periDS.DSzblueMean));
-%             allRats.meanNSzpurple(:,session,subj)= nan(size(currentSubj(session).periDS.DSzblueMean));        
-%          end %end NS conditional
-     end %end session loop
-          
- end %end subj loop
-
- % mean of all rats per training day ( each column is a training day , each 3d page is a subject)
-allRats.grandDSzblue=nanmean(allRats.meanDSzblue(:,:,:),3)'; %(:,:,1:4),3)' % doing 1:4 in 3rd dmension because rat8 is a GFP animal but need to find more robust way to do this
-allRats.grandDSzpurple=nanmean(allRats.meanDSzpurple(:,:, :),3)'; %1:4),3)'
-allRats.grandNSzblue=nanmean(allRats.meanNSzblue(:,:,:),3)';%'; %1:4),3)'
-allRats.grandNSzpurple=nanmean(allRats.meanNSzpurple(:,:,:),3)'; %,1:4),3)'
-
- %get bottom and top for color axis of DS heatplot
- allRats.bottomMeanallDS = min(min(min(allRats.grandDSzblue)), min(min(allRats.grandDSzpurple))); %find the lowest value 
- allRats.topMeanallDS = max(max(max(allRats.grandDSzblue)), max(max(allRats.grandDSzpurple))); %find the highest value
-
- %get bottom and top for color axis of NS heatplot
- allRats.bottomMeanallNS = min(min(min(allRats.grandNSzblue)), min(min(allRats.grandNSzpurple)));
- allRats.topMeanallNS = max(max(max(allRats.grandNSzblue)), max(max(allRats.grandNSzpurple)));
-
-
-%Establish a shared bottom and top for shared color axis of DS & NS means
-    if ~isnan(allRats.bottomMeanallNS) %if there is an NS
-        allRats.bottomMeanallShared= min(allRats.bottomMeanallDS, allRats.bottomMeanallNS); %find the absolute min value
-        allRats.topMeanallShared= max(allRats.topMeanallDS, allRats.topMeanallNS); %find the absolute min value
-    else
-        allRats.bottomMeanallShared= allRats.bottomMeanallDS;
-        allRats.topMeanallShared= allRats.topMeanallDS;
-    end
-    
- %get list of session days for heatplot y axis
-%  for day= 1:size(allRats.grandDSzblue,1)   
-%     allRats.subjTrialDS(day,1)= day;
-%  end
-
-    subjTrial= 1:numel(allDates); %let's just number each training day starting at 1
-
- 
-%get list of NS session days for heatplot y axis
-% need to loop through all subjects and sessions, find unique trials with NS data
-allRats.subjTrialNS=[];
- for subj = 1:numel(subjectsAnalyzed)
-
-    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing
-    for session = 1:numel(currentSubj) %for each training session this subject completed
-        if ~isempty(currentSubj(session).periNS.NS) %if there's an NS trial in this session, add it to the array that will mark the y axis
-%              allRats.subjTrialNS= cat(2, allRats.subjTrialNS, currentSubj(session).trainDay);
-%              disp(currentSubj(session).trainDay);
-        end
-    end %end session loop
-     
-     
- end %end subj loop
-   
-%get only unique elements of subjTrialNS
-% allRats.subjTrialNS= unique(allRats.subjTrialNS);
-
-% HEATPLOT
-
- %DS z plot
-    figure(figureCount);
-    figureCount=figureCount+1;
-    hold on;
-    subplot(2,2,1); %subplot for shared colorbar
-
-    %plot blue DS
-
-    timeLock = [-preCueFrames:postCueFrames]/fs;% [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-
-    heatDSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzblue);
-    title(' All rats avg blue z score response to DS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-    xlabel('seconds from cue onset');
-    ylabel('training day');
-    set(gca, 'ytick', subjTrial); %label trials appropriately
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
-
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-
-
-    %   plot purple DS (subplotted for shared colorbar)
-    subplot(2,2,3);
-    heatDSzpurpleMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzpurple); 
-
-    title(' All rats avg purple z score response to DS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
-    xlabel('seconds from cue onset');
-    ylabel('training day');
-
-    set(gca, 'ytick', subjTrial); 
-
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
-    
-%     %% TODO: try linspace with caxis
-
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-
-    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-
-
-
-    %     %NS z plot
-    %         figure(figureCount-1); %subplotting on the same figure as the DS heatplots
-    hold on;
-    subplot(2,2,2); %subplot for shared colorbar
-
-    timeLock = [-preCueFrames:postCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-
-    heatNSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandNSzblue, 'AlphaData', ~isnan(allRats.grandNSzpurple));
-    title(' All rats avg blue z score response to NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-    xlabel('seconds from cue onset');
-    ylabel('training day');
-    set(gca, 'ytick', subjTrial); %label trials appropriately
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
-
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-
-
-    %   plot purple NS (subplotted for shared colorbar)
-    subplot(2,2,4);
-    heatNSzpurpleMean= imagesc(timeLock,subjTrial,allRats.grandNSzpurple, 'AlphaData', ~isnan(allRats.grandNSzpurple)); 
-
-    title(' All rats avg purple z score response to NS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
-    xlabel('seconds from cue onset');
-    ylabel('training day');
-
-    set(gca, 'ytick', subjTrial); 
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
-
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-
-    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
     
 %% HEAT PLOT OF RESPONSE TO EVERY INDIVIDUAL CUE PRESENTATION- sorted by trial 
 
@@ -3619,6 +3419,786 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
                
     end %end variable reward conditional
 end %end subject loop
+
+%% ~~ Between subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%% BETWEEN SUBJECTS HEATPLOTS- Avg response to cue (by date)
+ 
+ %gathering all mean data from time window around cue 
+ 
+ 
+ for subj= 1:numel(subjectsAnalyzed) %for each subject
+     
+     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+ 
+     %we'll want to organize these by common date instead of relative
+     %training day as well
+     
+     %First find out which dates this subj has data for
+    %get all dates for this subj
+    for session= 1:numel(currentSubj)
+        subjDates(session)= currentSubj(session).date;
+    end %end session loop
+    
+    %now find out which dates from allDates this subj has data for 
+    for thisDate = allDates %loop through all dates
+        if isempty(subjDates(subjDates==thisDate)) %if this subj doesn't have valid data on this date
+%                 emptyDates= cat(1, emptyDates,thisDate); %save this empty date to an array (add onto array by using cat())
+                currentSubj(end+1).date= thisDate; %use end+1 to add a new empty session
+                
+                %fill relevant fields with NaN for later 
+                currentSubj(end).periDS.DSzblueMean= NaN(size(timeLock'));
+                currentSubj(end).periDS.DSzpurpleMean= NaN(size(timeLock'));
+                currentSubj(end).periNS.NSzblueMean= NaN(size(timeLock'));
+                currentSubj(end).periNS.NSzpurpleMean= NaN(size(timeLock'));
+                
+                currentSubj(end).periNS.NS= nan;
+
+        end
+    end
+    
+    %now let's resort the struct with empty sessions by date
+     subjTable = struct2table(currentSubj); % convert the struct array to a table
+     subjTableSorted = sortrows(subjTable, 'date'); % sort the table by 'date'
+     currentSubj = table2struct(subjTableSorted); %convert back to struct
+
+     
+     
+     NStrialCount= 1; %counter for ns sessions
+     
+     %now get the actual photometry data
+     
+     for session = 1:numel(currentSubj) %for each session this subject completed
+
+         allRats.meanDSzblue(:,session,subj)= currentSubj(session).periDS.DSzblueMean;
+         allRats.meanDSzpurple(:,session,subj)= currentSubj(session).periDS.DSzpurpleMean;
+
+         if isempty(currentSubj(session).periNS.NS) %if there's no NS data, fill with NaNs
+            currentSubj(session).periNS.NSzblueMean= NaN(size(timeLock'));
+            currentSubj(session).periNS.NSzpurpleMean=  NaN(size(timeLock'));
+         end
+         
+         allRats.meanNSzblue(:,session,subj)= currentSubj(session).periNS.NSzblueMean;
+         allRats.meanNSzpurple(:,session,subj)= currentSubj(session).periNS.NSzpurpleMean;
+         
+%          if ~isempty(currentSubj(session).periNS.NS) %only run if NS data present
+%             allRats.meanNSzblue(:,NStrialCount,subj)= currentSubj(session).periNS.NSzblueMean;
+%             allRats.meanNSzpurple(:,NStrialCount,subj)= currentSubj(session).periNS.NSzpurpleMean;
+%              
+% %             allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
+%             
+%             NStrialCount= NStrialCount+1;
+%             % zeros are appearing in sessions where there's no data! (e.g.
+%             % rats are on different training days, so one can be on day 14
+%             % ahead of others that are on day 13)
+%                        %skipping from 6->10
+%          else %if there's no NS data present, fill with nan (otherwise will fill with zeros)
+%             allRats.meanNSzblue(:,session, subj)= nan(size(currentSubj(session).periDS.DSzblueMean));
+%             allRats.meanNSzpurple(:,session,subj)= nan(size(currentSubj(session).periDS.DSzblueMean));        
+%          end %end NS conditional
+     end %end session loop
+          
+ end %end subj loop
+
+ % mean of all rats per training day ( each column is a training day , each 3d page is a subject)
+allRats.grandDSzblue=nanmean(allRats.meanDSzblue(:,:,:),3)'; %(:,:,1:4),3)' % doing 1:4 in 3rd dmension because rat8 is a GFP animal but need to find more robust way to do this
+allRats.grandDSzpurple=nanmean(allRats.meanDSzpurple(:,:, :),3)'; %1:4),3)'
+allRats.grandNSzblue=nanmean(allRats.meanNSzblue(:,:,:),3)';%'; %1:4),3)'
+allRats.grandNSzpurple=nanmean(allRats.meanNSzpurple(:,:,:),3)'; %,1:4),3)'
+
+ %get bottom and top for color axis of DS heatplot
+ allRats.bottomMeanallDS = min(min(min(allRats.grandDSzblue)), min(min(allRats.grandDSzpurple))); %find the lowest value 
+ allRats.topMeanallDS = max(max(max(allRats.grandDSzblue)), max(max(allRats.grandDSzpurple))); %find the highest value
+
+ %get bottom and top for color axis of NS heatplot
+ allRats.bottomMeanallNS = min(min(min(allRats.grandNSzblue)), min(min(allRats.grandNSzpurple)));
+ allRats.topMeanallNS = max(max(max(allRats.grandNSzblue)), max(max(allRats.grandNSzpurple)));
+
+
+%Establish a shared bottom and top for shared color axis of DS & NS means
+    if ~isnan(allRats.bottomMeanallNS) %if there is an NS
+        allRats.bottomMeanallShared= min(allRats.bottomMeanallDS, allRats.bottomMeanallNS); %find the absolute min value
+        allRats.topMeanallShared= max(allRats.topMeanallDS, allRats.topMeanallNS); %find the absolute min value
+    else
+        allRats.bottomMeanallShared= allRats.bottomMeanallDS;
+        allRats.topMeanallShared= allRats.topMeanallDS;
+    end
+    
+ %get list of session days for heatplot y axis
+%  for day= 1:size(allRats.grandDSzblue,1)   
+%     allRats.subjTrialDS(day,1)= day;
+%  end
+
+    subjTrial= 1:numel(allDates); %let's just number each training day starting at 1
+
+ 
+%get list of NS session days for heatplot y axis
+% need to loop through all subjects and sessions, find unique trials with NS data
+allRats.subjTrialNS=[];
+ for subj = 1:numel(subjectsAnalyzed)
+
+    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing
+    for session = 1:numel(currentSubj) %for each training session this subject completed
+        if ~isempty(currentSubj(session).periNS.NS) %if there's an NS trial in this session, add it to the array that will mark the y axis
+%              allRats.subjTrialNS= cat(2, allRats.subjTrialNS, currentSubj(session).trainDay);
+%              disp(currentSubj(session).trainDay);
+        end
+    end %end session loop
+     
+     
+ end %end subj loop
+   
+%get only unique elements of subjTrialNS
+% allRats.subjTrialNS= unique(allRats.subjTrialNS);
+
+% HEATPLOT
+
+ %DS z plot
+    figure(figureCount);
+    figureCount=figureCount+1;
+    hold on;
+    subplot(2,2,1); %subplot for shared colorbar
+
+    %plot blue DS
+
+    timeLock = [-preCueFrames:postCueFrames]/fs;% [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+
+    heatDSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzblue);
+    title(' All rats avg blue z score response to DS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+    set(gca, 'ytick', subjTrial); %label trials appropriately
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+
+    %   plot purple DS (subplotted for shared colorbar)
+    subplot(2,2,3);
+    heatDSzpurpleMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzpurple); 
+
+    title(' All rats avg purple z score response to DS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+
+    set(gca, 'ytick', subjTrial); 
+
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+    
+%     %% TODO: try linspace with caxis
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+
+
+
+    %     %NS z plot
+    %         figure(figureCount-1); %subplotting on the same figure as the DS heatplots
+    hold on;
+    subplot(2,2,2); %subplot for shared colorbar
+
+    timeLock = [-preCueFrames:postCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+
+    heatNSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandNSzblue, 'AlphaData', ~isnan(allRats.grandNSzpurple));
+    title(' All rats avg blue z score response to NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+    set(gca, 'ytick', subjTrial); %label trials appropriately
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+
+    %   plot purple NS (subplotted for shared colorbar)
+    subplot(2,2,4);
+    heatNSzpurpleMean= imagesc(timeLock,subjTrial,allRats.grandNSzpurple, 'AlphaData', ~isnan(allRats.grandNSzpurple)); 
+
+    title(' All rats avg purple z score response to NS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from cue onset');
+    ylabel('training day');
+
+    set(gca, 'ytick', subjTrial); 
+    caxis manual;
+    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+%% Between subjects response to cue on key transition sessions
+%avg response timelocked to CUE on key transition sessions
+%(e.g. first day of training, first day with NS, last day of stage 5
+
+for subj= 1:numel(subjIncluded) %for each subject
+       currentSubj= subjDataAnalyzed.(subjIncluded{subj}); %use this for easy indexing into the current subject within the struct
+
+      %First, need to identify sessions that meet these conditions
+       
+%       %counter for sessions that meet each condition, reset between subjs
+      sesCountA= 1;
+      sesCountB= 1;
+      sesCountC= 1;
+      sesCountD= 1;
+      
+       for session = 1:numel(currentSubj) %for each training session this subject completed
+            
+           %cond A
+           if currentSubj(session).trainStage==2 %condA= stage 2 sessions (rat13 missing stage1 data)
+               %save training day label for this data 
+                allRats(1).subjSessA(sesCountA,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountA= sesCountA+1;
+           end %end conditional A
+
+             %cond B
+           if currentSubj(session).trainStage ==5 %condB= stage 5 sessions
+               %save training day label for this data 
+                allRats(1).subjSessB(sesCountB,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountB= sesCountB+1;
+           end %end conditional B
+           
+               %cond C
+           if currentSubj(session).trainStage==7 %condC = stage 7 sessions (full 1s delay between PE and pump on)
+               %save training day label for this data 
+                allRats(1).subjSessC(sesCountC,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountC= sesCountC+1;
+           end %end conditional C
+           
+                %cond D
+           if currentSubj(session).trainStage ==8 %condD = stage 8 sessions (any variable reward, should be refined by changing stage to reflect reward ID)
+               %save training day label for this data 
+                allRats(1).subjSessD(sesCountD,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountD= sesCountD+1;
+           end %end conditional D
+        end %end session loop
+
+     %replace empty 0s with nans AND identify individual sessions for
+     %plotting (instead of plotting them all)
+        %the above code filled in blank training dates with 0 for photometry data (e.g. if 1 rat 
+        %ran 12 days but others ran 9 days, the 3 days in between were 
+        %filled with 0), let's make these = nan instead 
+        
+            %condA
+        for ses = 1:size(allRats(1).subjSessA,1) %each row is a session
+           if allRats(1).subjSessA(ses,subj)==0 %if there's no data for this date
+              %make train day nan
+              allRats(1).subjSessA(ses,subj)=nan;
+           end
+           
+           if ses==1 %retain only the first stage 2 day
+               allRats(1).stage2FirstSes(1,subj)= allRats(1).subjSessA(ses,subj); %get corresponding session, will be used to extract photometry data
+               
+               allRats(1).DSzblueMeanStage2FirstSes(1,:,subj)= currentSubj(allRats(1).stage2FirstSes(1,subj)).periDS.DSzblueMean'; %transposing for readability
+               allRats(1).DSzpurpleMeanStage2FirstSes(1,:,subj)= currentSubj(allRats(1).stage2FirstSes(1,subj)).periDS.DSzpurpleMean';
+           end 
+        end
+        
+            %condB
+         for ses = 1:size(allRats(1).subjSessB,1) %each row is a session
+           if allRats(1).subjSessB(ses,subj)==0 %if there's no data for this date
+              %make train day nan
+              allRats(1).subjSessB(ses,subj)=nan;
+           end
+           
+           if ses==1 %retain the first and last stage 5 day
+               allRats(1).stage5FirstSes(1,subj)= allRats(1).subjSessB(ses,subj);
+               allRats(1).stage5LastSes(1,subj)= max(allRats(1).subjSessB(:,subj));
+               
+               allRats(1).DSzblueMeanStage5FirstSes(1,:,subj)= currentSubj(allRats(1).stage5FirstSes(1,subj)).periDS.DSzblueMean';
+               allRats(1).NSzblueMeanStage5FirstSes(1,:,subj)= currentSubj(allRats(1).stage5FirstSes(1,subj)).periNS.NSzblueMean';
+               allRats(1).DSzpurpleMeanStage5FirstSes(1,:,subj)= currentSubj(allRats(1).stage5FirstSes(1,subj)).periDS.DSzpurpleMean';
+               allRats(1).NSzpurpleMeanStage5FirstSes(1,:,subj)= currentSubj(allRats(1).stage5FirstSes(1,subj)).periNS.NSzpurpleMean';
+               
+               allRats(1).DSzblueMeanStage5LastSes(1,:,subj)= currentSubj(allRats(1).stage5LastSes(1,subj)).periDS.DSzblueMean';
+               allRats(1).NSzblueMeanStage5LastSes(1,:,subj)= currentSubj(allRats(1).stage5LastSes(1,subj)).periNS.NSzblueMean';
+               allRats(1).DSzpurpleMeanStage5LastSes(1,:,subj)= currentSubj(allRats(1).stage5LastSes(1,subj)).periDS.DSzpurpleMean';
+               allRats(1).NSzpurpleMeanStage5LastSes(1,:,subj)= currentSubj(allRats(1).stage5LastSes(1,subj)).periNS.NSzpurpleMean';
+               
+           end
+           
+         end
+         
+           %condC
+         for ses = 1:size(allRats(1).subjSessC,1) %each row is a session
+           if allRats(1).subjSessC(ses,subj)==0 %if there's no data for this date
+              %make train day nan
+              allRats(1).subjSessC(ses,subj)=nan;
+           end
+           
+           if ses==1 %retain the first and last stage 7 day
+              allRats(1).stage7FirstSes(1,subj)= allRats(1).subjSessC(ses,subj);
+              allRats(1).stage7LastSes(1,subj)=max(allRats(1).subjSessC(:,subj));
+              
+              allRats(1).DSzblueMeanStage7FirstSes(1,:,subj)= currentSubj(allRats(1).stage7FirstSes(1,subj)).periDS.DSzblueMean';
+              allRats(1).NSzblueMeanStage7FirstSes(1,:,subj)= currentSubj(allRats(1).stage7FirstSes(1,subj)).periNS.NSzblueMean';
+              allRats(1).DSzpurpleMeanStage7FirstSes(1,:,subj)= currentSubj(allRats(1).stage7FirstSes(1,subj)).periDS.DSzpurpleMean';
+              allRats(1).NSzpurpleMeanStage7FirstSes(1,:,subj)= currentSubj(allRats(1).stage7FirstSes(1,subj)).periNS.NSzpurpleMean';
+              
+              allRats(1).DSzblueMeanStage7LastSes(1,:,subj)= currentSubj(allRats(1).stage7LastSes(1,subj)).periDS.DSzblueMean';
+              allRats(1).NSzblueMeanStage7LastSes(1,:,subj)= currentSubj(allRats(1).stage7LastSes(1,subj)).periNS.NSzblueMean';
+              allRats(1).DSzpurpleMeanStage7LastSes(1,:,subj)= currentSubj(allRats(1).stage7LastSes(1,subj)).periDS.DSzpurpleMean';
+              allRats(1).NSzpurpleMeanStage7LastSes(1,:,subj)= currentSubj(allRats(1).stage7LastSes(1,subj)).periNS.NSzpurpleMean';
+           end
+           
+         end
+           %condD 
+         for ses = 1:size(allRats(1).subjSessD,1) %each row is a session
+           if allRats(1).subjSessD(ses,subj)==0 %if there's no data for this date
+              %make train day nan`
+              allRats(1).subjSessD(ses,subj)=nan;
+           end
+           
+           if ses==1 %retain the first and last stage 8 days (last is extinction for vp-vta-fpround2)
+               allRats(1).stage8FirstSes(1,subj)= allRats(1).subjSessD(ses,subj);
+               allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessD(:,subj));
+               
+              allRats(1).DSzblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDS.DSzblueMean';
+              allRats(1).NSzblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNS.NSzblueMean';
+              allRats(1).DSzpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDS.DSzpurpleMean';
+              allRats(1).NSzpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNS.NSzpurpleMean';
+              
+              allRats(1).DSzblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDS.DSzblueMean';
+              allRats(1).NSzblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periNS.NSzblueMean';
+              allRats(1).DSzpurpleMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDS.DSzpurpleMean';
+              allRats(1).NSzpurpleMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periNS.NSzpurpleMean';
+               
+           end
+         end
+end %end subj loop
+         
+
+
+ % now get mean of all rats for these transition sessions (each column is a training day , each 3d page is a subject)
+
+    %stage 2
+ allRats.grandMeanDSzblueStage2FirstSes=nanmean(allRats.DSzblueMeanStage2FirstSes,3);
+ allRats.grandMeanDSzpurpleStage2FirstSes=nanmean(allRats.DSzpurpleMeanStage2FirstSes,3);
+
+    %stage 5
+allRats(1).grandMeanDSzblueStage5FirstSes= nanmean(allRats.DSzblueMeanStage5FirstSes,3);
+allRats(1).grandMeanNSzblueStage5FirstSes= nanmean(allRats.NSzblueMeanStage5FirstSes,3);
+allRats(1).grandMeanDSzpurpleStage5FirstSes= nanmean(allRats.DSzpurpleMeanStage5FirstSes,3);
+allRats(1).grandMeanNSzpurpleStage5FirstSes= nanmean(allRats.NSzpurpleMeanStage5FirstSes,3);
+
+allRats(1).grandMeanDSzblueStage5LastSes= nanmean(allRats.DSzblueMeanStage5LastSes,3);
+allRats(1).grandMeanNSzblueStage5LastSes= nanmean(allRats.NSzblueMeanStage5LastSes,3);
+allRats(1).grandMeanDSzpurpleStage5LastSes= nanmean(allRats.DSzpurpleMeanStage5LastSes,3);
+allRats(1).grandMeanNSzpurpleStage5LastSes= nanmean(allRats.NSzpurpleMeanStage5LastSes,3);
+    
+    %stage 7
+allRats(1).grandMeanDSzblueStage7FirstSes= nanmean(allRats.DSzblueMeanStage7FirstSes,3);
+allRats(1).grandMeanNSzblueStage7FirstSes= nanmean(allRats.NSzblueMeanStage7FirstSes,3);
+allRats(1).grandMeanDSzpurpleStage7FirstSes= nanmean(allRats.DSzpurpleMeanStage7FirstSes,3);
+allRats(1).grandMeanNSzpurpleStage7FirstSes= nanmean(allRats.NSzpurpleMeanStage7FirstSes,3);
+
+allRats(1).grandMeanDSzblueStage7LastSes= nanmean(allRats.DSzblueMeanStage7LastSes,3);
+allRats(1).grandMeanNSzblueStage7LastSes= nanmean(allRats.NSzblueMeanStage7LastSes,3);
+allRats(1).grandMeanDSzpurpleStage7LastSes= nanmean(allRats.DSzpurpleMeanStage7LastSes,3);
+allRats(1).grandMeanNSzpurpleStage7LastSes= nanmean(allRats.NSzpurpleMeanStage7LastSes,3);    
+ 
+    %stage 8
+allRats(1).grandMeanDSzblueStage8FirstSes= nanmean(allRats.DSzblueMeanStage8FirstSes,3);
+allRats(1).grandMeanNSzblueStage8FirstSes= nanmean(allRats.NSzblueMeanStage8FirstSes,3);
+allRats(1).grandMeanDSzpurpleStage8FirstSes= nanmean(allRats.DSzpurpleMeanStage8FirstSes,3);
+allRats(1).grandMeanNSzpurpleStage8FirstSes= nanmean(allRats.NSzpurpleMeanStage8FirstSes,3);
+
+allRats(1).grandMeanDSzblueExtinctionLastSes= nanmean(allRats.DSzblueMeanExtinctionLastSes,3);
+allRats(1).grandMeanNSzblueExtinctionLastSes= nanmean(allRats.NSzblueMeanExtinctionLastSes,3);
+allRats(1).grandMeanDSzpurpleExtinctionLastSes= nanmean(allRats.DSzpurpleMeanExtinctionLastSes,3);
+allRats(1).grandMeanNSzpurpleExtinctionLastSes= nanmean(allRats.NSzpurpleMeanExtinctionLastSes,3);  
+
+
+% Now, 2d plots 
+figure(figureCount);
+figureCount= figureCount+1;
+
+sgtitle('Between subjects (n=5) avg response to cue on transition days')
+
+subplot(2,7,1);
+title('DS stage 2 first day');
+hold on;
+plot(timeLock,allRats(1).grandMeanDSzblueStage2FirstSes, 'b');
+plot(timeLock,allRats(1).grandMeanDSzpurpleStage2FirstSes, 'm');
+
+subplot(2,7,2);
+title('DS stage 5 first day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzblueStage5FirstSes,'b');
+plot(timeLock, allRats(1).grandMeanDSzpurpleStage5FirstSes,'m');
+
+subplot(2,7,3);
+title('DS stage 5 last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzblueStage5LastSes,'b');
+plot(timeLock, allRats(1).grandMeanDSzpurpleStage5LastSes,'m');
+
+subplot(2,7,4);
+title('DS stage 7 first day (1s delay)');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzblueStage7FirstSes,'b');
+plot(timeLock, allRats(1).grandMeanDSzpurpleStage7FirstSes,'m');
+
+subplot(2,7,5);
+title('DS stage 7 last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzblueStage7LastSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpurpleStage7LastSes,'m');
+
+subplot(2,7,6);
+title('DS stage 8 first day (variable reward)');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzblueStage8FirstSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpurpleStage8FirstSes,'m');
+
+subplot(2,7,7);
+title('DS extinction last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzblueExtinctionLastSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpurpleExtinctionLastSes,'m');
+
+
+
+subplot(2,7,8);
+title('no NS on stage 2');
+hold on;
+
+subplot(2,7,9);
+title('NS stage 5 first day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzblueStage5FirstSes,'b');
+plot(timeLock, allRats(1).grandMeanNSzpurpleStage5FirstSes,'m');
+
+subplot(2,7,10);
+title('NS stage 5 last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzblueStage5LastSes,'b');
+plot(timeLock, allRats(1).grandMeanNSzpurpleStage5LastSes,'m');
+
+subplot(2,7,11);
+title('NS stage 7 first day (1s delay)');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzblueStage7FirstSes,'b');
+plot(timeLock, allRats(1).grandMeanNSzpurpleStage7FirstSes,'m');
+
+subplot(2,7,12);
+title('NS stage 7 last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzblueStage7LastSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpurpleStage7LastSes,'m');
+
+subplot(2,7,13);
+title('NS stage 8 first day (variable reward)');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzblueStage8FirstSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpurpleStage8FirstSes,'m');
+
+subplot(2,7,14);
+title('NS extinction last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzblueExtinctionLastSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpurpleExtinctionLastSes,'m');
+
+
+%equalize the axes and link them together for examination
+linkaxes;
+
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen
+
+
+%% Between subjects response to FIRST PE after cue on key transition sessions
+%avg response timelocked to FIRST PE on key transition sessions
+%(e.g. first day of training, first day with NS, last day of stage 5
+
+for subj= 1:numel(subjIncluded) %for each subject
+       currentSubj= subjDataAnalyzed.(subjIncluded{subj}); %use this for easy indexing into the current subject within the struct
+
+      %First, need to identify sessions that meet these conditions
+       
+%       %counter for sessions that meet each condition, reset between subjs
+      sesCountA= 1;
+      sesCountB= 1;
+      sesCountC= 1;
+      sesCountD= 1;
+      
+       for session = 1:numel(currentSubj) %for each training session this subject completed
+            
+           %cond A
+           if currentSubj(session).trainStage==2 %condA= stage 2 sessions (rat13 missing stage1 data)
+               %save training day label for this data 
+                allRats(1).subjSessA(sesCountA,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountA= sesCountA+1;
+           end %end conditional A
+
+             %cond B
+           if currentSubj(session).trainStage ==5 %condB= stage 5 sessions
+               %save training day label for this data 
+                allRats(1).subjSessB(sesCountB,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountB= sesCountB+1;
+           end %end conditional B
+           
+               %cond C
+           if currentSubj(session).trainStage==7 %condC = stage 7 sessions (full 1s delay between PE and pump on)
+               %save training day label for this data 
+                allRats(1).subjSessC(sesCountC,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountC= sesCountC+1;
+           end %end conditional C
+           
+                %cond D
+           if currentSubj(session).trainStage ==8 %condD = stage 8 sessions (any variable reward, should be refined by changing stage to reflect reward ID)
+               %save training day label for this data 
+                allRats(1).subjSessD(sesCountD,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountD= sesCountD+1;
+           end %end conditional D
+        end %end session loop
+
+     %replace empty 0s with nans AND identify individual sessions for
+     %plotting (instead of plotting them all)
+        %the above code filled in blank training dates with 0 for photometry data (e.g. if 1 rat 
+        %ran 12 days but others ran 9 days, the 3 days in between were 
+        %filled with 0), let's make these = nan instead 
+        
+            %condA
+        for ses = 1:size(allRats(1).subjSessA,1) %each row is a session
+           if allRats(1).subjSessA(ses,subj)==0 %if there's no data for this date
+              %make train day nan
+              allRats(1).subjSessA(ses,subj)=nan;
+           end
+           
+           if ses==1 %retain only the first stage 2 day
+               allRats(1).stage2FirstSes(1,subj)= allRats(1).subjSessA(ses,subj); %get corresponding session, will be used to extract photometry data
+               
+               allRats(1).DSzpoxblueMeanStage2FirstSes(1,:,subj)= currentSubj(allRats(1).stage2FirstSes(1,subj)).periDSpox.DSzpoxblueMean'; %transposing for readability
+               allRats(1).DSzpoxpurpleMeanStage2FirstSes(1,:,subj)= currentSubj(allRats(1).stage2FirstSes(1,subj)).periDSpox.DSzpoxpurpleMean';
+           end 
+        end
+        
+            %condB
+         for ses = 1:size(allRats(1).subjSessB,1) %each row is a session
+           if allRats(1).subjSessB(ses,subj)==0 %if there's no data for this date
+              %make train day nan
+              allRats(1).subjSessB(ses,subj)=nan;
+           end
+           
+           if ses==1 %retain the first and last stage 5 day
+               allRats(1).stage5FirstSes(1,subj)= allRats(1).subjSessB(ses,subj);
+               allRats(1).stage5LastSes(1,subj)= max(allRats(1).subjSessB(:,subj));
+               
+               allRats(1).DSzpoxblueMeanStage5FirstSes(1,:,subj)= currentSubj(allRats(1).stage5FirstSes(1,subj)).periDSpox.DSzpoxblueMean';
+               allRats(1).NSzpoxblueMeanStage5FirstSes(1,:,subj)= currentSubj(allRats(1).stage5FirstSes(1,subj)).periNSpox.NSzpoxblueMean';
+               allRats(1).DSzpoxpurpleMeanStage5FirstSes(1,:,subj)= currentSubj(allRats(1).stage5FirstSes(1,subj)).periDSpox.DSzpoxpurpleMean';
+               allRats(1).NSzpoxpurpleMeanStage5FirstSes(1,:,subj)= currentSubj(allRats(1).stage5FirstSes(1,subj)).periNSpox.NSzpoxpurpleMean';
+               
+               allRats(1).DSzpoxblueMeanStage5LastSes(1,:,subj)= currentSubj(allRats(1).stage5LastSes(1,subj)).periDSpox.DSzpoxblueMean';
+               allRats(1).NSzpoxblueMeanStage5LastSes(1,:,subj)= currentSubj(allRats(1).stage5LastSes(1,subj)).periNSpox.NSzpoxblueMean';
+               allRats(1).DSzpoxpurpleMeanStage5LastSes(1,:,subj)= currentSubj(allRats(1).stage5LastSes(1,subj)).periDSpox.DSzpoxpurpleMean';
+               allRats(1).NSzpoxpurpleMeanStage5LastSes(1,:,subj)= currentSubj(allRats(1).stage5LastSes(1,subj)).periNSpox.NSzpoxpurpleMean';
+               
+           end
+           
+         end
+         
+           %condC
+         for ses = 1:size(allRats(1).subjSessC,1) %each row is a session
+           if allRats(1).subjSessC(ses,subj)==0 %if there's no data for this date
+              %make train day nan
+              allRats(1).subjSessC(ses,subj)=nan;
+           end
+           
+           if ses==1 %retain the first and last stage 7 day
+              allRats(1).stage7FirstSes(1,subj)= allRats(1).subjSessC(ses,subj);
+              allRats(1).stage7LastSes(1,subj)=max(allRats(1).subjSessC(:,subj));
+              
+              allRats(1).DSzpoxblueMeanStage7FirstSes(1,:,subj)= currentSubj(allRats(1).stage7FirstSes(1,subj)).periDSpox.DSzpoxblueMean';
+              allRats(1).NSzpoxblueMeanStage7FirstSes(1,:,subj)= currentSubj(allRats(1).stage7FirstSes(1,subj)).periNSpox.NSzpoxblueMean';
+              allRats(1).DSzpoxpurpleMeanStage7FirstSes(1,:,subj)= currentSubj(allRats(1).stage7FirstSes(1,subj)).periDSpox.DSzpoxpurpleMean';
+              allRats(1).NSzpoxpurpleMeanStage7FirstSes(1,:,subj)= currentSubj(allRats(1).stage7FirstSes(1,subj)).periNSpox.NSzpoxpurpleMean';
+              
+              allRats(1).DSzpoxblueMeanStage7LastSes(1,:,subj)= currentSubj(allRats(1).stage7LastSes(1,subj)).periDSpox.DSzpoxblueMean';
+              allRats(1).NSzpoxblueMeanStage7LastSes(1,:,subj)= currentSubj(allRats(1).stage7LastSes(1,subj)).periNSpox.NSzpoxblueMean';
+              allRats(1).DSzpoxpurpleMeanStage7LastSes(1,:,subj)= currentSubj(allRats(1).stage7LastSes(1,subj)).periDSpox.DSzpoxpurpleMean';
+              allRats(1).NSzpoxpurpleMeanStage7LastSes(1,:,subj)= currentSubj(allRats(1).stage7LastSes(1,subj)).periNSpox.NSzpoxpurpleMean';
+           end
+           
+         end
+           %condD 
+         for ses = 1:size(allRats(1).subjSessD,1) %each row is a session
+           if allRats(1).subjSessD(ses,subj)==0 %if there's no data for this date
+              %make train day nan`
+              allRats(1).subjSessD(ses,subj)=nan;
+           end
+           
+           if ses==1 %retain the first and last stage 8 days (last is extinction for vp-vta-fpround2)
+               allRats(1).stage8FirstSes(1,subj)= allRats(1).subjSessD(ses,subj);
+               allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessD(:,subj));
+               
+              allRats(1).DSzpoxblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDSpox.DSzpoxblueMean';
+              allRats(1).NSzpoxblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNSpox.NSzpoxblueMean';
+              allRats(1).DSzpoxpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDSpox.DSzpoxpurpleMean';
+              allRats(1).NSzpoxpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNSpox.NSzpoxpurpleMean';
+              
+              allRats(1).DSzpoxblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDSpox.DSzpoxblueMean';
+              allRats(1).NSzpoxblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periNSpox.NSzpoxblueMean';
+              allRats(1).DSzpoxpurpleMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDSpox.DSzpoxpurpleMean';
+              allRats(1).NSzpoxpurpleMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periNSpox.NSzpoxpurpleMean';
+               
+           end
+         end
+end %end subj loop
+         
+
+
+ % now get mean of all rats for these transition sessions (each column is a training day , each 3d page is a subject)
+
+    %stage 2
+ allRats.grandMeanDSzpoxblueStage2FirstSes=nanmean(allRats.DSzpoxblueMeanStage2FirstSes,3);
+ allRats.grandMeanDSzpoxpurpleStage2FirstSes=nanmean(allRats.DSzpoxpurpleMeanStage2FirstSes,3);
+
+    %stage 5
+allRats(1).grandMeanDSzpoxblueStage5FirstSes= nanmean(allRats.DSzpoxblueMeanStage5FirstSes,3);
+allRats(1).grandMeanNSzpoxblueStage5FirstSes= nanmean(allRats.NSzpoxblueMeanStage5FirstSes,3);
+allRats(1).grandMeanDSzpoxpurpleStage5FirstSes= nanmean(allRats.DSzpoxpurpleMeanStage5FirstSes,3);
+allRats(1).grandMeanNSzpoxpurpleStage5FirstSes= nanmean(allRats.NSzpoxpurpleMeanStage5FirstSes,3);
+
+allRats(1).grandMeanDSzpoxblueStage5LastSes= nanmean(allRats.DSzpoxblueMeanStage5LastSes,3);
+allRats(1).grandMeanNSzpoxblueStage5LastSes= nanmean(allRats.NSzpoxblueMeanStage5LastSes,3);
+allRats(1).grandMeanDSzpoxpurpleStage5LastSes= nanmean(allRats.DSzpoxpurpleMeanStage5LastSes,3);
+allRats(1).grandMeanNSzpoxpurpleStage5LastSes= nanmean(allRats.NSzpoxpurpleMeanStage5LastSes,3);
+    
+    %stage 7
+allRats(1).grandMeanDSzpoxblueStage7FirstSes= nanmean(allRats.DSzpoxblueMeanStage7FirstSes,3);
+allRats(1).grandMeanNSzpoxblueStage7FirstSes= nanmean(allRats.NSzpoxblueMeanStage7FirstSes,3);
+allRats(1).grandMeanDSzpoxpurpleStage7FirstSes= nanmean(allRats.DSzpoxpurpleMeanStage7FirstSes,3);
+allRats(1).grandMeanNSzpoxpurpleStage7FirstSes= nanmean(allRats.NSzpoxpurpleMeanStage7FirstSes,3);
+
+allRats(1).grandMeanDSzpoxblueStage7LastSes= nanmean(allRats.DSzpoxblueMeanStage7LastSes,3);
+allRats(1).grandMeanNSzpoxblueStage7LastSes= nanmean(allRats.NSzpoxblueMeanStage7LastSes,3);
+allRats(1).grandMeanDSzpoxpurpleStage7LastSes= nanmean(allRats.DSzpoxpurpleMeanStage7LastSes,3);
+allRats(1).grandMeanNSzpoxpurpleStage7LastSes= nanmean(allRats.NSzpoxpurpleMeanStage7LastSes,3);    
+ 
+    %stage 8
+allRats(1).grandMeanDSzpoxblueStage8FirstSes= nanmean(allRats.DSzpoxblueMeanStage8FirstSes,3);
+allRats(1).grandMeanNSzpoxblueStage8FirstSes= nanmean(allRats.NSzpoxblueMeanStage8FirstSes,3);
+allRats(1).grandMeanDSzpoxpurpleStage8FirstSes= nanmean(allRats.DSzpoxpurpleMeanStage8FirstSes,3);
+allRats(1).grandMeanNSzpoxpurpleStage8FirstSes= nanmean(allRats.NSzpoxpurpleMeanStage8FirstSes,3);
+
+allRats(1).grandMeanDSzpoxblueExtinctionLastSes= nanmean(allRats.DSzpoxblueMeanExtinctionLastSes,3);
+allRats(1).grandMeanNSzpoxblueExtinctionLastSes= nanmean(allRats.NSzpoxblueMeanExtinctionLastSes,3);
+allRats(1).grandMeanDSzpoxpurpleExtinctionLastSes= nanmean(allRats.DSzpoxpurpleMeanExtinctionLastSes,3);
+allRats(1).grandMeanNSzpoxpurpleExtinctionLastSes= nanmean(allRats.NSzpoxpurpleMeanExtinctionLastSes,3);  
+
+
+% Now, 2d plots 
+figure(figureCount);
+figureCount= figureCount+1;
+
+sgtitle('Between subjects (n=5) avg response to FIRST PE after cue on transition days')
+
+subplot(2,7,1);
+title('DS stage 2 first day');
+hold on;
+plot(timeLock,allRats(1).grandMeanDSzpoxblueStage2FirstSes, 'b');
+plot(timeLock,allRats(1).grandMeanDSzpoxpurpleStage2FirstSes, 'm');
+
+subplot(2,7,2);
+title('DS stage 5 first day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzpoxblueStage5FirstSes,'b');
+plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage5FirstSes,'m');
+
+subplot(2,7,3);
+title('DS stage 5 last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzpoxblueStage5LastSes,'b');
+plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage5LastSes,'m');
+
+subplot(2,7,4);
+title('DS stage 7 first day (1s delay)');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzpoxblueStage7FirstSes,'b');
+plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage7FirstSes,'m');
+
+subplot(2,7,5);
+title('DS stage 7 last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzpoxblueStage7LastSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage7LastSes,'m');
+
+subplot(2,7,6);
+title('DS stage 8 first day (variable reward)');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzpoxblueStage8FirstSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage8FirstSes,'m');
+
+subplot(2,7,7);
+title('DS extinction last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzpoxblueExtinctionLastSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpoxpurpleExtinctionLastSes,'m');
+
+
+
+subplot(2,7,8);
+title('no NS on stage 2');
+hold on;
+
+subplot(2,7,9);
+title('NS stage 5 first day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzpoxblueStage5FirstSes,'b');
+plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage5FirstSes,'m');
+
+subplot(2,7,10);
+title('NS stage 5 last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzpoxblueStage5LastSes,'b');
+plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage5LastSes,'m');
+
+subplot(2,7,11);
+title('NS stage 7 first day (1s delay)');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzpoxblueStage7FirstSes,'b');
+plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage7FirstSes,'m');
+
+subplot(2,7,12);
+title('NS stage 7 last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzpoxblueStage7LastSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage7LastSes,'m');
+
+subplot(2,7,13);
+title('NS stage 8 first day (variable reward)');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzpoxblueStage8FirstSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage8FirstSes,'m');
+
+subplot(2,7,14);
+title('NS extinction last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzpoxblueExtinctionLastSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpoxpurpleExtinctionLastSes,'m');
+
+
+%equalize the axes and link them together for examination
+linkaxes;
+
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen
+
+
 
 
 %% ~~ Data vis- photometry & behavior ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -5583,7 +6163,7 @@ end %end subject loop
 
 %% Between subjects session avg by stage
 
-%TODO: photomoetry data is  more readable in (session, cue, subj)
+%TODO: all pohtometry data is  more readable in (session, cue, subj)
 %format, consider switching rest of code to this format
 subjIncluded= subjects(~ismember(subjects,'rat10')); %excluding VP-VTA-FP10
 
