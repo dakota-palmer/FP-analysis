@@ -29,6 +29,7 @@ subjData= rmfield(subjData,excludedSubjs);
 
 subjects= fieldnames(subjData); %get an updated list of included subjs
 
+subjIncluded= subjects;
 
 %% ~~~Photometry plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Within-subjects raw photometry plots - all in 1 figure
@@ -3930,6 +3931,7 @@ for subj= 1:numel(subjIncluded) %for each subject
       sesCountB= 1;
       sesCountC= 1;
       sesCountD= 1;
+      sesCountE= 1;
       
        for session = 1:numel(currentSubj) %for each training session this subject completed
             
@@ -3963,8 +3965,17 @@ for subj= 1:numel(subjIncluded) %for each subject
                 allRats(1).subjSessD(sesCountD,subj)=currentSubj(session).trainDay; 
                %iterate the counter for sessions that meet this condition
                 sesCountD= sesCountD+1;
-           end %end conditional D
+           end %end conditional D        
+        
+                %cond E
+           if currentSubj(session).trainStage ==9 %condE = Extinction (stage 9)
+               %save training day label for this data 
+                allRats(1).subjSessE(sesCountE,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountE= sesCountE+1;
+           end %end conditional E
         end %end session loop
+        
 
      %replace empty 0s with nans AND identify individual sessions for
      %plotting (instead of plotting them all)
@@ -4044,12 +4055,24 @@ for subj= 1:numel(subjIncluded) %for each subject
            
            if ses==1 %retain the first and last stage 8 days (last is extinction for vp-vta-fpround2)
                allRats(1).stage8FirstSes(1,subj)= allRats(1).subjSessD(ses,subj);
-               allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessD(:,subj));
                
               allRats(1).DSzpoxblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDSpox.DSzpoxblueMean';
               allRats(1).NSzpoxblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNSpox.NSzpoxblueMean';
               allRats(1).DSzpoxpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDSpox.DSzpoxpurpleMean';
               allRats(1).NSzpoxpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNSpox.NSzpoxpurpleMean';
+               
+           end
+         end
+         
+               %condE 
+         for ses = 1:size(allRats(1).subjSessE,1) %each row is a session
+           if allRats(1).subjSessE(ses,subj)==0 %if there's no data for this date
+              %make train day nan`
+              allRats(1).subjSessE(ses,subj)=nan;
+           end
+           
+           if ses==1 %retain the last extinction day
+               allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessE(:,subj));
               
               allRats(1).DSzpoxblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDSpox.DSzpoxblueMean';
               allRats(1).NSzpoxblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periNSpox.NSzpoxblueMean';
@@ -4058,16 +4081,17 @@ for subj= 1:numel(subjIncluded) %for each subject
                
            end
          end
+         
 end %end subj loop
          
 
 
- % now get mean of all rats for these transition sessions (each column is a training day , each 3d page is a subject)
-
+ % now get mean & SEM of all rats for these transition sessions (each column is a training day , each 3d page is a subject)
+       
     %stage 2
  allRats.grandMeanDSzpoxblueStage2FirstSes=nanmean(allRats.DSzpoxblueMeanStage2FirstSes,3);
  allRats.grandMeanDSzpoxpurpleStage2FirstSes=nanmean(allRats.DSzpoxpurpleMeanStage2FirstSes,3);
-
+ 
     %stage 5
 allRats(1).grandMeanDSzpoxblueStage5FirstSes= nanmean(allRats.DSzpoxblueMeanStage5FirstSes,3);
 allRats(1).grandMeanNSzpoxblueStage5FirstSes= nanmean(allRats.NSzpoxblueMeanStage5FirstSes,3);
@@ -4102,6 +4126,13 @@ allRats(1).grandMeanDSzpoxpurpleExtinctionLastSes= nanmean(allRats.DSzpoxpurpleM
 allRats(1).grandMeanNSzpoxpurpleExtinctionLastSes= nanmean(allRats.NSzpoxpurpleMeanExtinctionLastSes,3);  
 
 
+ %also, get standard error (SEM)
+    %should this be based on std of each animals avg from the between subj
+    %avg(avg of all avgs)? then divided by the number of subjects?
+allRats(1).grandStdDSzpoxblueStage2FirstSes= std(allRats.DSzpoxblueMeanStage2FirstSes,0,3);
+allRats(1).grandSEMDSzpoxblueStage2FirstSes= allRats(1).grandStdDSzpoxblueStage2FirstSes/sqrt(numel(subjIncluded));
+    
+
 % Now, 2d plots 
 figure(figureCount);
 figureCount= figureCount+1;
@@ -4113,6 +4144,9 @@ title('DS stage 2 first day');
 hold on;
 plot(timeLock,allRats(1).grandMeanDSzpoxblueStage2FirstSes, 'b');
 plot(timeLock,allRats(1).grandMeanDSzpoxpurpleStage2FirstSes, 'm');
+
+plot(timeLock, allRats(1).grandMeanDSzpoxblueStage2FirstSes+allRats(1).grandSEMDSzpoxblueStage2FirstSes, 'k--');
+plot(timeLock, allRats(1).grandMeanDSzpoxblueStage2FirstSes-allRats(1).grandSEMDSzpoxblueStage2FirstSes, 'k--');
 
 subplot(2,7,2);
 title('DS stage 5 first day');
@@ -6165,7 +6199,7 @@ end %end subject loop
 
 %TODO: all pohtometry data is  more readable in (session, cue, subj)
 %format, consider switching rest of code to this format
-subjIncluded= subjects(~ismember(subjects,'rat10')); %excluding VP-VTA-FP10
+% subjIncluded= subjects(~ismember(subjects,'rat10')); %excluding VP-VTA-FP10
 
 for subj= 1:numel(subjIncluded) %for each subject
        currentSubj= subjDataAnalyzed.(subjIncluded{subj}); %use this for easy indexing into the current subject within the struct
