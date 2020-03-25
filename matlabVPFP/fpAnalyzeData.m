@@ -3977,6 +3977,46 @@ for subj= 1:numel(subjIncluded) %for each subject
         end %end session loop
         
 
+     %Translate the training days saved above into an index based on the
+     %file order (critical step- if a subject is missing a file then the
+     %training day can't be used as an index bc it will pull incorrect
+     %data)
+     
+        for transitionSession= 1:size(allRats.subjSessA,1)
+             if allRats(1).subjSessA(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessA(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessA(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessA(transitionSession,subj));
+             end
+         end
+     
+        for transitionSession= 1:size(allRats.subjSessB,1)
+             if allRats(1).subjSessB(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessB(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessB(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessB(transitionSession,subj));
+             end
+         end
+     
+        for transitionSession= 1:size(allRats.subjSessC,1)
+             if allRats(1).subjSessC(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessC(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessC(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessC(transitionSession,subj));
+             end
+         end
+     
+        for transitionSession= 1:size(allRats.subjSessD,1)
+             if allRats(1).subjSessD(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessD(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessD(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessD(transitionSession,subj));
+             end
+         end
+     
+         for transitionSession= 1:size(allRats.subjSessE,1)
+             if allRats(1).subjSessE(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessE(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessE(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessE(transitionSession,subj));
+             end
+         end
+
      %replace empty 0s with nans AND identify individual sessions for
      %plotting (instead of plotting them all)
         %the above code filled in blank training dates with 0 for photometry data (e.g. if 1 rat 
@@ -3984,12 +4024,9 @@ for subj= 1:numel(subjIncluded) %for each subject
         %filled with 0), let's make these = nan instead 
         
             %condA
+        allRats(1).subjSessA(allRats(1).subjSessA==0)=nan; %if there's no data for this date just make it nan
+
         for ses = 1:size(allRats(1).subjSessA,1) %each row is a session
-           if allRats(1).subjSessA(ses,subj)==0 %if there's no data for this date
-              %make train day nan
-              allRats(1).subjSessA(ses,subj)=nan;
-           end
-           
            if ses==1 %retain only the first stage 2 day
                allRats(1).stage2FirstSes(1,subj)= allRats(1).subjSessA(ses,subj); %get corresponding session, will be used to extract photometry data
                
@@ -3999,12 +4036,9 @@ for subj= 1:numel(subjIncluded) %for each subject
         end
         
             %condB
-         for ses = 1:size(allRats(1).subjSessB,1) %each row is a session
-           if allRats(1).subjSessB(ses,subj)==0 %if there's no data for this date
-              %make train day nan
-              allRats(1).subjSessB(ses,subj)=nan;
-           end
-           
+         allRats(1).subjSessB(allRats(1).subjSessB==0)=nan; %if there's no data for this date just make it nan
+         
+         for ses = 1:size(allRats(1).subjSessB,1) %each row is a session           
            if ses==1 %retain the first and last stage 5 day
                allRats(1).stage5FirstSes(1,subj)= allRats(1).subjSessB(ses,subj);
                allRats(1).stage5LastSes(1,subj)= max(allRats(1).subjSessB(:,subj));
@@ -4024,12 +4058,8 @@ for subj= 1:numel(subjIncluded) %for each subject
          end
          
            %condC
-         for ses = 1:size(allRats(1).subjSessC,1) %each row is a session
-           if allRats(1).subjSessC(ses,subj)==0 %if there's no data for this date
-              %make train day nan
-              allRats(1).subjSessC(ses,subj)=nan;
-           end
-           
+         allRats(1).subjSessC(allRats(1).subjSessC==0)=nan; %if there's no data for this date just make it nan
+         for ses = 1:size(allRats(1).subjSessC,1) %each row is a session\     
            if ses==1 %retain the first and last stage 7 day
               allRats(1).stage7FirstSes(1,subj)= allRats(1).subjSessC(ses,subj);
               allRats(1).stage7LastSes(1,subj)=max(allRats(1).subjSessC(:,subj));
@@ -4047,12 +4077,8 @@ for subj= 1:numel(subjIncluded) %for each subject
            
          end
            %condD 
-         for ses = 1:size(allRats(1).subjSessD,1) %each row is a session
-           if allRats(1).subjSessD(ses,subj)==0 %if there's no data for this date
-              %make train day nan`
-              allRats(1).subjSessD(ses,subj)=nan;
-           end
-           
+        allRats(1).subjSessD(allRats(1).subjSessD==0)=nan; %if there's no data for this date just make it nan
+        for ses = 1:size(allRats(1).subjSessD,1) %each row is a session           
            if ses==1 %retain the first and last stage 8 days (last is extinction for vp-vta-fpround2)
                allRats(1).stage8FirstSes(1,subj)= allRats(1).subjSessD(ses,subj);
                
@@ -4065,15 +4091,11 @@ for subj= 1:numel(subjIncluded) %for each subject
          end
          
                %condE 
+         allRats(1).subjSessE(allRats(1).subjSessE==0)=nan; %if there's no data for this date just make it nan
          for ses = 1:size(allRats(1).subjSessE,1) %each row is a session
-           if allRats(1).subjSessE(ses,subj)==0 %if there's no data for this date
-              %make train day nan`
-              allRats(1).subjSessE(ses,subj)=nan;
-           end
-           
            if ses==1 %retain the last extinction day
-               allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessE(:,subj));
-              
+              allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessE(:,subj)); %critical step- get the right indices in case files are missing
+               
               allRats(1).DSzpoxblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDSpox.DSzpoxblueMean';
               allRats(1).NSzpoxblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periNSpox.NSzpoxblueMean';
               allRats(1).DSzpoxpurpleMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDSpox.DSzpoxpurpleMean';
