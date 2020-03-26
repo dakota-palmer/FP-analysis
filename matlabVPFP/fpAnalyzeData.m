@@ -569,7 +569,7 @@ end %end subject loop
 %collect all licks between the current cue onset and the next cue's onset
 
 %Parameters
-preCueTime= 5; %t in seconds to examine before cue
+preCueTime= 10; %t in seconds to examine before cue
 postCueTime= 10; %t in seconds to examine after cue
 
 preCueFrames= preCueTime*fs;
@@ -655,7 +655,10 @@ for subj= 1:numel(subjects) %for each subject
           end %end cue too close to end conditional
         end %end cue loop
                
-        subjDataAnalyzed.(subjects{subj})(session).behavior= currentSubj(session).behavior; %save the results
+            subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS= currentSubj(session).behavior.poxDS;
+            subjDataAnalyzed.(subjects{subj})(session).behavior.outDS= currentSubj(session).behavior.outDS;
+            subjDataAnalyzed.(subjects{subj})(session).behavior.loxDS= currentSubj(session).behavior.loxDS;
+            subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel= currentSubj(session).behavior.loxDSrel;
 
    end %end session loop
      
@@ -1510,7 +1513,7 @@ end
     allDates(allDates==0) = [];
     
     %retain only unique dates 
-%     allDates= unique(allDates); 
+    allDates= unique(allDates); 
 
 %% HEAT PLOT OF AVG RESPONSE TO CUE (by session)
 
@@ -1530,7 +1533,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     emptyDates= [];
     
     timeLock= [-preCueFrames:postCueFrames]/fs;
-    
+     
     %First find out which dates this subj has data for
     %get all dates for this subj
     for session= 1:numel(currentSubj)
@@ -4885,6 +4888,433 @@ linkaxes;
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen
 
 
+% Trying to overlay mean cue onset/PE and lick
+for subj = 1:numel(subjIncluded)
+    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj});
+    
+    %keep count of valid sessions for easy indexing of last day mean PElatency
+    sesCountA= 0;
+    sesCountB= 0;
+    sesCountC= 0;
+    sesCountD= 0;
+    sesCountE= 0;
+    
+        %stage2 (condA)
+    for transitionSession= 1:size(allRats(1).subjSessA,1)
+        session= allRats(1).subjSessA(transitionSession,subj);
+        if ~isnan(session)
+            allRats(1).meanDSPElatencyStage2FirstDay(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
+
+            %for licks, want to get an average of the 1st lick and the last
+            %after the cue (TODO: this is just lick timestamps, not checking for bout
+            %criteria yet)
+            firstLox= []; %reset between sessions/subjs to prevent carryover of values
+            lastLox= [];
+            for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1); %get the first lick
+                    firstLox(firstLox==0)= nan; %replace empty 0s with NaN
+                    allRats(1).meanFirstloxDSstage2(transitionSession,subj)= nanmean(firstLox);
+
+                    lastLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(end); %get last lox
+                    lastLox(lastLox==0)= nan; %replace empty 0s with NaN
+                    allRats(1).meanLastloxDSstage2FirstDay(transitionSession,subj)= nanmean(lastLox);
+                end
+            end
+            sesCountA= sesCountA+1;
+        end
+    end
+        allRats(1).meanFirstloxDSstage2FirstDay= allRats(1).meanFirstloxDSstage2(1,subj);
+    
+       %stage5 (condB)
+    for transitionSession= 1:size(allRats(1).subjSessB,1)
+        session= allRats(1).subjSessB(transitionSession,subj);
+        if ~isnan(session) %only run if the session is valid
+            allRats(1).meanDSPElatencyStage5(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
+            allRats(1).meanNSPElatencyStage5(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
+            
+            %for licks, want to get an average of the 1st lick and the last
+            %after the cue (TODO: this is just lick timestamps, not checking for bout
+            %criteria yet)
+            firstLox= []; %reset between sessions/subjs to prevent carryover of values
+            lastLox= [];
+            for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1); %get the first lick
+                    firstLox(firstLox==0)= nan; %replace empty 0s with NaN
+                    allRats(1).meanFirstloxDSstage5(transitionSession,subj)= nanmean(firstLox);
+
+                    lastLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(end); %get last lox
+                    lastLox(lastLox==0)= nan; %replace empty 0s with NaN
+                    allRats(1).meanLastloxDSstage5(transitionSession,subj)= nanmean(lastLox);
+                end
+            end
+
+            for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+               if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+                   firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
+                   allRats(1).meanFirstloxNSstage5(transitionSession,subj)= nanmean(firstLox);
+
+                   lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+                   lastLox(lastLox==0)=nan;
+                   allRats(1).meanLastloxNSstage5(transitionSession,subj)= nanmean(lastLox);
+               end
+            end
+
+%              for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+%                     firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1); %get the first lick
+%                     firstLox(firstLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanFirstloxDSstage5LastDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                     lastLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(end); %get last lox
+%                     lastLox(lastLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanLastloxDSstage5LastDay(transitionSession,subj)= nanmean(lastLox);
+%                 end
+%             end
+
+%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
+%                    allRats(1).meanFirstloxNSstage5LastDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+%                    lastLox(lastLox==0)=nan;
+%                    allRats(1).meanLastloxNSstage5LastDay(transitionSession,subj)= nanmean(lastLox);
+%                end
+            
+            
+            
+            if transitionSession==1
+                allRats(1).meanDSPElatencyStage5FirstDay(1,subj)= allRats(1).meanDSPElatencyStage5(1,subj);
+                allRats(1).meanNSPElatencyStage5FirstDay(1,subj)= allRats(1).meanNSPElatencyStage5(1,subj);
+            end
+            
+            
+             sesCountB= sesCountB+1; %only add to count if not nan
+        end
+    end
+        
+    
+    allRats(1).meanDSPElatencyStage5LastDay(1,subj)= allRats(1).meanDSPElatencyStage5(sesCountB,subj);
+    allRats(1).meanNSPElatencyStage5LastDay(1,subj)= allRats(1).meanNSPElatencyStage5(sesCountB,subj);
+    
+    allRats(1).meanFirstloxDSstage5FirstDay(1,subj)= allRats(1).meanFirstloxDSstage5(1,subj);
+    allRats(1).meanFirstloxDSstage5LastDay(1,subj)= allRats(1).meanFirstloxDSstage5(sesCountB,subj);
+    allRats(1).meanLastloxDSstage5FirstDay(1,subj)= allRats(1).meanLastloxDSstage5(1,subj);
+    allRats(1).meanLastloxDSstage5LastDay(1,subj)= allRats(1).meanLastloxDSstage5(sesCountB,subj);
+    
+    
+    allRats(1).meanFirstloxNSstage5FirstDay(1,subj)= allRats(1).meanFirstloxNSstage5(1,subj);
+    allRats(1).meanFirstloxNSstage5LastDay(1,subj)= allRats(1).meanFirstloxNSstage5(sesCountB,subj);
+    allRats(1).meanLastloxNSstage5FirstDay(1,subj)= allRats(1).meanLastloxNSstage5(1,subj);
+    allRats(1).meanLastloxNSstage5LastDay(1,subj)= allRats(1).meanLastloxNSstage5(sesCountB,subj);
+    
+    %end stage 5 (cond B)
+
+    
+%     
+%      %stage7 (cond C)
+%     for transitionSession= 1:size(allRats(1).subjSessC,1)
+%         session= allRats(1).subjSessC(transitionSession,subj);
+%         if ~isnan(session)
+%             allRats(1).meanDSPElatencyStage7FirstDay(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
+% 
+%             %for licks, want to get an average of the 1st lick and the last
+%             %after the cue (TODO: this is just lick timestamps, not checking for bout
+%             %criteria yet)
+%             firstLox= []; %reset between sessions/subjs to prevent carryover of values
+%             lastLox= [];
+%             for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+%                     firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1); %get the first lick
+%                     firstLox(firstLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanFirstloxDSstage7FirstDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                     lastLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(end); %get last lox
+%                     lastLox(lastLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanLastloxDSstage7FirstDay(transitionSession,subj)= nanmean(lastLox);
+%                 end
+%             end
+% 
+%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
+%                    allRats(1).meanFirstloxNSstage7FirstDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+%                    lastLox(lastLox==0)=nan;
+%                    allRats(1).meanLastloxNSstage7FirstDay(transitionSession,subj)= nanmean(lastLox);
+%                end
+%             end
+% 
+%              for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+%                     firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1); %get the first lick
+%                     firstLox(firstLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanFirstloxDSstage7lastDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                     lastLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(end); %get last lox
+%                     lastLox(lastLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanLastloxDSstage7lastDay(transitionSession,subj)= nanmean(lastLox);
+%                 end
+%             end
+% 
+%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
+%                    allRats(1).meanFirstloxNSstage7lastDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+%                    lastLox(lastLox==0)=nan;
+%                    allRats(1).meanLastloxNSstage7lastDay(transitionSession,subj)= nanmean(lastLox);
+%                end
+%             end  
+%         end
+%     end %end stage 7 (cond C)
+%     
+%      %stage 8 (cond D)
+%     for transitionSession= 1:size(allRats(1).subjSessD,1)
+%         session= allRats(1).subjSessD(transitionSession,subj);
+%         if ~isnan(session)
+%             allRats(1).meanDSPElatencyStage8FirstDay(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
+% 
+%             %for licks, want to get an average of the 1st lick and the last
+%             %after the cue (TODO: this is just lick timestamps, not checking for bout
+%             %criteria yet)
+%             firstLox= []; %reset between sessions/subjs to prevent carryover of values
+%             lastLox= [];
+%             for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+%                     firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1); %get the first lick
+%                     firstLox(firstLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanFirstloxDSstage8FirstDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                     lastLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(end); %get last lox
+%                     lastLox(lastLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanLastloxDSstage8FirstDay(transitionSession,subj)= nanmean(lastLox);
+%                 end
+%             end
+% 
+%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
+%                    allRats(1).meanFirstloxNSstage8FirstDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+%                    lastLox(lastLox==0)=nan;
+%                    allRats(1).meanLastloxNSstage8FirstDay(transitionSession,subj)= nanmean(lastLox);
+%                end
+%             end
+% 
+%              for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+%                     firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1); %get the first lick
+%                     firstLox(firstLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanFirstloxDSstage8lastDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                     lastLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(end); %get last lox
+%                     lastLox(lastLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanLastloxDSstage8lastDay(transitionSession,subj)= nanmean(lastLox);
+%                 end
+%             end
+% 
+%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
+%                    allRats(1).meanFirstloxNSstage8lastDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+%                    lastLox(lastLox==0)=nan;
+%                    allRats(1).meanLastloxNSstage8lastDay(transitionSession,subj)= nanmean(lastLox);
+%                end
+%             end  
+%         end
+%     end %end stage 8 (cond D)
+%     
+%      %stage12- extinction (condE)
+%     for transitionSession= 1:size(allRats(1).subjSessE,1)
+%         session= allRats(1).subjSessE(transitionSession,subj);
+%         if ~isnan(session)
+%             allRats(1).meanDSPElatencyExtinctionFirstDay(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
+% 
+%             %for licks, want to get an average of the 1st lick and the last
+%             %after the cue (TODO: this is just lick timestamps, not checking for bout
+%             %criteria yet)
+%             firstLox= []; %reset between sessions/subjs to prevent carryover of values
+%             lastLox= [];
+%             for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+%                     firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1); %get the first lick
+%                     firstLox(firstLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanFirstloxDSExtinctionFirstDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                     lastLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(end); %get last lox
+%                     lastLox(lastLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanLastloxDSExtinctionFirstDay(transitionSession,subj)= nanmean(lastLox);
+%                 end
+%             end
+% 
+%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
+%                    allRats(1).meanFirstloxNSExtinctionFirstDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+%                    lastLox(lastLox==0)=nan;
+%                    allRats(1).meanLastloxNSExtinctionFirstDay(transitionSession,subj)= nanmean(lastLox);
+%                end
+%             end
+% 
+%              for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+%                     firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1); %get the first lick
+%                     firstLox(firstLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanFirstloxDSExtinctionlastDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                     lastLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(end); %get last lox
+%                     lastLox(lastLox==0)= nan; %replace empty 0s with NaN
+%                     allRats(1).meanLastloxDSExtinctionlastDay(transitionSession,subj)= nanmean(lastLox);
+%                 end
+%             end
+% 
+%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
+%                    allRats(1).meanFirstloxNSExtinctionlastDay(transitionSession,subj)= nanmean(firstLox);
+% 
+%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+%                    lastLox(lastLox==0)=nan;
+%                    allRats(1).meanLastloxNSExtinctionlastDay(transitionSession,subj)= nanmean(lastLox);
+%                end
+%             end  
+%         end
+%     end %end stage 12 (cond E)
+%     
+    
+end %end subj loop
+
+%     %Delete empty 0s for easier indexing then isolate the 1st and last session
+%     %mean PE latencies
+%     for subj= 1:numel(subjIncluded)
+%      allRats(1).meanDSPElatencyStage5((allRats(1).meanDSPElatencyStage5==0)) = [];
+%      allRats(1).meanDSPElatencyStage5FirstDay(1,subj)= allRats(1).meanDSPElatencyStage5(1,subj);
+%      allRats(1).meanDSPElatencyStage5LastDay(1,subj)= allRats(1).meanDSPElatencyStage5(end,subj);
+%     end
+
+
+    %get a grand mean across all subjects for these events
+    %stage 2 
+allRats(1).grandMeanDSPElatencyStage2FirstDay= mean(allRats(1).meanDSPElatencyStage2FirstDay);
+allRats(1).grandMeanfirstLoxDSstage2FirstDay= mean(allRats(1).meanFirstloxDSstage2FirstDay);
+allRats(1).grandMeanlastLoxDSstage2FirstDay= mean(allRats(1).meanLastloxDSstage2FirstDay);
+    %stage 5
+allRats(1).grandMeanDSPElatencyStage5FirstDay= mean(allRats(1).meanDSPElatencyStage5FirstDay);
+allRats(1).grandMeanfirstLoxDSstage5FirstDay= mean(allRats(1).meanFirstloxDSstage5FirstDay);
+allRats(1).grandMeanlastLoxDSstage5FirstDay= mean(allRats(1).meanLastloxDSstage5FirstDay);
+
+allRats(1).grandMeanDSPElatencyStage5LastDay= mean(allRats(1).meanDSPElatencyStage5LastDay);
+allRats(1).grandMeanfirstLoxDSstage5LastDay= mean(allRats(1).meanFirstloxDSstage5LastDay);
+allRats(1).grandMeanlastLoxDSstage5LastDay= mean(allRats(1).meanLastloxDSstage5LastDay);
+
+allRats(1).grandMeanNSPElatencyStage5FirstDay= mean(allRats(1).meanNSPElatencyStage5FirstDay);
+allRats(1).grandMeanfirstLoxNSstage5FirstDay= mean(allRats(1).meanFirstloxNSstage5FirstDay);
+allRats(1).grandMeanlastLoxNSstage5FirstDay= mean(allRats(1).meanLastloxNSstage5FirstDay);
+
+allRats(1).grandMeanNSPElatencyStage5LastDay= mean(allRats(1).meanNSPElatencyStage5LastDay);
+allRats(1).grandMeanfirstLoxNSstage5LastDay= mean(allRats(1).meanFirstloxNSstage5LastDay);
+allRats(1).grandMeanlastLoxNSstage5LastDay= mean(allRats(1).meanLastloxNSstage5LastDay);
+%     %stage 7
+% allRats(1).grandMeanDSPElatencyStage7FirstDay= mean(allRats(1).meanDSPElatencyStage7FirstDay);
+% allRats(1).grandMeanfirstLoxDSstage7FirstDay= mean(allRats(1).meanFirstloxDSstage7FirstDay);
+% allRats(1).grandMeanlastLoxDSstage7FirstDay= mean(allRats(1).meanLastloxDSstage7FirstDay);
+% 
+% allRats(1).grandMeanDSPElatencyStage7lastDay= mean(allRats(1).meanDSPElatencyStage7lastDay);
+% allRats(1).grandMeanfirstLoxDSstage7lastDay= mean(allRats(1).meanFirstloxDSstage7lastDay);
+% allRats(1).grandMeanlastLoxDSstage7lastDay= mean(allRats(1).meanLastloxDSstage7lastDay);
+% 
+% allRats(1).grandMeanNSPElatencyStage7FirstDay= mean(allRats(1).meanNSPElatencyStage7FirstDay);
+% allRats(1).grandMeanfirstLoxNSstage7FirstDay= mean(allRats(1).meanFirstloxNSstage7FirstDay);
+% allRats(1).grandMeanlastLoxNSstage7FirstDay= mean(allRats(1).meanLastloxNSstage7FirstDay);
+% 
+% allRats(1).grandMeanNSPElatencyStage7lastDay= mean(allRats(1).meanNSPElatencyStage7lastDay);
+% allRats(1).grandMeanfirstLoxNSstage7lastDay= mean(allRats(1).meanFirstloxNSstage7lastDay);
+% allRats(1).grandMeanlastLoxNSstage7lastDay= mean(allRats(1).meanLastloxNSstage7lastDay);
+%     %stage 8
+% allRats(1).grandMeanDSPElatencyStage8FirstDay= mean(allRats(1).meanDSPElatencyStage8FirstDay);
+% allRats(1).grandMeanfirstLoxDSstage8FirstDay= mean(allRats(1).meanFirstloxDSstage8FirstDay);
+% allRats(1).grandMeanlastLoxDSstage8FirstDay= mean(allRats(1).meanLastloxDSstage8FirstDay);
+% 
+% allRats(1).grandMeanDSPElatencyStage8lastDay= mean(allRats(1).meanDSPElatencyStage8lastDay);
+% allRats(1).grandMeanfirstLoxDSstage8lastDay= mean(allRats(1).meanFirstloxDSstage8lastDay);
+% allRats(1).grandMeanlastLoxDSstage8lastDay= mean(allRats(1).meanLastloxDSstage8lastDay);
+% 
+% allRats(1).grandMeanNSPElatencyStage8FirstDay= mean(allRats(1).meanNSPElatencyStage8FirstDay);
+% allRats(1).grandMeanfirstLoxNSstage8FirstDay= mean(allRats(1).meanFirstloxNSstage8FirstDay);
+% allRats(1).grandMeanlastLoxNSstage8FirstDay= mean(allRats(1).meanLastloxNSstage8FirstDay);
+% 
+% allRats(1).grandMeanNSPElatencyStage8lastDay= mean(allRats(1).meanNSPElatencyStage8lastDay);
+% allRats(1).grandMeanfirstLoxNSstage8lastDay= mean(allRats(1).meanFirstloxNSstage8lastDay);
+% allRats(1).grandMeanlastLoxNSstage8lastDay= mean(allRats(1).meanLastloxNSstage8lastDay);
+%     %stage 12 (extinction)
+% allRats(1).grandMeanDSPElatencyExtinctionFirstDay= mean(allRats(1).meanDSPElatencyExtinctionFirstDay);
+% allRats(1).grandMeanfirstLoxDSExtinctionFirstDay= mean(allRats(1).meanFirstloxDSExtinctionFirstDay);
+% allRats(1).grandMeanlastLoxDSExtinctionFirstDay= mean(allRats(1).meanLastloxDSExtinctionFirstDay);
+% 
+% allRats(1).grandMeanDSPElatencyExtinctionlastDay= mean(allRats(1).meanDSPElatencyExtinctionlastDay);
+% allRats(1).grandMeanfirstLoxDSExtinctionlastDay= mean(allRats(1).meanFirstloxDSExtinctionlastDay);
+% allRats(1).grandMeanlastLoxDSExtinctionlastDay= mean(allRats(1).meanLastloxDSExtinctionlastDay);
+% 
+% allRats(1).grandMeanNSPElatencyExtinctionFirstDay= mean(allRats(1).meanNSPElatencyExtinctionFirstDay);
+% allRats(1).grandMeanfirstLoxNSExtinctionFirstDay= mean(allRats(1).meanFirstloxNSExtinctionFirstDay);
+% allRats(1).grandMeanlastLoxNSExtinctionFirstDay= mean(allRats(1).meanLastloxNSExtinctionFirstDay);
+% 
+% allRats(1).grandMeanNSPElatencyExtinctionlastDay= mean(allRats(1).meanNSPElatencyExtinctionlastDay);
+% allRats(1).grandMeanfirstLoxNSExtinctionlastDay= mean(allRats(1).meanFirstloxNSExtinctionlastDay);
+% allRats(1).grandMeanlastLoxNSExtinctionlastDay= mean(allRats(1).meanLastloxNSExtinctionlastDay);
+
+subplot(2,9,1)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanDSPElatencyStage2FirstDay,-allRats(1).grandMeanDSPElatencyStage2FirstDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxDSstage2FirstDay,allRats(1).grandMeanfirstLoxDSstage2FirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxDSstage2FirstDay,allRats(1).grandMeanlastLoxDSstage2FirstDay], ylim, 'g--');%plot vertical line for last lick
+
+hLegend= legend('465nm', '405nm', '465nm SEM','405nm SEM', 'port entry', 'mean cue Onset', 'mean first & last lick'); %add rats to legend, location outside of plot
+
+legendPosition = [.94 0.7 0.03 0.1];
+set(hLegend,'Position', legendPosition,'Units', 'normalized');
+
+subplot(2,9,2)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanDSPElatencyStage5FirstDay,-allRats(1).grandMeanDSPElatencyStage5FirstDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxDSstage5FirstDay,allRats(1).grandMeanfirstLoxDSstage5FirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxDSstage5FirstDay,allRats(1).grandMeanlastLoxDSstage5FirstDay], ylim, 'g--');%plot vertical line for last lick
+
+subplot(2,9,3)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanDSPElatencyStage5LastDay,-allRats(1).grandMeanDSPElatencyStage5LastDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxDSstage5LastDay,allRats(1).grandMeanfirstLoxDSstage5LastDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxDSstage5LastDay,allRats(1).grandMeanlastLoxDSstage5LastDay], ylim, 'g--');%plot vertical line for last lick
+
+
+%% Trying some stat with visualization
+effectStart= -1; % Define a time window of interest after cue onset within which we will look for an effect (this is t in seconds relative to cue onset)
+effectEnd= 0;
+
+cueOnsetTime= periCueFrames-postCueFrames;
+
+effectWindow= effectStart*fs:effectEnd*fs; %Indices of the time window for the effect
 
 
 %% ~~ Data vis- photometry & behavior ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
