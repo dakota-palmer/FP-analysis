@@ -17,9 +17,9 @@ profile on; %For optimization/trackin g performance of the code- this starts the
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-metaDataAddress = 'Z:\Dakota\Photometry\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
+metaDataAddress = 'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
 
-nexAddress =  'Z:\Dakota\Photometry\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2'; % nex file location 
+nexAddress =  'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 %note: assembly of this nex file list is case-sensitive (I had a minor issue
 %where files with subjects in caps were being loaded before uncapitalized

@@ -3639,7 +3639,7 @@ allRats.subjTrialNS=[];
 %(e.g. first day of training, first day with NS, last day of stage 5
 
 for subj= 1:numel(subjIncluded) %for each subject
-       currentSubj= subjDataAnalyzed.(subjIncluded{subj}); %use this for easy indexing into the current subject within the struct
+     currentSubj= subjDataAnalyzed.(subjIncluded{subj}); %use this for easy indexing into the current subject within the struct
 
       %First, need to identify sessions that meet these conditions
        
@@ -3648,6 +3648,7 @@ for subj= 1:numel(subjIncluded) %for each subject
       sesCountB= 1;
       sesCountC= 1;
       sesCountD= 1;
+      sesCountE= 1;
       
        for session = 1:numel(currentSubj) %for each training session this subject completed
             
@@ -3676,13 +3677,62 @@ for subj= 1:numel(subjIncluded) %for each subject
            end %end conditional C
            
                 %cond D
-           if currentSubj(session).trainStage ==8 %condD = stage 8 sessions (any variable reward, should be refined by changing stage to reflect reward ID)
+           if currentSubj(session).trainStage ==8 %condD = stage 8 sessions (variable 10%, 5%, 20% sucrose)
                %save training day label for this data 
                 allRats(1).subjSessD(sesCountD,subj)=currentSubj(session).trainDay; 
                %iterate the counter for sessions that meet this condition
                 sesCountD= sesCountD+1;
-           end %end conditional D
+           end %end conditional D        
+        
+                %cond E
+           if currentSubj(session).trainStage ==12 %condE = Extinction (stage 12)
+               %save training day label for this data 
+                allRats(1).subjSessE(sesCountE,subj)=currentSubj(session).trainDay; 
+               %iterate the counter for sessions that meet this condition
+                sesCountE= sesCountE+1;
+           end %end conditional E
         end %end session loop
+        
+
+     %Translate the training days saved above into an index based on the
+     %file order (critical step- if a subject is missing a file then the
+     %training day can't be used as an index bc it will pull incorrect
+     %data)
+     
+        for transitionSession= 1:size(allRats.subjSessA,1)
+             if allRats(1).subjSessA(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessA(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessA(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessA(transitionSession,subj));
+             end
+         end
+     
+        for transitionSession= 1:size(allRats.subjSessB,1)
+             if allRats(1).subjSessB(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessB(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessB(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessB(transitionSession,subj));
+             end
+         end
+     
+        for transitionSession= 1:size(allRats.subjSessC,1)
+             if allRats(1).subjSessC(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessC(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessC(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessC(transitionSession,subj));
+             end
+         end
+     
+        for transitionSession= 1:size(allRats.subjSessD,1)
+             if allRats(1).subjSessD(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessD(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessD(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessD(transitionSession,subj));
+             end
+         end
+     
+         for transitionSession= 1:size(allRats.subjSessE,1)
+             if allRats(1).subjSessE(transitionSession,subj) ~= 0 && ~isnan(allRats(1).subjSessE(transitionSession,subj))
+                 %search the trainDay field by vectorizing it [] and get its index using find() 
+                 allRats(1).subjSessE(transitionSession,subj)= find([currentSubj.trainDay]==allRats(1).subjSessE(transitionSession,subj));
+             end
+         end
 
      %replace empty 0s with nans AND identify individual sessions for
      %plotting (instead of plotting them all)
@@ -3691,12 +3741,9 @@ for subj= 1:numel(subjIncluded) %for each subject
         %filled with 0), let's make these = nan instead 
         
             %condA
+        allRats(1).subjSessA(allRats(1).subjSessA==0)=nan; %if there's no data for this date just make it nan
+
         for ses = 1:size(allRats(1).subjSessA,1) %each row is a session
-           if allRats(1).subjSessA(ses,subj)==0 %if there's no data for this date
-              %make train day nan
-              allRats(1).subjSessA(ses,subj)=nan;
-           end
-           
            if ses==1 %retain only the first stage 2 day
                allRats(1).stage2FirstSes(1,subj)= allRats(1).subjSessA(ses,subj); %get corresponding session, will be used to extract photometry data
                
@@ -3706,12 +3753,9 @@ for subj= 1:numel(subjIncluded) %for each subject
         end
         
             %condB
-         for ses = 1:size(allRats(1).subjSessB,1) %each row is a session
-           if allRats(1).subjSessB(ses,subj)==0 %if there's no data for this date
-              %make train day nan
-              allRats(1).subjSessB(ses,subj)=nan;
-           end
-           
+         allRats(1).subjSessB(allRats(1).subjSessB==0)=nan; %if there's no data for this date just make it nan
+         
+         for ses = 1:size(allRats(1).subjSessB,1) %each row is a session           
            if ses==1 %retain the first and last stage 5 day
                allRats(1).stage5FirstSes(1,subj)= allRats(1).subjSessB(ses,subj);
                allRats(1).stage5LastSes(1,subj)= max(allRats(1).subjSessB(:,subj));
@@ -3731,12 +3775,8 @@ for subj= 1:numel(subjIncluded) %for each subject
          end
          
            %condC
-         for ses = 1:size(allRats(1).subjSessC,1) %each row is a session
-           if allRats(1).subjSessC(ses,subj)==0 %if there's no data for this date
-              %make train day nan
-              allRats(1).subjSessC(ses,subj)=nan;
-           end
-           
+         allRats(1).subjSessC(allRats(1).subjSessC==0)=nan; %if there's no data for this date just make it nan
+         for ses = 1:size(allRats(1).subjSessC,1) %each row is a session\     
            if ses==1 %retain the first and last stage 7 day
               allRats(1).stage7FirstSes(1,subj)= allRats(1).subjSessC(ses,subj);
               allRats(1).stage7LastSes(1,subj)=max(allRats(1).subjSessC(:,subj));
@@ -3754,20 +3794,37 @@ for subj= 1:numel(subjIncluded) %for each subject
            
          end
            %condD 
-         for ses = 1:size(allRats(1).subjSessD,1) %each row is a session
-           if allRats(1).subjSessD(ses,subj)==0 %if there's no data for this date
-              %make train day nan`
-              allRats(1).subjSessD(ses,subj)=nan;
-           end
-           
+        allRats(1).subjSessD(allRats(1).subjSessD==0)=nan; %if there's no data for this date just make it nan
+        for ses = 1:size(allRats(1).subjSessD,1) %each row is a session           
            if ses==1 %retain the first and last stage 8 days (last is extinction for vp-vta-fpround2)
-               allRats(1).stage8FirstSes(1,subj)= allRats(1).subjSessD(ses,subj);
-               allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessD(:,subj));
-               
+              allRats(1).stage8FirstSes(1,subj)= allRats(1).subjSessD(ses,subj);
+              allRats(1).stage8LastSes(1,subj)= max(allRats(1).subjSessD(:,subj));
+              
               allRats(1).DSzblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDS.DSzblueMean';
               allRats(1).NSzblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNS.NSzblueMean';
               allRats(1).DSzpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDS.DSzpurpleMean';
               allRats(1).NSzpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNS.NSzpurpleMean';
+              
+              allRats(1).DSzblueMeanStage8LastSes(1,:,subj)= currentSubj(allRats(1).stage8LastSes(1,subj)).periDS.DSzblueMean';
+              allRats(1).NSzblueMeanStage8LastSes(1,:,subj)= currentSubj(allRats(1).stage8LastSes(1,subj)).periNS.NSzblueMean';
+              allRats(1).DSzpurpleMeanStage8LastSes(1,:,subj)= currentSubj(allRats(1).stage8LastSes(1,subj)).periDS.DSzpurpleMean';
+              allRats(1).NSzpurpleMeanStage8LastSes(1,:,subj)= currentSubj(allRats(1).stage8LastSes(1,subj)).periNS.NSzpurpleMean';
+               
+           end
+         end
+         
+               %condE 
+         allRats(1).subjSessE(allRats(1).subjSessE==0)=nan; %if there's no data for this date just make it nan
+         for ses = 1:size(allRats(1).subjSessE,1) %each row is a session
+           if ses==1 %retain the last extinction day
+              
+               allRats(1).extinctionFirstSes(1,subj)= allRats(1).subjSessE(ses,subj);
+               allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessE(:,subj));
+
+              allRats(1).DSzblueMeanExtinctionFirstSes(1,:,subj)= currentSubj(allRats(1).extinctionFirstSes(1,subj)).periDS.DSzblueMean';
+              allRats(1).NSzblueMeanExtinctionFirstSes(1,:,subj)= currentSubj(allRats(1).extinctionFirstSes(1,subj)).periNS.NSzblueMean';
+              allRats(1).DSzpurpleMeanExtinctionFirstSes(1,:,subj)= currentSubj(allRats(1).extinctionFirstSes(1,subj)).periDS.DSzpurpleMean';
+              allRats(1).NSzpurpleMeanExtinctionFirstSes(1,:,subj)= currentSubj(allRats(1).extinctionFirstSes(1,subj)).periNS.NSzpurpleMean';
               
               allRats(1).DSzblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDS.DSzblueMean';
               allRats(1).NSzblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periNS.NSzblueMean';
@@ -3776,16 +3833,17 @@ for subj= 1:numel(subjIncluded) %for each subject
                
            end
          end
+         
 end %end subj loop
          
 
 
- % now get mean of all rats for these transition sessions (each column is a training day , each 3d page is a subject)
-
+ % now get mean & SEM of all rats for these transition sessions (each column is a training day , each 3d page is a subject)
+       
     %stage 2
  allRats.grandMeanDSzblueStage2FirstSes=nanmean(allRats.DSzblueMeanStage2FirstSes,3);
  allRats.grandMeanDSzpurpleStage2FirstSes=nanmean(allRats.DSzpurpleMeanStage2FirstSes,3);
-
+ 
     %stage 5
 allRats(1).grandMeanDSzblueStage5FirstSes= nanmean(allRats.DSzblueMeanStage5FirstSes,3);
 allRats(1).grandMeanNSzblueStage5FirstSes= nanmean(allRats.NSzblueMeanStage5FirstSes,3);
@@ -3814,55 +3872,89 @@ allRats(1).grandMeanNSzblueStage8FirstSes= nanmean(allRats.NSzblueMeanStage8Firs
 allRats(1).grandMeanDSzpurpleStage8FirstSes= nanmean(allRats.DSzpurpleMeanStage8FirstSes,3);
 allRats(1).grandMeanNSzpurpleStage8FirstSes= nanmean(allRats.NSzpurpleMeanStage8FirstSes,3);
 
+allRats(1).grandMeanDSzblueStage8LastSes= nanmean(allRats.DSzblueMeanStage8LastSes,3);
+allRats(1).grandMeanNSzblueStage8LastSes= nanmean(allRats.NSzblueMeanStage8LastSes,3);
+allRats(1).grandMeanDSzpurpleStage8LastSes= nanmean(allRats.DSzpurpleMeanStage8LastSes,3);
+allRats(1).grandMeanNSzpurpleStage8LastSes= nanmean(allRats.NSzpurpleMeanStage8LastSes,3);    
+
+    %stage 12 (extinction)
+allRats(1).grandMeanDSzblueExtinctionFirstSes= nanmean(allRats.DSzblueMeanExtinctionFirstSes,3);
+allRats(1).grandMeanNSzblueExtinctionFirstSes= nanmean(allRats.NSzblueMeanExtinctionFirstSes,3);
+allRats(1).grandMeanDSzpurpleExtinctionFirstSes= nanmean(allRats.DSzpurpleMeanExtinctionFirstSes,3);
+allRats(1).grandMeanNSzpurpleExtinctionFirstSes= nanmean(allRats.NSzpurpleMeanExtinctionFirstSes,3);  
+    
 allRats(1).grandMeanDSzblueExtinctionLastSes= nanmean(allRats.DSzblueMeanExtinctionLastSes,3);
 allRats(1).grandMeanNSzblueExtinctionLastSes= nanmean(allRats.NSzblueMeanExtinctionLastSes,3);
 allRats(1).grandMeanDSzpurpleExtinctionLastSes= nanmean(allRats.DSzpurpleMeanExtinctionLastSes,3);
 allRats(1).grandMeanNSzpurpleExtinctionLastSes= nanmean(allRats.NSzpurpleMeanExtinctionLastSes,3);  
 
 
+ %also, get standard error (SEM)
+    %should this be based on std of each animals avg from the between subj
+    %avg(avg of all avgs)? then divided by the number of subjects?
+allRats(1).grandStdDSzblueStage2FirstSes= std(allRats.DSzblueMeanStage2FirstSes,0,3);
+allRats(1).grandSEMDSzblueStage2FirstSes= allRats(1).grandStdDSzblueStage2FirstSes/sqrt(numel(subjIncluded));
+    
+
 % Now, 2d plots 
 figure(figureCount);
 figureCount= figureCount+1;
 
-sgtitle('Between subjects (n=5) avg response to cue on transition days')
+sgtitle('Between subjects (n=5) avg response to CUE on transition days')
 
-subplot(2,7,1);
+subplot(2,9,1);
 title('DS stage 2 first day');
 hold on;
 plot(timeLock,allRats(1).grandMeanDSzblueStage2FirstSes, 'b');
 plot(timeLock,allRats(1).grandMeanDSzpurpleStage2FirstSes, 'm');
 
-subplot(2,7,2);
+plot(timeLock, allRats(1).grandMeanDSzblueStage2FirstSes+allRats(1).grandSEMDSzblueStage2FirstSes, 'k--');
+plot(timeLock, allRats(1).grandMeanDSzblueStage2FirstSes-allRats(1).grandSEMDSzblueStage2FirstSes, 'k--');
+
+subplot(2,9,2);
 title('DS stage 5 first day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzblueStage5FirstSes,'b');
 plot(timeLock, allRats(1).grandMeanDSzpurpleStage5FirstSes,'m');
 
-subplot(2,7,3);
+subplot(2,9,3);
 title('DS stage 5 last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzblueStage5LastSes,'b');
 plot(timeLock, allRats(1).grandMeanDSzpurpleStage5LastSes,'m');
 
-subplot(2,7,4);
+subplot(2,9,4);
 title('DS stage 7 first day (1s delay)');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzblueStage7FirstSes,'b');
 plot(timeLock, allRats(1).grandMeanDSzpurpleStage7FirstSes,'m');
 
-subplot(2,7,5);
+subplot(2,9,5);
 title('DS stage 7 last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzblueStage7LastSes, 'b');
 plot(timeLock, allRats(1).grandMeanDSzpurpleStage7LastSes,'m');
 
-subplot(2,7,6);
-title('DS stage 8 first day (variable reward)');
+subplot(2,9,6);
+title('DS 10%,5%,20% first day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzblueStage8FirstSes, 'b');
 plot(timeLock, allRats(1).grandMeanDSzpurpleStage8FirstSes,'m');
 
-subplot(2,7,7);
+subplot(2,9,7);
+title('DS 10%,5%,20% last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzblueStage8LastSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpurpleStage8LastSes,'m');
+
+
+subplot(2,9,8);
+title('DS extinction first day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzblueExtinctionFirstSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpurpleExtinctionFirstSes,'m');
+
+subplot(2,9,9);
 title('DS extinction last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzblueExtinctionLastSes, 'b');
@@ -3870,41 +3962,53 @@ plot(timeLock, allRats(1).grandMeanDSzpurpleExtinctionLastSes,'m');
 
 
 
-subplot(2,7,8);
+subplot(2,9,10);
 title('no NS on stage 2');
 hold on;
 
-subplot(2,7,9);
+subplot(2,9,11);
 title('NS stage 5 first day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzblueStage5FirstSes,'b');
 plot(timeLock, allRats(1).grandMeanNSzpurpleStage5FirstSes,'m');
 
-subplot(2,7,10);
+subplot(2,9,12);
 title('NS stage 5 last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzblueStage5LastSes,'b');
 plot(timeLock, allRats(1).grandMeanNSzpurpleStage5LastSes,'m');
 
-subplot(2,7,11);
+subplot(2,9,13);
 title('NS stage 7 first day (1s delay)');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzblueStage7FirstSes,'b');
 plot(timeLock, allRats(1).grandMeanNSzpurpleStage7FirstSes,'m');
 
-subplot(2,7,12);
+subplot(2,9,14);
 title('NS stage 7 last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzblueStage7LastSes, 'b');
 plot(timeLock, allRats(1).grandMeanNSzpurpleStage7LastSes,'m');
 
-subplot(2,7,13);
-title('NS stage 8 first day (variable reward)');
+subplot(2,9,15);
+title('NS 10%,5%,20% first day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzblueStage8FirstSes, 'b');
 plot(timeLock, allRats(1).grandMeanNSzpurpleStage8FirstSes,'m');
 
-subplot(2,7,14);
+subplot(2,9,16);
+title('NS 10%,5%,20% last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzblueStage8LastSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpurpleStage8LastSes,'m');
+
+subplot(2,9,17);
+title('NS extinction first day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzblueExtinctionFirstSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpurpleExtinctionFirstSes,'m');
+
+subplot(2,9,18);
 title('NS extinction last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzblueExtinctionLastSes, 'b');
@@ -3915,7 +4019,6 @@ plot(timeLock, allRats(1).grandMeanNSzpurpleExtinctionLastSes,'m');
 linkaxes;
 
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen
-
 
 %% Between subjects response to FIRST PE after cue on key transition sessions
 %avg response timelocked to FIRST PE on key transition sessions
@@ -3960,7 +4063,7 @@ for subj= 1:numel(subjIncluded) %for each subject
            end %end conditional C
            
                 %cond D
-           if currentSubj(session).trainStage ==8 %condD = stage 8 sessions (any variable reward, should be refined by changing stage to reflect reward ID)
+           if currentSubj(session).trainStage ==8 %condD = stage 8 sessions (variable 10%, 5%, 20% sucrose)
                %save training day label for this data 
                 allRats(1).subjSessD(sesCountD,subj)=currentSubj(session).trainDay; 
                %iterate the counter for sessions that meet this condition
@@ -3968,7 +4071,7 @@ for subj= 1:numel(subjIncluded) %for each subject
            end %end conditional D        
         
                 %cond E
-           if currentSubj(session).trainStage ==9 %condE = Extinction (stage 9)
+           if currentSubj(session).trainStage ==12 %condE = Extinction (stage 12)
                %save training day label for this data 
                 allRats(1).subjSessE(sesCountE,subj)=currentSubj(session).trainDay; 
                %iterate the counter for sessions that meet this condition
@@ -4080,12 +4183,18 @@ for subj= 1:numel(subjIncluded) %for each subject
         allRats(1).subjSessD(allRats(1).subjSessD==0)=nan; %if there's no data for this date just make it nan
         for ses = 1:size(allRats(1).subjSessD,1) %each row is a session           
            if ses==1 %retain the first and last stage 8 days (last is extinction for vp-vta-fpround2)
-               allRats(1).stage8FirstSes(1,subj)= allRats(1).subjSessD(ses,subj);
-               
+              allRats(1).stage8FirstSes(1,subj)= allRats(1).subjSessD(ses,subj);
+              allRats(1).stage8LastSes(1,subj)= max(allRats(1).subjSessD(:,subj));
+              
               allRats(1).DSzpoxblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDSpox.DSzpoxblueMean';
               allRats(1).NSzpoxblueMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNSpox.NSzpoxblueMean';
               allRats(1).DSzpoxpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periDSpox.DSzpoxpurpleMean';
               allRats(1).NSzpoxpurpleMeanStage8FirstSes(1,:,subj)= currentSubj(allRats(1).stage8FirstSes(1,subj)).periNSpox.NSzpoxpurpleMean';
+              
+              allRats(1).DSzpoxblueMeanStage8LastSes(1,:,subj)= currentSubj(allRats(1).stage8LastSes(1,subj)).periDSpox.DSzpoxblueMean';
+              allRats(1).NSzpoxblueMeanStage8LastSes(1,:,subj)= currentSubj(allRats(1).stage8LastSes(1,subj)).periNSpox.NSzpoxblueMean';
+              allRats(1).DSzpoxpurpleMeanStage8LastSes(1,:,subj)= currentSubj(allRats(1).stage8LastSes(1,subj)).periDSpox.DSzpoxpurpleMean';
+              allRats(1).NSzpoxpurpleMeanStage8LastSes(1,:,subj)= currentSubj(allRats(1).stage8LastSes(1,subj)).periNSpox.NSzpoxpurpleMean';
                
            end
          end
@@ -4094,8 +4203,15 @@ for subj= 1:numel(subjIncluded) %for each subject
          allRats(1).subjSessE(allRats(1).subjSessE==0)=nan; %if there's no data for this date just make it nan
          for ses = 1:size(allRats(1).subjSessE,1) %each row is a session
            if ses==1 %retain the last extinction day
-              allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessE(:,subj)); %critical step- get the right indices in case files are missing
-               
+              
+               allRats(1).extinctionFirstSes(1,subj)= allRats(1).subjSessE(ses,subj);
+               allRats(1).extinctionLastSes(1,subj)= max(allRats(1).subjSessE(:,subj));
+
+              allRats(1).DSzpoxblueMeanExtinctionFirstSes(1,:,subj)= currentSubj(allRats(1).extinctionFirstSes(1,subj)).periDSpox.DSzpoxblueMean';
+              allRats(1).NSzpoxblueMeanExtinctionFirstSes(1,:,subj)= currentSubj(allRats(1).extinctionFirstSes(1,subj)).periNSpox.NSzpoxblueMean';
+              allRats(1).DSzpoxpurpleMeanExtinctionFirstSes(1,:,subj)= currentSubj(allRats(1).extinctionFirstSes(1,subj)).periDSpox.DSzpoxpurpleMean';
+              allRats(1).NSzpoxpurpleMeanExtinctionFirstSes(1,:,subj)= currentSubj(allRats(1).extinctionFirstSes(1,subj)).periNSpox.NSzpoxpurpleMean';
+              
               allRats(1).DSzpoxblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDSpox.DSzpoxblueMean';
               allRats(1).NSzpoxblueMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periNSpox.NSzpoxblueMean';
               allRats(1).DSzpoxpurpleMeanExtinctionLastSes(1,:,subj)= currentSubj(allRats(1).extinctionLastSes(1,subj)).periDSpox.DSzpoxpurpleMean';
@@ -4142,18 +4258,116 @@ allRats(1).grandMeanNSzpoxblueStage8FirstSes= nanmean(allRats.NSzpoxblueMeanStag
 allRats(1).grandMeanDSzpoxpurpleStage8FirstSes= nanmean(allRats.DSzpoxpurpleMeanStage8FirstSes,3);
 allRats(1).grandMeanNSzpoxpurpleStage8FirstSes= nanmean(allRats.NSzpoxpurpleMeanStage8FirstSes,3);
 
+allRats(1).grandMeanDSzpoxblueStage8LastSes= nanmean(allRats.DSzpoxblueMeanStage8LastSes,3);
+allRats(1).grandMeanNSzpoxblueStage8LastSes= nanmean(allRats.NSzpoxblueMeanStage8LastSes,3);
+allRats(1).grandMeanDSzpoxpurpleStage8LastSes= nanmean(allRats.DSzpoxpurpleMeanStage8LastSes,3);
+allRats(1).grandMeanNSzpoxpurpleStage8LastSes= nanmean(allRats.NSzpoxpurpleMeanStage8LastSes,3);    
+
+    %stage 12 (extinction)
+allRats(1).grandMeanDSzpoxblueExtinctionFirstSes= nanmean(allRats.DSzpoxblueMeanExtinctionFirstSes,3);
+allRats(1).grandMeanNSzpoxblueExtinctionFirstSes= nanmean(allRats.NSzpoxblueMeanExtinctionFirstSes,3);
+allRats(1).grandMeanDSzpoxpurpleExtinctionFirstSes= nanmean(allRats.DSzpoxpurpleMeanExtinctionFirstSes,3);
+allRats(1).grandMeanNSzpoxpurpleExtinctionFirstSes= nanmean(allRats.NSzpoxpurpleMeanExtinctionFirstSes,3);  
+    
 allRats(1).grandMeanDSzpoxblueExtinctionLastSes= nanmean(allRats.DSzpoxblueMeanExtinctionLastSes,3);
 allRats(1).grandMeanNSzpoxblueExtinctionLastSes= nanmean(allRats.NSzpoxblueMeanExtinctionLastSes,3);
 allRats(1).grandMeanDSzpoxpurpleExtinctionLastSes= nanmean(allRats.DSzpoxpurpleMeanExtinctionLastSes,3);
 allRats(1).grandMeanNSzpoxpurpleExtinctionLastSes= nanmean(allRats.NSzpoxpurpleMeanExtinctionLastSes,3);  
 
 
- %also, get standard error (SEM)
-    %should this be based on std of each animals avg from the between subj
-    %avg(avg of all avgs)? then divided by the number of subjects?
-allRats(1).grandStdDSzpoxblueStage2FirstSes= std(allRats.DSzpoxblueMeanStage2FirstSes,0,3);
-allRats(1).grandSEMDSzpoxblueStage2FirstSes= allRats(1).grandStdDSzpoxblueStage2FirstSes/sqrt(numel(subjIncluded));
+ %Calculate standard error of the mean(SEM)
+  %treat each animal's avg as an obesrvation and calculate their std from
+  %the grand mean across all animals
+    %stage 2
+allRats(1).grandStdDSzpoxblueStage2FirstSes= nanstd(allRats.DSzpoxblueMeanStage2FirstSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMDSzpoxblueStage2FirstSes= allRats(1).grandStdDSzpoxblueStage2FirstSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdDSzpoxpurpleStage2FirstSes= nanstd(allRats.DSzpoxpurpleMeanStage2FirstSes,0,3); 
+allRats(1).grandSEMDSzpoxpurpleStage2FirstSes= allRats(1).grandStdDSzpoxpurpleStage2FirstSes/sqrt(numel(subjIncluded));
+
+   %stage 5
+allRats(1).grandStdDSzpoxblueStage5FirstSes= nanstd(allRats.DSzpoxblueMeanStage5FirstSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMDSzpoxblueStage5FirstSes= allRats(1).grandStdDSzpoxblueStage5FirstSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdDSzpoxpurpleStage5FirstSes= nanstd(allRats.DSzpoxpurpleMeanStage5FirstSes,0,3); 
+allRats(1).grandSEMDSzpoxpurpleStage5FirstSes= allRats(1).grandStdDSzpoxpurpleStage5FirstSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdDSzpoxblueStage5LastSes= nanstd(allRats.DSzpoxblueMeanStage5LastSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMDSzpoxblueStage5LastSes= allRats(1).grandStdDSzpoxblueStage5LastSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdDSzpoxpurpleStage5LastSes= nanstd(allRats.DSzpoxpurpleMeanStage5LastSes,0,3); 
+allRats(1).grandSEMDSzpoxpurpleStage5LastSes= allRats(1).grandStdDSzpoxpurpleStage5LastSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdNSzpoxblueStage5FirstSes= nanstd(allRats.NSzpoxblueMeanStage5FirstSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMNSzpoxblueStage5FirstSes= allRats(1).grandStdNSzpoxblueStage5FirstSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdNSzpoxpurpleStage5FirstSes= nanstd(allRats.NSzpoxpurpleMeanStage5FirstSes,0,3); 
+allRats(1).grandSEMNSzpoxpurpleStage5FirstSes= allRats(1).grandStdNSzpoxpurpleStage5FirstSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdNSzpoxblueStage5LastSes= nanstd(allRats.NSzpoxblueMeanStage5LastSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMNSzpoxblueStage5LastSes= allRats(1).grandStdNSzpoxblueStage5LastSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdNSzpoxpurpleStage5LastSes= nanstd(allRats.NSzpoxpurpleMeanStage5LastSes,0,3); 
+allRats(1).grandSEMNSzpoxpurpleStage5LastSes= allRats(1).grandStdNSzpoxpurpleStage5LastSes/sqrt(numel(subjIncluded));
+
+
+    %stage 7
+allRats(1).grandStdDSzpoxblueStage7FirstSes= nanstd(allRats.DSzpoxblueMeanStage7FirstSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMDSzpoxblueStage7FirstSes= allRats(1).grandStdDSzpoxblueStage7FirstSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdDSzpoxpurpleStage7FirstSes= nanstd(allRats.DSzpoxpurpleMeanStage7FirstSes,0,3); 
+allRats(1).grandSEMDSzpoxpurpleStage7FirstSes= allRats(1).grandStdDSzpoxpurpleStage7FirstSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdDSzpoxblueStage7LastSes= nanstd(allRats.DSzpoxblueMeanStage7LastSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMDSzpoxblueStage7LastSes= allRats(1).grandStdDSzpoxblueStage7LastSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdDSzpoxpurpleStage7LastSes= nanstd(allRats.DSzpoxpurpleMeanStage7LastSes,0,3); 
+allRats(1).grandSEMDSzpoxpurpleStage7LastSes= allRats(1).grandStdDSzpoxpurpleStage7LastSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdNSzpoxblueStage7FirstSes= nanstd(allRats.NSzpoxblueMeanStage7FirstSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMNSzpoxblueStage7FirstSes= allRats(1).grandStdNSzpoxblueStage7FirstSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdNSzpoxpurpleStage7FirstSes= nanstd(allRats.NSzpoxpurpleMeanStage7FirstSes,0,3); 
+allRats(1).grandSEMNSzpoxpurpleStage7FirstSes= allRats(1).grandStdNSzpoxpurpleStage7FirstSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdNSzpoxblueStage7LastSes= nanstd(allRats.NSzpoxblueMeanStage7LastSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMNSzpoxblueStage7LastSes= allRats(1).grandStdNSzpoxblueStage7LastSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdNSzpoxpurpleStage7LastSes= nanstd(allRats.NSzpoxpurpleMeanStage7LastSes,0,3); 
+allRats(1).grandSEMNSzpoxpurpleStage7LastSes= allRats(1).grandStdNSzpoxpurpleStage7LastSes/sqrt(numel(subjIncluded));
     
+    %stage 8
+allRats(1).grandStdDSzpoxblueStage8FirstSes= nanstd(allRats.DSzpoxblueMeanStage8FirstSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMDSzpoxblueStage8FirstSes= allRats(1).grandStdDSzpoxblueStage8FirstSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdDSzpoxpurpleStage8FirstSes= nanstd(allRats.DSzpoxpurpleMeanStage8FirstSes,0,3); 
+allRats(1).grandSEMDSzpoxpurpleStage8FirstSes= allRats(1).grandStdDSzpoxpurpleStage8FirstSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdDSzpoxblueStage8LastSes= nanstd(allRats.DSzpoxblueMeanStage8LastSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMDSzpoxblueStage8LastSes= allRats(1).grandStdDSzpoxblueStage8LastSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdDSzpoxpurpleStage8LastSes= nanstd(allRats.DSzpoxpurpleMeanStage8LastSes,0,3); 
+allRats(1).grandSEMDSzpoxpurpleStage8LastSes= allRats(1).grandStdDSzpoxpurpleStage8LastSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdNSzpoxblueStage8FirstSes= nanstd(allRats.NSzpoxblueMeanStage8FirstSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMNSzpoxblueStage8FirstSes= allRats(1).grandStdNSzpoxblueStage8FirstSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdNSzpoxpurpleStage8FirstSes= nanstd(allRats.NSzpoxpurpleMeanStage8FirstSes,0,3); 
+allRats(1).grandSEMNSzpoxpurpleStage8FirstSes= allRats(1).grandStdNSzpoxpurpleStage8FirstSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdNSzpoxblueStage8LastSes= nanstd(allRats.NSzpoxblueMeanStage8LastSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMNSzpoxblueStage8LastSes= allRats(1).grandStdNSzpoxblueStage8LastSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdNSzpoxpurpleStage8LastSes= nanstd(allRats.NSzpoxpurpleMeanStage8LastSes,0,3); 
+allRats(1).grandSEMNSzpoxpurpleStage8LastSes= allRats(1).grandStdNSzpoxpurpleStage8LastSes/sqrt(numel(subjIncluded));
+
+    %stage 12 (extinction)
+allRats(1).grandStdDSzpoxblueExtinctionFirstSes= nanstd(allRats.DSzpoxblueMeanExtinctionFirstSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMDSzpoxblueExtinctionFirstSes= allRats(1).grandStdDSzpoxblueExtinctionFirstSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdDSzpoxpurpleExtinctionFirstSes= nanstd(allRats.DSzpoxpurpleMeanExtinctionFirstSes,0,3); 
+allRats(1).grandSEMDSzpoxpurpleExtinctionFirstSes= allRats(1).grandStdDSzpoxpurpleExtinctionFirstSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdDSzpoxblueExtinctionLastSes= nanstd(allRats.DSzpoxblueMeanExtinctionLastSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMDSzpoxblueExtinctionLastSes= allRats(1).grandStdDSzpoxblueExtinctionLastSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdDSzpoxpurpleExtinctionLastSes= nanstd(allRats.DSzpoxpurpleMeanExtinctionLastSes,0,3); 
+allRats(1).grandSEMDSzpoxpurpleExtinctionLastSes= allRats(1).grandStdDSzpoxpurpleExtinctionLastSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdNSzpoxblueExtinctionFirstSes= nanstd(allRats.NSzpoxblueMeanExtinctionFirstSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMNSzpoxblueExtinctionFirstSes= allRats(1).grandStdNSzpoxblueExtinctionFirstSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdNSzpoxpurpleExtinctionFirstSes= nanstd(allRats.NSzpoxpurpleMeanExtinctionFirstSes,0,3); 
+allRats(1).grandSEMNSzpoxpurpleExtinctionFirstSes= allRats(1).grandStdNSzpoxpurpleExtinctionFirstSes/sqrt(numel(subjIncluded));
+
+allRats(1).grandStdNSzpoxblueExtinctionLastSes= nanstd(allRats.NSzpoxblueMeanExtinctionLastSes,0,3); %first get the std for each timepoint
+allRats(1).grandSEMNSzpoxblueExtinctionLastSes= allRats(1).grandStdNSzpoxblueExtinctionLastSes/sqrt(numel(subjIncluded)); %now calculate SEM for each timepoint
+allRats(1).grandStdNSzpoxpurpleExtinctionLastSes= nanstd(allRats.NSzpoxpurpleMeanExtinctionLastSes,0,3); 
+allRats(1).grandSEMNSzpoxpurpleExtinctionLastSes= allRats(1).grandStdNSzpoxpurpleExtinctionLastSes/sqrt(numel(subjIncluded));
 
 % Now, 2d plots 
 figure(figureCount);
@@ -4161,93 +4375,269 @@ figureCount= figureCount+1;
 
 sgtitle('Between subjects (n=5) avg response to FIRST PE after cue on transition days')
 
-subplot(2,7,1);
+subplot(2,9,1);
 title('DS stage 2 first day');
 hold on;
 plot(timeLock,allRats(1).grandMeanDSzpoxblueStage2FirstSes, 'b');
 plot(timeLock,allRats(1).grandMeanDSzpoxpurpleStage2FirstSes, 'm');
 
-plot(timeLock, allRats(1).grandMeanDSzpoxblueStage2FirstSes+allRats(1).grandSEMDSzpoxblueStage2FirstSes, 'k--');
-plot(timeLock, allRats(1).grandMeanDSzpoxblueStage2FirstSes-allRats(1).grandSEMDSzpoxblueStage2FirstSes, 'k--');
+grandSemBluePos= allRats(1).grandMeanDSzpoxblueStage2FirstSes+allRats(1).grandSEMDSzpoxblueStage2FirstSes;
+grandSemBlueNeg= allRats(1).grandMeanDSzpoxblueStage2FirstSes-allRats(1).grandSEMDSzpoxblueStage2FirstSes;
 
-subplot(2,7,2);
+grandSemPurplePos= allRats(1).grandMeanDSzpoxpurpleStage2FirstSes+allRats(1).grandSEMDSzpoxpurpleStage2FirstSes;
+grandSemPurpleNeg= allRats(1).grandMeanDSzpoxpurpleStage2FirstSes-allRats(1).grandSEMDSzpoxpurpleStage2FirstSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandSemBluePos,grandSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandSemPurplePos,grandSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+
+subplot(2,9,2);
 title('DS stage 5 first day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzpoxblueStage5FirstSes,'b');
 plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage5FirstSes,'m');
 
-subplot(2,7,3);
+grandSemBluePos= allRats(1).grandMeanDSzpoxblueStage5FirstSes+allRats(1).grandSEMDSzpoxblueStage5FirstSes;
+grandSemBlueNeg= allRats(1).grandMeanDSzpoxblueStage5FirstSes-allRats(1).grandSEMDSzpoxblueStage5FirstSes;
+
+grandSemPurplePos= allRats(1).grandMeanDSzpoxpurpleStage5FirstSes+allRats(1).grandSEMDSzpoxpurpleStage5FirstSes;
+grandSemPurpleNeg= allRats(1).grandMeanDSzpoxpurpleStage5FirstSes-allRats(1).grandSEMDSzpoxpurpleStage5FirstSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandSemBluePos,grandSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandSemPurplePos,grandSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,3);
 title('DS stage 5 last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzpoxblueStage5LastSes,'b');
 plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage5LastSes,'m');
 
-subplot(2,7,4);
+grandSemBluePos= allRats(1).grandMeanDSzpoxblueStage5LastSes+allRats(1).grandSEMDSzpoxblueStage5LastSes;
+grandSemBlueNeg= allRats(1).grandMeanDSzpoxblueStage5LastSes-allRats(1).grandSEMDSzpoxblueStage5LastSes;
+
+grandSemPurplePos= allRats(1).grandMeanDSzpoxpurpleStage5LastSes+allRats(1).grandSEMDSzpoxpurpleStage5LastSes;
+grandSemPurpleNeg= allRats(1).grandMeanDSzpoxpurpleStage5LastSes-allRats(1).grandSEMDSzpoxpurpleStage5LastSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandSemBluePos,grandSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandSemPurplePos,grandSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,4);
 title('DS stage 7 first day (1s delay)');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzpoxblueStage7FirstSes,'b');
 plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage7FirstSes,'m');
 
-subplot(2,7,5);
+grandSemBluePos= allRats(1).grandMeanDSzpoxblueStage7FirstSes+allRats(1).grandSEMDSzpoxblueStage7FirstSes;
+grandSemBlueNeg= allRats(1).grandMeanDSzpoxblueStage7FirstSes-allRats(1).grandSEMDSzpoxblueStage7FirstSes;
+
+grandSemPurplePos= allRats(1).grandMeanDSzpoxpurpleStage7FirstSes+allRats(1).grandSEMDSzpoxpurpleStage7FirstSes;
+grandSemPurpleNeg= allRats(1).grandMeanDSzpoxpurpleStage7FirstSes-allRats(1).grandSEMDSzpoxpurpleStage7FirstSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandSemBluePos,grandSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandSemPurplePos,grandSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,5);
 title('DS stage 7 last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzpoxblueStage7LastSes, 'b');
 plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage7LastSes,'m');
 
-subplot(2,7,6);
-title('DS stage 8 first day (variable reward)');
+grandSemBluePos= allRats(1).grandMeanDSzpoxblueStage7LastSes+allRats(1).grandSEMDSzpoxblueStage5LastSes;
+grandSemBlueNeg= allRats(1).grandMeanDSzpoxblueStage7LastSes-allRats(1).grandSEMDSzpoxblueStage5LastSes;
+
+grandSemPurplePos= allRats(1).grandMeanDSzpoxpurpleStage7LastSes+allRats(1).grandSEMDSzpoxpurpleStage7LastSes;
+grandSemPurpleNeg= allRats(1).grandMeanDSzpoxpurpleStage7LastSes-allRats(1).grandSEMDSzpoxpurpleStage7LastSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandSemBluePos,grandSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandSemPurplePos,grandSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,6);
+title('DS 10%,5%,20% first day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzpoxblueStage8FirstSes, 'b');
 plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage8FirstSes,'m');
 
-subplot(2,7,7);
+grandSemBluePos= allRats(1).grandMeanDSzpoxblueStage8FirstSes+allRats(1).grandSEMDSzpoxblueStage8FirstSes;
+grandSemBlueNeg= allRats(1).grandMeanDSzpoxblueStage8FirstSes-allRats(1).grandSEMDSzpoxblueStage8FirstSes;
+
+grandSemPurplePos= allRats(1).grandMeanDSzpoxpurpleStage8FirstSes+allRats(1).grandSEMDSzpoxpurpleStage8FirstSes;
+grandSemPurpleNeg= allRats(1).grandMeanDSzpoxpurpleStage8FirstSes-allRats(1).grandSEMDSzpoxpurpleStage8FirstSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandSemBluePos,grandSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandSemPurplePos,grandSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,7);
+title('DS 10%,5%,20% last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzpoxblueStage8LastSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpoxpurpleStage8LastSes,'m');
+
+grandSemBluePos= allRats(1).grandMeanDSzpoxblueStage8LastSes+allRats(1).grandSEMDSzpoxblueStage8LastSes;
+grandSemBlueNeg= allRats(1).grandMeanDSzpoxblueStage8LastSes-allRats(1).grandSEMDSzpoxblueStage8LastSes;
+
+grandSemPurplePos= allRats(1).grandMeanDSzpoxpurpleStage8LastSes+allRats(1).grandSEMDSzpoxpurpleStage8LastSes;
+grandSemPurpleNeg= allRats(1).grandMeanDSzpoxpurpleStage8LastSes-allRats(1).grandSEMDSzpoxpurpleStage8LastSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandSemBluePos,grandSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandSemPurplePos,grandSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+
+subplot(2,9,8);
+title('DS extinction first day');
+hold on;
+plot(timeLock, allRats(1).grandMeanDSzpoxblueExtinctionFirstSes, 'b');
+plot(timeLock, allRats(1).grandMeanDSzpoxpurpleExtinctionFirstSes,'m');
+
+grandSemBluePos= allRats(1).grandMeanDSzpoxblueExtinctionFirstSes+allRats(1).grandSEMDSzpoxblueExtinctionFirstSes;
+grandSemBlueNeg= allRats(1).grandMeanDSzpoxblueExtinctionFirstSes-allRats(1).grandSEMDSzpoxblueExtinctionFirstSes;
+
+grandSemPurplePos= allRats(1).grandMeanDSzpoxpurpleExtinctionFirstSes+allRats(1).grandSEMDSzpoxpurpleExtinctionFirstSes;
+grandSemPurpleNeg= allRats(1).grandMeanDSzpoxpurpleExtinctionFirstSes-allRats(1).grandSEMDSzpoxpurpleExtinctionFirstSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandSemBluePos,grandSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandSemPurplePos,grandSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,9);
 title('DS extinction last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanDSzpoxblueExtinctionLastSes, 'b');
 plot(timeLock, allRats(1).grandMeanDSzpoxpurpleExtinctionLastSes,'m');
 
+grandSemBluePos= allRats(1).grandMeanDSzpoxblueExtinctionLastSes+allRats(1).grandSEMDSzpoxblueExtinctionLastSes;
+grandSemBlueNeg= allRats(1).grandMeanDSzpoxblueExtinctionLastSes-allRats(1).grandSEMDSzpoxblueExtinctionLastSes;
+
+grandSemPurplePos= allRats(1).grandMeanDSzpoxpurpleExtinctionLastSes+allRats(1).grandSEMDSzpoxpurpleExtinctionLastSes;
+grandSemPurpleNeg= allRats(1).grandMeanDSzpoxpurpleExtinctionLastSes-allRats(1).grandSEMDSzpoxpurpleExtinctionLastSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandSemBluePos,grandSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandSemPurplePos,grandSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
 
 
-subplot(2,7,8);
-title('no NS on stage 2');
-hold on;
 
-subplot(2,7,9);
+subplot(2,9,10);
+title('No NS on stage 2');
+
+
+subplot(2,9,11);
 title('NS stage 5 first day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzpoxblueStage5FirstSes,'b');
 plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage5FirstSes,'m');
 
-subplot(2,7,10);
+grandNSemBluePos= allRats(1).grandMeanNSzpoxblueStage5FirstSes+allRats(1).grandSEMNSzpoxblueStage5FirstSes;
+grandNSemBlueNeg= allRats(1).grandMeanNSzpoxblueStage5FirstSes-allRats(1).grandSEMNSzpoxblueStage5FirstSes;
+
+grandNSemPurplePos= allRats(1).grandMeanNSzpoxpurpleStage5FirstSes+allRats(1).grandSEMNSzpoxpurpleStage5FirstSes;
+grandNSemPurpleNeg= allRats(1).grandMeanNSzpoxpurpleStage5FirstSes-allRats(1).grandSEMNSzpoxpurpleStage5FirstSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandNSemBluePos,grandNSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandNSemPurplePos,grandNSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,12);
 title('NS stage 5 last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzpoxblueStage5LastSes,'b');
 plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage5LastSes,'m');
 
-subplot(2,7,11);
+grandNSemBluePos= allRats(1).grandMeanNSzpoxblueStage5LastSes+allRats(1).grandSEMNSzpoxblueStage5LastSes;
+grandNSemBlueNeg= allRats(1).grandMeanNSzpoxblueStage5LastSes-allRats(1).grandSEMNSzpoxblueStage5LastSes;
+
+grandNSemPurplePos= allRats(1).grandMeanNSzpoxpurpleStage5LastSes+allRats(1).grandSEMNSzpoxpurpleStage5LastSes;
+grandNSemPurpleNeg= allRats(1).grandMeanNSzpoxpurpleStage5LastSes-allRats(1).grandSEMNSzpoxpurpleStage5LastSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandNSemBluePos,grandNSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandNSemPurplePos,grandNSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,13);
 title('NS stage 7 first day (1s delay)');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzpoxblueStage7FirstSes,'b');
 plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage7FirstSes,'m');
 
-subplot(2,7,12);
+grandNSemBluePos= allRats(1).grandMeanNSzpoxblueStage7FirstSes+allRats(1).grandSEMNSzpoxblueStage7FirstSes;
+grandNSemBlueNeg= allRats(1).grandMeanNSzpoxblueStage7FirstSes-allRats(1).grandSEMNSzpoxblueStage7FirstSes;
+
+grandNSemPurplePos= allRats(1).grandMeanNSzpoxpurpleStage7FirstSes+allRats(1).grandSEMNSzpoxpurpleStage7FirstSes;
+grandNSemPurpleNeg= allRats(1).grandMeanNSzpoxpurpleStage7FirstSes-allRats(1).grandSEMNSzpoxpurpleStage7FirstSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandNSemBluePos,grandNSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandNSemPurplePos,grandNSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,14);
 title('NS stage 7 last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzpoxblueStage7LastSes, 'b');
 plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage7LastSes,'m');
 
-subplot(2,7,13);
-title('NS stage 8 first day (variable reward)');
+grandNSemBluePos= allRats(1).grandMeanNSzpoxblueStage7LastSes+allRats(1).grandSEMNSzpoxblueStage5LastSes;
+grandNSemBlueNeg= allRats(1).grandMeanNSzpoxblueStage7LastSes-allRats(1).grandSEMNSzpoxblueStage5LastSes;
+
+grandNSemPurplePos= allRats(1).grandMeanNSzpoxpurpleStage7LastSes+allRats(1).grandSEMNSzpoxpurpleStage7LastSes;
+grandNSemPurpleNeg= allRats(1).grandMeanNSzpoxpurpleStage7LastSes-allRats(1).grandSEMNSzpoxpurpleStage7LastSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandNSemBluePos,grandNSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandNSemPurplePos,grandNSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,15);
+title('NS 10%,5%,20% first day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzpoxblueStage8FirstSes, 'b');
 plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage8FirstSes,'m');
 
-subplot(2,7,14);
+grandNSemBluePos= allRats(1).grandMeanNSzpoxblueStage8FirstSes+allRats(1).grandSEMNSzpoxblueStage8FirstSes;
+grandNSemBlueNeg= allRats(1).grandMeanNSzpoxblueStage8FirstSes-allRats(1).grandSEMNSzpoxblueStage8FirstSes;
+
+grandNSemPurplePos= allRats(1).grandMeanNSzpoxpurpleStage8FirstSes+allRats(1).grandSEMNSzpoxpurpleStage8FirstSes;
+grandNSemPurpleNeg= allRats(1).grandMeanNSzpoxpurpleStage8FirstSes-allRats(1).grandSEMNSzpoxpurpleStage8FirstSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandNSemBluePos,grandNSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandNSemPurplePos,grandNSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,16);
+title('NS 10%,5%,20% last day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzpoxblueStage8LastSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpoxpurpleStage8LastSes,'m');
+
+grandNSemBluePos= allRats(1).grandMeanNSzpoxblueStage8LastSes+allRats(1).grandSEMNSzpoxblueStage8LastSes;
+grandNSemBlueNeg= allRats(1).grandMeanNSzpoxblueStage8LastSes-allRats(1).grandSEMNSzpoxblueStage8LastSes;
+
+grandNSemPurplePos= allRats(1).grandMeanNSzpoxpurpleStage8LastSes+allRats(1).grandSEMNSzpoxpurpleStage8LastSes;
+grandNSemPurpleNeg= allRats(1).grandMeanNSzpoxpurpleStage8LastSes-allRats(1).grandSEMNSzpoxpurpleStage8LastSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandNSemBluePos,grandNSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandNSemPurplePos,grandNSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+
+subplot(2,9,17);
+title('NS extinction first day');
+hold on;
+plot(timeLock, allRats(1).grandMeanNSzpoxblueExtinctionFirstSes, 'b');
+plot(timeLock, allRats(1).grandMeanNSzpoxpurpleExtinctionFirstSes,'m');
+
+grandNSemBluePos= allRats(1).grandMeanNSzpoxblueExtinctionFirstSes+allRats(1).grandSEMNSzpoxblueExtinctionFirstSes;
+grandNSemBlueNeg= allRats(1).grandMeanNSzpoxblueExtinctionFirstSes-allRats(1).grandSEMNSzpoxblueExtinctionFirstSes;
+
+grandNSemPurplePos= allRats(1).grandMeanNSzpoxpurpleExtinctionFirstSes+allRats(1).grandSEMNSzpoxpurpleExtinctionFirstSes;
+grandNSemPurpleNeg= allRats(1).grandMeanNSzpoxpurpleExtinctionFirstSes-allRats(1).grandSEMNSzpoxpurpleExtinctionFirstSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandNSemBluePos,grandNSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandNSemPurplePos,grandNSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
+
+subplot(2,9,18);
 title('NS extinction last day');
 hold on;
 plot(timeLock, allRats(1).grandMeanNSzpoxblueExtinctionLastSes, 'b');
 plot(timeLock, allRats(1).grandMeanNSzpoxpurpleExtinctionLastSes,'m');
 
+grandNSemBluePos= allRats(1).grandMeanNSzpoxblueExtinctionLastSes+allRats(1).grandSEMNSzpoxblueExtinctionLastSes;
+grandNSemBlueNeg= allRats(1).grandMeanNSzpoxblueExtinctionLastSes-allRats(1).grandSEMNSzpoxblueExtinctionLastSes;
+
+grandNSemPurplePos= allRats(1).grandMeanNSzpoxpurpleExtinctionLastSes+allRats(1).grandSEMNSzpoxpurpleExtinctionLastSes;
+grandNSemPurpleNeg= allRats(1).grandMeanNSzpoxpurpleExtinctionLastSes-allRats(1).grandSEMNSzpoxpurpleExtinctionLastSes;
+
+patch([timeLock,timeLock(end:-1:1)],[grandNSemBluePos,grandNSemBlueNeg(end:-1:1)],'b','EdgeColor','None');alpha(0.5);
+patch([timeLock,timeLock(end:-1:1)],[grandNSemPurplePos,grandNSemPurpleNeg(end:-1:1)],'m','EdgeColor','None');alpha(0.5);
 
 %equalize the axes and link them together for examination
 linkaxes;
