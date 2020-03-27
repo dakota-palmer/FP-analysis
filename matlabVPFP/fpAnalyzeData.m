@@ -4706,8 +4706,8 @@ allRats(1).grandMeanlastLoxNSExtinctionLastDay= nanmean(allRats(1).meanLastloxNS
 
 subplot(2,9,1)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanDSPElatencyStage2FirstDay,allRats(1).grandMeanDSPElatencyStage2FirstDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanDSPElatencyStage2FirstDay,allRats(1).grandMeanDSPElatencyStage2FirstDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxDSstage2FirstDay,allRats(1).grandMeanfirstLoxDSstage2FirstDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxDSstage2FirstDay,allRats(1).grandMeanlastLoxDSstage2FirstDay], ylim, 'g--');%plot vertical line for last lick
 
@@ -4718,59 +4718,59 @@ set(hLegend,'Position', legendPosition,'Units', 'normalized');
 
 subplot(2,9,2)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanDSPElatencyStage5FirstDay,allRats(1).grandMeanDSPElatencyStage5FirstDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanDSPElatencyStage5FirstDay,allRats(1).grandMeanDSPElatencyStage5FirstDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxDSstage5FirstDay,allRats(1).grandMeanfirstLoxDSstage5FirstDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxDSstage5FirstDay,allRats(1).grandMeanlastLoxDSstage5FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,3)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanDSPElatencyStage5LastDay,allRats(1).grandMeanDSPElatencyStage5LastDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanDSPElatencyStage5LastDay,allRats(1).grandMeanDSPElatencyStage5LastDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxDSstage5LastDay,allRats(1).grandMeanfirstLoxDSstage5LastDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxDSstage5LastDay,allRats(1).grandMeanlastLoxDSstage5LastDay], ylim, 'g--');%plot vertical line for last lick
 
 
 subplot(2,9,4)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanDSPElatencyStage7FirstDay,allRats(1).grandMeanDSPElatencyStage7LastDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanDSPElatencyStage7FirstDay,allRats(1).grandMeanDSPElatencyStage7LastDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxDSstage7FirstDay,allRats(1).grandMeanfirstLoxDSstage7FirstDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxDSstage7FirstDay,allRats(1).grandMeanlastLoxDSstage7FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,5)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanDSPElatencyStage7LastDay,allRats(1).grandMeanDSPElatencyStage7LastDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanDSPElatencyStage7LastDay,allRats(1).grandMeanDSPElatencyStage7LastDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxDSstage7LastDay,allRats(1).grandMeanfirstLoxDSstage7LastDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxDSstage7LastDay,allRats(1).grandMeanlastLoxDSstage7LastDay], ylim, 'g--');%plot vertical line for last lick
 
 
 subplot(2,9,6)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanDSPElatencyStage8FirstDay,allRats(1).grandMeanDSPElatencyStage8FirstDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanDSPElatencyStage8FirstDay,allRats(1).grandMeanDSPElatencyStage8FirstDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxDSstage8FirstDay,allRats(1).grandMeanfirstLoxDSstage8FirstDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxDSstage8FirstDay,allRats(1).grandMeanlastLoxDSstage8FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,7)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanDSPElatencyStage8LastDay,allRats(1).grandMeanDSPElatencyStage8LastDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanDSPElatencyStage8LastDay,allRats(1).grandMeanDSPElatencyStage8LastDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxDSstage8LastDay,allRats(1).grandMeanfirstLoxDSstage8LastDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxDSstage8LastDay,allRats(1).grandMeanlastLoxDSstage8LastDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,8)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanDSPElatencyExtinctionFirstDay,allRats(1).grandMeanDSPElatencyExtinctionFirstDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanDSPElatencyExtinctionFirstDay,allRats(1).grandMeanDSPElatencyExtinctionFirstDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxDSExtinctionFirstDay,allRats(1).grandMeanfirstLoxDSExtinctionFirstDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxDSExtinctionFirstDay,allRats(1).grandMeanlastLoxDSExtinctionFirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,9)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanDSPElatencyExtinctionLastDay,allRats(1).grandMeanDSPElatencyExtinctionLastDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanDSPElatencyExtinctionLastDay,allRats(1).grandMeanDSPElatencyExtinctionLastDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxDSExtinctionLastDay,allRats(1).grandMeanfirstLoxDSExtinctionLastDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxDSExtinctionLastDay,allRats(1).grandMeanlastLoxDSExtinctionLastDay], ylim, 'g--');%plot vertical line for last lick
 
@@ -4781,58 +4781,58 @@ subplot(2,9,10) %no NS on stage 2
 
 subplot(2,9,11)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanNSPElatencyStage5FirstDay,allRats(1).grandMeanNSPElatencyStage5FirstDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanNSPElatencyStage5FirstDay,allRats(1).grandMeanNSPElatencyStage5FirstDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxNSstage5FirstDay,allRats(1).grandMeanfirstLoxNSstage5FirstDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxNSstage5FirstDay,allRats(1).grandMeanlastLoxNSstage5FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,12)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanNSPElatencyStage5LastDay,allRats(1).grandMeanNSPElatencyStage5LastDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanNSPElatencyStage5LastDay,allRats(1).grandMeanNSPElatencyStage5LastDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxNSstage5LastDay,allRats(1).grandMeanfirstLoxNSstage5LastDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxNSstage5LastDay,allRats(1).grandMeanlastLoxNSstage5LastDay], ylim, 'g--');%plot vertical line for last lick
 
 
 subplot(2,9,13)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanNSPElatencyStage7FirstDay,allRats(1).grandMeanNSPElatencyStage7FirstDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanNSPElatencyStage7FirstDay,allRats(1).grandMeanNSPElatencyStage7FirstDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxNSstage7FirstDay,allRats(1).grandMeanfirstLoxNSstage7FirstDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxNSstage7FirstDay,allRats(1).grandMeanlastLoxNSstage7FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,14)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanNSPElatencyStage7LastDay,allRats(1).grandMeanNSPElatencyStage7LastDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanNSPElatencyStage7LastDay,allRats(1).grandMeanNSPElatencyStage7LastDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxNSstage7LastDay,allRats(1).grandMeanfirstLoxNSstage7LastDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxNSstage7LastDay,allRats(1).grandMeanlastLoxNSstage7LastDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,15)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanNSPElatencyStage8FirstDay,allRats(1).grandMeanNSPElatencyStage8FirstDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanNSPElatencyStage8FirstDay,allRats(1).grandMeanNSPElatencyStage8FirstDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxNSstage8FirstDay,allRats(1).grandMeanfirstLoxNSstage8FirstDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxNSstage8FirstDay,allRats(1).grandMeanlastLoxNSstage8FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,16)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanNSPElatencyStage8LastDay,allRats(1).grandMeanNSPElatencyStage8LastDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
+plot([allRats(1).grandMeanNSPElatencyStage8LastDay,allRats(1).grandMeanNSPElatencyStage8LastDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxNSstage8LastDay,allRats(1).grandMeanfirstLoxNSstage8LastDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxNSstage8LastDay,allRats(1).grandMeanlastLoxNSstage8LastDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,17)
 hold on;
-plot([0,0], ylim, 'k--'); %plot vertical line for PE
-plot([allRats(1).grandMeanNSPElatencyExtinctionFirstDay,allRats(1).grandMeanNSPElatencyExtinctionFirstDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([0,0], ylim, 'r--'); %plot vertical line for PE
+plot([allRats(1).grandMeanNSPElatencyExtinctionFirstDay,allRats(1).grandMeanNSPElatencyExtinctionFirstDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxNSExtinctionFirstDay,allRats(1).grandMeanfirstLoxNSExtinctionFirstDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxNSExtinctionFirstDay,allRats(1).grandMeanlastLoxNSExtinctionFirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,18)
 hold on;
 plot([0,0], ylim, 'k--'); %plot vertical line for cue onset
-plot([allRats(1).grandMeanNSPElatencyExtinctionLastDay,allRats(1).grandMeanNSPElatencyExtinctionLastDay], ylim, 'r--'); %plot vertical line for PE latency
+plot([allRats(1).grandMeanNSPElatencyExtinctionLastDay,allRats(1).grandMeanNSPElatencyExtinctionLastDay], ylim, 'k--'); %plot vertical line for PE latency
 plot([allRats(1).grandMeanfirstLoxNSExtinctionLastDay,allRats(1).grandMeanfirstLoxNSExtinctionLastDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxNSExtinctionLastDay,allRats(1).grandMeanlastLoxNSExtinctionLastDay], ylim, 'g--');%plot vertical line for last lick
 
