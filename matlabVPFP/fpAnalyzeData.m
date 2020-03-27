@@ -5259,84 +5259,76 @@ for subj = 1:numel(subjIncluded)
  
 end %end subj loop
 
-%     %Delete empty 0s for easier indexing then isolate the 1st and last session
-%     %mean PE latencies
-%     for subj= 1:numel(subjIncluded)
-%      allRats(1).meanDSPElatencyStage5((allRats(1).meanDSPElatencyStage5==0)) = nan;
-%      allRats(1).meanDSPElatencyStage5FirstDay(1,subj)= allRats(1).meanDSPElatencyStage5(1,subj);
-%      allRats(1).meanDSPElatencyStage5LastDay(1,subj)= allRats(1).meanDSPElatencyStage5(end,subj);
-%     end
-
 
     %get a grand mean across all subjects for these events
     %stage 2 
-allRats(1).grandMeanDSPElatencyStage2FirstDay= mean(allRats(1).meanDSPElatencyStage2FirstDay);
-allRats(1).grandMeanfirstLoxDSstage2FirstDay= mean(allRats(1).meanFirstloxDSstage2FirstDay);
-allRats(1).grandMeanlastLoxDSstage2FirstDay= mean(allRats(1).meanLastloxDSstage2FirstDay);
+allRats(1).grandMeanDSPElatencyStage2FirstDay= nanmean(allRats(1).meanDSPElatencyStage2FirstDay);
+allRats(1).grandMeanfirstLoxDSstage2FirstDay= nanmean(allRats(1).meanFirstloxDSstage2FirstDay);
+allRats(1).grandMeanlastLoxDSstage2FirstDay= nanmean(allRats(1).meanLastloxDSstage2FirstDay);
     %stage 5
-allRats(1).grandMeanDSPElatencyStage5FirstDay= mean(allRats(1).meanDSPElatencyStage5FirstDay);
-allRats(1).grandMeanfirstLoxDSstage5FirstDay= mean(allRats(1).meanFirstloxDSstage5FirstDay);
-allRats(1).grandMeanlastLoxDSstage5FirstDay= mean(allRats(1).meanLastloxDSstage5FirstDay);
+allRats(1).grandMeanDSPElatencyStage5FirstDay= nanmean(allRats(1).meanDSPElatencyStage5FirstDay);
+allRats(1).grandMeanfirstLoxDSstage5FirstDay= nanmean(allRats(1).meanFirstloxDSstage5FirstDay);
+allRats(1).grandMeanlastLoxDSstage5FirstDay= nanmean(allRats(1).meanLastloxDSstage5FirstDay);
 
-allRats(1).grandMeanDSPElatencyStage5LastDay= mean(allRats(1).meanDSPElatencyStage5LastDay);
-allRats(1).grandMeanfirstLoxDSstage5LastDay= mean(allRats(1).meanFirstloxDSstage5LastDay);
-allRats(1).grandMeanlastLoxDSstage5LastDay= mean(allRats(1).meanLastloxDSstage5LastDay);
+allRats(1).grandMeanDSPElatencyStage5LastDay= nanmean(allRats(1).meanDSPElatencyStage5LastDay);
+allRats(1).grandMeanfirstLoxDSstage5LastDay= nanmean(allRats(1).meanFirstloxDSstage5LastDay);
+allRats(1).grandMeanlastLoxDSstage5LastDay= nanmean(allRats(1).meanLastloxDSstage5LastDay);
 
-allRats(1).grandMeanNSPElatencyStage5FirstDay= mean(allRats(1).meanNSPElatencyStage5FirstDay);
-allRats(1).grandMeanfirstLoxNSstage5FirstDay= mean(allRats(1).meanFirstloxNSstage5FirstDay);
-allRats(1).grandMeanlastLoxNSstage5FirstDay= mean(allRats(1).meanLastloxNSstage5FirstDay);
+allRats(1).grandMeanNSPElatencyStage5FirstDay= nanmean(allRats(1).meanNSPElatencyStage5FirstDay);
+allRats(1).grandMeanfirstLoxNSstage5FirstDay= nanmean(allRats(1).meanFirstloxNSstage5FirstDay);
+allRats(1).grandMeanlastLoxNSstage5FirstDay= nanmean(allRats(1).meanLastloxNSstage5FirstDay);
 
-allRats(1).grandMeanNSPElatencyStage5LastDay= mean(allRats(1).meanNSPElatencyStage5LastDay);
-allRats(1).grandMeanfirstLoxNSstage5LastDay= mean(allRats(1).meanFirstloxNSstage5LastDay);
-allRats(1).grandMeanlastLoxNSstage5LastDay= mean(allRats(1).meanLastloxNSstage5LastDay);
+allRats(1).grandMeanNSPElatencyStage5LastDay= nanmean(allRats(1).meanNSPElatencyStage5LastDay);
+allRats(1).grandMeanfirstLoxNSstage5LastDay= nanmean(allRats(1).meanFirstloxNSstage5LastDay);
+allRats(1).grandMeanlastLoxNSstage5LastDay= nanmean(allRats(1).meanLastloxNSstage5LastDay);
     %stage 7
-allRats(1).grandMeanDSPElatencyStage7FirstDay= mean(allRats(1).meanDSPElatencyStage7FirstDay);
-allRats(1).grandMeanfirstLoxDSstage7FirstDay= mean(allRats(1).meanFirstloxDSstage7FirstDay);
-allRats(1).grandMeanlastLoxDSstage7FirstDay= mean(allRats(1).meanLastloxDSstage7FirstDay);
+allRats(1).grandMeanDSPElatencyStage7FirstDay= nanmean(allRats(1).meanDSPElatencyStage7FirstDay);
+allRats(1).grandMeanfirstLoxDSstage7FirstDay= nanmean(allRats(1).meanFirstloxDSstage7FirstDay);
+allRats(1).grandMeanlastLoxDSstage7FirstDay= nanmean(allRats(1).meanLastloxDSstage7FirstDay);
 
-allRats(1).grandMeanDSPElatencyStage7LastDay= mean(allRats(1).meanDSPElatencyStage7LastDay);
-allRats(1).grandMeanfirstLoxDSstage7LastDay= mean(allRats(1).meanFirstloxDSstage7LastDay);
-allRats(1).grandMeanlastLoxDSstage7LastDay= mean(allRats(1).meanLastloxDSstage7LastDay);
+allRats(1).grandMeanDSPElatencyStage7LastDay= nanmean(allRats(1).meanDSPElatencyStage7LastDay);
+allRats(1).grandMeanfirstLoxDSstage7LastDay= nanmean(allRats(1).meanFirstloxDSstage7LastDay);
+allRats(1).grandMeanlastLoxDSstage7LastDay= nanmean(allRats(1).meanLastloxDSstage7LastDay);
 
-allRats(1).grandMeanNSPElatencyStage7FirstDay= mean(allRats(1).meanNSPElatencyStage7FirstDay);
-allRats(1).grandMeanfirstLoxNSstage7FirstDay= mean(allRats(1).meanFirstloxNSstage7FirstDay);
-allRats(1).grandMeanlastLoxNSstage7FirstDay= mean(allRats(1).meanLastloxNSstage7FirstDay);
+allRats(1).grandMeanNSPElatencyStage7FirstDay= nanmean(allRats(1).meanNSPElatencyStage7FirstDay);
+allRats(1).grandMeanfirstLoxNSstage7FirstDay= nanmean(allRats(1).meanFirstloxNSstage7FirstDay);
+allRats(1).grandMeanlastLoxNSstage7FirstDay= nanmean(allRats(1).meanLastloxNSstage7FirstDay);
 
-allRats(1).grandMeanNSPElatencyStage7LastDay= mean(allRats(1).meanNSPElatencyStage7LastDay);
-allRats(1).grandMeanfirstLoxNSstage7LastDay= mean(allRats(1).meanFirstloxNSstage7LastDay);
-allRats(1).grandMeanlastLoxNSstage7LastDay= mean(allRats(1).meanLastloxNSstage7LastDay);
+allRats(1).grandMeanNSPElatencyStage7LastDay= nanmean(allRats(1).meanNSPElatencyStage7LastDay);
+allRats(1).grandMeanfirstLoxNSstage7LastDay= nanmean(allRats(1).meanFirstloxNSstage7LastDay);
+allRats(1).grandMeanlastLoxNSstage7LastDay= nanmean(allRats(1).meanLastloxNSstage7LastDay);
     %stage 8
-allRats(1).grandMeanDSPElatencyStage8FirstDay= mean(allRats(1).meanDSPElatencyStage8FirstDay);
-allRats(1).grandMeanfirstLoxDSstage8FirstDay= mean(allRats(1).meanFirstloxDSstage8FirstDay);
-allRats(1).grandMeanlastLoxDSstage8FirstDay= mean(allRats(1).meanLastloxDSstage8FirstDay);
+allRats(1).grandMeanDSPElatencyStage8FirstDay= nanmean(allRats(1).meanDSPElatencyStage8FirstDay);
+allRats(1).grandMeanfirstLoxDSstage8FirstDay= nanmean(allRats(1).meanFirstloxDSstage8FirstDay);
+allRats(1).grandMeanlastLoxDSstage8FirstDay= nanmean(allRats(1).meanLastloxDSstage8FirstDay);
 
-allRats(1).grandMeanDSPElatencyStage8LastDay= mean(allRats(1).meanDSPElatencyStage8LastDay);
-allRats(1).grandMeanfirstLoxDSstage8LastDay= mean(allRats(1).meanFirstloxDSstage8LastDay);
-allRats(1).grandMeanlastLoxDSstage8LastDay= mean(allRats(1).meanLastloxDSstage8LastDay);
+allRats(1).grandMeanDSPElatencyStage8LastDay= nanmean(allRats(1).meanDSPElatencyStage8LastDay);
+allRats(1).grandMeanfirstLoxDSstage8LastDay= nanmean(allRats(1).meanFirstloxDSstage8LastDay);
+allRats(1).grandMeanlastLoxDSstage8LastDay= nanmean(allRats(1).meanLastloxDSstage8LastDay);
 
-allRats(1).grandMeanNSPElatencyStage8FirstDay= mean(allRats(1).meanNSPElatencyStage8FirstDay);
-allRats(1).grandMeanfirstLoxNSstage8FirstDay= mean(allRats(1).meanFirstloxNSstage8FirstDay);
-allRats(1).grandMeanlastLoxNSstage8FirstDay= mean(allRats(1).meanLastloxNSstage8FirstDay);
+allRats(1).grandMeanNSPElatencyStage8FirstDay= nanmean(allRats(1).meanNSPElatencyStage8FirstDay);
+allRats(1).grandMeanfirstLoxNSstage8FirstDay= nanmean(allRats(1).meanFirstloxNSstage8FirstDay);
+allRats(1).grandMeanlastLoxNSstage8FirstDay= nanmean(allRats(1).meanLastloxNSstage8FirstDay);
 
-allRats(1).grandMeanNSPElatencyStage8LastDay= mean(allRats(1).meanNSPElatencyStage8LastDay);
-allRats(1).grandMeanfirstLoxNSstage8LastDay= mean(allRats(1).meanFirstloxNSstage8LastDay);
-allRats(1).grandMeanlastLoxNSstage8LastDay= mean(allRats(1).meanLastloxNSstage8LastDay);
+allRats(1).grandMeanNSPElatencyStage8LastDay= nanmean(allRats(1).meanNSPElatencyStage8LastDay);
+allRats(1).grandMeanfirstLoxNSstage8LastDay= nanmean(allRats(1).meanFirstloxNSstage8LastDay);
+allRats(1).grandMeanlastLoxNSstage8LastDay= nanmean(allRats(1).meanLastloxNSstage8LastDay);
     %stage 12 (extinction)
-allRats(1).grandMeanDSPElatencyExtinctionFirstDay= mean(allRats(1).meanDSPElatencyExtinctionFirstDay);
-allRats(1).grandMeanfirstLoxDSExtinctionFirstDay= mean(allRats(1).meanFirstloxDSExtinctionFirstDay);
-allRats(1).grandMeanlastLoxDSExtinctionFirstDay= mean(allRats(1).meanLastloxDSExtinctionFirstDay);
+allRats(1).grandMeanDSPElatencyExtinctionFirstDay= nanmean(allRats(1).meanDSPElatencyExtinctionFirstDay);
+allRats(1).grandMeanfirstLoxDSExtinctionFirstDay= nanmean(allRats(1).meanFirstloxDSExtinctionFirstDay);
+allRats(1).grandMeanlastLoxDSExtinctionFirstDay= nanmean(allRats(1).meanLastloxDSExtinctionFirstDay);
 
-allRats(1).grandMeanDSPElatencyExtinctionLastDay= mean(allRats(1).meanDSPElatencyExtinctionLastDay);
-allRats(1).grandMeanfirstLoxDSExtinctionLastDay= mean(allRats(1).meanFirstloxDSExtinctionLastDay);
-allRats(1).grandMeanlastLoxDSExtinctionLastDay= mean(allRats(1).meanLastloxDSExtinctionLastDay);
+allRats(1).grandMeanDSPElatencyExtinctionLastDay= nanmean(allRats(1).meanDSPElatencyExtinctionLastDay);
+allRats(1).grandMeanfirstLoxDSExtinctionLastDay= nanmean(allRats(1).meanFirstloxDSExtinctionLastDay);
+allRats(1).grandMeanlastLoxDSExtinctionLastDay= nanmean(allRats(1).meanLastloxDSExtinctionLastDay);
 
-allRats(1).grandMeanNSPElatencyExtinctionFirstDay= mean(allRats(1).meanNSPElatencyExtinctionFirstDay);
-allRats(1).grandMeanfirstLoxNSExtinctionFirstDay= mean(allRats(1).meanFirstloxNSExtinctionFirstDay);
-allRats(1).grandMeanlastLoxNSExtinctionFirstDay= mean(allRats(1).meanLastloxNSExtinctionFirstDay);
+allRats(1).grandMeanNSPElatencyExtinctionFirstDay= nanmean(allRats(1).meanNSPElatencyExtinctionFirstDay);
+allRats(1).grandMeanfirstLoxNSExtinctionFirstDay= nanmean(allRats(1).meanFirstloxNSExtinctionFirstDay);
+allRats(1).grandMeanlastLoxNSExtinctionFirstDay= nanmean(allRats(1).meanLastloxNSExtinctionFirstDay);
 
-allRats(1).grandMeanNSPElatencyExtinctionLastDay= mean(allRats(1).meanNSPElatencyExtinctionLastDay);
-allRats(1).grandMeanfirstLoxNSExtinctionLastDay= mean(allRats(1).meanFirstloxNSExtinctionLastDay);
-allRats(1).grandMeanlastLoxNSExtinctionLastDay= mean(allRats(1).meanLastloxNSExtinctionLastDay);
+allRats(1).grandMeanNSPElatencyExtinctionLastDay= nanmean(allRats(1).meanNSPElatencyExtinctionLastDay);
+allRats(1).grandMeanfirstLoxNSExtinctionLastDay= nanmean(allRats(1).meanFirstloxNSExtinctionLastDay);
+allRats(1).grandMeanlastLoxNSExtinctionLastDay= nanmean(allRats(1).meanLastloxNSExtinctionLastDay);
 
 subplot(2,9,1)
 hold on;
@@ -5830,24 +5822,24 @@ for subj= 1:numel(subjects) %for each subject
    
    %now get the mean z value within the cueResponseFrames
         %cond A
-   currentSubj(1).meanDSzblueResponseA= mean(currentSubj(1).DSzblueAllTrialsA,1);
-   currentSubj(1).meanDSzpurpleResponseA= mean(currentSubj(1).DSzpurpleAllTrialsA,1);
+   currentSubj(1).meanDSzblueResponseA= nanmean(currentSubj(1).DSzblueAllTrialsA,1);
+   currentSubj(1).meanDSzpurpleResponseA= nanmean(currentSubj(1).DSzpurpleAllTrialsA,1);
    
         %cond B
-   currentSubj(1).meanDSzblueResponseB= mean(currentSubj(1).DSzblueAllTrialsB,1);
-   currentSubj(1).meanDSzpurpleResponseB= mean(currentSubj(1).DSzpurpleAllTrialsB,1);
-   currentSubj(1).meanNSzblueResponseB= mean(currentSubj(1).NSzblueAllTrialsB,1);
-   currentSubj(1).meanNSzpurpleResponseB= mean(currentSubj(1).NSzpurpleAllTrialsB,1);
+   currentSubj(1).meanDSzblueResponseB= nanmean(currentSubj(1).DSzblueAllTrialsB,1);
+   currentSubj(1).meanDSzpurpleResponseB= nanmean(currentSubj(1).DSzpurpleAllTrialsB,1);
+   currentSubj(1).meanNSzblueResponseB= nanmean(currentSubj(1).NSzblueAllTrialsB,1);
+   currentSubj(1).meanNSzpurpleResponseB= nanmean(currentSubj(1).NSzpurpleAllTrialsB,1);
         %cond C
-   currentSubj(1).meanDSzblueResponseC= mean(currentSubj(1).DSzblueAllTrialsC,1);
-   currentSubj(1).meanDSzpurpleResponseC= mean(currentSubj(1).DSzpurpleAllTrialsC,1);
-   currentSubj(1).meanNSzblueResponseC= mean(currentSubj(1).NSzblueAllTrialsC,1);
-   currentSubj(1).meanNSzpurpleResponseC= mean(currentSubj(1).NSzpurpleAllTrialsC,1);
+   currentSubj(1).meanDSzblueResponseC= nanmean(currentSubj(1).DSzblueAllTrialsC,1);
+   currentSubj(1).meanDSzpurpleResponseC= nanmean(currentSubj(1).DSzpurpleAllTrialsC,1);
+   currentSubj(1).meanNSzblueResponseC= nanmean(currentSubj(1).NSzblueAllTrialsC,1);
+   currentSubj(1).meanNSzpurpleResponseC= nanmean(currentSubj(1).NSzpurpleAllTrialsC,1);
         %cond D
-   currentSubj(1).meanDSzblueResponseD= mean(currentSubj(1).DSzblueAllTrialsD,1);
-   currentSubj(1).meanDSzpurpleResponseD= mean(currentSubj(1).DSzpurpleAllTrialsD,1);
-   currentSubj(1).meanNSzblueResponseD= mean(currentSubj(1).NSzblueAllTrialsD,1);
-   currentSubj(1).meanNSzpurpleResponseD= mean(currentSubj(1).NSzpurpleAllTrialsD,1);
+   currentSubj(1).meanDSzblueResponseD= nanmean(currentSubj(1).DSzblueAllTrialsD,1);
+   currentSubj(1).meanDSzpurpleResponseD= nanmean(currentSubj(1).DSzpurpleAllTrialsD,1);
+   currentSubj(1).meanNSzblueResponseD= nanmean(currentSubj(1).NSzblueAllTrialsD,1);
+   currentSubj(1).meanNSzpurpleResponseD= nanmean(currentSubj(1).NSzpurpleAllTrialsD,1);
 
    
    figure(figureCount);
