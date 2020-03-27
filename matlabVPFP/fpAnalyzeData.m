@@ -4989,9 +4989,13 @@ for subj = 1:numel(subjIncluded)
         end
     end
         
-    
-    allRats(1).meanDSPElatencyStage5LastDay(1,subj)= allRats(1).meanDSPElatencyStage5(sesCountB,subj);
-    allRats(1).meanNSPElatencyStage5LastDay(1,subj)= allRats(1).meanNSPElatencyStage5(sesCountB,subj);
+        %TODO: keep in mind that as we go through here by subj, empty 0s may be added to
+        %meanDSPElatencyStage5 if one animal has more sessions meeting
+        %criteria than the others... not a big deal if looking at specific
+        %days but if you took a mean or something across days you'd want to
+        % make them nan
+    allRats(1).meanDSPElatencyStage5LastDay(1,subj)= allRats(1).meanDSPElatencyStage5(sesCountB,subj); 
+    allRats(1).meanNSPElatencyStage5LastDay(1,subj)= allRats(1).meanNSPElatencyStage5(sesCountB,subj); 
     
     allRats(1).meanFirstloxDSstage5FirstDay(1,subj)= allRats(1).meanFirstloxDSstage5(1,subj);
     allRats(1).meanFirstloxDSstage5LastDay(1,subj)= allRats(1).meanFirstloxDSstage5(sesCountB,subj);
@@ -5147,8 +5151,8 @@ for subj = 1:numel(subjIncluded)
     for transitionSession= 1:size(allRats(1).subjSessE,1)
         session= allRats(1).subjSessE(transitionSession,subj);
         if ~isnan(session) %only run if the session is valid
-            allRats(1).meanDSPElatencyStage12(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
-            allRats(1).meanNSPElatencyStage12(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
+            allRats(1).meanDSPElatencyExtinction(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
+            allRats(1).meanNSPElatencyExtinction(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
             
             %for licks, want to get an average of the 1st lick and the last
             %after the cue (TODO: this is just lick timestamps, not checking for bout
@@ -5166,8 +5170,8 @@ for subj = 1:numel(subjIncluded)
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
-               allRats(1).meanFirstloxDSstage12(transitionSession,subj)= nanmean(firstLox);
-               allRats(1).meanLastloxDSstage12(transitionSession,subj)= nanmean(lastLox);
+               allRats(1).meanFirstloxDSExtinction(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).meanLastloxDSExtinction(transitionSession,subj)= nanmean(lastLox);
             end
 
             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
@@ -5183,31 +5187,30 @@ for subj = 1:numel(subjIncluded)
                    lastLox(cue)=nan;
                end
                
-               allRats(1).meanFirstloxNSstage12(transitionSession,subj)= nanmean(firstLox);
-               allRats(1).meanLastloxNSstage12(transitionSession,subj)= nanmean(lastLox);
+               allRats(1).meanFirstloxNSExtinction(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).meanLastloxNSExtinction(transitionSession,subj)= nanmean(lastLox);
             end
             
             if transitionSession==1
-                allRats(1).meanDSPElatencyStage12FirstDay(1,subj)= allRats(1).meanDSPElatencyStage12(1,subj);
-                allRats(1).meanNSPElatencyStage12FirstDay(1,subj)= allRats(1).meanNSPElatencyStage12(1,subj);
+                allRats(1).meanDSPElatencyExtinctionFirstDay(1,subj)= allRats(1).meanDSPElatencyExtinction(1,subj);
+                allRats(1).meanNSPElatencyExtinctionFirstDay(1,subj)= allRats(1).meanNSPElatencyExtinction(1,subj);
             end            
              sesCountE= sesCountE+1; %only add to count if not nan
         end
     end
          
-    allRats(1).meanDSPElatencyStage12LastDay(1,subj)= allRats(1).meanDSPElatencyStage12(sesCountE,subj);
-    allRats(1).meanNSPElatencyStage12LastDay(1,subj)= allRats(1).meanNSPElatencyStage12(sesCountE,subj);
+    allRats(1).meanDSPElatencyExtinctionLastDay(1,subj)= allRats(1).meanDSPElatencyExtinction(sesCountE,subj);
+    allRats(1).meanNSPElatencyExtinctionLastDay(1,subj)= allRats(1).meanNSPElatencyExtinction(sesCountE,subj);
     
-    allRats(1).meanFirstloxDSstage12FirstDay(1,subj)= allRats(1).meanFirstloxDSstage12(1,subj);
-    allRats(1).meanFirstloxDSstage12LastDay(1,subj)= allRats(1).meanFirstloxDSstage12(sesCountE,subj);
-    allRats(1).meanLastloxDSstage12FirstDay(1,subj)= allRats(1).meanLastloxDSstage12(1,subj);
-    allRats(1).meanLastloxDSstage12LastDay(1,subj)= allRats(1).meanLastloxDSstage12(sesCountE,subj);
+    allRats(1).meanFirstloxDSExtinctionFirstDay(1,subj)= allRats(1).meanFirstloxDSExtinction(1,subj);
+    allRats(1).meanFirstloxDSExtinctionLastDay(1,subj)= allRats(1).meanFirstloxDSExtinction(sesCountE,subj);
+    allRats(1).meanLastloxDSExtinctionFirstDay(1,subj)= allRats(1).meanLastloxDSExtinction(1,subj);
+    allRats(1).meanLastloxDSExtinctionLastDay(1,subj)= allRats(1).meanLastloxDSExtinction(sesCountE,subj);
     
-    
-    allRats(1).meanFirstloxNSstage12FirstDay(1,subj)= allRats(1).meanFirstloxNSstage12(1,subj);
-    allRats(1).meanFirstloxNSstage12LastDay(1,subj)= allRats(1).meanFirstloxNSstage12(sesCountE,subj);
-    allRats(1).meanLastloxNSstage12FirstDay(1,subj)= allRats(1).meanLastloxNSstage12(1,subj);
-    allRats(1).meanLastloxNSstage12LastDay(1,subj)= allRats(1).meanLastloxNSstage12(sesCountE,subj);
+    allRats(1).meanFirstloxNSExtinctionFirstDay(1,subj)= allRats(1).meanFirstloxNSExtinction(1,subj);
+    allRats(1).meanFirstloxNSExtinctionLastDay(1,subj)= allRats(1).meanFirstloxNSExtinction(sesCountE,subj);
+    allRats(1).meanLastloxNSExtinctionFirstDay(1,subj)= allRats(1).meanLastloxNSExtinction(1,subj);
+    allRats(1).meanLastloxNSExtinctionLastDay(1,subj)= allRats(1).meanLastloxNSExtinction(sesCountE,subj);
     
     %end stage 12 extinction (cond E)
  
@@ -5243,54 +5246,54 @@ allRats(1).grandMeanlastLoxNSstage5FirstDay= mean(allRats(1).meanLastloxNSstage5
 allRats(1).grandMeanNSPElatencyStage5LastDay= mean(allRats(1).meanNSPElatencyStage5LastDay);
 allRats(1).grandMeanfirstLoxNSstage5LastDay= mean(allRats(1).meanFirstloxNSstage5LastDay);
 allRats(1).grandMeanlastLoxNSstage5LastDay= mean(allRats(1).meanLastloxNSstage5LastDay);
-%     %stage 7
-% allRats(1).grandMeanDSPElatencyStage7FirstDay= mean(allRats(1).meanDSPElatencyStage7FirstDay);
-% allRats(1).grandMeanfirstLoxDSstage7FirstDay= mean(allRats(1).meanFirstloxDSstage7FirstDay);
-% allRats(1).grandMeanlastLoxDSstage7FirstDay= mean(allRats(1).meanLastloxDSstage7FirstDay);
-% 
-% allRats(1).grandMeanDSPElatencyStage7lastDay= mean(allRats(1).meanDSPElatencyStage7lastDay);
-% allRats(1).grandMeanfirstLoxDSstage7lastDay= mean(allRats(1).meanFirstloxDSstage7lastDay);
-% allRats(1).grandMeanlastLoxDSstage7lastDay= mean(allRats(1).meanLastloxDSstage7lastDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage7FirstDay= mean(allRats(1).meanNSPElatencyStage7FirstDay);
-% allRats(1).grandMeanfirstLoxNSstage7FirstDay= mean(allRats(1).meanFirstloxNSstage7FirstDay);
-% allRats(1).grandMeanlastLoxNSstage7FirstDay= mean(allRats(1).meanLastloxNSstage7FirstDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage7lastDay= mean(allRats(1).meanNSPElatencyStage7lastDay);
-% allRats(1).grandMeanfirstLoxNSstage7lastDay= mean(allRats(1).meanFirstloxNSstage7lastDay);
-% allRats(1).grandMeanlastLoxNSstage7lastDay= mean(allRats(1).meanLastloxNSstage7lastDay);
-%     %stage 8
-% allRats(1).grandMeanDSPElatencyStage8FirstDay= mean(allRats(1).meanDSPElatencyStage8FirstDay);
-% allRats(1).grandMeanfirstLoxDSstage8FirstDay= mean(allRats(1).meanFirstloxDSstage8FirstDay);
-% allRats(1).grandMeanlastLoxDSstage8FirstDay= mean(allRats(1).meanLastloxDSstage8FirstDay);
-% 
-% allRats(1).grandMeanDSPElatencyStage8lastDay= mean(allRats(1).meanDSPElatencyStage8lastDay);
-% allRats(1).grandMeanfirstLoxDSstage8lastDay= mean(allRats(1).meanFirstloxDSstage8lastDay);
-% allRats(1).grandMeanlastLoxDSstage8lastDay= mean(allRats(1).meanLastloxDSstage8lastDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage8FirstDay= mean(allRats(1).meanNSPElatencyStage8FirstDay);
-% allRats(1).grandMeanfirstLoxNSstage8FirstDay= mean(allRats(1).meanFirstloxNSstage8FirstDay);
-% allRats(1).grandMeanlastLoxNSstage8FirstDay= mean(allRats(1).meanLastloxNSstage8FirstDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage8lastDay= mean(allRats(1).meanNSPElatencyStage8lastDay);
-% allRats(1).grandMeanfirstLoxNSstage8lastDay= mean(allRats(1).meanFirstloxNSstage8lastDay);
-% allRats(1).grandMeanlastLoxNSstage8lastDay= mean(allRats(1).meanLastloxNSstage8lastDay);
-%     %stage 12 (extinction)
-% allRats(1).grandMeanDSPElatencyExtinctionFirstDay= mean(allRats(1).meanDSPElatencyExtinctionFirstDay);
-% allRats(1).grandMeanfirstLoxDSExtinctionFirstDay= mean(allRats(1).meanFirstloxDSExtinctionFirstDay);
-% allRats(1).grandMeanlastLoxDSExtinctionFirstDay= mean(allRats(1).meanLastloxDSExtinctionFirstDay);
-% 
-% allRats(1).grandMeanDSPElatencyExtinctionlastDay= mean(allRats(1).meanDSPElatencyExtinctionlastDay);
-% allRats(1).grandMeanfirstLoxDSExtinctionlastDay= mean(allRats(1).meanFirstloxDSExtinctionlastDay);
-% allRats(1).grandMeanlastLoxDSExtinctionlastDay= mean(allRats(1).meanLastloxDSExtinctionlastDay);
-% 
-% allRats(1).grandMeanNSPElatencyExtinctionFirstDay= mean(allRats(1).meanNSPElatencyExtinctionFirstDay);
-% allRats(1).grandMeanfirstLoxNSExtinctionFirstDay= mean(allRats(1).meanFirstloxNSExtinctionFirstDay);
-% allRats(1).grandMeanlastLoxNSExtinctionFirstDay= mean(allRats(1).meanLastloxNSExtinctionFirstDay);
-% 
-% allRats(1).grandMeanNSPElatencyExtinctionlastDay= mean(allRats(1).meanNSPElatencyExtinctionlastDay);
-% allRats(1).grandMeanfirstLoxNSExtinctionlastDay= mean(allRats(1).meanFirstloxNSExtinctionlastDay);
-% allRats(1).grandMeanlastLoxNSExtinctionlastDay= mean(allRats(1).meanLastloxNSExtinctionlastDay);
+    %stage 7
+allRats(1).grandMeanDSPElatencyStage7FirstDay= mean(allRats(1).meanDSPElatencyStage7FirstDay);
+allRats(1).grandMeanfirstLoxDSstage7FirstDay= mean(allRats(1).meanFirstloxDSstage7FirstDay);
+allRats(1).grandMeanlastLoxDSstage7FirstDay= mean(allRats(1).meanLastloxDSstage7FirstDay);
+
+allRats(1).grandMeanDSPElatencyStage7LastDay= mean(allRats(1).meanDSPElatencyStage7LastDay);
+allRats(1).grandMeanfirstLoxDSstage7LastDay= mean(allRats(1).meanFirstloxDSstage7LastDay);
+allRats(1).grandMeanlastLoxDSstage7LastDay= mean(allRats(1).meanLastloxDSstage7LastDay);
+
+allRats(1).grandMeanNSPElatencyStage7FirstDay= mean(allRats(1).meanNSPElatencyStage7FirstDay);
+allRats(1).grandMeanfirstLoxNSstage7FirstDay= mean(allRats(1).meanFirstloxNSstage7FirstDay);
+allRats(1).grandMeanlastLoxNSstage7FirstDay= mean(allRats(1).meanLastloxNSstage7FirstDay);
+
+allRats(1).grandMeanNSPElatencyStage7LastDay= mean(allRats(1).meanNSPElatencyStage7LastDay);
+allRats(1).grandMeanfirstLoxNSstage7LastDay= mean(allRats(1).meanFirstloxNSstage7LastDay);
+allRats(1).grandMeanlastLoxNSstage7LastDay= mean(allRats(1).meanLastloxNSstage7LastDay);
+    %stage 8
+allRats(1).grandMeanDSPElatencyStage8FirstDay= mean(allRats(1).meanDSPElatencyStage8FirstDay);
+allRats(1).grandMeanfirstLoxDSstage8FirstDay= mean(allRats(1).meanFirstloxDSstage8FirstDay);
+allRats(1).grandMeanlastLoxDSstage8FirstDay= mean(allRats(1).meanLastloxDSstage8FirstDay);
+
+allRats(1).grandMeanDSPElatencyStage8LastDay= mean(allRats(1).meanDSPElatencyStage8LastDay);
+allRats(1).grandMeanfirstLoxDSstage8LastDay= mean(allRats(1).meanFirstloxDSstage8LastDay);
+allRats(1).grandMeanlastLoxDSstage8LastDay= mean(allRats(1).meanLastloxDSstage8LastDay);
+
+allRats(1).grandMeanNSPElatencyStage8FirstDay= mean(allRats(1).meanNSPElatencyStage8FirstDay);
+allRats(1).grandMeanfirstLoxNSstage8FirstDay= mean(allRats(1).meanFirstloxNSstage8FirstDay);
+allRats(1).grandMeanlastLoxNSstage8FirstDay= mean(allRats(1).meanLastloxNSstage8FirstDay);
+
+allRats(1).grandMeanNSPElatencyStage8LastDay= mean(allRats(1).meanNSPElatencyStage8LastDay);
+allRats(1).grandMeanfirstLoxNSstage8LastDay= mean(allRats(1).meanFirstloxNSstage8LastDay);
+allRats(1).grandMeanlastLoxNSstage8LastDay= mean(allRats(1).meanLastloxNSstage8LastDay);
+    %stage 12 (extinction)
+allRats(1).grandMeanDSPElatencyExtinctionFirstDay= mean(allRats(1).meanDSPElatencyExtinctionFirstDay);
+allRats(1).grandMeanfirstLoxDSExtinctionFirstDay= mean(allRats(1).meanFirstloxDSExtinctionFirstDay);
+allRats(1).grandMeanlastLoxDSExtinctionFirstDay= mean(allRats(1).meanLastloxDSExtinctionFirstDay);
+
+allRats(1).grandMeanDSPElatencyExtinctionLastDay= mean(allRats(1).meanDSPElatencyExtinctionLastDay);
+allRats(1).grandMeanfirstLoxDSExtinctionLastDay= mean(allRats(1).meanFirstloxDSExtinctionLastDay);
+allRats(1).grandMeanlastLoxDSExtinctionLastDay= mean(allRats(1).meanLastloxDSExtinctionLastDay);
+
+allRats(1).grandMeanNSPElatencyExtinctionFirstDay= mean(allRats(1).meanNSPElatencyExtinctionFirstDay);
+allRats(1).grandMeanfirstLoxNSExtinctionFirstDay= mean(allRats(1).meanFirstloxNSExtinctionFirstDay);
+allRats(1).grandMeanlastLoxNSExtinctionFirstDay= mean(allRats(1).meanLastloxNSExtinctionFirstDay);
+
+allRats(1).grandMeanNSPElatencyExtinctionLastDay= mean(allRats(1).meanNSPElatencyExtinctionLastDay);
+allRats(1).grandMeanfirstLoxNSExtinctionLastDay= mean(allRats(1).meanFirstloxNSExtinctionLastDay);
+allRats(1).grandMeanlastLoxNSExtinctionLastDay= mean(allRats(1).meanLastloxNSExtinctionLastDay);
 
 subplot(2,9,1)
 hold on;
@@ -5319,7 +5322,52 @@ plot([allRats(1).grandMeanfirstLoxDSstage5LastDay,allRats(1).grandMeanfirstLoxDS
 plot([allRats(1).grandMeanlastLoxDSstage5LastDay,allRats(1).grandMeanlastLoxDSstage5LastDay], ylim, 'g--');%plot vertical line for last lick
 
 
+subplot(2,9,4)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanDSPElatencyStage7FirstDay,-allRats(1).grandMeanDSPElatencyStage7FirstDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxDSstage7FirstDay,allRats(1).grandMeanfirstLoxDSstage7FirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxDSstage7FirstDay,allRats(1).grandMeanlastLoxDSstage7FirstDay], ylim, 'g--');%plot vertical line for last lick
 
+subplot(2,9,5)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanDSPElatencyStage7LastDay,-allRats(1).grandMeanDSPElatencyStage7LastDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxDSstage7LastDay,allRats(1).grandMeanfirstLoxDSstage7LastDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxDSstage7LastDay,allRats(1).grandMeanlastLoxDSstage7LastDay], ylim, 'g--');%plot vertical line for last lick
+
+
+subplot(2,9,6)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanDSPElatencyStage8FirstDay,-allRats(1).grandMeanDSPElatencyStage8FirstDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxDSstage8FirstDay,allRats(1).grandMeanfirstLoxDSstage8FirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxDSstage8FirstDay,allRats(1).grandMeanlastLoxDSstage8FirstDay], ylim, 'g--');%plot vertical line for last lick
+
+subplot(2,9,7)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanDSPElatencyStage8LastDay,-allRats(1).grandMeanDSPElatencyStage8LastDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxDSstage8LastDay,allRats(1).grandMeanfirstLoxDSstage8LastDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxDSstage8LastDay,allRats(1).grandMeanlastLoxDSstage8LastDay], ylim, 'g--');%plot vertical line for last lick
+
+subplot(2,9,8)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanDSPElatencyExtinctionFirstDay,-allRats(1).grandMeanDSPElatencyExtinctionFirstDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxDSExtinctionFirstDay,allRats(1).grandMeanfirstLoxDSExtinctionFirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxDSExtinctionFirstDay,allRats(1).grandMeanlastLoxDSExtinctionFirstDay], ylim, 'g--');%plot vertical line for last lick
+
+subplot(2,9,9)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanDSPElatencyExtinctionLastDay,-allRats(1).grandMeanDSPElatencyExtinctionLastDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxDSExtinctionLastDay,allRats(1).grandMeanfirstLoxDSExtinctionLastDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxDSExtinctionLastDay,allRats(1).grandMeanlastLoxDSExtinctionLastDay], ylim, 'g--');%plot vertical line for last lick
+
+
+
+subplot(2,9,10) %no NS on stage 2
 
 
 subplot(2,9,11)
@@ -5335,6 +5383,49 @@ plot([0,0], ylim, 'k--'); %plot vertical line for PE
 plot([-allRats(1).grandMeanNSPElatencyStage5LastDay,-allRats(1).grandMeanNSPElatencyStage5LastDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
 plot([allRats(1).grandMeanfirstLoxNSstage5LastDay,allRats(1).grandMeanfirstLoxNSstage5LastDay], ylim, 'g--'); %plot vertical line for first lick
 plot([allRats(1).grandMeanlastLoxNSstage5LastDay,allRats(1).grandMeanlastLoxNSstage5LastDay], ylim, 'g--');%plot vertical line for last lick
+
+
+subplot(2,9,13)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanNSPElatencyStage7FirstDay,-allRats(1).grandMeanNSPElatencyStage7FirstDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxNSstage7FirstDay,allRats(1).grandMeanfirstLoxNSstage7FirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxNSstage7FirstDay,allRats(1).grandMeanlastLoxNSstage7FirstDay], ylim, 'g--');%plot vertical line for last lick
+
+subplot(2,9,14)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanNSPElatencyStage7LastDay,-allRats(1).grandMeanNSPElatencyStage7LastDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxNSstage7LastDay,allRats(1).grandMeanfirstLoxNSstage7LastDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxNSstage7LastDay,allRats(1).grandMeanlastLoxNSstage7LastDay], ylim, 'g--');%plot vertical line for last lick
+
+subplot(2,9,15)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanNSPElatencyStage8FirstDay,-allRats(1).grandMeanNSPElatencyStage8FirstDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxNSstage8FirstDay,allRats(1).grandMeanfirstLoxNSstage8FirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxNSstage8FirstDay,allRats(1).grandMeanlastLoxNSstage8FirstDay], ylim, 'g--');%plot vertical line for last lick
+
+subplot(2,9,16)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanNSPElatencyStage8LastDay,-allRats(1).grandMeanNSPElatencyStage8LastDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxNSstage8LastDay,allRats(1).grandMeanfirstLoxNSstage8LastDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxNSstage8LastDay,allRats(1).grandMeanlastLoxNSstage8LastDay], ylim, 'g--');%plot vertical line for last lick
+
+subplot(2,9,17)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanNSPElatencyExtinctionFirstDay,-allRats(1).grandMeanNSPElatencyExtinctionFirstDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxNSExtinctionFirstDay,allRats(1).grandMeanfirstLoxNSExtinctionFirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxNSExtinctionFirstDay,allRats(1).grandMeanlastLoxNSExtinctionFirstDay], ylim, 'g--');%plot vertical line for last lick
+
+subplot(2,9,18)
+hold on;
+plot([0,0], ylim, 'k--'); %plot vertical line for PE
+plot([-allRats(1).grandMeanNSPElatencyExtinctionLastDay,-allRats(1).grandMeanNSPElatencyExtinctionLastDay], ylim, 'r--'); %plot vertical line for Cue onset (-mean peLatency)
+plot([allRats(1).grandMeanfirstLoxNSExtinctionLastDay,allRats(1).grandMeanfirstLoxNSExtinctionLastDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).grandMeanlastLoxNSExtinctionLastDay,allRats(1).grandMeanlastLoxNSExtinctionLastDay], ylim, 'g--');%plot vertical line for last lick
 
 
 %% Trying some stat with visualization
