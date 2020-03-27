@@ -1024,7 +1024,6 @@ for subj= 1:numel(subjects) %for each subject
       
 end %end subj loop
 
-
 %% ~~~Event-Triggered Analyses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %In these sections, we will do an event-triggered analyses by extracting data 
 %from the photometry traces immediately surrounding relevant behavioral events (e.g. cue onset, port entry, lick)
@@ -1252,6 +1251,50 @@ for subj= 1:numel(subjects) %for each subject
       end %end if NS ~nan conditional 
    end %end session loop
 end %end subject loop
+
+
+%% Calculate shifted timestamps for licks relative to PE (for timelocking to PE)
+% Since we know the PE latency for each trial and have timestamps for licks
+% relative to cue onset, we calculate timestamps for licks relative to PE
+% as loxRel-PElatency
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj}); 
+    for session= 1:numel(currentSubj)
+        for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %for each DS trial in this session
+           
+            DSloxCount=0; %counter to tell if licks happened during any cues- if not, make empty
+            
+            if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only run if valid data present
+               currentSubj(session).behavior.loxDSpoxRel{cue}= currentSubj(session).behavior.loxDSrel{cue}-currentSubj(session).behavior.DSpeLatency(cue); %loxDSpoxRel = timestamp of lick relative to PE 
+               DSloxCount=DSloxCount+1;
+            end
+        end
+    
+        for cue = 1:numel(currentSubj(session).behavior.loxNSrel) %for each NS trial in this session
+            NSloxCount= 0;
+
+            if ~isempty(currentSubj(session).behavior.loxNSrel{cue}) %only run if valid data present
+               currentSubj(session).behavior.loxNSpoxRel{cue}= currentSubj(session).behavior.loxNSrel{cue}-currentSubj(session).behavior.NSpeLatency(cue); %loxNSpoxRel = timestamp of lick relative to PE 
+               NSloxCount= NSloxCount+1;
+            end
+        end
+        
+        %save the data
+        if DSloxCount >0
+                subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSpoxRel= currentSubj(session).behavior.loxDSpoxRel;
+        else 
+            subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSpoxRel= [];
+        end
+        
+        if NSloxCount >0
+            subjDataAnalyzed.(subjects{subj})(session).behavior.loxNSpoxRel= currentSubj(session).behavior.loxNSpoxRel;
+        else
+            subjDataAnalyzed.(subjects{subj})(session).behavior.loxNSpoxRel=[];
+        end
+    end % end session loop
+end% end subj loop
+
 
 %% TIMELOCK TO FIRST PE AFTER DS (when sucrose should be dispensed)
 %DS trials where animal was in port at cue onset are excluded
@@ -4910,14 +4953,14 @@ for subj = 1:numel(subjIncluded)
             %criteria yet)
             firstLox= []; %reset between sessions/subjs to prevent carryover of values
             lastLox= [];
-       for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+       for cue = 1:numel(currentSubj(session).behavior.loxDSpoxRel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSpoxRel{cue}(1);
                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
 
-                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   lastLox(cue)=currentSubj(session).behavior.loxDSpoxRel{cue}(end);
                    lastLox(lastLox==0)=nan;
-               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+               elseif isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
@@ -4949,14 +4992,14 @@ for subj = 1:numel(subjIncluded)
             %criteria yet)
             firstLox= []; %reset between sessions/subjs to prevent carryover of values
             lastLox= [];
-            for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+            for cue = 1:numel(currentSubj(session).behavior.loxDSpoxRel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSpoxRel{cue}(1);
                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
 
-                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   lastLox(cue)=currentSubj(session).behavior.loxDSpoxRel{cue}(end);
                    lastLox(lastLox==0)=nan;
-               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+               elseif isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
@@ -4964,15 +5007,15 @@ for subj = 1:numel(subjIncluded)
                allRats(1).meanLastloxDSstage5(transitionSession,subj)= nanmean(lastLox);
             end
 
-            for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
-               if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
-                   firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+            for cue= 1:numel(currentSubj(session).behavior.loxNSpoxRel) %repeat for NS trials
+               if ~isempty(currentSubj(session).behavior.loxNSpoxRel{cue})
+                   firstLox(cue)= currentSubj(session).behavior.loxNSpoxRel{cue}(1);
                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
 
-                   lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+                   lastLox(cue)=currentSubj(session).behavior.loxNSpoxRel{cue}(end);
                    lastLox(lastLox==0)=nan;
                
-               elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
+               elseif isempty(currentSubj(session).behavior.loxNSpoxRel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
@@ -5021,14 +5064,14 @@ for subj = 1:numel(subjIncluded)
             %criteria yet)
             firstLox= []; %reset between sessions/subjs to prevent carryover of values
             lastLox= [];
-            for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+            for cue = 1:numel(currentSubj(session).behavior.loxDSpoxRel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSpoxRel{cue}(1);
                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
 
-                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   lastLox(cue)=currentSubj(session).behavior.loxDSpoxRel{cue}(end);
                    lastLox(lastLox==0)=nan;
-               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+               elseif isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
@@ -5036,15 +5079,15 @@ for subj = 1:numel(subjIncluded)
                allRats(1).meanLastloxDSstage7(transitionSession,subj)= nanmean(lastLox);
             end
 
-            for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
-               if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
-                   firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+            for cue= 1:numel(currentSubj(session).behavior.loxNSpoxRel) %repeat for NS trials
+               if ~isempty(currentSubj(session).behavior.loxNSpoxRel{cue})
+                   firstLox(cue)= currentSubj(session).behavior.loxNSpoxRel{cue}(1);
                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
 
-                   lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+                   lastLox(cue)=currentSubj(session).behavior.loxNSpoxRel{cue}(end);
                    lastLox(lastLox==0)=nan;
                
-               elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
+               elseif isempty(currentSubj(session).behavior.loxNSpoxRel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
@@ -5090,14 +5133,14 @@ for subj = 1:numel(subjIncluded)
             %criteria yet)
             firstLox= []; %reset between sessions/subjs to prevent carryover of values
             lastLox= [];
-           for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+           for cue = 1:numel(currentSubj(session).behavior.loxDSpoxRel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSpoxRel{cue}(1);
                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
 
-                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   lastLox(cue)=currentSubj(session).behavior.loxDSpoxRel{cue}(end);
                    lastLox(lastLox==0)=nan;
-               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+               elseif isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
@@ -5105,15 +5148,15 @@ for subj = 1:numel(subjIncluded)
                allRats(1).meanLastloxDSstage8(transitionSession,subj)= nanmean(lastLox);
             end
 
-            for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
-               if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
-                   firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+            for cue= 1:numel(currentSubj(session).behavior.loxNSpoxRel) %repeat for NS trials
+               if ~isempty(currentSubj(session).behavior.loxNSpoxRel{cue})
+                   firstLox(cue)= currentSubj(session).behavior.loxNSpoxRel{cue}(1);
                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
 
-                   lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+                   lastLox(cue)=currentSubj(session).behavior.loxNSpoxRel{cue}(end);
                    lastLox(lastLox==0)=nan;
                
-               elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
+               elseif isempty(currentSubj(session).behavior.loxNSpoxRel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
@@ -5159,14 +5202,14 @@ for subj = 1:numel(subjIncluded)
             %criteria yet)
             firstLox= []; %reset between sessions/subjs to prevent carryover of values
             lastLox= [];
-            for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+            for cue = 1:numel(currentSubj(session).behavior.loxDSpoxRel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSpoxRel{cue}(1);
                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
 
-                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   lastLox(cue)=currentSubj(session).behavior.loxDSpoxRel{cue}(end);
                    lastLox(lastLox==0)=nan;
-               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+               elseif isempty(currentSubj(session).behavior.loxDSpoxRel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
@@ -5174,15 +5217,15 @@ for subj = 1:numel(subjIncluded)
                allRats(1).meanLastloxDSExtinction(transitionSession,subj)= nanmean(lastLox);
             end
 
-            for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
-               if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
-                   firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+            for cue= 1:numel(currentSubj(session).behavior.loxNSpoxRel) %repeat for NS trials
+               if ~isempty(currentSubj(session).behavior.loxNSpoxRel{cue})
+                   firstLox(cue)= currentSubj(session).behavior.loxNSpoxRel{cue}(1);
                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
 
-                   lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+                   lastLox(cue)=currentSubj(session).behavior.loxNSpoxRel{cue}(end);
                    lastLox(lastLox==0)=nan;
                
-               elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
+               elseif isempty(currentSubj(session).behavior.loxNSpoxRel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
