@@ -1261,10 +1261,12 @@ end %end subject loop
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj}); 
     for session= 1:numel(currentSubj)
+        DSloxCount=0; %counter to tell if licks happened during any cues- if not, make empty
+        NSloxCount= 0;
+
+        
         for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %for each DS trial in this session
-           
-            DSloxCount=0; %counter to tell if licks happened during any cues- if not, make empty
-            
+                       
             if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only run if valid data present
                currentSubj(session).behavior.loxDSpoxRel{cue}= currentSubj(session).behavior.loxDSrel{cue}-currentSubj(session).behavior.DSpeLatency(cue); %loxDSpoxRel = timestamp of lick relative to PE 
                DSloxCount=DSloxCount+1;
@@ -1272,8 +1274,6 @@ for subj= 1:numel(subjects)
         end
     
         for cue = 1:numel(currentSubj(session).behavior.loxNSrel) %for each NS trial in this session
-            NSloxCount= 0;
-
             if ~isempty(currentSubj(session).behavior.loxNSrel{cue}) %only run if valid data present
                currentSubj(session).behavior.loxNSpoxRel{cue}= currentSubj(session).behavior.loxNSrel{cue}-currentSubj(session).behavior.NSpeLatency(cue); %loxNSpoxRel = timestamp of lick relative to PE 
                NSloxCount= NSloxCount+1;
@@ -3704,12 +3704,16 @@ btwnSubjonlyPE();
 btwnSubjonlyInPort();
 
 %% Trying some stat with visualization
-effectStart= -1; % Define a time window of interest after cue onset within which we will look for an effect (this is t in seconds relative to cue onset)
-effectEnd= 0;
+
+%first spike after cue effect- seems like a rapid rise starting ~0.2s (maybe 0.3s on extinction day) like to start falling by 0.9s
+effectStart= 0.3; % Define a time window of interest after cue onset within which we will look for an effect (this is t in seconds relative to cue onset)
+effectEnd= 0.8;
 
 cueOnsetTime= periCueFrames-postCueFrames;
 
 effectWindow= effectStart*fs:effectEnd*fs; %Indices of the time window for the effect
+
+
 
 
 %% ~~ Data vis- photometry & behavior ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
