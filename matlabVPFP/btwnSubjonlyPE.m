@@ -6,6 +6,8 @@
 %excludes trials where animal was already in port at cue onset as well as
 %trials with no valid PE
 
+clear allRats.poxOnly; %reset between analyses
+
 for subj= 1:numel(subjIncluded) %for each subject
        currentSubj= subjDataAnalyzed.(subjIncluded{subj}); %use this for easy indexing into the current subject within the struct
 
@@ -972,404 +974,478 @@ linkaxes;
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen
 
 
-% % Overlay mean cue onset/PE and lick
-% for subj = 1:numel(subjIncluded)
-%     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj});
-%     
-%     %keep count of valid sessions for easy indexing of last day mean PElatency
-%     sesCountA= 0;
-%     sesCountB= 0;
-%     sesCountC= 0;
-%     sesCountD= 0;
-%     sesCountE= 0;
-%     
-%         %stage2 (condA)
-%     for transitionSession= 1:size(allRats(1).subjSessA,1)
-%         session= allRats(1).subjSessA(transitionSession,subj);
-%         if ~isnan(session)
-%             allRats(1).meanDSPElatencyStage2(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
-% 
-%             %for licks, want to get an average of the 1st lick and the last
-%             %after the cue (TODO: this is just lick timestamps, not checking for bout
-%             %criteria yet)
-%             firstLox= []; %reset between sessions/subjs to prevent carryover of values
-%             lastLox= [];
-%        for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-%                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
-% 
-%                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-%                    lastLox(lastLox==0)=nan;
-%                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
-%                    firstLox(cue) = nan;
-%                    lastLox(cue)=nan;
-%                end
-%                allRats(1).meanFirstloxDSstage2(transitionSession,subj)= nanmean(firstLox);
-%                allRats(1).meanLastloxDSstage2(transitionSession,subj)= nanmean(lastLox);
-%         end
-% 
-%            
-%              if transitionSession==1
-%                 allRats(1).meanDSPElatencyStage2FirstDay(1,subj)= allRats(1).meanDSPElatencyStage2(1,subj);
-%              end
-%             sesCountA= sesCountA+1;
-%         end
-%     end
-%     
-%     allRats(1).meanFirstloxDSstage2FirstDay(1,subj)= allRats(1).meanFirstloxDSstage2(1,subj);
-%     allRats(1).meanLastloxDSstage2FirstDay(1,subj)= allRats(1).meanLastloxDSstage2(1,subj);
-%   
-%     
-%        %stage5 (condB)
-%     for transitionSession= 1:size(allRats(1).subjSessB,1)
-%         session= allRats(1).subjSessB(transitionSession,subj);
-%         if ~isnan(session) %only run if the session is valid
-%             allRats(1).meanDSPElatencyStage5(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
-%             allRats(1).meanNSPElatencyStage5(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
-%             
-%             %for licks, want to get an average of the 1st lick and the last
-%             %after the cue (TODO: this is just lick timestamps, not checking for bout
-%             %criteria yet)
-%             firstLox= []; %reset between sessions/subjs to prevent carryover of values
-%             lastLox= [];
-%             for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-%                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
-% 
-%                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-%                    lastLox(lastLox==0)=nan;
-%                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
-%                    firstLox(cue) = nan;
-%                    lastLox(cue)=nan;
-%                end
-%                allRats(1).meanFirstloxDSstage5(transitionSession,subj)= nanmean(firstLox);
-%                allRats(1).meanLastloxDSstage5(transitionSession,subj)= nanmean(lastLox);
-%             end
-% 
-%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
-%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
-%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
-%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
-% 
-%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
-%                    lastLox(lastLox==0)=nan;
-%                
-%                elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
-%                    firstLox(cue) = nan;
-%                    lastLox(cue)=nan;
-%                end
-%                
-%                allRats(1).meanFirstloxNSstage5(transitionSession,subj)= nanmean(firstLox);
-%                allRats(1).meanLastloxNSstage5(transitionSession,subj)= nanmean(lastLox);
-%             end
-%             
-%             if transitionSession==1
-%                 allRats(1).meanDSPElatencyStage5FirstDay(1,subj)= allRats(1).meanDSPElatencyStage5(1,subj);
-%                 allRats(1).meanNSPElatencyStage5FirstDay(1,subj)= allRats(1).meanNSPElatencyStage5(1,subj);
-%             end            
-%              sesCountB= sesCountB+1; %only add to count if not nan
-%         end
-%     end
-%         
-%         %TODO: keep in mind that as we go through here by subj, empty 0s may be added to
-%         %meanDSPElatencyStage5 if one animal has more sessions meeting
-%         %criteria than the others... not a big deal if looking at specific
-%         %days but if you took a mean or something across days you'd want to
-%         % make them nan
-%     allRats(1).meanDSPElatencyStage5LastDay(1,subj)= allRats(1).meanDSPElatencyStage5(sesCountB,subj); 
-%     allRats(1).meanNSPElatencyStage5LastDay(1,subj)= allRats(1).meanNSPElatencyStage5(sesCountB,subj); 
-%     
-%     allRats(1).meanFirstloxDSstage5FirstDay(1,subj)= allRats(1).meanFirstloxDSstage5(1,subj);
-%     allRats(1).meanFirstloxDSstage5LastDay(1,subj)= allRats(1).meanFirstloxDSstage5(sesCountB,subj);
-%     allRats(1).meanLastloxDSstage5FirstDay(1,subj)= allRats(1).meanLastloxDSstage5(1,subj);
-%     allRats(1).meanLastloxDSstage5LastDay(1,subj)= allRats(1).meanLastloxDSstage5(sesCountB,subj);
-%     
-%     
-%     allRats(1).meanFirstloxNSstage5FirstDay(1,subj)= allRats(1).meanFirstloxNSstage5(1,subj);
-%     allRats(1).meanFirstloxNSstage5LastDay(1,subj)= allRats(1).meanFirstloxNSstage5(sesCountB,subj);
-%     allRats(1).meanLastloxNSstage5FirstDay(1,subj)= allRats(1).meanLastloxNSstage5(1,subj);
-%     allRats(1).meanLastloxNSstage5LastDay(1,subj)= allRats(1).meanLastloxNSstage5(sesCountB,subj);
-%     
-%     %end stage 7 (cond C)
-% %stage7 (condC)
-%     for transitionSession= 1:size(allRats(1).subjSessC,1)
-%         session= allRats(1).subjSessC(transitionSession,subj);
-%         if ~isnan(session) %only run if the session is valid
-%             allRats(1).meanDSPElatencyStage7(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
-%             allRats(1).meanNSPElatencyStage7(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
-%             
-%             %for licks, want to get an average of the 1st lick and the last
-%             %after the cue (TODO: this is just lick timestamps, not checking for bout
-%             %criteria yet)
-%             firstLox= []; %reset between sessions/subjs to prevent carryover of values
-%             lastLox= [];
-%             for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-%                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
-% 
-%                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-%                    lastLox(lastLox==0)=nan;
-%                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
-%                    firstLox(cue) = nan;
-%                    lastLox(cue)=nan;
-%                end
-%                allRats(1).meanFirstloxDSstage7(transitionSession,subj)= nanmean(firstLox);
-%                allRats(1).meanLastloxDSstage7(transitionSession,subj)= nanmean(lastLox);
-%             end
-% 
-%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
-%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
-%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
-%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
-% 
-%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
-%                    lastLox(lastLox==0)=nan;
-%                
-%                elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
-%                    firstLox(cue) = nan;
-%                    lastLox(cue)=nan;
-%                end
-%                
-%                allRats(1).meanFirstloxNSstage7(transitionSession,subj)= nanmean(firstLox);
-%                allRats(1).meanLastloxNSstage7(transitionSession,subj)= nanmean(lastLox);
-%             end
-%             
-%             if transitionSession==1
-%                 allRats(1).meanDSPElatencyStage7FirstDay(1,subj)= allRats(1).meanDSPElatencyStage7(1,subj);
-%                 allRats(1).meanNSPElatencyStage7FirstDay(1,subj)= allRats(1).meanNSPElatencyStage7(1,subj);
-%             end            
-%              sesCountC= sesCountC+1; %only add to count if not nan
-%         end
-%     end
-%         
-%     
-%     allRats(1).meanDSPElatencyStage7LastDay(1,subj)= allRats(1).meanDSPElatencyStage7(sesCountC,subj);
-%     allRats(1).meanNSPElatencyStage7LastDay(1,subj)= allRats(1).meanNSPElatencyStage7(sesCountC,subj);
-%     
-%     allRats(1).meanFirstloxDSstage7FirstDay(1,subj)= allRats(1).meanFirstloxDSstage7(1,subj);
-%     allRats(1).meanFirstloxDSstage7LastDay(1,subj)= allRats(1).meanFirstloxDSstage7(sesCountC,subj);
-%     allRats(1).meanLastloxDSstage7FirstDay(1,subj)= allRats(1).meanLastloxDSstage7(1,subj);
-%     allRats(1).meanLastloxDSstage7LastDay(1,subj)= allRats(1).meanLastloxDSstage7(sesCountC,subj);
-%     
-%     
-%     allRats(1).meanFirstloxNSstage7FirstDay(1,subj)= allRats(1).meanFirstloxNSstage7(1,subj);
-%     allRats(1).meanFirstloxNSstage7LastDay(1,subj)= allRats(1).meanFirstloxNSstage7(sesCountC,subj);
-%     allRats(1).meanLastloxNSstage7FirstDay(1,subj)= allRats(1).meanLastloxNSstage7(1,subj);
-%     allRats(1).meanLastloxNSstage7LastDay(1,subj)= allRats(1).meanLastloxNSstage7(sesCountC,subj);
-%     
-%     %end stage 7 (cond C)
-%     
-% %stage8 (condD)
-%     for transitionSession= 1:size(allRats(1).subjSessD,1)
-%         session= allRats(1).subjSessD(transitionSession,subj);
-%         if ~isnan(session) %only run if the session is valid
-%             allRats(1).meanDSPElatencyStage8(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
-%             allRats(1).meanNSPElatencyStage8(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
-%             
-%             %for licks, want to get an average of the 1st lick and the last
-%             %after the cue (TODO: this is just lick timestamps, not checking for bout
-%             %criteria yet)
-%                firstLox= []; %reset between sessions/subjs to prevent carryover of values
-%          lastLox= [];
-%            for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-%                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
-% 
-%                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-%                    lastLox(lastLox==0)=nan;
-%                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
-%                    firstLox(cue) = nan;
-%                    lastLox(cue)=nan;
-%                end
-%                allRats(1).meanFirstloxDSstage8(transitionSession,subj)= nanmean(firstLox);
-%                allRats(1).meanLastloxDSstage8(transitionSession,subj)= nanmean(lastLox);
-%             end
-% 
-%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
-%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
-%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
-%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
-% 
-%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
-%                    lastLox(lastLox==0)=nan;
-%                
-%                elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
-%                    firstLox(cue) = nan;
-%                    lastLox(cue)=nan;
-%                end
-%                
-%                allRats(1).meanFirstloxNSstage8(transitionSession,subj)= nanmean(firstLox);
-%                allRats(1).meanLastloxNSstage8(transitionSession,subj)= nanmean(lastLox);
-%             end
-%             
-%             if transitionSession==1
-%                 allRats(1).meanDSPElatencyStage8FirstDay(1,subj)= allRats(1).meanDSPElatencyStage8(1,subj);
-%                 allRats(1).meanNSPElatencyStage8FirstDay(1,subj)= allRats(1).meanNSPElatencyStage8(1,subj);
-%             end            
-%              sesCountD= sesCountD+1; %only add to count if not nan
-%         end
-%     end
-%         
-%     
-%     allRats(1).meanDSPElatencyStage8LastDay(1,subj)= allRats(1).meanDSPElatencyStage8(sesCountD,subj);
-%     allRats(1).meanNSPElatencyStage8LastDay(1,subj)= allRats(1).meanNSPElatencyStage8(sesCountD,subj);
-%     
-%     allRats(1).meanFirstloxDSstage8FirstDay(1,subj)= allRats(1).meanFirstloxDSstage8(1,subj);
-%     allRats(1).meanFirstloxDSstage8LastDay(1,subj)= allRats(1).meanFirstloxDSstage8(sesCountD,subj);
-%     allRats(1).meanLastloxDSstage8FirstDay(1,subj)= allRats(1).meanLastloxDSstage8(1,subj);
-%     allRats(1).meanLastloxDSstage8LastDay(1,subj)= allRats(1).meanLastloxDSstage8(sesCountD,subj);
-%     
-%     
-%     allRats(1).meanFirstloxNSstage8FirstDay(1,subj)= allRats(1).meanFirstloxNSstage8(1,subj);
-%     allRats(1).meanFirstloxNSstage8LastDay(1,subj)= allRats(1).meanFirstloxNSstage8(sesCountD,subj);
-%     allRats(1).meanLastloxNSstage8FirstDay(1,subj)= allRats(1).meanLastloxNSstage8(1,subj);
-%     allRats(1).meanLastloxNSstage8LastDay(1,subj)= allRats(1).meanLastloxNSstage8(sesCountD,subj);
-%     
-%     %end stage 8 (cond D)
-%     
-% %stage12 extinction (condE)
-%     for transitionSession= 1:size(allRats(1).subjSessE,1)
-%         session= allRats(1).subjSessE(transitionSession,subj);
-%         if ~isnan(session) %only run if the session is valid
-%             allRats(1).meanDSPElatencyExtinction(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
-%             allRats(1).meanNSPElatencyExtinction(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
-%             
-%             %for licks, want to get an average of the 1st lick and the last
-%             %after the cue (TODO: this is just lick timestamps, not checking for bout
-%             %criteria yet)
-%             firstLox= []; %reset between sessions/subjs to prevent carryover of values
-%             lastLox= [];
-%             for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
-%                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
-%                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
-% 
-%                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-%                    lastLox(lastLox==0)=nan;
-%                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
-%                    firstLox(cue) = nan;
-%                    lastLox(cue)=nan;
-%                end
-%                allRats(1).meanFirstloxDSExtinction(transitionSession,subj)= nanmean(firstLox);
-%                allRats(1).meanLastloxDSExtinction(transitionSession,subj)= nanmean(lastLox);
-%             end
-% 
-%             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
-%                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
-%                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
-%                    firstLox(firstLox==0)= nan; %replace empty 0s with nan
-% 
-%                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
-%                    lastLox(lastLox==0)=nan;
-%                
-%                elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
-%                    firstLox(cue) = nan;
-%                    lastLox(cue)=nan;
-%                end
-%                
-%                allRats(1).meanFirstloxNSExtinction(transitionSession,subj)= nanmean(firstLox);
-%                allRats(1).meanLastloxNSExtinction(transitionSession,subj)= nanmean(lastLox);
-%             end
-%             
-%             if transitionSession==1
-%                 allRats(1).meanDSPElatencyExtinctionFirstDay(1,subj)= allRats(1).meanDSPElatencyExtinction(1,subj);
-%                 allRats(1).meanNSPElatencyExtinctionFirstDay(1,subj)= allRats(1).meanNSPElatencyExtinction(1,subj);
-%             end            
-%              sesCountE= sesCountE+1; %only add to count if not nan
-%         end
-%     end
-%          
-%     allRats(1).meanDSPElatencyExtinctionLastDay(1,subj)= allRats(1).meanDSPElatencyExtinction(sesCountE,subj);
-%     allRats(1).meanNSPElatencyExtinctionLastDay(1,subj)= allRats(1).meanNSPElatencyExtinction(sesCountE,subj);
-%     
-%     allRats(1).meanFirstloxDSExtinctionFirstDay(1,subj)= allRats(1).meanFirstloxDSExtinction(1,subj);
-%     allRats(1).meanFirstloxDSExtinctionLastDay(1,subj)= allRats(1).meanFirstloxDSExtinction(sesCountE,subj);
-%     allRats(1).meanLastloxDSExtinctionFirstDay(1,subj)= allRats(1).meanLastloxDSExtinction(1,subj);
-%     allRats(1).meanLastloxDSExtinctionLastDay(1,subj)= allRats(1).meanLastloxDSExtinction(sesCountE,subj);
-%     
-%     allRats(1).meanFirstloxNSExtinctionFirstDay(1,subj)= allRats(1).meanFirstloxNSExtinction(1,subj);
-%     allRats(1).meanFirstloxNSExtinctionLastDay(1,subj)= allRats(1).meanFirstloxNSExtinction(sesCountE,subj);
-%     allRats(1).meanLastloxNSExtinctionFirstDay(1,subj)= allRats(1).meanLastloxNSExtinction(1,subj);
-%     allRats(1).meanLastloxNSExtinctionLastDay(1,subj)= allRats(1).meanLastloxNSExtinction(sesCountE,subj);
-%     
-%     %end stage 12 extinction (cond E)
-%  
-% end %end subj loop
-% 
-% 
-%     %get a grand mean across all subjects for these events
-%     %stage 2 
-% allRats(1).grandMeanDSPElatencyStage2FirstDay= nanmean(allRats(1).meanDSPElatencyStage2FirstDay);
-% allRats(1).grandMeanfirstLoxDSstage2FirstDay= nanmean(allRats(1).meanFirstloxDSstage2FirstDay);
-% allRats(1).grandMeanlastLoxDSstage2FirstDay= nanmean(allRats(1).meanLastloxDSstage2FirstDay);
-%     %stage 5
-% allRats(1).grandMeanDSPElatencyStage5FirstDay= nanmean(allRats(1).meanDSPElatencyStage5FirstDay);
-% allRats(1).grandMeanfirstLoxDSstage5FirstDay= nanmean(allRats(1).meanFirstloxDSstage5FirstDay);
-% allRats(1).grandMeanlastLoxDSstage5FirstDay= nanmean(allRats(1).meanLastloxDSstage5FirstDay);
-% 
-% allRats(1).grandMeanDSPElatencyStage5LastDay= nanmean(allRats(1).meanDSPElatencyStage5LastDay);
-% allRats(1).grandMeanfirstLoxDSstage5LastDay= nanmean(allRats(1).meanFirstloxDSstage5LastDay);
-% allRats(1).grandMeanlastLoxDSstage5LastDay= nanmean(allRats(1).meanLastloxDSstage5LastDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage5FirstDay= nanmean(allRats(1).meanNSPElatencyStage5FirstDay);
-% allRats(1).grandMeanfirstLoxNSstage5FirstDay= nanmean(allRats(1).meanFirstloxNSstage5FirstDay);
-% allRats(1).grandMeanlastLoxNSstage5FirstDay= nanmean(allRats(1).meanLastloxNSstage5FirstDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage5LastDay= nanmean(allRats(1).meanNSPElatencyStage5LastDay);
-% allRats(1).grandMeanfirstLoxNSstage5LastDay= nanmean(allRats(1).meanFirstloxNSstage5LastDay);
-% allRats(1).grandMeanlastLoxNSstage5LastDay= nanmean(allRats(1).meanLastloxNSstage5LastDay);
-%     %stage 7
-% allRats(1).grandMeanDSPElatencyStage7FirstDay= nanmean(allRats(1).meanDSPElatencyStage7FirstDay);
-% allRats(1).grandMeanfirstLoxDSstage7FirstDay= nanmean(allRats(1).meanFirstloxDSstage7FirstDay);
-% allRats(1).grandMeanlastLoxDSstage7FirstDay= nanmean(allRats(1).meanLastloxDSstage7FirstDay);
-% 
-% allRats(1).grandMeanDSPElatencyStage7LastDay= nanmean(allRats(1).meanDSPElatencyStage7LastDay);
-% allRats(1).grandMeanfirstLoxDSstage7LastDay= nanmean(allRats(1).meanFirstloxDSstage7LastDay);
-% allRats(1).grandMeanlastLoxDSstage7LastDay= nanmean(allRats(1).meanLastloxDSstage7LastDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage7FirstDay= nanmean(allRats(1).meanNSPElatencyStage7FirstDay);
-% allRats(1).grandMeanfirstLoxNSstage7FirstDay= nanmean(allRats(1).meanFirstloxNSstage7FirstDay);
-% allRats(1).grandMeanlastLoxNSstage7FirstDay= nanmean(allRats(1).meanLastloxNSstage7FirstDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage7LastDay= nanmean(allRats(1).meanNSPElatencyStage7LastDay);
-% allRats(1).grandMeanfirstLoxNSstage7LastDay= nanmean(allRats(1).meanFirstloxNSstage7LastDay);
-% allRats(1).grandMeanlastLoxNSstage7LastDay= nanmean(allRats(1).meanLastloxNSstage7LastDay);
-%     %stage 8
-% allRats(1).grandMeanDSPElatencyStage8FirstDay= nanmean(allRats(1).meanDSPElatencyStage8FirstDay);
-% allRats(1).grandMeanfirstLoxDSstage8FirstDay= nanmean(allRats(1).meanFirstloxDSstage8FirstDay);
-% allRats(1).grandMeanlastLoxDSstage8FirstDay= nanmean(allRats(1).meanLastloxDSstage8FirstDay);
-% 
-% allRats(1).grandMeanDSPElatencyStage8LastDay= nanmean(allRats(1).meanDSPElatencyStage8LastDay);
-% allRats(1).grandMeanfirstLoxDSstage8LastDay= nanmean(allRats(1).meanFirstloxDSstage8LastDay);
-% allRats(1).grandMeanlastLoxDSstage8LastDay= nanmean(allRats(1).meanLastloxDSstage8LastDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage8FirstDay= nanmean(allRats(1).meanNSPElatencyStage8FirstDay);
-% allRats(1).grandMeanfirstLoxNSstage8FirstDay= nanmean(allRats(1).meanFirstloxNSstage8FirstDay);
-% allRats(1).grandMeanlastLoxNSstage8FirstDay= nanmean(allRats(1).meanLastloxNSstage8FirstDay);
-% 
-% allRats(1).grandMeanNSPElatencyStage8LastDay= nanmean(allRats(1).meanNSPElatencyStage8LastDay);
-% allRats(1).grandMeanfirstLoxNSstage8LastDay= nanmean(allRats(1).meanFirstloxNSstage8LastDay);
-% allRats(1).grandMeanlastLoxNSstage8LastDay= nanmean(allRats(1).meanLastloxNSstage8LastDay);
-%     %stage 12 (extinction)
-% allRats(1).grandMeanDSPElatencyExtinctionFirstDay= nanmean(allRats(1).meanDSPElatencyExtinctionFirstDay);
-% allRats(1).grandMeanfirstLoxDSExtinctionFirstDay= nanmean(allRats(1).meanFirstloxDSExtinctionFirstDay);
-% allRats(1).grandMeanlastLoxDSExtinctionFirstDay= nanmean(allRats(1).meanLastloxDSExtinctionFirstDay);
-% 
-% allRats(1).grandMeanDSPElatencyExtinctionLastDay= nanmean(allRats(1).meanDSPElatencyExtinctionLastDay);
-% allRats(1).grandMeanfirstLoxDSExtinctionLastDay= nanmean(allRats(1).meanFirstloxDSExtinctionLastDay);
-% allRats(1).grandMeanlastLoxDSExtinctionLastDay= nanmean(allRats(1).meanLastloxDSExtinctionLastDay);
-% 
-% allRats(1).grandMeanNSPElatencyExtinctionFirstDay= nanmean(allRats(1).meanNSPElatencyExtinctionFirstDay);
-% allRats(1).grandMeanfirstLoxNSExtinctionFirstDay= nanmean(allRats(1).meanFirstloxNSExtinctionFirstDay);
-% allRats(1).grandMeanlastLoxNSExtinctionFirstDay= nanmean(allRats(1).meanLastloxNSExtinctionFirstDay);
-% 
-% allRats(1).grandMeanNSPElatencyExtinctionLastDay= nanmean(allRats(1).meanNSPElatencyExtinctionLastDay);
-% allRats(1).grandMeanfirstLoxNSExtinctionLastDay= nanmean(allRats(1).meanFirstloxNSExtinctionLastDay);
-% allRats(1).grandMeanlastLoxNSExtinctionLastDay= nanmean(allRats(1).meanLastloxNSExtinctionLastDay);
+% Overlay mean cue onset/PE and lick
+for subj = 1:numel(subjIncluded)
+    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj});
+    
+    %keep count of valid sessions for easy indexing of last day mean PElatency
+    sesCountA= 0;
+    sesCountB= 0;
+    sesCountC= 0;
+    sesCountD= 0;
+    sesCountE= 0;
+    
+        %stage2 (condA)
+    for transitionSession= 1:size(allRats(1).subjSessA,1)
+        session= allRats(1).subjSessA(transitionSession,subj);
+                
+        if ~isnan(session)
+               %Exclude trials where animal was in port or did not make a PE
+                %first get the DS cues for this session
+                DSselected= currentSubj(session).periDS.DS;  % all the DS cues
+                
+                %First, let's exclude trials where animal was already in port
+
+                %We have to throw in an extra conditional in case we've excluded
+                %cues in our peri cue analysis due to being too close to the
+                %beginning or end.
+                for inPortTrial = find(~isnan(currentSubj(session).behavior.inPortDS))
+                    if inPortTrial < numel(DSselected) 
+                        DSselected(~isnan(currentSubj(session).behavior.inPortDS)) = nan;
+                    end
+                end
+                
+                %Then, let's exclude trials where animal did not make a PE during
+                %the cue epoch. (cellfun('isempty'))
+                for PEtrial = find(cellfun('isempty', currentSubj(session).behavior.poxDS))
+                    if PEtrial < numel(DSselected)  %same here, we need an extra conditional in case cues were excluded
+                        DSselected(cellfun('isempty', currentSubj(session).behavior.poxDS)) = nan;
+                    end
+                end
+            
+            allRats(1).poxOnly.meanDSPElatencyStage2(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency(~isnan(DSselected))); %take the mean of all the PE latencies for this session
+
+                
+            %for licks, want to get an average of the 1st lick and the last
+            %after the cue (TODO: this is just lick timestamps, not checking for bout
+            %criteria yet)
+            firstLox= []; %reset between sessions/subjs to prevent carryover of values
+            lastLox= [];
+            
+            %looping through lick cell array is a bit more complicated-
+            %need to get indexes cues to loop through using (find) 
+       for cue = find(~isnan(DSselected)) %loop through each selected trial and retrieve licks %1:numel(currentSubj(session).behavior.loxDSrel) 
+                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   
+               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+                   firstLox(cue) = nan;
+                   lastLox(cue)=nan;
+                end            
+                firstLox(firstLox==0)= nan; %replace empty 0s with nan
+                lastLox(lastLox==0)=nan;
+       end %end cue loop
+        
+               allRats(1).poxOnly.meanFirstloxDSstage2(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).poxOnly.meanLastloxDSstage2(transitionSession,subj)= nanmean(lastLox);
+
+             if transitionSession==1
+                allRats(1).poxOnly.meanDSPElatencyStage2FirstDay(1,subj)= allRats(1).poxOnly.meanDSPElatencyStage2(1,subj);
+             end
+            sesCountA= sesCountA+1;
+        end
+    end
+    
+    allRats(1).poxOnly.meanFirstloxDSstage2FirstDay(1,subj)= allRats(1).poxOnly.meanFirstloxDSstage2(1,subj);
+    allRats(1).poxOnly.meanLastloxDSstage2FirstDay(1,subj)= allRats(1).poxOnly.meanLastloxDSstage2(1,subj);
+  
+    
+       %stage5 (condB)
+    for transitionSession= 1:size(allRats(1).subjSessB,1)
+        session= allRats(1).subjSessB(transitionSession,subj);
+        if ~isnan(session) %only run if the session is valid
+            %Exclude trials where animal was in port or did not make a PE
+                %first get the DS cues for this session
+                DSselected= currentSubj(session).periDS.DS;  % all the DS cues
+                
+                %First, let's exclude trials where animal was already in port
+
+                %We have to throw in an extra conditional in case we've excluded
+                %cues in our peri cue analysis due to being too close to the
+                %beginning or end.
+                for inPortTrial = find(~isnan(currentSubj(session).behavior.inPortDS))
+                    if inPortTrial < numel(DSselected) 
+                        DSselected(~isnan(currentSubj(session).behavior.inPortDS)) = nan;
+                    end
+                end
+                
+                %Then, let's exclude trials where animal did not make a PE during
+                %the cue epoch. (cellfun('isempty'))
+                for PEtrial = find(cellfun('isempty', currentSubj(session).behavior.poxDS))
+                    if PEtrial < numel(DSselected)  %same here, we need an extra conditional in case cues were excluded
+                        DSselected(cellfun('isempty', currentSubj(session).behavior.poxDS)) = nan;
+                    end
+                end
+            
+                     %Exclude trials where animal was in port or did not make a PE
+                %first get the NS cues for this session
+                NSselected= currentSubj(session).periNS.NS;  % all the NS cues
+                
+                %First, let's exclude trials where animal was already in port
+
+                %We have to throw in an extra conditional in case we've excluded
+                %cues in our peri cue analysis due to being too close to the
+                %beginning or end.
+                for inPortTrial = find(~isnan(currentSubj(session).behavior.inPortNS))
+                    if inPortTrial < numel(NSselected) 
+                        NSselected(~isnan(currentSubj(session).behavior.inPortNS)) = nan;
+                    end
+                end
+                
+                %Then, let's exclude trials where animal did not make a PE during
+                %the cue epoch. (cellfun('isempty'))
+                for PEtrial = find(cellfun('isempty', currentSubj(session).behavior.poxNS))
+                    if PEtrial < numel(NSselected)  %same here, we need an extra conditional in case cues were excluded
+                        NSselected(cellfun('isempty', currentSubj(session).behavior.poxNS)) = nan;
+                    end
+                end
+            allRats(1).poxOnly.meanDSPElatencyStage5(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency(~isnan(DSselected))); %take the mean of all the PE latencies for this session
+            allRats(1).poxOnly.meanNSPElatencyStage5(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency(~isnan(NSselected))); %take the mean of all the PE latencies for this session
+
+            
+            %for licks, want to get an average of the 1st lick and the last
+            %after the cue (TODO: this is just lick timestamps, not checking for bout
+            %criteria yet)
+            firstLox= []; %reset between sessions/subjs to prevent carryover of values
+            lastLox= [];
+              for cue = find(~isnan(DSselected)) %loop through each selected trial and retrieve licks %1:numel(currentSubj(session).behavior.loxDSrel) 
+                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   
+               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+                   firstLox(cue) = nan;
+                   lastLox(cue)=nan;
+                end            
+                firstLox(firstLox==0)= nan; %replace empty 0s with nan
+                lastLox(lastLox==0)=nan;
+              end %end cue loop
+        
+               allRats(1).poxOnly.meanFirstloxDSstage5(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).poxOnly.meanLastloxDSstage5(transitionSession,subj)= nanmean(lastLox);
+
+             for cue = find(~isnan(NSselected)) %loop through each selected trial and retrieve licks %1:numel(currentSubj(session).behavior.loxNSrel) 
+                if ~isempty(currentSubj(session).behavior.loxNSrel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+                   lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+                   
+               elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
+                   firstLox(cue) = nan;
+                   lastLox(cue)=nan;
+                end            
+                firstLox(firstLox==0)= nan; %replace empty 0s with nan
+                lastLox(lastLox==0)=nan;
+              end %end cue loop
+        
+               allRats(1).poxOnly.meanFirstloxNSstage5(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).poxOnly.meanLastloxNSstage5(transitionSession,subj)= nanmean(lastLox);
+
+            if transitionSession==1
+                allRats(1).poxOnly.meanDSPElatencyStage5FirstDay(1,subj)= allRats(1).poxOnly.meanDSPElatencyStage5(1,subj);
+                allRats(1).poxOnly.meanNSPElatencyStage5FirstDay(1,subj)= allRats(1).poxOnly.meanNSPElatencyStage5(1,subj);
+            end            
+             sesCountB= sesCountB+1; %only add to count if not nan
+        end
+    end
+        
+        %TODO: keep in mind that as we go through here by subj, empty 0s may be added to
+        %meanDSPElatencyStage5 if one animal has more sessions meeting
+        %criteria than the others... not a big deal if looking at specific
+        %days but if you took a mean or something across days you'd want to
+        % make them nan
+    allRats(1).poxOnly.meanDSPElatencyStage5LastDay(1,subj)= allRats(1).poxOnly.meanDSPElatencyStage5(sesCountB,subj); 
+    allRats(1).poxOnly.meanNSPElatencyStage5LastDay(1,subj)= allRats(1).poxOnly.meanNSPElatencyStage5(sesCountB,subj); 
+    
+    allRats(1).poxOnly.meanFirstloxDSstage5FirstDay(1,subj)= allRats(1).poxOnly.meanFirstloxDSstage5(1,subj);
+    allRats(1).poxOnly.meanFirstloxDSstage5LastDay(1,subj)= allRats(1).poxOnly.meanFirstloxDSstage5(sesCountB,subj);
+    allRats(1).poxOnly.meanLastloxDSstage5FirstDay(1,subj)= allRats(1).poxOnly.meanLastloxDSstage5(1,subj);
+    allRats(1).poxOnly.meanLastloxDSstage5LastDay(1,subj)= allRats(1).poxOnly.meanLastloxDSstage5(sesCountB,subj);
+    
+    
+    allRats(1).poxOnly.meanFirstloxNSstage5FirstDay(1,subj)= allRats(1).poxOnly.meanFirstloxNSstage5(1,subj);
+    allRats(1).poxOnly.meanFirstloxNSstage5LastDay(1,subj)= allRats(1).poxOnly.meanFirstloxNSstage5(sesCountB,subj);
+    allRats(1).poxOnly.meanLastloxNSstage5FirstDay(1,subj)= allRats(1).poxOnly.meanLastloxNSstage5(1,subj);
+    allRats(1).poxOnly.meanLastloxNSstage5LastDay(1,subj)= allRats(1).poxOnly.meanLastloxNSstage5(sesCountB,subj);
+    
+    %end stage 7 (cond C)
+%stage7 (condC)
+    for transitionSession= 1:size(allRats(1).subjSessC,1)
+        session= allRats(1).subjSessC(transitionSession,subj);
+        if ~isnan(session) %only run if the session is valid
+            allRats(1).poxOnly.meanDSPElatencyStage7(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
+            allRats(1).poxOnly.meanNSPElatencyStage7(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
+            
+            %for licks, want to get an average of the 1st lick and the last
+            %after the cue (TODO: this is just lick timestamps, not checking for bout
+            %criteria yet)
+            firstLox= []; %reset between sessions/subjs to prevent carryover of values
+            lastLox= [];
+            for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
+
+                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   lastLox(lastLox==0)=nan;
+               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+                   firstLox(cue) = nan;
+                   lastLox(cue)=nan;
+               end
+               allRats(1).poxOnly.meanFirstloxDSstage7(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).poxOnly.meanLastloxDSstage7(transitionSession,subj)= nanmean(lastLox);
+            end
+
+            for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+               if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+                   firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
+
+                   lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+                   lastLox(lastLox==0)=nan;
+               
+               elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
+                   firstLox(cue) = nan;
+                   lastLox(cue)=nan;
+               end
+               
+               allRats(1).poxOnly.meanFirstloxNSstage7(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).poxOnly.meanLastloxNSstage7(transitionSession,subj)= nanmean(lastLox);
+            end
+            
+            if transitionSession==1
+                allRats(1).poxOnly.meanDSPElatencyStage7FirstDay(1,subj)= allRats(1).poxOnly.meanDSPElatencyStage7(1,subj);
+                allRats(1).poxOnly.meanNSPElatencyStage7FirstDay(1,subj)= allRats(1).poxOnly.meanNSPElatencyStage7(1,subj);
+            end            
+             sesCountC= sesCountC+1; %only add to count if not nan
+        end
+    end
+        
+    
+    allRats(1).poxOnly.meanDSPElatencyStage7LastDay(1,subj)= allRats(1).poxOnly.meanDSPElatencyStage7(sesCountC,subj);
+    allRats(1).poxOnly.meanNSPElatencyStage7LastDay(1,subj)= allRats(1).poxOnly.meanNSPElatencyStage7(sesCountC,subj);
+    
+    allRats(1).poxOnly.meanFirstloxDSstage7FirstDay(1,subj)= allRats(1).poxOnly.meanFirstloxDSstage7(1,subj);
+    allRats(1).poxOnly.meanFirstloxDSstage7LastDay(1,subj)= allRats(1).poxOnly.meanFirstloxDSstage7(sesCountC,subj);
+    allRats(1).poxOnly.meanLastloxDSstage7FirstDay(1,subj)= allRats(1).poxOnly.meanLastloxDSstage7(1,subj);
+    allRats(1).poxOnly.meanLastloxDSstage7LastDay(1,subj)= allRats(1).poxOnly.meanLastloxDSstage7(sesCountC,subj);
+    
+    
+    allRats(1).poxOnly.meanFirstloxNSstage7FirstDay(1,subj)= allRats(1).poxOnly.meanFirstloxNSstage7(1,subj);
+    allRats(1).poxOnly.meanFirstloxNSstage7LastDay(1,subj)= allRats(1).poxOnly.meanFirstloxNSstage7(sesCountC,subj);
+    allRats(1).poxOnly.meanLastloxNSstage7FirstDay(1,subj)= allRats(1).poxOnly.meanLastloxNSstage7(1,subj);
+    allRats(1).poxOnly.meanLastloxNSstage7LastDay(1,subj)= allRats(1).poxOnly.meanLastloxNSstage7(sesCountC,subj);
+    
+    %end stage 7 (cond C)
+    
+%stage8 (condD)
+    for transitionSession= 1:size(allRats(1).subjSessD,1)
+        session= allRats(1).subjSessD(transitionSession,subj);
+        if ~isnan(session) %only run if the session is valid
+            allRats(1).poxOnly.meanDSPElatencyStage8(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
+            allRats(1).poxOnly.meanNSPElatencyStage8(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
+            
+            %for licks, want to get an average of the 1st lick and the last
+            %after the cue (TODO: this is just lick timestamps, not checking for bout
+            %criteria yet)
+               firstLox= []; %reset between sessions/subjs to prevent carryover of values
+         lastLox= [];
+           for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
+
+                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   lastLox(lastLox==0)=nan;
+               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+                   firstLox(cue) = nan;
+                   lastLox(cue)=nan;
+               end
+               allRats(1).poxOnly.meanFirstloxDSstage8(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).poxOnly.meanLastloxDSstage8(transitionSession,subj)= nanmean(lastLox);
+            end
+
+            for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+               if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+                   firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
+
+                   lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+                   lastLox(lastLox==0)=nan;
+               
+               elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
+                   firstLox(cue) = nan;
+                   lastLox(cue)=nan;
+               end
+               
+               allRats(1).poxOnly.meanFirstloxNSstage8(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).poxOnly.meanLastloxNSstage8(transitionSession,subj)= nanmean(lastLox);
+            end
+            
+            if transitionSession==1
+                allRats(1).poxOnly.meanDSPElatencyStage8FirstDay(1,subj)= allRats(1).poxOnly.meanDSPElatencyStage8(1,subj);
+                allRats(1).poxOnly.meanNSPElatencyStage8FirstDay(1,subj)= allRats(1).poxOnly.meanNSPElatencyStage8(1,subj);
+            end            
+             sesCountD= sesCountD+1; %only add to count if not nan
+        end
+    end
+        
+    
+    allRats(1).poxOnly.meanDSPElatencyStage8LastDay(1,subj)= allRats(1).poxOnly.meanDSPElatencyStage8(sesCountD,subj);
+    allRats(1).poxOnly.meanNSPElatencyStage8LastDay(1,subj)= allRats(1).poxOnly.meanNSPElatencyStage8(sesCountD,subj);
+    
+    allRats(1).poxOnly.meanFirstloxDSstage8FirstDay(1,subj)= allRats(1).poxOnly.meanFirstloxDSstage8(1,subj);
+    allRats(1).poxOnly.meanFirstloxDSstage8LastDay(1,subj)= allRats(1).poxOnly.meanFirstloxDSstage8(sesCountD,subj);
+    allRats(1).poxOnly.meanLastloxDSstage8FirstDay(1,subj)= allRats(1).poxOnly.meanLastloxDSstage8(1,subj);
+    allRats(1).poxOnly.meanLastloxDSstage8LastDay(1,subj)= allRats(1).poxOnly.meanLastloxDSstage8(sesCountD,subj);
+    
+    
+    allRats(1).poxOnly.meanFirstloxNSstage8FirstDay(1,subj)= allRats(1).poxOnly.meanFirstloxNSstage8(1,subj);
+    allRats(1).poxOnly.meanFirstloxNSstage8LastDay(1,subj)= allRats(1).poxOnly.meanFirstloxNSstage8(sesCountD,subj);
+    allRats(1).poxOnly.meanLastloxNSstage8FirstDay(1,subj)= allRats(1).poxOnly.meanLastloxNSstage8(1,subj);
+    allRats(1).poxOnly.meanLastloxNSstage8LastDay(1,subj)= allRats(1).poxOnly.meanLastloxNSstage8(sesCountD,subj);
+    
+    %end stage 8 (cond D)
+    
+%stage12 extinction (condE)
+    for transitionSession= 1:size(allRats(1).subjSessE,1)
+        session= allRats(1).subjSessE(transitionSession,subj);
+        if ~isnan(session) %only run if the session is valid
+            allRats(1).poxOnly.meanDSPElatencyExtinction(transitionSession,subj)= nanmean(currentSubj(session).behavior.DSpeLatency); %take the mean of all the PE latencies for this session
+            allRats(1).poxOnly.meanNSPElatencyExtinction(transitionSession,subj)= nanmean(currentSubj(session).behavior.NSpeLatency);
+            
+            %for licks, want to get an average of the 1st lick and the last
+            %after the cue (TODO: this is just lick timestamps, not checking for bout
+            %criteria yet)
+            firstLox= []; %reset between sessions/subjs to prevent carryover of values
+            lastLox= [];
+            for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
+                if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
+                   firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
+                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
+
+                   lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
+                   lastLox(lastLox==0)=nan;
+               elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
+                   firstLox(cue) = nan;
+                   lastLox(cue)=nan;
+               end
+               allRats(1).poxOnly.meanFirstloxDSExtinction(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).poxOnly.meanLastloxDSExtinction(transitionSession,subj)= nanmean(lastLox);
+            end
+
+            for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
+               if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
+                   firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
+                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
+
+                   lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
+                   lastLox(lastLox==0)=nan;
+               
+               elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
+                   firstLox(cue) = nan;
+                   lastLox(cue)=nan;
+               end
+               
+               allRats(1).poxOnly.meanFirstloxNSExtinction(transitionSession,subj)= nanmean(firstLox);
+               allRats(1).poxOnly.meanLastloxNSExtinction(transitionSession,subj)= nanmean(lastLox);
+            end
+            
+            if transitionSession==1
+                allRats(1).poxOnly.meanDSPElatencyExtinctionFirstDay(1,subj)= allRats(1).poxOnly.meanDSPElatencyExtinction(1,subj);
+                allRats(1).poxOnly.meanNSPElatencyExtinctionFirstDay(1,subj)= allRats(1).poxOnly.meanNSPElatencyExtinction(1,subj);
+            end            
+             sesCountE= sesCountE+1; %only add to count if not nan
+        end
+    end
+         
+    allRats(1).poxOnly.meanDSPElatencyExtinctionLastDay(1,subj)= allRats(1).poxOnly.meanDSPElatencyExtinction(sesCountE,subj);
+    allRats(1).poxOnly.meanNSPElatencyExtinctionLastDay(1,subj)= allRats(1).poxOnly.meanNSPElatencyExtinction(sesCountE,subj);
+    
+    allRats(1).poxOnly.meanFirstloxDSExtinctionFirstDay(1,subj)= allRats(1).poxOnly.meanFirstloxDSExtinction(1,subj);
+    allRats(1).poxOnly.meanFirstloxDSExtinctionLastDay(1,subj)= allRats(1).poxOnly.meanFirstloxDSExtinction(sesCountE,subj);
+    allRats(1).poxOnly.meanLastloxDSExtinctionFirstDay(1,subj)= allRats(1).poxOnly.meanLastloxDSExtinction(1,subj);
+    allRats(1).poxOnly.meanLastloxDSExtinctionLastDay(1,subj)= allRats(1).poxOnly.meanLastloxDSExtinction(sesCountE,subj);
+    
+    allRats(1).poxOnly.meanFirstloxNSExtinctionFirstDay(1,subj)= allRats(1).poxOnly.meanFirstloxNSExtinction(1,subj);
+    allRats(1).poxOnly.meanFirstloxNSExtinctionLastDay(1,subj)= allRats(1).poxOnly.meanFirstloxNSExtinction(sesCountE,subj);
+    allRats(1).poxOnly.meanLastloxNSExtinctionFirstDay(1,subj)= allRats(1).poxOnly.meanLastloxNSExtinction(1,subj);
+    allRats(1).poxOnly.meanLastloxNSExtinctionLastDay(1,subj)= allRats(1).poxOnly.meanLastloxNSExtinction(sesCountE,subj);
+    
+    %end stage 12 extinction (cond E)
+ 
+end %end subj loop
+
+
+    %get a grand mean across all subjects for these events
+    %stage 2 
+allRats(1).poxOnly.grandMeanDSPElatencyStage2FirstDay= nanmean(allRats(1).poxOnly.meanDSPElatencyStage2FirstDay);
+allRats(1).poxOnly.grandMeanfirstLoxDSstage2FirstDay= nanmean(allRats(1).poxOnly.meanFirstloxDSstage2FirstDay);
+allRats(1).poxOnly.grandMeanlastLoxDSstage2FirstDay= nanmean(allRats(1).poxOnly.meanLastloxDSstage2FirstDay);
+    %stage 5
+allRats(1).poxOnly.grandMeanDSPElatencyStage5FirstDay= nanmean(allRats(1).poxOnly.meanDSPElatencyStage5FirstDay);
+allRats(1).poxOnly.grandMeanfirstLoxDSstage5FirstDay= nanmean(allRats(1).poxOnly.meanFirstloxDSstage5FirstDay);
+allRats(1).poxOnly.grandMeanlastLoxDSstage5FirstDay= nanmean(allRats(1).poxOnly.meanLastloxDSstage5FirstDay);
+
+allRats(1).poxOnly.grandMeanDSPElatencyStage5LastDay= nanmean(allRats(1).poxOnly.meanDSPElatencyStage5LastDay);
+allRats(1).poxOnly.grandMeanfirstLoxDSstage5LastDay= nanmean(allRats(1).poxOnly.meanFirstloxDSstage5LastDay);
+allRats(1).poxOnly.grandMeanlastLoxDSstage5LastDay= nanmean(allRats(1).poxOnly.meanLastloxDSstage5LastDay);
+
+allRats(1).poxOnly.grandMeanNSPElatencyStage5FirstDay= nanmean(allRats(1).poxOnly.meanNSPElatencyStage5FirstDay);
+allRats(1).poxOnly.grandMeanfirstLoxNSstage5FirstDay= nanmean(allRats(1).poxOnly.meanFirstloxNSstage5FirstDay);
+allRats(1).poxOnly.grandMeanlastLoxNSstage5FirstDay= nanmean(allRats(1).poxOnly.meanLastloxNSstage5FirstDay);
+
+allRats(1).poxOnly.grandMeanNSPElatencyStage5LastDay= nanmean(allRats(1).poxOnly.meanNSPElatencyStage5LastDay);
+allRats(1).poxOnly.grandMeanfirstLoxNSstage5LastDay= nanmean(allRats(1).poxOnly.meanFirstloxNSstage5LastDay);
+allRats(1).poxOnly.grandMeanlastLoxNSstage5LastDay= nanmean(allRats(1).poxOnly.meanLastloxNSstage5LastDay);
+    %stage 7
+allRats(1).poxOnly.grandMeanDSPElatencyStage7FirstDay= nanmean(allRats(1).poxOnly.meanDSPElatencyStage7FirstDay);
+allRats(1).poxOnly.grandMeanfirstLoxDSstage7FirstDay= nanmean(allRats(1).poxOnly.meanFirstloxDSstage7FirstDay);
+allRats(1).poxOnly.grandMeanlastLoxDSstage7FirstDay= nanmean(allRats(1).poxOnly.meanLastloxDSstage7FirstDay);
+
+allRats(1).poxOnly.grandMeanDSPElatencyStage7LastDay= nanmean(allRats(1).poxOnly.meanDSPElatencyStage7LastDay);
+allRats(1).poxOnly.grandMeanfirstLoxDSstage7LastDay= nanmean(allRats(1).poxOnly.meanFirstloxDSstage7LastDay);
+allRats(1).poxOnly.grandMeanlastLoxDSstage7LastDay= nanmean(allRats(1).poxOnly.meanLastloxDSstage7LastDay);
+
+allRats(1).poxOnly.grandMeanNSPElatencyStage7FirstDay= nanmean(allRats(1).poxOnly.meanNSPElatencyStage7FirstDay);
+allRats(1).poxOnly.grandMeanfirstLoxNSstage7FirstDay= nanmean(allRats(1).poxOnly.meanFirstloxNSstage7FirstDay);
+allRats(1).poxOnly.grandMeanlastLoxNSstage7FirstDay= nanmean(allRats(1).poxOnly.meanLastloxNSstage7FirstDay);
+
+allRats(1).poxOnly.grandMeanNSPElatencyStage7LastDay= nanmean(allRats(1).poxOnly.meanNSPElatencyStage7LastDay);
+allRats(1).poxOnly.grandMeanfirstLoxNSstage7LastDay= nanmean(allRats(1).poxOnly.meanFirstloxNSstage7LastDay);
+allRats(1).poxOnly.grandMeanlastLoxNSstage7LastDay= nanmean(allRats(1).poxOnly.meanLastloxNSstage7LastDay);
+    %stage 8
+allRats(1).poxOnly.grandMeanDSPElatencyStage8FirstDay= nanmean(allRats(1).poxOnly.meanDSPElatencyStage8FirstDay);
+allRats(1).poxOnly.grandMeanfirstLoxDSstage8FirstDay= nanmean(allRats(1).poxOnly.meanFirstloxDSstage8FirstDay);
+allRats(1).poxOnly.grandMeanlastLoxDSstage8FirstDay= nanmean(allRats(1).poxOnly.meanLastloxDSstage8FirstDay);
+
+allRats(1).poxOnly.grandMeanDSPElatencyStage8LastDay= nanmean(allRats(1).poxOnly.meanDSPElatencyStage8LastDay);
+allRats(1).poxOnly.grandMeanfirstLoxDSstage8LastDay= nanmean(allRats(1).poxOnly.meanFirstloxDSstage8LastDay);
+allRats(1).poxOnly.grandMeanlastLoxDSstage8LastDay= nanmean(allRats(1).poxOnly.meanLastloxDSstage8LastDay);
+
+allRats(1).poxOnly.grandMeanNSPElatencyStage8FirstDay= nanmean(allRats(1).poxOnly.meanNSPElatencyStage8FirstDay);
+allRats(1).poxOnly.grandMeanfirstLoxNSstage8FirstDay= nanmean(allRats(1).poxOnly.meanFirstloxNSstage8FirstDay);
+allRats(1).poxOnly.grandMeanlastLoxNSstage8FirstDay= nanmean(allRats(1).poxOnly.meanLastloxNSstage8FirstDay);
+
+allRats(1).poxOnly.grandMeanNSPElatencyStage8LastDay= nanmean(allRats(1).poxOnly.meanNSPElatencyStage8LastDay);
+allRats(1).poxOnly.grandMeanfirstLoxNSstage8LastDay= nanmean(allRats(1).poxOnly.meanFirstloxNSstage8LastDay);
+allRats(1).poxOnly.grandMeanlastLoxNSstage8LastDay= nanmean(allRats(1).poxOnly.meanLastloxNSstage8LastDay);
+    %stage 12 (extinction)
+allRats(1).poxOnly.grandMeanDSPElatencyExtinctionFirstDay= nanmean(allRats(1).poxOnly.meanDSPElatencyExtinctionFirstDay);
+allRats(1).poxOnly.grandMeanfirstLoxDSExtinctionFirstDay= nanmean(allRats(1).poxOnly.meanFirstloxDSExtinctionFirstDay);
+allRats(1).poxOnly.grandMeanlastLoxDSExtinctionFirstDay= nanmean(allRats(1).poxOnly.meanLastloxDSExtinctionFirstDay);
+
+allRats(1).poxOnly.grandMeanDSPElatencyExtinctionLastDay= nanmean(allRats(1).poxOnly.meanDSPElatencyExtinctionLastDay);
+allRats(1).poxOnly.grandMeanfirstLoxDSExtinctionLastDay= nanmean(allRats(1).poxOnly.meanFirstloxDSExtinctionLastDay);
+allRats(1).poxOnly.grandMeanlastLoxDSExtinctionLastDay= nanmean(allRats(1).poxOnly.meanLastloxDSExtinctionLastDay);
+
+allRats(1).poxOnly.grandMeanNSPElatencyExtinctionFirstDay= nanmean(allRats(1).poxOnly.meanNSPElatencyExtinctionFirstDay);
+allRats(1).poxOnly.grandMeanfirstLoxNSExtinctionFirstDay= nanmean(allRats(1).poxOnly.meanFirstloxNSExtinctionFirstDay);
+allRats(1).poxOnly.grandMeanlastLoxNSExtinctionFirstDay= nanmean(allRats(1).poxOnly.meanLastloxNSExtinctionFirstDay);
+
+allRats(1).poxOnly.grandMeanNSPElatencyExtinctionLastDay= nanmean(allRats(1).poxOnly.meanNSPElatencyExtinctionLastDay);
+allRats(1).poxOnly.grandMeanfirstLoxNSExtinctionLastDay= nanmean(allRats(1).poxOnly.meanFirstloxNSExtinctionLastDay);
+allRats(1).poxOnly.grandMeanlastLoxNSExtinctionLastDay= nanmean(allRats(1).poxOnly.meanLastloxNSExtinctionLastDay);
 
 
 %these should be plotted after the axes are equalized (or else the ylim
@@ -1377,11 +1453,11 @@ set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen
 subplot(2,9,1)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanDSPElatencyStage2FirstDay,allRats(1).grandMeanDSPElatencyStage2FirstDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxDSstage2FirstDay,allRats(1).grandMeanfirstLoxDSstage2FirstDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxDSstage2FirstDay,allRats(1).grandMeanlastLoxDSstage2FirstDay], ylim, 'g--');%plot vertical line for last lick
+plot([allRats(1).poxOnly.grandMeanDSPElatencyStage2FirstDay,allRats(1).poxOnly.grandMeanDSPElatencyStage2FirstDay], ylim, 'k--'); %plot vertical line for PE latency
+plot([allRats(1).poxOnly.grandMeanfirstLoxDSstage2FirstDay,allRats(1).poxOnly.grandMeanfirstLoxDSstage2FirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).poxOnly.grandMeanlastLoxDSstage2FirstDay,allRats(1).poxOnly.grandMeanlastLoxDSstage2FirstDay], ylim, 'g--');%plot vertical line for last lick
 
-hLegend= legend('465nm', '405nm', '465nm SEM','405nm SEM', 'cue onset'); %add rats to legend, location outside of plot
+hLegend= legend('465nm', '405nm', '465nm SEM','405nm SEM', 'cue onset', 'mean PE latency', 'mean first & last lick'); %add rats to legend, location outside of plot
 
 legendPosition = [.94 0.7 0.03 0.1];
 set(hLegend,'Position', legendPosition,'Units', 'normalized');
@@ -1389,60 +1465,60 @@ set(hLegend,'Position', legendPosition,'Units', 'normalized');
 subplot(2,9,2)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanDSPElatencyStage5FirstDay,allRats(1).grandMeanDSPElatencyStage5FirstDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxDSstage5FirstDay,allRats(1).grandMeanfirstLoxDSstage5FirstDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxDSstage5FirstDay,allRats(1).grandMeanlastLoxDSstage5FirstDay], ylim, 'g--');%plot vertical line for last lick
+plot([allRats(1).poxOnly.grandMeanDSPElatencyStage5FirstDay,allRats(1).poxOnly.grandMeanDSPElatencyStage5FirstDay], ylim, 'k--'); %plot vertical line for PE latency
+plot([allRats(1).poxOnly.grandMeanfirstLoxDSstage5FirstDay,allRats(1).poxOnly.grandMeanfirstLoxDSstage5FirstDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).poxOnly.grandMeanlastLoxDSstage5FirstDay,allRats(1).poxOnly.grandMeanlastLoxDSstage5FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,3)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanDSPElatencyStage5LastDay,allRats(1).grandMeanDSPElatencyStage5LastDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxDSstage5LastDay,allRats(1).grandMeanfirstLoxDSstage5LastDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxDSstage5LastDay,allRats(1).grandMeanlastLoxDSstage5LastDay], ylim, 'g--');%plot vertical line for last lick
+plot([allRats(1).poxOnly.grandMeanDSPElatencyStage5LastDay,allRats(1).poxOnly.grandMeanDSPElatencyStage5LastDay], ylim, 'k--'); %plot vertical line for PE latency
+plot([allRats(1).poxOnly.grandMeanfirstLoxDSstage5LastDay,allRats(1).poxOnly.grandMeanfirstLoxDSstage5LastDay], ylim, 'g--'); %plot vertical line for first lick
+plot([allRats(1).poxOnly.grandMeanlastLoxDSstage5LastDay,allRats(1).poxOnly.grandMeanlastLoxDSstage5LastDay], ylim, 'g--');%plot vertical line for last lick
 
 
 subplot(2,9,4)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanDSPElatencyStage7FirstDay,allRats(1).grandMeanDSPElatencyStage7LastDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxDSstage7FirstDay,allRats(1).grandMeanfirstLoxDSstage7FirstDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxDSstage7FirstDay,allRats(1).grandMeanlastLoxDSstage7FirstDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanDSPElatencyStage7FirstDay,allRats(1).poxOnly.grandMeanDSPElatencyStage7LastDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxDSstage7FirstDay,allRats(1).poxOnly.grandMeanfirstLoxDSstage7FirstDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxDSstage7FirstDay,allRats(1).poxOnly.grandMeanlastLoxDSstage7FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,5)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanDSPElatencyStage7LastDay,allRats(1).grandMeanDSPElatencyStage7LastDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxDSstage7LastDay,allRats(1).grandMeanfirstLoxDSstage7LastDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxDSstage7LastDay,allRats(1).grandMeanlastLoxDSstage7LastDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanDSPElatencyStage7LastDay,allRats(1).poxOnly.grandMeanDSPElatencyStage7LastDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxDSstage7LastDay,allRats(1).poxOnly.grandMeanfirstLoxDSstage7LastDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxDSstage7LastDay,allRats(1).poxOnly.grandMeanlastLoxDSstage7LastDay], ylim, 'g--');%plot vertical line for last lick
 
 
 subplot(2,9,6)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanDSPElatencyStage8FirstDay,allRats(1).grandMeanDSPElatencyStage8FirstDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxDSstage8FirstDay,allRats(1).grandMeanfirstLoxDSstage8FirstDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxDSstage8FirstDay,allRats(1).grandMeanlastLoxDSstage8FirstDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanDSPElatencyStage8FirstDay,allRats(1).poxOnly.grandMeanDSPElatencyStage8FirstDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxDSstage8FirstDay,allRats(1).poxOnly.grandMeanfirstLoxDSstage8FirstDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxDSstage8FirstDay,allRats(1).poxOnly.grandMeanlastLoxDSstage8FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,7)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanDSPElatencyStage8LastDay,allRats(1).grandMeanDSPElatencyStage8LastDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxDSstage8LastDay,allRats(1).grandMeanfirstLoxDSstage8LastDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxDSstage8LastDay,allRats(1).grandMeanlastLoxDSstage8LastDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanDSPElatencyStage8LastDay,allRats(1).poxOnly.grandMeanDSPElatencyStage8LastDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxDSstage8LastDay,allRats(1).poxOnly.grandMeanfirstLoxDSstage8LastDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxDSstage8LastDay,allRats(1).poxOnly.grandMeanlastLoxDSstage8LastDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,8)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanDSPElatencyExtinctionFirstDay,allRats(1).grandMeanDSPElatencyExtinctionFirstDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxDSExtinctionFirstDay,allRats(1).grandMeanfirstLoxDSExtinctionFirstDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxDSExtinctionFirstDay,allRats(1).grandMeanlastLoxDSExtinctionFirstDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanDSPElatencyExtinctionFirstDay,allRats(1).poxOnly.grandMeanDSPElatencyExtinctionFirstDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxDSExtinctionFirstDay,allRats(1).poxOnly.grandMeanfirstLoxDSExtinctionFirstDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxDSExtinctionFirstDay,allRats(1).poxOnly.grandMeanlastLoxDSExtinctionFirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,9)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanDSPElatencyExtinctionLastDay,allRats(1).grandMeanDSPElatencyExtinctionLastDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxDSExtinctionLastDay,allRats(1).grandMeanfirstLoxDSExtinctionLastDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxDSExtinctionLastDay,allRats(1).grandMeanlastLoxDSExtinctionLastDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanDSPElatencyExtinctionLastDay,allRats(1).poxOnly.grandMeanDSPElatencyExtinctionLastDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxDSExtinctionLastDay,allRats(1).poxOnly.grandMeanfirstLoxDSExtinctionLastDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxDSExtinctionLastDay,allRats(1).poxOnly.grandMeanlastLoxDSExtinctionLastDay], ylim, 'g--');%plot vertical line for last lick
 
 
 
@@ -1452,58 +1528,58 @@ subplot(2,9,10) %no NS on stage 2
 subplot(2,9,11)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanNSPElatencyStage5FirstDay,allRats(1).grandMeanNSPElatencyStage5FirstDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxNSstage5FirstDay,allRats(1).grandMeanfirstLoxNSstage5FirstDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxNSstage5FirstDay,allRats(1).grandMeanlastLoxNSstage5FirstDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanNSPElatencyStage5FirstDay,allRats(1).poxOnly.grandMeanNSPElatencyStage5FirstDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxNSstage5FirstDay,allRats(1).poxOnly.grandMeanfirstLoxNSstage5FirstDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxNSstage5FirstDay,allRats(1).poxOnly.grandMeanlastLoxNSstage5FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,12)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanNSPElatencyStage5LastDay,allRats(1).grandMeanNSPElatencyStage5LastDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxNSstage5LastDay,allRats(1).grandMeanfirstLoxNSstage5LastDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxNSstage5LastDay,allRats(1).grandMeanlastLoxNSstage5LastDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanNSPElatencyStage5LastDay,allRats(1).poxOnly.grandMeanNSPElatencyStage5LastDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxNSstage5LastDay,allRats(1).poxOnly.grandMeanfirstLoxNSstage5LastDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxNSstage5LastDay,allRats(1).poxOnly.grandMeanlastLoxNSstage5LastDay], ylim, 'g--');%plot vertical line for last lick
 
 
 subplot(2,9,13)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanNSPElatencyStage7FirstDay,allRats(1).grandMeanNSPElatencyStage7FirstDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxNSstage7FirstDay,allRats(1).grandMeanfirstLoxNSstage7FirstDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxNSstage7FirstDay,allRats(1).grandMeanlastLoxNSstage7FirstDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanNSPElatencyStage7FirstDay,allRats(1).poxOnly.grandMeanNSPElatencyStage7FirstDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxNSstage7FirstDay,allRats(1).poxOnly.grandMeanfirstLoxNSstage7FirstDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxNSstage7FirstDay,allRats(1).poxOnly.grandMeanlastLoxNSstage7FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,14)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanNSPElatencyStage7LastDay,allRats(1).grandMeanNSPElatencyStage7LastDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxNSstage7LastDay,allRats(1).grandMeanfirstLoxNSstage7LastDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxNSstage7LastDay,allRats(1).grandMeanlastLoxNSstage7LastDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanNSPElatencyStage7LastDay,allRats(1).poxOnly.grandMeanNSPElatencyStage7LastDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxNSstage7LastDay,allRats(1).poxOnly.grandMeanfirstLoxNSstage7LastDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxNSstage7LastDay,allRats(1).poxOnly.grandMeanlastLoxNSstage7LastDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,15)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanNSPElatencyStage8FirstDay,allRats(1).grandMeanNSPElatencyStage8FirstDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxNSstage8FirstDay,allRats(1).grandMeanfirstLoxNSstage8FirstDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxNSstage8FirstDay,allRats(1).grandMeanlastLoxNSstage8FirstDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanNSPElatencyStage8FirstDay,allRats(1).poxOnly.grandMeanNSPElatencyStage8FirstDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxNSstage8FirstDay,allRats(1).poxOnly.grandMeanfirstLoxNSstage8FirstDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxNSstage8FirstDay,allRats(1).poxOnly.grandMeanlastLoxNSstage8FirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,16)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanNSPElatencyStage8LastDay,allRats(1).grandMeanNSPElatencyStage8LastDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxNSstage8LastDay,allRats(1).grandMeanfirstLoxNSstage8LastDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxNSstage8LastDay,allRats(1).grandMeanlastLoxNSstage8LastDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanNSPElatencyStage8LastDay,allRats(1).poxOnly.grandMeanNSPElatencyStage8LastDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxNSstage8LastDay,allRats(1).poxOnly.grandMeanfirstLoxNSstage8LastDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxNSstage8LastDay,allRats(1).poxOnly.grandMeanlastLoxNSstage8LastDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,17)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanNSPElatencyExtinctionFirstDay,allRats(1).grandMeanNSPElatencyExtinctionFirstDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxNSExtinctionFirstDay,allRats(1).grandMeanfirstLoxNSExtinctionFirstDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxNSExtinctionFirstDay,allRats(1).grandMeanlastLoxNSExtinctionFirstDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanNSPElatencyExtinctionFirstDay,allRats(1).poxOnly.grandMeanNSPElatencyExtinctionFirstDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxNSExtinctionFirstDay,allRats(1).poxOnly.grandMeanfirstLoxNSExtinctionFirstDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxNSExtinctionFirstDay,allRats(1).poxOnly.grandMeanlastLoxNSExtinctionFirstDay], ylim, 'g--');%plot vertical line for last lick
 
 subplot(2,9,18)
 hold on;
 plot([0,0], ylim, 'r--'); %plot vertical line for cue onset
-% plot([allRats(1).grandMeanNSPElatencyExtinctionLastDay,allRats(1).grandMeanNSPElatencyExtinctionLastDay], ylim, 'k--'); %plot vertical line for PE latency
-% plot([allRats(1).grandMeanfirstLoxNSExtinctionLastDay,allRats(1).grandMeanfirstLoxNSExtinctionLastDay], ylim, 'g--'); %plot vertical line for first lick
-% plot([allRats(1).grandMeanlastLoxNSExtinctionLastDay,allRats(1).grandMeanlastLoxNSExtinctionLastDay], ylim, 'g--');%plot vertical line for last lick
+% plot([allRats(1).poxOnly.grandMeanNSPElatencyExtinctionLastDay,allRats(1).poxOnly.grandMeanNSPElatencyExtinctionLastDay], ylim, 'k--'); %plot vertical line for PE latency
+% plot([allRats(1).poxOnly.grandMeanfirstLoxNSExtinctionLastDay,allRats(1).poxOnly.grandMeanfirstLoxNSExtinctionLastDay], ylim, 'g--'); %plot vertical line for first lick
+% plot([allRats(1).poxOnly.grandMeanlastLoxNSExtinctionLastDay,allRats(1).poxOnly.grandMeanlastLoxNSExtinctionLastDay], ylim, 'g--');%plot vertical line for last lick
 
 

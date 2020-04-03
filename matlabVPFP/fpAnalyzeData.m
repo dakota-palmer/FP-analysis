@@ -569,7 +569,7 @@ end %end subject loop
 %collect all licks between the current cue onset and the next cue's onset
 
 %Parameters
-preCueTime= 10; %t in seconds to examine before cue
+preCueTime= 5; %t in seconds to examine before cue
 postCueTime= 10; %t in seconds to examine after cue
 
 preCueFrames= preCueTime*fs;
@@ -652,6 +652,7 @@ for subj= 1:numel(subjects) %for each subject
                        loxDScount=loxDScount+1; %iterate the counter
                    end
                 end
+                               
           end %end cue too close to end conditional
         end %end cue loop
                
@@ -5678,9 +5679,8 @@ end %end subject loop
 
 %% Between subjects session avg by stage
 
-%TODO: all pohtometry data is  more readable in (session, cue, subj)
+%TODO: all photometry data is  more readable in (session, cue, subj)
 %format, consider switching rest of code to this format
-% subjIncluded= subjects(~ismember(subjects,'rat10')); %excluding VP-VTA-FP10
 
 for subj= 1:numel(subjIncluded) %for each subject
        currentSubj= subjDataAnalyzed.(subjIncluded{subj}); %use this for easy indexing into the current subject within the struct

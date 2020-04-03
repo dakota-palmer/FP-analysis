@@ -648,18 +648,18 @@ for subj = 1:numel(subjIncluded)
        for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
-
                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-                   lastLox(lastLox==0)=nan;
                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
-               end
+                end
+               
+               firstLox(firstLox==0)= nan; %replace empty 0s with nan
+               lastLox(lastLox==0)=nan;
+       end
+
                allRats(1).allCues.meanFirstloxDSstage2(transitionSession,subj)= nanmean(firstLox);
                allRats(1).allCues.meanLastloxDSstage2(transitionSession,subj)= nanmean(lastLox);
-        end
-
            
              if transitionSession==1
                 allRats(1).allCues.meanDSPElatencyStage2FirstDay(1,subj)= allRats(1).allCues.meanDSPElatencyStage2(1,subj);
@@ -687,34 +687,36 @@ for subj = 1:numel(subjIncluded)
             for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
-
                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-                   lastLox(lastLox==0)=nan;
                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
-               end
+                end
+                
+               firstLox(firstLox==0)= nan; %replace empty 0s with nan
+               lastLox(lastLox==0)=nan;
+            end %end DS loop
+            
                allRats(1).allCues.meanFirstloxDSstage5(transitionSession,subj)= nanmean(firstLox);
                allRats(1).allCues.meanLastloxDSstage5(transitionSession,subj)= nanmean(lastLox);
-            end
-
+            
             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
-                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
-
                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
-                   lastLox(lastLox==0)=nan;
                
                elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
                
+               firstLox(firstLox==0)= nan; %replace empty 0s with nan
+               lastLox(lastLox==0)=nan;
+
+            end %end NS loop
+            
                allRats(1).allCues.meanFirstloxNSstage5(transitionSession,subj)= nanmean(firstLox);
                allRats(1).allCues.meanLastloxNSstage5(transitionSession,subj)= nanmean(lastLox);
-            end
             
             if transitionSession==1
                 allRats(1).allCues.meanDSPElatencyStage5FirstDay(1,subj)= allRats(1).allCues.meanDSPElatencyStage5(1,subj);
@@ -759,34 +761,33 @@ for subj = 1:numel(subjIncluded)
             for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
-
                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-                   lastLox(lastLox==0)=nan;
                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
-               end
+                end
+                firstLox(firstLox==0)= nan; %replace empty 0s with nan
+                lastLox(lastLox==0)=nan;
+            end %end DS loop
+            
                allRats(1).allCues.meanFirstloxDSstage7(transitionSession,subj)= nanmean(firstLox);
                allRats(1).allCues.meanLastloxDSstage7(transitionSession,subj)= nanmean(lastLox);
-            end
 
             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
-                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
-
                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
-                   lastLox(lastLox==0)=nan;
                
                elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
-               
+               firstLox(firstLox==0)= nan; %replace empty 0s with nan
+               lastLox(lastLox==0)=nan;
+            end %end NS loop
+                           
                allRats(1).allCues.meanFirstloxNSstage7(transitionSession,subj)= nanmean(firstLox);
                allRats(1).allCues.meanLastloxNSstage7(transitionSession,subj)= nanmean(lastLox);
-            end
             
             if transitionSession==1
                 allRats(1).allCues.meanDSPElatencyStage7FirstDay(1,subj)= allRats(1).allCues.meanDSPElatencyStage7(1,subj);
@@ -828,34 +829,32 @@ for subj = 1:numel(subjIncluded)
            for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
-
                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-                   lastLox(lastLox==0)=nan;
                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
-               end
+                end
+                firstLox(firstLox==0)= nan; %replace empty 0s with nan
+                lastLox(lastLox==0)=nan;
+           end %end DS loop
+            
                allRats(1).allCues.meanFirstloxDSstage8(transitionSession,subj)= nanmean(firstLox);
                allRats(1).allCues.meanLastloxDSstage8(transitionSession,subj)= nanmean(lastLox);
-            end
 
             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
-                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
-
                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
-                   lastLox(lastLox==0)=nan;
-               
                elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
-               
+               firstLox(firstLox==0)= nan; %replace empty 0s with nan
+               lastLox(lastLox==0)=nan;
+            end %end NS loop
+      
                allRats(1).allCues.meanFirstloxNSstage8(transitionSession,subj)= nanmean(firstLox);
                allRats(1).allCues.meanLastloxNSstage8(transitionSession,subj)= nanmean(lastLox);
-            end
             
             if transitionSession==1
                 allRats(1).allCues.meanDSPElatencyStage8FirstDay(1,subj)= allRats(1).allCues.meanDSPElatencyStage8(1,subj);
@@ -897,34 +896,33 @@ for subj = 1:numel(subjIncluded)
             for cue = 1:numel(currentSubj(session).behavior.loxDSrel) %loop through all trials
                 if ~isempty(currentSubj(session).behavior.loxDSrel{cue}) %only look for trials where there was a lick
                    firstLox(cue)= currentSubj(session).behavior.loxDSrel{cue}(1);
-                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
-
                    lastLox(cue)=currentSubj(session).behavior.loxDSrel{cue}(end);
-                   lastLox(lastLox==0)=nan;
                elseif isempty(currentSubj(session).behavior.loxDSrel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
-               end
+                end
+                firstLox(firstLox==0)= nan; %replace empty 0s with nan
+                lastLox(lastLox==0)=nan;
+            end %end DS loop
+            
                allRats(1).allCues.meanFirstloxDSExtinction(transitionSession,subj)= nanmean(firstLox);
                allRats(1).allCues.meanLastloxDSExtinction(transitionSession,subj)= nanmean(lastLox);
-            end
 
             for cue= 1:numel(currentSubj(session).behavior.loxNSrel) %repeat for NS trials
                if ~isempty(currentSubj(session).behavior.loxNSrel{cue})
                    firstLox(cue)= currentSubj(session).behavior.loxNSrel{cue}(1);
-                   firstLox(firstLox==0)= nan; %replace empty 0s with nan
-
                    lastLox(cue)=currentSubj(session).behavior.loxNSrel{cue}(end);
-                   lastLox(lastLox==0)=nan;
                
                elseif isempty(currentSubj(session).behavior.loxNSrel{cue}) %in case there are no licks
                    firstLox(cue) = nan;
                    lastLox(cue)=nan;
                end
-               
+               firstLox(firstLox==0)= nan; %replace empty 0s with nan
+               lastLox(lastLox==0)=nan;
+            end %end NS loop
+                           
                allRats(1).allCues.meanFirstloxNSExtinction(transitionSession,subj)= nanmean(firstLox);
                allRats(1).allCues.meanLastloxNSExtinction(transitionSession,subj)= nanmean(lastLox);
-            end
             
             if transitionSession==1
                 allRats(1).allCues.meanDSPElatencyExtinctionFirstDay(1,subj)= allRats(1).allCues.meanDSPElatencyExtinction(1,subj);
