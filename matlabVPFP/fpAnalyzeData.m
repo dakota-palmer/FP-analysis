@@ -2953,11 +2953,8 @@ end %end subject loop
 for subj= 1:numel(subjectsAnalyzed) %for each subject
 currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
 
-
-rewardSessionCount= 0; %counter for sessions with valid variable reward data 
-
-
     for session = 1:numel(currentSubj) %for each training session this subject completed
+        rewardSessionCount= 0; %counter for sessions with valid variable reward data 
                 
         %clear between sessions
         indPump1= [];
@@ -7142,6 +7139,11 @@ end%end subj loop
 %% Save the analyzed data 
 %save the subjDataAnalyzed struct for later analysis
 save(strcat(experimentName,'-', allDates, 'subjDataAnalyzed'), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
+
+allRats.preCueFrames= preCueFrames;
+allRats.postCueFrames= postCueFrames;
+allRats.timeLock= timeLock;
+save(strcat(experimentName,'_allRats.mat'), 'allRats');
 
 disp(strcat('all done, expect ', num2str(figureCount-1), ' figures'));
 figureCount=1;
