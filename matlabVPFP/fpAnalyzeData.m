@@ -2952,9 +2952,9 @@ end %end subject loop
 
 for subj= 1:numel(subjectsAnalyzed) %for each subject
 currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+    rewardSessionCount= 0; %counter for sessions with valid variable reward data 
 
     for session = 1:numel(currentSubj) %for each training session this subject completed
-        rewardSessionCount= 0; %counter for sessions with valid variable reward data 
                 
         %clear between sessions
         indPump1= [];
