@@ -30,5 +30,5 @@
       * This script will perform data analysis within-session (e.g. dF & z-score calculations around the time of cue onsets) and between-session analyses (e.g. plotting heatmap of all cue responses for a given rat)
       
 *Edits to variableReward branch:
-    * broken up code file is used to more easily edit the scripts that run analysis on the photometry data after it has been extracted         using the ASedited extracting scripts. 
-    * Run the fpAnalysis.m file only. The other files are used to more easily edit and access the code.  The order the files are run in       fpAnalysis.m currently must remain the same. 
+  * broken up code file is used to more easily edit the scripts that run analysis on the photometry data after it has been extracted   using the ASedited extracting scripts. 
+  * Run the fpAnalysis.m file only. The other files are used to more easily edit and access the code.  The order the files are run in fpAnalysis.m currently must remain the same. 
