@@ -1,6 +1,6 @@
 %% ~~~Traces~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-%% Organize data into a formot the @gramm package can utilize to easily subset data
+%% Organize data into a format the @gramm package can utilize to easily subset data
 %initialize
     idDS=[];
     idNS=[];

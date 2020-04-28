@@ -76,8 +76,8 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDS.DSzpurplemeanPump2= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDS.DSzpurplePump2,2);
     subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDS.DSzpurplemeanPump3= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDS.DSzpurplePump3,2);
     
-        end %end session loop
-    end %end ~isempty reward conditional (alternative to stage conditional)
+        end %end ~isempty reward conditional (alternative to stage conditional)
+    end %end session loop
     
        
     if rewardSessionCount ~=0 %if this subject had a session with valid variable reward data
