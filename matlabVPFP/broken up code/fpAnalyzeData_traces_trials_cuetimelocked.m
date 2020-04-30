@@ -931,17 +931,41 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
      end % end trial loop
 end%end day loop
 
-%TRACES FROM Stage 6
+% Plots of Z score Traces for each animal
+
+
+%TRACES FROM Stage 6,7,8 on trial 8
 figure(figureCount) %one figure with poxCount across sessions for all subjects
 
-
+figureCount= figureCount+1;
+if find(unique(stageDS)==6)
+%Stage 6
    g(1,1)=gramm('x',timeLocktracesDS,'y', DSzSessionblue,'color',daysDS,'subset',stageDS==6&trialsDS==8);
    g(1,1).geom_line();
    g(1,1).set_names('x','Time from Cue Onset (sec)','y','Z-Score','color','Training Day')
    g(1,1).set_title(' Average DS 465 nm Z Score-Representative Trial-Stage 6')
-   g(1,1).axe_property('YLim',[-3 20])
+   g(1,1).axe_property('YLim',[-7 15])
    g(1,1).set_color_options('map','brewer_dark')
-   g(1,1).draw()
- 
+   
+ %Stage 7  
+   g(2,1)=gramm('x',timeLocktracesDS,'y', DSzSessionblue,'color',daysDS,'subset',stageDS==7&trialsDS==8);
+   g(2,1).geom_line();
+   g(2,1).set_names('x','Time from Cue Onset (sec)','y','Z-Score','color','Training Day')
+   g(2,1).set_title(' Average DS 465 nm Z Score-Representative Trial-Stage 7')
+   g(2,1).axe_property('YLim',[-7 15])
+   g(2,1).set_color_options('map','brewer_dark')
 
+ %Stage 8
+   g(3,1)=gramm('x',timeLocktracesDS,'y', DSzSessionblue,'color',daysDS,'subset',stageDS==8&trialsDS==8);
+   g(3,1).geom_line();
+   g(3,1).set_names('x','Time from Cue Onset (sec)','y','Z-Score','color','Training Day')
+   g(3,1).set_title(' Average DS 465 nm Z Score-Representative Trial-Stage 8')
+   g(3,1).axe_property('YLim',[-7 15])
+   g(3,1).set_color_options('map','brewer_dark')  
+   
+   g.draw()
+ 
+ 
+   saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'cuelocked_trial8_traces','.fig'));
+end %end if loop for later trial traces
 end%end subj loop
