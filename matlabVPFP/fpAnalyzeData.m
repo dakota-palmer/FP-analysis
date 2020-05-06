@@ -7142,7 +7142,7 @@ end%end subj loop
 
 %% Save the analyzed data 
 %save the subjDataAnalyzed struct for later analysis
-save(strcat(experimentName,'-', date, 'subjDataAnalyzed'), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
+save(strcat(experimentName,'-', date, 'subjDataAnalyzed.mat'), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
 
 allRats.preCueFrames= preCueFrames;
 allRats.postCueFrames= postCueFrames;
