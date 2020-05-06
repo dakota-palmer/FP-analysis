@@ -252,17 +252,19 @@ for subj= 1:numel(subjects) %for each subject
                
                  %find the minimum PE timestamp during the cue epoch (this is the 1st pe)
                 firstPox= min(subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS{cue});
-             
+
                 %use interp to find closest timestamp in cutTime to this firstPox ( TODO: or we could add a timestamp and interp the photometry values?)
                 firstPox = interp1(cutTime,cutTime, firstPox, 'nearest');
 
                 %get the index of this timestamp in cutTime
                 firstPoxind= find(cutTime==firstPox);
+
                 
             %define the frames (datapoints) around each cue to analyze
             preEventTime = firstPoxind-periCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
             postEventTime = firstPoxind+periCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
-
+            
+            
             if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
                 disp(strcat('****firstPoxdS ', num2str(cue), ' too close to beginning, continueing out'));
                 DSskipped= DSskipped+1;
@@ -289,7 +291,7 @@ for subj= 1:numel(subjects) %for each subject
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected= DSselected;
-
+           
 %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(:,:,cue)= currentSubj(session).reblue(preEventTime:postEventTime);
@@ -422,7 +424,7 @@ for subj= 1:numel(subjects) %for each subject
             %save all of the following data in the subjDataAnalyzed struct under the periNS field
 
             subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSselected= NSselected;
-
+            
 %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
             subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblue(:,:,cue)= currentSubj(session).reblue(preEventTime:postEventTime);
