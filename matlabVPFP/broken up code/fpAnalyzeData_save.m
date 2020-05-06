@@ -1,8 +1,10 @@
 %% Save the analyzed data 
 %save the subjDataAnalyzed struct for later analysis
-save(strcat(experimentName,'-', 'subjDataAnalyzed'), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
+structpath='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP-analysis\matlabVPFP\broken up code\'
+save(structpath,strcat(experimentName,'-', 'subjDataAnalyzed'), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
 
 %% save data from each stage from each animal for ERT analysis
+ERTpath='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\PhotometryEventDetection\ERTsimulation-master\ERTsimulation-master\'
 ERTData=struct();
 subj=[];
 session=[];
@@ -25,4 +27,4 @@ end
 ERTData.timeLock=timeLock;
 
 %save 
-save(strcat(experimentName,'-', 'ERTData'), 'ERTData');
+save(ERTpath,strcat(experimentName,'-', 'ERTData'), 'ERTData');
