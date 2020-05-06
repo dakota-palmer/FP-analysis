@@ -158,8 +158,8 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
      
      %now choose the most extreme of these two (between blue and
      %purple)to represent the color axis 
-     bottomAllDS= min(bottomDSzblue, bottomDSzpurple);
-     topAllDS= max(topDSzblue, topDSzpurple);
+     bottomAllDS= 2/3*(min(bottomDSzblue, bottomDSzpurple));
+     topAllDS= 2/3*(max(topDSzblue, topDSzpurple));
      
     %same, but defining color axes for NS
     if ~isempty(currentSubj(1).NSzblueSessionMean) %only run this if there's NS data
@@ -169,8 +169,8 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
         bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));
         bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));
 
-        bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
-        topAllNS= max(topNSzblue, topNSzpurple);
+        bottomAllNS= 2/3*(min(bottomNSzblue, bottomNSzpurple));
+        topAllNS= 2/3*(max(topNSzblue, topNSzpurple));
     end
     %Establish a shared bottom and top for shared color axis of DS & NS
     if ~isempty(currentSubj(1).NSzblueSessionMean) %if there is an NS
@@ -568,11 +568,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     %Establish a shared bottom and top for shared color axis of DS & NS
     if ~isempty(currentSubj(1).NSzblueAllTrials) %if there is an NS
-        bottomAllShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
-        topAllShared= max(topAllDS, topAllNS); %find the absolute min value
+        bottomAllShared= 2/3*(min(bottomAllDS, bottomAllNS)); %find the absolute min value
+        topAllShared= 2/3*(max(topAllDS, topAllNS)); %find the absolute min value
     else
-        bottomAllShared= bottomAllDS;
-        topAllShared= topAllDS;
+        bottomAllShared= 2/3*(bottomAllDS);
+        topAllShared= 2/3*(topAllDS);
     end
     
     %save for later 
@@ -898,11 +898,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     %Establish a shared bottom and top for shared color axis of DS & NS
     if ~isempty(currentSubj(1).NSzblueAllTrials) %if there is an NS
-        bottomAllShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
-        topAllShared= max(topAllDS, topAllNS); %find the absolute min value
+        bottomAllShared= 2/3*(min(bottomAllDS, bottomAllNS)); %find the absolute min value
+        topAllShared= 2/3*(max(topAllDS, topAllNS)); %find the absolute min value
     else
-        bottomAllShared= bottomAllDS;
-        topAllShared= topAllDS;
+        bottomAllShared= 2/3*(bottomAllDS);
+        topAllShared= 2/3*(topAllDS);
     end
     
     %save for later 

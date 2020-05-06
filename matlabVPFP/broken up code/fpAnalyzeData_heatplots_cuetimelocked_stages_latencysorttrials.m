@@ -1004,10 +1004,10 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
      bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzpurpleA, bottomDSzpurpleB];
      tops= [topDSzblueA, topDSzblueB, topDSzpurpleA, topDSzpurpleB];
      
-          %now choose the most extreme of these two (between blue and
+          %now choose the one half the most extreme of these two (between blue and
      %purple)to represent the color axis 
-     bottomAllDS= min(bottoms);
-     topAllDS= max(tops);
+     bottomAllDS= 2/3*(min(bottoms));
+     topAllDS= 2/3*(max(tops));
              bottomMeanShared= bottomAllDS;
         topMeanShared= topAllDS;
    
@@ -1029,8 +1029,8 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
       end
     
   if currentSubj(session).trainStage>5     
-      bottomAllDS2= min(bottoms2);
-     topAllDS2= max(tops2);
+      bottomAllDS2= 2/3*(min(bottoms2));
+     topAllDS2= 2/3*(max(tops2));
      
      bottomMeanShared2= bottomAllDS2;
         topMeanShared2= topAllDS2;        
@@ -1180,72 +1180,75 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
    scatter(DSpeLatencySortedC,currentSubj(1).totalDScountC', 'm.');
    end
    
-  %overlay scatter of Licks- 
-       licksToPlot= 10;
-       lickAlpha= 0.15;
-    
-       subplot(2,3,1) %condA DS blue 
-       hold on
-       for trial= (currentSubj(1).totalDScountA)
-%            scatter all licks
-%                s= scatter(currentSubj(1).DSloxAllTrialsA{trial},ones(numel(currentSubj(1).DSloxAllTrialsA{trial}),1)*currentSubj(1).totalDScountA(trial), 'k.');
-%            scatter # of licksToPlot
-           if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
-                s.MarkerEdgeAlpha= lickAlpha; %make transparent
-           end
-       end
-    
-       subplot(2,3,2) %condB DS blue 
-       hold on
-       for trial= (currentSubj(1).totalDScountB)
-               %scatter # of licksToPlot
-           if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
-                s.MarkerEdgeAlpha= lickAlpha; %make transparent
-           end
-       end
-  if currentSubj(session).trainStage >5     
-       subplot(2,3,3) %condC DS blue 
-       hold on
-       for trial= (currentSubj(1).totalDScountC)
-                %scatter # of licksToPlot
-           if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
-                s.MarkerEdgeAlpha= lickAlpha; %make transparent
-           end
-       end
-  end
-       subplot(2,3,4) %condA DS purple 
-       hold on
-       for trial= (currentSubj(1).totalDScountA)
-               %scatter # of licksToPlot
-           if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
-                s.MarkerEdgeAlpha= 0.3; %make transparent
-           end
-       end
-       
-       subplot(2,3,5) %condB DS purple 
-       hold on
-       for trial= (currentSubj(1).totalDScountB)
-               %scatter # of licksToPlot
-           if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
-                s.MarkerEdgeAlpha= lickAlpha; %make transparent
-           end
-       end
- if currentSubj(session).trainStage >5      
-       subplot(2,3,6) %condC DS purple 
-       hold on
-       for trial= (currentSubj(1).totalDScountC)
-              %scatter # of licksToPlot
-           if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
-                s.MarkerEdgeAlpha= lickAlpha; %make transparent
-           end
-       end
- end  
+%   %overlay scatter of Licks- 
+%        licksToPlot= 10;
+%        lickAlpha= 0.15;
+%     
+%        subplot(2,3,1) %condA DS blue 
+%        hold on
+%        for trial= (currentSubj(1).totalDScountA)
+% %            scatter all licks
+% %                s= scatter(currentSubj(1).DSloxAllTrialsA{trial},ones(numel(currentSubj(1).DSloxAllTrialsA{trial}),1)*currentSubj(1).totalDScountA(trial), 'k.');
+% %            scatter # of licksToPlot
+%            if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
+%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+%            end
+%        end
+%     
+%        subplot(2,3,2) %condB DS blue 
+%        hold on
+%        for trial= (currentSubj(1).totalDScountB)
+%                %scatter # of licksToPlot
+%            if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
+%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+%            end
+%        end
+%   if currentSubj(session).trainStage >5     
+%        subplot(2,3,3) %condC DS blue 
+%        hold on
+%        for trial= (currentSubj(1).totalDScountC)
+%                 %scatter # of licksToPlot
+%            if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
+%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+%            end
+%        end
+%   end
+%        subplot(2,3,4) %condA DS purple 
+%        hold on
+%        for trial= (currentSubj(1).totalDScountA)
+%                %scatter # of licksToPlot
+%            if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
+%                 s.MarkerEdgeAlpha= 0.3; %make transparent
+%            end
+%        end
+%        
+%        subplot(2,3,5) %condB DS purple 
+%        hold on
+%        for trial= (currentSubj(1).totalDScountB)
+%                %scatter # of licksToPlot
+%            if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
+%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+%            end
+%        end
+%  if currentSubj(session).trainStage >5      
+%        subplot(2,3,6) %condC DS purple 
+%        hold on
+%        for trial= (currentSubj(1).totalDScountC)
+%               %scatter # of licksToPlot
+%            if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
+%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+%            end
+%        end
+%  end  
+
+
+
     %worked for nested structure
     
 %    trialCount= 1;
@@ -1387,73 +1390,73 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
    scatter(NSpeLatencySortedC,currentSubj(1).totalNScountC', 'm.');
    end
             
-     %overlay scatter of Licks- 
-       licksToPlot= 10;
-      lickAlpha= 0.35;
-
-    
-       subplot(2,3,1) %condA NS blue 
-       hold on
-%       for trial= (currentSubj(1).totalNScountA)
-%            scatter all licks
-%                s= scatter(currentSubj(1).NSloxAllTrialsA{trial},ones(numel(currentSubj(1).NSloxAllTrialsA{trial}),1)*currentSubj(1).totalNScountA(trial), 'k.');
-%            scatter # of licksToPlot
-%            if numel(currentSubj(1).NSloxAllTrialsA{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).NSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountA(trial), 'k.');
-%                 s.MarkerEdgeAlpha= 0.3; %make transparent
-%       end
-%       end
-    
-       subplot(2,3,2) %condB NS blue 
-       hold on
-       for trial= (currentSubj(1).totalNScountB)
-             % scatter # of licksToPlot
-           if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
-                s.MarkerEdgeAlpha= lickAlpha; %make transparent
-           end
-       end
-if currentSubj(session).trainStage >5       
-       subplot(2,3,3) %condC NS blue 
-       hold on
-       for trial= (currentSubj(1).totalNScountC)
-               % scatter # of licksToPlot
-           if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
-                s.MarkerEdgeAlpha= lickAlpha; %make transparent
-           end
-       end
-end   
-%        subplot(2,3,4) %condA NS purple 
+%      %overlay scatter of Licks- 
+%        licksToPlot= 10;
+%       lickAlpha= 0.35;
+% 
+%     
+%        subplot(2,3,1) %condA NS blue 
 %        hold on
-%        for trial= (currentSubj(1).totalNScountA)
-%                %scatter # of licksToPlot
-%            if numel(currentSubj(1).NSloxAllTrialsA{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).NSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountA(trial), 'k.');
-%                 s.MarkerEdgeAlpha= 0.3; %make transparent
+% %       for trial= (currentSubj(1).totalNScountA)
+% %            scatter all licks
+% %                s= scatter(currentSubj(1).NSloxAllTrialsA{trial},ones(numel(currentSubj(1).NSloxAllTrialsA{trial}),1)*currentSubj(1).totalNScountA(trial), 'k.');
+% %            scatter # of licksToPlot
+% %            if numel(currentSubj(1).NSloxAllTrialsA{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).NSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountA(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= 0.3; %make transparent
+% %       end
+% %       end
+%     
+%        subplot(2,3,2) %condB NS blue 
+%        hold on
+%        for trial= (currentSubj(1).totalNScountB)
+%              % scatter # of licksToPlot
+%            if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
+%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
 %            end
 %        end
-       subplot(2,3,5) %condB NS purple 
-       hold on
-       for trial= (currentSubj(1).totalNScountB)
-               %scatter # of licksToPlot
-           if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
-                s.MarkerEdgeAlpha= lickAlpha; %make transparent
-           end
-       end
-if currentSubj(session).trainStage >5       
-       subplot(2,3,6) %condC NS purple 
-       hold on
-       for trial= (currentSubj(1).totalNScountC)
-              %scatter # of licksToPlot
-           if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
-                s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
-                s.MarkerEdgeAlpha= lickAlpha; %make transparent
-           end
-       end
-end           
-            
+% if currentSubj(session).trainStage >5       
+%        subplot(2,3,3) %condC NS blue 
+%        hold on
+%        for trial= (currentSubj(1).totalNScountC)
+%                % scatter # of licksToPlot
+%            if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
+%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+%            end
+%        end
+% end   
+% %        subplot(2,3,4) %condA NS purple 
+% %        hold on
+% %        for trial= (currentSubj(1).totalNScountA)
+% %                %scatter # of licksToPlot
+% %            if numel(currentSubj(1).NSloxAllTrialsA{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).NSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountA(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= 0.3; %make transparent
+% %            end
+% %        end
+%        subplot(2,3,5) %condB NS purple 
+%        hold on
+%        for trial= (currentSubj(1).totalNScountB)
+%                %scatter # of licksToPlot
+%            if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
+%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+%            end
+%        end
+% if currentSubj(session).trainStage >5       
+%        subplot(2,3,6) %condC NS purple 
+%        hold on
+%        for trial= (currentSubj(1).totalNScountC)
+%               %scatter # of licksToPlot
+%            if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
+%                 s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
+%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+%            end
+%        end
+% end           
+%             
             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
             saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, 'allstages_NScuelocked_sorted','.fig')); %save the current figure in fig format
        
