@@ -677,11 +677,12 @@ end %end subject loop
 for subj= 1:numel(subjectsAnalyzed) %for each subject
 currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
 
+ 
         %initialize arrays for convenience
         currentSubj(1).NSzpoxblueAllTrials= [];
         currentSubj(1).NSzpoxpurpleAllTrials= [];
         currentSubj(1).NSpoxpeLatencyAllTrials= [];
-
+        currentSubj(1).NSpoxcueonsetAllTrials=[]; 
     for session = 1:numel(currentSubj) %for each training session this subject completed
        
         clear NSselected
@@ -690,7 +691,6 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         %selectively extract these data first
         
             %get the DS cues
-        DSselected=[];  
         DSselected= currentSubj(session).periDSpox.DSselected;  % all the DS cues
 
         %First, let's exclude trials where animal was already in port
@@ -702,7 +702,8 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         %lets convert this to an index of trials with a valid value 
         DSselected= find(~isnan(DSselected));
         
-            %Repeat above for NS 
+            
+        %Repeat above for NS 
         if ~isempty(currentSubj(session).periNSpox.NSselected)
              NSselected= currentSubj(session).periNSpox.NSselected;  
 
@@ -710,19 +711,25 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
             %lets convert this to an index of trials with a valid value 
             NSselected= find(~isnan(NSselected));
         end %end NS conditional       
+       
+        
         
         %collect all z score responses to every single DS across all sessions
         %we'll use DSselected and NSselected as indices to pull only data
         %from trials with port entries
         if session==1 %for first session, initialize 
+            
+    
+            
            currentSubj(1).DSzpoxblueAllTrials= squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,DSselected)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
            currentSubj(1).DSzpoxpurpleAllTrials= squeeze(currentSubj(session).periDSpox.DSzpoxpurple(:,:,DSselected)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
            currentSubj(1).DSpoxpeLatencyAllTrials= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
-         
+           
            if ~isempty(currentSubj(session).periNSpox.NSselected) %if there's valid NS data
                 currentSubj(1).NSzpoxblueAllTrials= squeeze(currentSubj(session).periNSpox.NSzpoxblue(:,:,NSselected)); 
                 currentSubj(1).NSzpoxpurpleAllTrials= squeeze(currentSubj(session).periNSpox.NSzpoxpurple(:,:,NSselected));
-                currentSubj(1).NSpoxpeLatencyAllTrials= currentSubj(session).behavior.NSpeLatency(NSselected); 
+                currentSubj(1).NSpoxpeLatencyAllTrials= currentSubj(session).behavior.NSpeLatency(NSselected);
+
            else
                continue %continue if no NS data
            end
@@ -730,11 +737,14 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
             currentSubj(1).DSzpoxblueAllTrials = cat(2, currentSubj.DSzpoxblueAllTrials, (squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
             currentSubj(1).DSzpoxpurpleAllTrials = cat(2, currentSubj.DSzpoxpurpleAllTrials, (squeeze(currentSubj(session).periDSpox.DSzpoxpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
             currentSubj(1).DSpoxpeLatencyAllTrials = cat(2,currentSubj(1).DSpoxpeLatencyAllTrials,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-        
-            if ~isempty(currentSubj(session).periNS.NS)
+          
+            
+            
+            if ~isempty(currentSubj(session).periNSpox.NSselected)
                 currentSubj(1).NSzpoxblueAllTrials = cat(2, currentSubj.NSzpoxblueAllTrials, (squeeze(currentSubj(session).periNSpox.NSzpoxblue(:,:,NSselected)))); 
                 currentSubj(1).NSzpoxpurpleAllTrials = cat(2, currentSubj.NSzpoxpurpleAllTrials, (squeeze(currentSubj(session).periNSpox.NSzpoxpurple(:,:,NSselected)))); 
                 currentSubj(1).NSpoxpeLatencyAllTrials = cat(2,currentSubj(1).NSpoxpeLatencyAllTrials,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+                
             else
                 continue %continue if nos NS data
             end
@@ -753,14 +763,13 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     currentSubj(1).DSzpoxpurpleAllTrials= currentSubj(1).DSzpoxpurpleAllTrials(:,DSsortInd);
     currentSubj(1).NSzpoxblueAllTrials = currentSubj(1).NSzpoxblueAllTrials(:,NSsortInd);
     currentSubj(1).NSzpoxpurpleAllTrials= currentSubj(1).NSzpoxpurpleAllTrials(:,NSsortInd);
-
+    
     %Transpose these data for readability
     currentSubj(1).DSzpoxblueAllTrials= currentSubj(1).DSzpoxblueAllTrials';
     currentSubj(1).DSzpoxpurpleAllTrials= currentSubj(1).DSzpoxpurpleAllTrials';    
     currentSubj(1).NSzpoxblueAllTrials= currentSubj(1).NSzpoxblueAllTrials';
     currentSubj(1).NSzpoxpurpleAllTrials= currentSubj(1).NSzpoxpurpleAllTrials';
-      
-    
+
     %get a trial count to use for the heatplot ytick
     currentSubj(1).totalDSpoxcount= 1:size(currentSubj(1).DSzpoxblueAllTrials,1); 
     currentSubj(1).totalNSpoxcount= 1:size(currentSubj(1).NSzpoxblueAllTrials,1);
@@ -808,11 +817,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     %Establish a shared bottom and top for shared color axis of DS & NS
     if ~isempty(currentSubj(1).NSzpoxblueAllTrials) %if there is an NS
-        bottomAllSharedpox= min(bottomAllDSpox, bottomAllNSpox); %find the absolute min value
-        topAllSharedpox= max(topAllDSpox, topAllNSpox); %find the absolute min value
+        bottomAllSharedpox= 2/3*(min(bottomAllDSpox, bottomAllNSpox)); %find the absolute min value
+        topAllSharedpox= 2/3*(max(topAllDSpox, topAllNSpox)); %find the absolute min value
     else
-        bottomAllSharedpox= bottomAllDSpox;
-        topAllSharedpox= topAllDSpox;
+        bottomAllSharedpox= 2/3*(bottomAllDSpox);
+        topAllSharedpox= 2/3*(topAllDSpox);
     end
     
     %save for later 
@@ -822,12 +831,13 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     %Heatplots!  
     
+    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    
     %DS z plot
     figure(figureCount);
     hold on;
     
-    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-    
+   
     %plot blue DS
 
     subplot(2,2,1); %subplot for shared colorbar
@@ -902,23 +912,23 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     end   
     
    
-%     %Overlay scatter of PE latency
-%    subplot(2,2,1) %DS blue
-%    hold on
-%    scatter(DSpoxpeLatencySorted,currentSubj(1).totalDSpoxcount', 'm.');
-%    subplot(2,2,3) %DS purple
-%    hold on
-%    scatter(DSpoxpeLatencySorted,currentSubj(1).totalDSpoxcount', 'm.');
-%    
-%    if ~isempty(currentSubj(1).NSzpoxblueAllTrials)
-%       subplot(2,2,2) %NS blue
-%       hold on
-%       scatter(NSpoxpeLatencySorted,currentSubj(1).totalNSpoxcount', 'm.');
-%      
-%       subplot(2,2,4) %NS purple
-%       hold on
-%       scatter(NSpoxpeLatencySorted,currentSubj(1).totalNSpoxcount', 'm.');
-%    end
+    %Overlay scatter of Cue onset
+   subplot(2,2,1) %DS blue
+   hold on
+   scatter(-DSpoxpeLatencySorted,currentSubj(1).totalDSpoxcount', 'k.');
+   subplot(2,2,3) %DS purple
+   hold on
+   scatter(-DSpoxpeLatencySorted,currentSubj(1).totalDSpoxcount', 'k.');
+   
+   if ~isempty(currentSubj(1).NSzpoxblueAllTrials)
+      subplot(2,2,2) %NS blue
+      hold on
+      scatter(-NSpoxpeLatencySorted,currentSubj(1).totalNSpoxcount', 'k.');
+     
+      subplot(2,2,4) %NS purple
+      hold on
+      scatter(-NSpoxpeLatencySorted,currentSubj(1).totalNSpoxcount', 'k.');
+   end
  saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periPEZ_AllTrials_latencysorted','.fig')); %save the current figure in fig format
     figureCount= figureCount+1;
    
