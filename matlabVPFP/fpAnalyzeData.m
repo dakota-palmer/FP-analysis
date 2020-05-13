@@ -647,7 +647,7 @@ for subj= 1:numel(subjects) %for each subject
                        currentSubj(session).behavior.loxDS{1,cue}(loxDScount,1)= currentSubj(session).lox(i); %cell array containing all pox during the cue, empty [] if no licks during the cue
                         
                        %save timestamps of lick relative to cue onset
-                       currentSubj(session).behavior.loxDSrel{1,cue}(loxDScount,1)= currentSubj(session).lox(i)-cutTime(DSonset)
+                       currentSubj(session).behavior.loxDSrel{1,cue}(loxDScount,1)= currentSubj(session).lox(i)-cutTime(DSonset);
                        
                        loxDScount=loxDScount+1; %iterate the counter
                    end
@@ -1126,15 +1126,7 @@ for subj= 1:numel(subjects) %for each subject
 %                subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple(:,:,cue) = nan;
 %             end
             
-                %get the mean response to the DS for this session
-            subjDataAnalyzed.(subjects{subj})(session).periDS.DSblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
-
-            subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
-
-            subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue, 3);
-
-            subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple, 3);
-                        
+        
             %lets save the baseline mean and std used for z score calc- so
             %that we can use this same baseline for other analyses
             subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanblue(1,cue)= baselineMeanblue;
@@ -1147,6 +1139,17 @@ for subj= 1:numel(subjects) %for each subject
 
             
         end %end DS cue loop
+        
+                %get the mean response to the DS for this session
+            subjDataAnalyzed.(subjects{subj})(session).periDS.DSblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+
+            subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+
+            subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue, 3);
+
+            subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple, 3);
+                        
+        
    end %end session loop
 end %end subject loop
         
@@ -1236,8 +1239,11 @@ for subj= 1:numel(subjects) %for each subject
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSbluedff(:,:,cue)= (subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff(preEventTimeNS:postEventTimeNS));
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurpledff(:,:,cue)= (subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff(preEventTimeNS:postEventTimeNS));
 
-                
-                    %get the mean response to the DS for this session
+                      
+            end % end NS cue loop
+      end %end if NS ~nan conditional 
+      
+                %get the mean response to the NS for this session
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue, 3);
@@ -1251,9 +1257,7 @@ for subj= 1:numel(subjects) %for each subject
                 subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanpurple(1,cue)= baselineMeanpurple;
                 subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdpurple(1,cue)= baselineStdpurple;
 
-             
-            end % end NS cue loop
-      end %end if NS ~nan conditional 
+      
    end %end session loop
 end %end subject loop
 
@@ -1388,8 +1392,17 @@ for subj= 1:numel(subjects) %for each subject
                 %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
-
-                %get the mean response to the DS for this session
+ 
+           elseif isnan(DSselected(cue)) %if there are no valid licks this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected(cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(1:periCueFrames+1,1,cue)= nan;
+           end
+       
+        end%end DSselected loop
+            %get the mean response to the DS for this session
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple, 3); 
@@ -1397,10 +1410,7 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue, 3);
 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple, 3);
-           end
-       
-       end %end DSselected loop
-       
+                      
    end %end session loop
 end %end subject loop
 
@@ -1513,7 +1523,7 @@ for subj= 1:numel(subjects) %for each subject
  
            end
        
-       end %end DSselected loop
+       end %end NSselected loop
        end %end NS conditional
        
                  %get the mean response to the NS for this session
@@ -1528,6 +1538,242 @@ for subj= 1:numel(subjects) %for each subject
    end %end session loop
 end %end subject loop
 
+
+%% TIMELOCK TO FIRST LICK AFTER DS 
+%DS trials where animal was in port at cue onset are excluded
+
+disp('conducting peri-DS first lox analysis');
+
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+
+        %get the DS cues
+        DSselected= currentSubj(session).DS;  
+
+       
+        %First, let's exclude trials where animal was already in port
+        %to do so, find indices of subjDataAnalyzed.behavior.inPortDS that
+        %have a non-nan value and use these to exclude DS trials from this
+        %analysis (we'll make them nan)
+                
+        DSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS)) = nan;
+
+        %Then, let's exclude trials where animal didn't make a PE during
+        %the cue epoch. To do so, get indices of empty cells in
+        %subjDataAnalyzed.behavior.loxDS (these are trials where no PE
+        %happened during the cue epoch) and then use these to set that DS =
+        %nan
+        DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.loxDS)) = nan;
+        
+        clear cutTime %clear between sessions to prevent spillover
+        
+        cutTime= currentSubj(session).cutTime; %save this as an array, greatly speeds things up because we have to go through each timestamp to find the closest one to the cues
+
+        DSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
+
+       
+       for cue = 1:numel(DSselected)
+            
+           if ~isnan(DSselected(cue)) %skip over trials where animal was in port at cue onset or did not make a PE during cue epoch
+               
+               
+                 %find the minimum PE timestamp during the cue epoch (this is the 1st pe)
+                firstLox= min(subjDataAnalyzed.(subjects{subj})(session).behavior.loxDS{cue});
+             
+                %use interp to find closest timestamp in cutTime to this firstLox ( TODO: or we could add a timestamp and interp the photometry values?)
+                firstLox = interp1(cutTime,cutTime, firstLox, 'nearest');
+
+                %get the index of this timestamp in cutTime
+                firstLoxind= find(cutTime==firstLox);
+                
+            %define the frames (datapoints) around each cue to analyze
+            preEventTime = firstLoxind-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
+            postEventTime = firstLoxind+postCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
+
+            if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
+                disp(strcat('****firstLoxdS ', num2str(cue), ' too close to beginning, continueing out'));
+                DSskipped= DSskipped+1;
+                continue
+            end
+
+            if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
+                disp(strcat('****firstLoxDS cue ', num2str(cue), ' too close to end, continueing out'));
+                DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
+                continue %continue out of the loop and move onto the next DS cue
+            end
+
+            % Calculate average baseline mean&stdDev 10s prior to DS for z-score
+            %we'll retrieve the baselines calculated when we timelocked to
+            %DS, so our z score is relative to a baseline prior to any
+            %cue-related activity
+            %blueA
+            baselineMeanblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanblue(1,cue); %baseline mean blue 10s prior to DS onset for boxA
+            baselineStdblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdblue(1,cue); %baseline stdDev blue 10s prior to DS onset for boxA
+            %purpleA
+            baselineMeanpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanpurple(1,cue); %baseline mean purple 10s prior to DS onset for boxA
+            baselineStdpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdpurple(1,cue); %baseline stdDev purple 10s prior to DS onset for boxA
+
+            %save all of the following data in the subjDataAnalyzed struct under the periDS field
+
+            subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSselected= DSselected;
+
+%             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
+
+            subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxblue(:,:,cue)= currentSubj(session).reblue(preEventTime:postEventTime);
+            subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxpurple(:,:,cue)= currentSubj(session).repurple(preEventTime:postEventTime);
+                
+                %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
+            subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
+            subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
+             
+           
+           
+           elseif isnan(DSselected(cue)) %if there are no valid licks this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
+               subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSselected(cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxblue(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxpurple(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxblue(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxpurple(1:periCueFrames+1,1,cue)= nan;
+           end
+            
+        end %end DSselected loop
+
+            %get the mean response to the DS for this session
+        subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
+
+        subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxpurple, 3); 
+
+        subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxblue, 3);
+
+        subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxpurple, 3);
+
+       
+   end %end session loop
+end %end subject loop
+
+%% TIMELOCK TO FIRST LICK AFTER NS (no sucrose)
+
+
+disp('conducting peri-NS lox analysis');
+
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+
+       if ~isempty(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS) %can only run for sessions that have NS data
+        %get the NS cues
+        NSselected= currentSubj(session).NS;  
+
+       
+        %First, let's exclude trials where animal was already in port
+        %to do so, find indices of subjDataAnalyzed.behavior.inPortNS that
+        %have a non-nan value and use these to exclude NS trials from this
+        %analysis (we'll make them nan)
+                
+        NSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS)) = nan;
+
+        %Then, let's exclude trials where animal didn't make a PE during
+        %the cue epoch. To do so, get indices of empty cells in
+        %subjDataAnalyzed.behavior.loxDS (these are trials where no PE
+        %happened during the cue epoch) and then use these to set that DS =
+        %nan
+        NSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.loxNS)) = nan;
+        
+        clear cutTime %clear between sessions to prevent spillover
+        
+        cutTime= currentSubj(session).cutTime; %save this as an array, greatly speeds things up because we have to go through each timestamp to find the closest one to the cues
+
+        NSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
+
+       
+       for cue = 1:numel(NSselected)
+            
+           if isnan(NSselected(cue)) %skip over trials where animal was in port at cue onset or did not make a PE during cue epoch, but save empty arrays
+               
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblue(1:periCueFrames+1,1,cue)= nan;
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurple(1:periCueFrames+1,1,cue)= nan;
+
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblue(1:periCueFrames+1,1,cue)= nan;
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurple(1:periCueFrames+1,1,cue)= nan;
+% 
+%                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSselected= [];
+%                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblue= [];
+%                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurple= [];
+%                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblue= [];
+%                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurple= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblueMean(1:periCueFrames+1,1,cue) = nan;
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurpleMean(1:periCueFrames+1,1,cue) = nan;
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblueMean(1:periCueFrames+1,1,cue) = nan;
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurpleMean(1:periCueFrames+1,1,cue) = nan;
+                
+           else %if this is a selected NS
+               
+                 %find the minimum PE timestamp during the cue epoch (this is the 1st pe)
+                firstLox= min(subjDataAnalyzed.(subjects{subj})(session).behavior.loxNS{cue});
+             
+                %use interp to find closest timestamp in cutTime to this firstLox ( TODO: or we could add a timestamp and interp the photometry values?)
+                firstLox = interp1(cutTime,cutTime, firstLox, 'nearest');
+
+                %get the index of this timestamp in cutTime
+                firstLoxind= find(cutTime==firstLox);
+                
+            %define the frames (datapoints) around each cue to analyze
+            preEventTime = firstLoxind-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
+            postEventTime = firstLoxind+postCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
+
+            if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
+                disp(strcat('****firstLoxNS ', num2str(cue), ' too close to beginning, continueing out'));
+                NSskipped= NSskipped+1;
+            continue
+            end
+
+            if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
+            disp(strcat('****firstLoxDS cue ', num2str(cue), ' too close to end, continueing out'));
+            NSskipped= NSskipped+1;  %iterate the counter for skipped DS cues
+            continue %continue out of the loop and move onto the next DS cue
+            end
+
+              % Calculate average baseline mean&stdDev 10s prior to DS for z-score
+            %we'll retrieve the baselines calculated when we timelocked to
+            %DS, so our z score is relative to a baseline prior to any
+            %cue-related activity
+            %blueA
+            baselineMeanblue= subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanblue(1,cue); %baseline mean blue 10s prior to DS onset for boxA
+            baselineStdblue= subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdblue(1,cue); %baseline stdDev blue 10s prior to DS onset for boxA
+            %purpleA
+            baselineMeanpurple= subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanpurple(1,cue); %baseline mean purple 10s prior to DS onset for boxA
+            baselineStdpurple= subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdpurple(1,cue); %baseline stdDev purple 10s prior to DS onset for boxA
+
+            %save all of the following data in the subjDataAnalyzed struct under the periNS field
+
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSselected= NSselected;
+
+%             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
+
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblue(:,:,cue)= currentSubj(session).reblue(preEventTime:postEventTime);
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurple(:,:,cue)= currentSubj(session).repurple(preEventTime:postEventTime);
+                
+                %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
+ 
+           end
+       
+       end %end DSselected loop
+       end %end NS conditional
+       
+                 %get the mean response to the NS for this session
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
+
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurple, 3); 
+
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblue, 3);
+
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurple, 3);
+       
+   end %end session loop
+end %end subject loop
 
 
 
@@ -2081,6 +2327,23 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 %     end
 %        
     figureCount= figureCount+1;
+    
+    
+    %2d plot to see magnitude
+    
+    figure;
+    figureCount= figureCount+1;
+    subplot(2,1,1);
+    title('DS');
+    hold on;
+    plot(timeLock,currentSubj(1).DSzblueAllTrials, 'b');
+    plot(timeLock,currentSubj(1).DSzpurpleAllTrials, 'm');
+    subplot(2,1,2);
+    title('NS');
+    hold on;
+    plot(timeLock,currentSubj(1).NSzblueAllTrials, 'b');
+    plot(timeLock,currentSubj(1).NSzpurpleAllTrials, 'm');
+    
 end %end subject loop
 
 
@@ -2563,6 +2826,193 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     figureCount= figureCount+1;
 end %end subject loop
+
+%% HEAT PLOT OF RESPONSE TO FIRST LICK IN CUE EPOCH
+
+%Here, we'll make a figure for each subject with 4 subplots- blue z score
+%response to DS firstLox, blue z score response to NS firstLox, purple z score response to
+%DS firstLox, purple z score response to NS firstLox.
+
+%we'll pull from the subjDataAnalyzed struct to make our heatplots 
+
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+    for session = 1:numel(currentSubj) %for each training session this subject completed
+        
+        %collect all z score responses to every single DSfirstLox across all sessions
+        if session==1 %for first session, initialize 
+            currentSubj(1).DSzloxblueAllTrials= squeeze(currentSubj(session).periDSlox.DSzloxblue); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+            currentSubj(1).DSzloxpurpleAllTrials= squeeze(currentSubj(session).periDSlox.DSzloxpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+            
+            currentSubj(1).NSzloxblueAllTrials= squeeze(currentSubj(session).periNSlox.NSzloxblue); 
+            currentSubj(1).NSzloxpurpleAllTrials= squeeze(currentSubj(session).periNSlox.NSzloxpurple);
+        else %add subsequent sessions using cat()
+            currentSubj(1).DSzloxblueAllTrials = cat(2, currentSubj.DSzloxblueAllTrials, (squeeze(currentSubj(session).periDSlox.DSzloxblue))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+            currentSubj(1).DSzloxpurpleAllTrials = cat(2, currentSubj.DSzloxpurpleAllTrials, (squeeze(currentSubj(session).periDSlox.DSzloxpurple))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+        
+            currentSubj(1).NSzloxblueAllTrials = cat(2, currentSubj.NSzloxblueAllTrials, (squeeze(currentSubj(session).periNSlox.NSzloxblue))); 
+            currentSubj(1).NSzloxpurpleAllTrials = cat(2, currentSubj.NSzloxpurpleAllTrials, (squeeze(currentSubj(session).periNSlox.NSzloxpurple))); 
+        end
+        
+    end %end session loop
+    
+    %Transpose these data for readability
+    currentSubj(1).DSzloxblueAllTrials= currentSubj(1).DSzloxblueAllTrials';
+    currentSubj(1).DSzloxpurpleAllTrials= currentSubj(1).DSzloxpurpleAllTrials';    
+    currentSubj(1).NSzloxblueAllTrials= currentSubj(1).NSzloxblueAllTrials';
+    currentSubj(1).NSzloxpurpleAllTrials= currentSubj(1).NSzloxpurpleAllTrials';
+      
+    
+    %remove nan trials (NSzlox arrays retain nan values bc of the 3d structure)
+    currentSubj(1).NSzloxblueAllTrials= currentSubj(1).NSzloxblueAllTrials(all(~isnan(currentSubj(1).NSzloxblueAllTrials),2),:); 
+    currentSubj(1).NSzloxpurpleAllTrials= currentSubj(1).NSzloxblueAllTrials(all(~isnan(currentSubj(1).NSzloxblueAllTrials),2),:); 
+
+    
+    %get a trial count to use for the heatplot ytick
+    currentSubj(1).totalDScount= 1:size(currentSubj(1).DSzloxblueAllTrials,1); 
+    currentSubj(1).totalNScount= 1:size(currentSubj(1).NSzloxblueAllTrials,1);
+    
+    
+    %TODO: split up yticks by session (this would show any clear differences between days)
+    
+     %Color axes   
+     
+     %First, we'll want to establish boundaries for our colormaps based on
+     %the std of the z score response. We want to have equidistant
+     %color axis max and min so that 0 sits directly in the middle
+     
+     %TODO: should this be a pooled std calculation (pooled blue & purple)?
+     
+     %define DS color axes
+     
+     %get the avg std in the blue and purple z score responses to all cues,
+     %get absolute value and then multiply this by some factor to define a color axis max and min
+     
+     stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
+     
+     topDSzblue= stdFactor*abs(nanmean((std(currentSubj(1).DSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).DSzloxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+
+     bottomDSzblue = -stdFactor*abs(nanmean((std(currentSubj(1).DSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     bottomDSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).DSzloxpurpleAllTrials, 0, 2))));
+     
+     %now choose the most extreme of these two (between blue and
+     %purple)to represent the color axis 
+     bottomAllDS= min(bottomDSzblue, bottomDSzpurple);
+     topAllDS= max(topDSzblue, topDSzpurple);
+     
+    %same, but defining color axes for NS
+    if ~isempty(currentSubj(1).NSzloxblueAllTrials) %only run this if there's NS data
+        topNSzblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+        topNSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+
+        bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));
+        bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));
+
+        bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
+        topAllNS= max(topNSzblue, topNSzpurple);
+    end
+    
+    %Establish a shared bottom and top for shared color axis of DS & NS
+    if ~isempty(currentSubj(1).NSzloxblueAllTrials) %if there is an NS
+        bottomAllShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
+        topAllShared= max(topAllDS, topAllNS); %find the absolute min value
+    else
+        bottomAllShared= bottomAllDS;
+        topAllShared= topAllDS;
+    end
+    
+    %save for later 
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDSlox.totalDScount= currentSubj(1).totalDScount;
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDSlox.bottomAllShared= bottomAllShared;
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDSlox.topAllShared= topAllShared;
+    
+    %Heatplots!  
+    
+    %DS z plot
+    figure(figureCount);
+    hold on;
+    
+    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    
+    %plot blue DS
+
+    subplot(2,2,1); %subplot for shared colorbar
+    
+    heatDSzloxblueAllTrials= imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzloxblueAllTrials);
+    title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding first lick in DS epoch')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from lick');
+    ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
+%     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+    caxis manual;
+    caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding DS');
+
+
+    %   plot purple DS (subplotted for shared colorbar)
+    subplot(2,2,3);
+    heatDSzloxpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzloxpurpleAllTrials); 
+
+    title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding first lick in DS epoch')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from lick');
+    ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
+
+%     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+
+    caxis manual;
+    caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+    
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding DS');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+%     saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
+
+    if ~isempty(currentSubj(1).NSzloxblueAllTrials) %if there is NS data
+        
+        %plot blue NS
+        subplot(2,2,2); %subplot for shared colorbar
+
+        heatNSzloxblueAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzloxblueAllTrials);
+        title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding first lick in NS epoch ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+        xlabel('seconds from lick');
+        ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNScount(end)), ')'));
+    %     set(gca, 'ytick', currentSubj(1).totalNScount); %label trials appropriately
+        caxis manual;
+        caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding NS');
+        
+        
+           %   plot purple NS (subplotted for shared colorbar)
+        subplot(2,2,4);
+        heatNSzloxpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzloxpurpleAllTrials); 
+
+        title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding first lick in NS epoch ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+        xlabel('seconds from lick ');
+        ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNScount(end)), ')'));
+
+    %     set(gca, 'ytick', currentSubj(1).totalNScount); %label trials appropriately
+
+        caxis manual;
+        caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding NS');
+
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+        saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_perifirstLoxZ_AllTrials','.fig')); %save the current figure in fig format
+    end
+    
+    
+    figureCount= figureCount+1;
+end %end subject loop
+
 
 %% DFF heat plot of response to every individual cue
 

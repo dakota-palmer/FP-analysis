@@ -225,133 +225,194 @@ for trial= 1:size(eventMaskFirstLox,2)
     timeToLox(eventInd+1:end,trial)= [1:size(timeToLox,1)-eventInd]/fs; %fill timestamps following event
 end 
 
-%% Get data into proper table format for model
-%Each column= variable (including response variable y, predictive variables x, and grouping variables g)
-%Each row= observation ); %vectorize into 1 column
-% eventMaskDSpox= eventMaskDSpox(:); %vectorize into 1 column
-blueAllTrials= blueAllTrials(:); %vectorize into 1 column
-purpleAllTrials= purpleAllTrials(:);%vectorize into 1 column
-eventMaskFirstPox= eventMaskFirstPox(:); %vectorize into 1 column
-eventMaskFirstLox= eventMaskFirstLox(:); %vectorize into 1 column
-trialTypeLabel= trialTypeLabel(:); %vectorize into 1 column
-timeToCue= timeToCue(:); %vectorize into 1 column
-subjLabel= subjLabel(:); %vectorize
-timeToPox= timeToPox(:); %vectorize
-timeToLox= timeToLox(:); %vectorize
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+%% Iterative deconvolution model based on (Ghazidadeh, Fields, & Ambroggi 2010)
+
+%Equation 2 from this paper: F= ZH+N ; where F=Bulk fluorescence, Z= Event timings, H= Event related fluorescence, N= Noise... all column vectors 
+
+%initialize
+F= []; %bulk fluorescence from all timestamps and all trials; column vector
+Z= []; %binary coded event timings (1=event) ; MKxKT matrix (where M= # trials, K= # event types, T= # timestamps)
+H= []; %event-related fluorescence; column  vector
+N=[];%noise; column vector
+
+DStrialCount= 0; %counters for trials of each type
+NStrialCount= 0; 
+
+%let's come up with a "Noise" distribution to sample from and estimate
+%noise... we'll base it off of fluorescence before cue onset
+noiseEst= blueAllTrials(1:4*fs,:);
+noiseDistroBlue= fitdist(noiseEst(:), 'Normal'); %construct a normal distro based from first 2s in peri-cue period
+
+for trial= 1:trialCount
+    if trialTypeLabel(:,trial)==1
+        DStrialCount= DStrialCount+1;
+        blueDStrials(:,DStrialCount)= blueAllTrials(:,trial);
+        eventMaskFirstPoxDStrials(:,DStrialCount)= eventMaskFirstPox(:,trial);
+        eventMaskFirstLoxDStrials(:,DStrialCount)= eventMaskFirstLox(:,trial);
+    end
+end %end all trial loop
 
 
-%trying only DS trials
-blueDStrials= blueAllTrials(find(trialTypeLabel==1));
-purpleDStrials= purpleAllTrials(find(trialTypeLabel==1));
-eventMaskFirstPoxDStrials= eventMaskFirstPox(find(trialTypeLabel==1));
-eventMaskFirstLoxDStrials= eventMaskFirstLox(find(trialTypeLabel==1));
-timeToCueDStrials= timeToCue(find(trialTypeLabel==1));
-subjLabelDStrials= subjLabel(find(trialTypeLabel==1));
-timeToPoxDStrials= timeToPox(find(trialTypeLabel==1));
-timeToLoxDStrials= timeToLox(find(trialTypeLabel==1));
+for DStrial= 1:DStrialCount
+    F= cat(1, F, blueDStrials(:,DStrial)); %single column vector with fluorescence for every timestamp for every DS trial; all timestamps from each trial appended onto end 
+    
+end %end DS trial loop
 
+    N=  random(noiseDistroBlue, size(F)); %single column vector with noise; randomly sample values from noise distribution constructed above; same size as F (noise for every timestamp)
+%     plot(N, '.') %visualize estimated "noise"
 
+    %Binary coded event timestamps in (timestamp, event type) format
+    Z(:,1)= eventMaskFirstPoxDStrials(:); %first PE timestamps
+    Z(:,2)= eventMaskFirstLoxDStrials (:); %first lick timestamps
+    
+% Equation 3 from this paper: take equation 2, multiply by Zt and divide by # trials M
+% H' = (1/M)*VH + (1/M)*Z*N ; where H' = peri event histogram, M= #
+% trials,Z= binary coded event times, V= "convolution matrix" size KTxKT equivalent to Zt*Z that 'maps the K
+% event related fluorescence to the corresponding K PETHs', H= actual event
+% related fluorescence,
+    %initialize
+    hPrime= []; %raw PETH for all events, KTx1 column vector
+    
 
-%% Convolution- doesn't seem necessary
-
-%convolution of event mask and photometry z score
-poxConvDStrials= conv(eventMaskFirstPoxDStrials, blueDStrials);
-loxConvDStrials= conv(eventMaskFirstLoxDStrials, blueDStrials);
-
-%convolution of event mask and time series
-% poxConvDStrials= conv(eventMaskFirstPoxDStrials, timeToCueDStrials);
-% loxConvDStrials= conv(eventMaskFirstLoxDStrials, timeToCueDStrials);
-
-%use padarray() to pad other variables with values to match size of conv result
-% blueDStrialsConv= padarray(blueDStrials, size(poxConvDStrials), nan);
-% blueDStrialsConv(:,1)= []; blueDStrialsConv(:,2)=[]; %this function pads in all dimensions, so delete new empty columns
-
-%adjust for size of convolution (length convolution = length(kernel)+length(data)-1)
-blueDStrialsConv= nan([size(poxConvDStrials,1),1]); %make empty array matching size of conv result
-blueDStrialsConv(1:size(blueDStrials,1),1)= blueDStrials; %fill empty array with values in appropriate spots
-
-timeToCueDStrialsConv= nan([size(poxConvDStrials,1),1]); %make empty array matching size of conv result
-timeToCueDStrialsConv(1:size(timeToCueDStrials,1),1)= timeToCueDStrials; %fill empty array with values in appropriate spots
-
-
-%% Generate and visualize models
-
-predictors= [eventMaskFirstPox, eventMaskFirstLox, trialTypeLabel, timeToCue];
-
-predictorsDS= [eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials, timeToCueDStrials];
-
-predictorsDSconv= [poxConvDStrials, loxConvDStrials,timeToCueDStrialsConv];
-
-% %stepwise() may be useful in determining useful predictors
-% stepwiseModelBlue= stepwise(predictors, blueAllTrials);
-% stepwiseModelBlueDSconv= stepwise(predictorsDSconv, blueDStrialsConv);
-
-modelTableBlue= table(timeToCue,trialTypeLabel,blueAllTrials); %all trials
-
-modelTableDSblue= table(timeToCueDStrials, eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials, blueDStrials); %DS trials
-
-modelTableDSblueConv= table(poxConvDStrials, loxConvDStrials, timeToCueDStrialsConv, blueDStrialsConv); %DS trial convs
-
-
-%Try LASSO
-lassoDS= lasso(predictorsDS, blueDStrials);
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%% Trying other regression based models
+% 
+% %% Get data into proper table format for model
+% %Each column= variable (including response variable y, predictive variables x, and grouping variables g)
+% %Each row= observation ); %vectorize into 1 column
+% % eventMaskDSpox= eventMaskDSpox(:); %vectorize into 1 column
+% blueAllTrials= blueAllTrials(:); %vectorize into 1 column
+% purpleAllTrials= purpleAllTrials(:);%vectorize into 1 column
+% eventMaskFirstPox= eventMaskFirstPox(:); %vectorize into 1 column
+% eventMaskFirstLox= eventMaskFirstLox(:); %vectorize into 1 column
+% trialTypeLabel= trialTypeLabel(:); %vectorize into 1 column
+% timeToCue= timeToCue(:); %vectorize into 1 column
+% subjLabel= subjLabel(:); %vectorize
+% timeToPox= timeToPox(:); %vectorize
+% timeToLox= timeToLox(:); %vectorize
+% 
+% 
+% %trying only DS trials
+% blueDStrials= blueAllTrials(find(trialTypeLabel==1));
+% purpleDStrials= purpleAllTrials(find(trialTypeLabel==1));
+% eventMaskFirstPoxDStrials= eventMaskFirstPox(find(trialTypeLabel==1));
+% eventMaskFirstLoxDStrials= eventMaskFirstLox(find(trialTypeLabel==1));
+% timeToCueDStrials= timeToCue(find(trialTypeLabel==1));
+% subjLabelDStrials= subjLabel(find(trialTypeLabel==1));
+% timeToPoxDStrials= timeToPox(find(trialTypeLabel==1));
+% timeToLoxDStrials= timeToLox(find(trialTypeLabel==1));
+% 
+% 
+% 
+% %% Convolution- doesn't seem necessary
+% 
+% %convolution of event mask and photometry z score
+% poxConvDStrials= conv(eventMaskFirstPoxDStrials, blueDStrials);
+% loxConvDStrials= conv(eventMaskFirstLoxDStrials, blueDStrials);
+% 
+% %convolution of event mask and time series
+% % poxConvDStrials= conv(eventMaskFirstPoxDStrials, timeToCueDStrials);
+% % loxConvDStrials= conv(eventMaskFirstLoxDStrials, timeToCueDStrials);
+% 
+% %use padarray() to pad other variables with values to match size of conv result
+% % blueDStrialsConv= padarray(blueDStrials, size(poxConvDStrials), nan);
+% % blueDStrialsConv(:,1)= []; blueDStrialsConv(:,2)=[]; %this function pads in all dimensions, so delete new empty columns
+% 
+% %adjust for size of convolution (length convolution = length(kernel)+length(data)-1)
+% blueDStrialsConv= nan([size(poxConvDStrials,1),1]); %make empty array matching size of conv result
+% blueDStrialsConv(1:size(blueDStrials,1),1)= blueDStrials; %fill empty array with values in appropriate spots
+% 
+% timeToCueDStrialsConv= nan([size(poxConvDStrials,1),1]); %make empty array matching size of conv result
+% timeToCueDStrialsConv(1:size(timeToCueDStrials,1),1)= timeToCueDStrials; %fill empty array with values in appropriate spots
+% 
+% 
+% %% Generate and visualize models
+% 
+% predictors= [eventMaskFirstPox, eventMaskFirstLox, trialTypeLabel, timeToCue];
+% 
+% predictorsDS= [eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials, timeToCueDStrials];
+% 
+% predictorsDSconv= [poxConvDStrials, loxConvDStrials,timeToCueDStrialsConv];
+% 
+% predictorsDSrel = [timeToPoxDStrials, timeToLoxDStrials, timeToCueDStrials];
+% 
+% % %stepwise() may be useful in determining useful predictors
+% % stepwiseModelBlue= stepwise(predictors, blueAllTrials);
+% % stepwiseModelBlueDSconv= stepwise(predictorsDSconv, blueDStrialsConv);
+% 
+% modelTableBlue= table(timeToCue,trialTypeLabel,blueAllTrials); %all trials
+% 
+% modelTableDSblue= table(timeToCueDStrials, eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials, blueDStrials); %DS trials
+% 
+% modelTableDSblueConv= table(poxConvDStrials, loxConvDStrials, timeToCueDStrialsConv, blueDStrialsConv); %DS trial convs
+% 
+% modelTableDSblueRel= table(timeToPoxDStrials, timeToLoxDStrials, timeToCueDStrials, blueDStrials);
+% 
+% %Try LASSO
+% lassoDS= lasso(predictorsDS, blueDStrials);
+% % figure;
+% % hold on;
+% % scatter(eventMaskFirstPoxDStrials, blueDStrials);
+% % plot(eventMaskFirstPoxDStrials, eventMaskFirstPoxDStrials*lassoDS(1,:))
+% 
+% %generate linear model
+% % linearModelBlue= fitlm(modelTableBlue);
+% 
+% linearModelBlue= fitlm(modelTableBlue, 'blueAllTrials~timeToCue*trialTypeLabel');
+% 
 % figure;
-% hold on;
-% scatter(eventMaskFirstPoxDStrials, blueDStrials);
-% plot(eventMaskFirstPoxDStrials, eventMaskFirstPoxDStrials*lassoDS(1,:))
-
-%generate linear model
-% linearModelBlue= fitlm(modelTableBlue);
-
-linearModelBlue= fitlm(modelTableBlue, 'blueAllTrials~timeToCue*trialTypeLabel');
-
-figure;
-plot(linearModelBlue);
-
-linearModelDSblue= fitlm(modelTableDSblue, 'blueDStrials~timeToCueDStrials*eventMaskFirstLoxDStrials');
-figure;
-plot(linearModelDSblue);
-
-linearModelDSblueConv= fitlm(modelTableDSblueConv, 'blueDStrialsConv~timeToCueDStrialsConv*poxConvDStrials');
-figure;
-plot(linearModelDSblueConv);
-
-% linearModelBlueCategorical= fitlm(blueAllTrials, predictors, 'Categorical', [1, 2, 3]);
-
-% Try mixed effects model
-meTableDSblue= table(timeToCueDStrials, eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials, subjLabelDStrials, purpleDStrials, blueDStrials);
-
-
-mixedEffectsModelDSblue= fitlme(meTableDSblue, 'blueDStrials~timeToCueDStrials+eventMaskFirstPoxDStrials+eventMaskFirstLoxDStrials+purpleDStrials +(1|subjLabelDStrials)');
-figure;
-plotResiduals(mixedEffectsModelDSblue, 'fitted');
-
-%gscatter
-
+% plot(linearModelBlue);
+% 
+% linearModelDSblue= fitlm(modelTableDSblue, 'blueDStrials~eventMaskFirstPoxDStrials*timeToCueDStrials+eventMaskFirstLoxDStrials*timeToCueDStrials');
 % figure;
-% gscatter(timeToCue,blueAllTrials,trialTypeLabel,'bgr','x.o');
-% x= linspace(min(timeLock),max(timeLock));
-% % line(x, feval(linearModelBlue,x,'0'),'Color','b');
-
-% compute coefficients of predictor variables (events) using regress()
-% function
-
-[regressBlue.coefficient, regressBlue.CI, regressBlue.residuals, regressBlue.stats]= regress(blueAllTrials, predictors);
-
-[regressBlueDS.coefficient, regressBlueDS.CI, regressBlueDS.residuals, regressBlueDS.stats]= regress(blueDStrials, predictorsDS);
-
-% for ts= 1:numel(eventMaskFirstPoxDStrials) %for each timestamp, let's model fluorescence given coefficients above
-%     bluePoxKernelDS(ts,1)= eventMaskFirstPoxDStrials(ts)*regressBlueDS.coefficient(1);
-% end
-
-%% compare against data- making sure labels are right
+% plot(linearModelDSblue);
+% 
+% linearModelDSblueConv= fitlm(modelTableDSblueConv, 'blueDStrialsConv~timeToCueDStrialsConv*poxConvDStrials');
 % figure;
-% hold on;
-% for subj= 1:numel(subjects)
-%     currentSubj= subjDataAnalyzed.(subjects{subj})
-%     for session = 1:numel(currentSubj)
-%         for cue= 1:size(currentSubj(session).periDS.DSzblue,3)
-%             scatter(timeLock,currentSubj(session).periDS.DSzblue(:,:,cue), 'g', '.')
-%         end
-%     end %end session loop
-% end %end subj loop
+% plot(linearModelDSblueConv);
+% 
+% linearModelDSblueRel= fitlm(modelTableDSblueRel, 'blueDStrials~timeToPoxDStrials+timeToLoxDStrials');
+% figure;
+% plot(linearModelDSblueRel);
+% 
+% % linearModelBlueCategorical= fitlm(blueAllTrials, predictors, 'Categorical', [1, 2, 3]);
+% 
+% % Try mixed effects model
+% meTableDSblue= table(timeToCueDStrials, eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials, subjLabelDStrials, purpleDStrials, blueDStrials);
+% 
+% 
+% mixedEffectsModelDSblue= fitlme(meTableDSblue, 'blueDStrials~timeToCueDStrials+eventMaskFirstPoxDStrials+eventMaskFirstLoxDStrials+purpleDStrials +(1|subjLabelDStrials)');
+% figure;
+% plotResiduals(mixedEffectsModelDSblue, 'fitted');
+% 
+% %gscatter
+% 
+% % figure;
+% % gscatter(timeToCue,blueAllTrials,trialTypeLabel,'bgr','x.o');
+% % x= linspace(min(timeLock),max(timeLock));
+% % % line(x, feval(linearModelBlue,x,'0'),'Color','b');
+% 
+% % compute coefficients of predictor variables (events) using regress()
+% % function
+% 
+% [regressBlue.coefficient, regressBlue.CI, regressBlue.residuals, regressBlue.stats]= regress(blueAllTrials, predictors);
+% 
+% [regressBlueDS.coefficient, regressBlueDS.CI, regressBlueDS.residuals, regressBlueDS.stats]= regress(blueDStrials, predictorsDS);
+% 
+% % for ts= 1:numel(eventMaskFirstPoxDStrials) %for each timestamp, let's model fluorescence given coefficients above
+% %     bluePoxKernelDS(ts,1)= eventMaskFirstPoxDStrials(ts)*regressBlueDS.coefficient(1);
+% % end
+% 
+% %% compare against data- making sure labels are right
+% % figure;
+% % hold on;
+% % for subj= 1:numel(subjects)
+% %     currentSubj= subjDataAnalyzed.(subjects{subj})
+% %     for session = 1:numel(currentSubj)
+% %         for cue= 1:size(currentSubj(session).periDS.DSzblue,3)
+% %             scatter(timeLock,currentSubj(session).periDS.DSzblue(:,:,cue), 'g', '.')
+% %         end
+% %     end %end session loop
+% % end %end subj loop
