@@ -17,7 +17,7 @@ flagThreshold= 0.2; %t in seconds to flag shifted event timestamps (since we shi
 fs=40; %sampling frequency
 %% Exclude data
 for subj= 1:numel(subjects)
-    currentSubj= subjDataAnalyzed.(subjects{subj})
+    currentSubj= subjDataAnalyzed.(subjects{subj});
     excludedSessions= [];
     for session= 1:numel(currentSubj)
         if currentSubj(session).trainStage ~= 7 %only include stage 7 days
@@ -26,7 +26,7 @@ for subj= 1:numel(subjects)
     end%end session loop
    subjDataAnalyzed.(subjects{subj})(excludedSessions)= []; 
    
-   currentSubj= subjDataAnalyzed.(subjects{subj})
+   currentSubj= subjDataAnalyzed.(subjects{subj});
    excludedSessions= [];
    for session= 1:numel(currentSubj) %loop through again and get rid of all except final stage 7 day
        if session<numel(currentSubj)
@@ -40,8 +40,6 @@ end %end subj loop
 
 %% get timestamps of events and photometry data from all trials   
 trialCount= 0; %counter for total number of trials 
-
-% clear eventMaskFirstPox eventMaskFirstLox timeShift poxDS loxDS poxNS loxNS blueAllTrials purpleAllTrials trialTypeLabel subjLabel timeToCue
 
 for subj= 1:numel(subjects) %for each subject
    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
@@ -95,11 +93,16 @@ for subj= 1:numel(subjects) %for each subject
                 end                
            end
            
-          %Get z score of 465nm photometry signal
-          blueAllTrials(:,trialCount)= currentSubj(session).periDS.DSzblue(:,:,cue);
+          %Get z score of 465nm photometry signal- timelocked to every event
+          periCueBlueAllTrials(:,trialCount)= currentSubj(session).periDS.DSzblue(:,:,cue);
+          periPoxBlueAllTrials(:,trialCount)= currentSubj(session).periDSpox.DSzpoxblue(:,:,cue);
+          periLoxBlueAllTrials(:,trialCount)= currentSubj(session).periDSlox.DSzloxblue(:,:,cue);
           
-          %Get z score of 405nm photometry signal
-          purpleAllTrials(:, trialCount)= currentSubj(session).periDS.DSzpurple(:,:,cue);
+          %Get z score of 405nm photometry signal- timelocked to every event
+          periCuePurpleAllTrials(:, trialCount)= currentSubj(session).periDS.DSzpurple(:,:,cue);
+          periPoxPurpleAllTrials(:,trialCount)= currentSubj(session).periDSpox.DSzpoxpurple(:,:,cue);
+          periLoxPurpleAllTrials(:,trialCount)= currentSubj(session).periDSlox.DSzloxpurple(:,:,cue);
+          
           
           %Add subj label for this trial
           subjLabel(:,trialCount)= ones(size(timeLock))'*subj;
@@ -162,14 +165,25 @@ for subj= 1:numel(subjects) %for each subject
            end
            
            if ~isempty(currentSubj(session).periNS.NS) %only run if NS present
-              %Get z score of 465nm photometry signal
-              blueAllTrials(:,trialCount)= currentSubj(session).periNS.NSzblue(:,:,cue);
+              %Get z score of 465nm photometry signal- timelocked to every event
+              periCueBlueAllTrials(:,trialCount)= currentSubj(session).periNS.NSzblue(:,:,cue);
+              periPoxBlueAllTrials(:,trialCount)= currentSubj(session).periNSpox.NSzpoxblue(:,:,cue);
+              periLoxBlueAllTrials(:,trialCount)= currentSubj(session).periNSlox.NSzloxblue(:,:,cue);
 
-              %Get z score of 405nm photometry signal
-              purpleAllTrials(:,trialCount)= currentSubj(session).periNS.NSzpurple(:,:,cue);
+              %Get z score of 405nm photometry signal- timelocked to every event
+              periCuePurpleAllTrials(:, trialCount)= currentSubj(session).periNS.NSzpurple(:,:,cue);
+              periPoxPurpleAllTrials(:,trialCount)= currentSubj(session).periNSpox.NSzpoxpurple(:,:,cue);
+              periLoxPurpleAllTrials(:,trialCount)= currentSubj(session).periNSlox.NSzloxpurple(:,:,cue);
+
            else
-               blueAllTrials(:,trialCount)= nan(size(timeLock))';
-               purpleAllTrials(:,trialCount)=  nan(size(timeLock))';
+%                periCueBlueAllTrials(:,trialCount)= nan(size(timeLock))';
+%                periCuePurpleAllTrials(:,trialCount)=  nan(size(timeLock))';
+%                
+%                periPoxBlueAllTrials(:,trialCount)= nan(size(timeLock))';
+%                periPoxPurpleAllTrials(:,trialCount)=  nan(size(timeLock))';
+%                
+%                periPoxBlueAllTrials(:,trialCount)= nan(size(timeLock))';
+%                periPoxPurpleAllTrials(:,trialCount)=  nan(size(timeLock))';
            end
            
               %Add subj label for this trial
@@ -242,13 +256,13 @@ NStrialCount= 0;
 
 %let's come up with a "Noise" distribution to sample from and estimate
 %noise... we'll base it off of fluorescence before cue onset
-noiseEst= blueAllTrials(1:4*fs,:);
+noiseEst= periCueBlueAllTrials(1:4*fs,:);
 noiseDistroBlue= fitdist(noiseEst(:), 'Normal'); %construct a normal distro based from first 2s in peri-cue period
 
 for trial= 1:trialCount
     if trialTypeLabel(:,trial)==1
         DStrialCount= DStrialCount+1;
-        blueDStrials(:,DStrialCount)= blueAllTrials(:,trial);
+        blueDStrials(:,DStrialCount)= periCueBlueAllTrials(:,trial);
         eventMaskFirstPoxDStrials(:,DStrialCount)= eventMaskFirstPox(:,trial);
         eventMaskFirstLoxDStrials(:,DStrialCount)= eventMaskFirstLox(:,trial);
     end
@@ -275,6 +289,7 @@ end %end DS trial loop
     %initialize
     hPrime= []; %raw PETH for all events, KTx1 column vector
     
+%     for DStrial= 
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Trying other regression based models
@@ -283,8 +298,8 @@ end %end DS trial loop
 % %Each column= variable (including response variable y, predictive variables x, and grouping variables g)
 % %Each row= observation ); %vectorize into 1 column
 % % eventMaskDSpox= eventMaskDSpox(:); %vectorize into 1 column
-% blueAllTrials= blueAllTrials(:); %vectorize into 1 column
-% purpleAllTrials= purpleAllTrials(:);%vectorize into 1 column
+% periCueBlueAllTrials= periCueBlueAllTrials(:); %vectorize into 1 column
+% periCuePurpleAllTrials= periCuePurpleAllTrials(:);%vectorize into 1 column
 % eventMaskFirstPox= eventMaskFirstPox(:); %vectorize into 1 column
 % eventMaskFirstLox= eventMaskFirstLox(:); %vectorize into 1 column
 % trialTypeLabel= trialTypeLabel(:); %vectorize into 1 column
@@ -295,8 +310,8 @@ end %end DS trial loop
 % 
 % 
 % %trying only DS trials
-% blueDStrials= blueAllTrials(find(trialTypeLabel==1));
-% purpleDStrials= purpleAllTrials(find(trialTypeLabel==1));
+% blueDStrials= periCueBlueAllTrials(find(trialTypeLabel==1));
+% purpleDStrials= periCuePurpleAllTrials(find(trialTypeLabel==1));
 % eventMaskFirstPoxDStrials= eventMaskFirstPox(find(trialTypeLabel==1));
 % eventMaskFirstLoxDStrials= eventMaskFirstLox(find(trialTypeLabel==1));
 % timeToCueDStrials= timeToCue(find(trialTypeLabel==1));
@@ -339,10 +354,10 @@ end %end DS trial loop
 % predictorsDSrel = [timeToPoxDStrials, timeToLoxDStrials, timeToCueDStrials];
 % 
 % % %stepwise() may be useful in determining useful predictors
-% % stepwiseModelBlue= stepwise(predictors, blueAllTrials);
+% % stepwiseModelBlue= stepwise(predictors, periCueBlueAllTrials);
 % % stepwiseModelBlueDSconv= stepwise(predictorsDSconv, blueDStrialsConv);
 % 
-% modelTableBlue= table(timeToCue,trialTypeLabel,blueAllTrials); %all trials
+% modelTableBlue= table(timeToCue,trialTypeLabel,periCueBlueAllTrials); %all trials
 % 
 % modelTableDSblue= table(timeToCueDStrials, eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials, blueDStrials); %DS trials
 % 
@@ -360,7 +375,7 @@ end %end DS trial loop
 % %generate linear model
 % % linearModelBlue= fitlm(modelTableBlue);
 % 
-% linearModelBlue= fitlm(modelTableBlue, 'blueAllTrials~timeToCue*trialTypeLabel');
+% linearModelBlue= fitlm(modelTableBlue, 'periCueBlueAllTrials~timeToCue*trialTypeLabel');
 % 
 % figure;
 % plot(linearModelBlue);
@@ -377,7 +392,7 @@ end %end DS trial loop
 % figure;
 % plot(linearModelDSblueRel);
 % 
-% % linearModelBlueCategorical= fitlm(blueAllTrials, predictors, 'Categorical', [1, 2, 3]);
+% % linearModelBlueCategorical= fitlm(periCueBlueAllTrials, predictors, 'Categorical', [1, 2, 3]);
 % 
 % % Try mixed effects model
 % meTableDSblue= table(timeToCueDStrials, eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials, subjLabelDStrials, purpleDStrials, blueDStrials);
@@ -390,14 +405,14 @@ end %end DS trial loop
 % %gscatter
 % 
 % % figure;
-% % gscatter(timeToCue,blueAllTrials,trialTypeLabel,'bgr','x.o');
+% % gscatter(timeToCue,periCueBlueAllTrials,trialTypeLabel,'bgr','x.o');
 % % x= linspace(min(timeLock),max(timeLock));
 % % % line(x, feval(linearModelBlue,x,'0'),'Color','b');
 % 
 % % compute coefficients of predictor variables (events) using regress()
 % % function
 % 
-% [regressBlue.coefficient, regressBlue.CI, regressBlue.residuals, regressBlue.stats]= regress(blueAllTrials, predictors);
+% [regressBlue.coefficient, regressBlue.CI, regressBlue.residuals, regressBlue.stats]= regress(periCueBlueAllTrials, predictors);
 % 
 % [regressBlueDS.coefficient, regressBlueDS.CI, regressBlueDS.residuals, regressBlueDS.stats]= regress(blueDStrials, predictorsDS);
 % 

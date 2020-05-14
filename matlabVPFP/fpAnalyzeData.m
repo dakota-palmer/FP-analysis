@@ -1239,8 +1239,16 @@ for subj= 1:numel(subjects) %for each subject
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSbluedff(:,:,cue)= (subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff(preEventTimeNS:postEventTimeNS));
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurpledff(:,:,cue)= (subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff(preEventTimeNS:postEventTimeNS));
 
-                      
+                %lets save the baseline mean and std used for z score calc- so
+                %that we can use this same baseline for other analyses
+                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanblue(1,cue)= baselineMeanblue;
+                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdblue(1,cue)= baselineStdblue;
+                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanpurple(1,cue)= baselineMeanpurple;
+                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdpurple(1,cue)= baselineStdpurple;
+                
+                
             end % end NS cue loop
+            
       end %end if NS ~nan conditional 
       
                 %get the mean response to the NS for this session
@@ -1248,14 +1256,7 @@ for subj= 1:numel(subjects) %for each subject
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue, 3);
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple, 3);
-                
-
-                %lets save the baseline mean and std used for z score calc- so
-                %that we can use this same baseline for other analyses
-                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanblue(1,cue)= baselineMeanblue;
-                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdblue(1,cue)= baselineStdblue;
-                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineMeanpurple(1,cue)= baselineMeanpurple;
-                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineStdpurple(1,cue)= baselineStdpurple;
+              
 
       
    end %end session loop
