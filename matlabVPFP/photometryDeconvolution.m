@@ -46,7 +46,15 @@ for subj= 1:numel(subjects) %for each subject
    for session = 1:numel(currentSubj) %for each training session this subject completed
        timeLock= currentSubj(session).periDS.timeLock;
        for cue= 1:numel(currentSubj(session).periDS.DS) %for each cue (trial) in this session
+                     
            trialCount=trialCount+1; %count all trials between sessions & subjects 
+ 
+       %Get cue timestamp TODO: change definition of trial start time to
+       %introduce variability
+           eventMaskCue(trialCount,:)=zeros(size(timeLock));
+           eventMaskCue(trialCount, find(currentSubj(session).periDS.timeLock==0))= 1;
+            
+           
        %Get PE timestamps
            if ~isempty(currentSubj(session).behavior.poxDS{cue}) %only run if PE during this cue
                poxDS{trialCount,:}= currentSubj(session).behavior.poxDS{cue}-currentSubj(session).periDS.DS(cue); %get timestamps of PEs relative to DS
@@ -56,7 +64,7 @@ for subj= 1:numel(subjects) %for each subject
            
            eventMaskFirstPox(trialCount,:)= zeros(size(timeLock));
            
-           %Important step!! Shifting event timestamp to match timeLock
+           %Important step! Shifting event timestamp to match timeLock
           poxDS{trialCount,:}= interp1(timeLock,timeLock, poxDS{trialCount,:}, 'nearest'); %shift the event timestamp to the nearest in cutTime;
             
            if ~isempty(poxDS{trialCount,:}) %only run if there's a valid pe on this trial
@@ -118,6 +126,12 @@ for subj= 1:numel(subjects) %for each subject
        %Now repeat for NS
        for cue= 1:numel(currentSubj(session).periNS.NS) %for each cue (trial) in this session
            trialCount=trialCount+1; %count all trials between sessions & subjects 
+           
+       %Get cue timestamp TODO: change definition of trial start time to
+       %introduce variability
+           eventMaskCue(trialCount,:)=zeros(size(timeLock));
+           eventMaskCue(trialCount, find(timeLock==0))= 1;
+           
        %Get PE timestamps
            if ~isempty(currentSubj(session).behavior.poxNS{cue}) %only run if PE during this cue
                poxNS{trialCount,:}= currentSubj(session).behavior.poxNS{cue}-currentSubj(session).periNS.NS(cue); %get timestamps of PEs relative to NS
@@ -217,7 +231,8 @@ end %end subject loop
 %     end
 % end
 
-%Flip event masks into (timestamp, trial) format
+%Transpose event masks into (timestamp, trial) format
+eventMaskCue= eventMaskCue';
 eventMaskFirstLox= eventMaskFirstLox';
 eventMaskFirstPox= eventMaskFirstPox';
 
@@ -259,38 +274,85 @@ NStrialCount= 0;
 noiseEst= periCueBlueAllTrials(1:4*fs,:);
 noiseDistroBlue= fitdist(noiseEst(:), 'Normal'); %construct a normal distro based from first 2s in peri-cue period
 
+%Get DS trial data
 for trial= 1:trialCount
     if trialTypeLabel(:,trial)==1
         DStrialCount= DStrialCount+1;
-        blueDStrials(:,DStrialCount)= periCueBlueAllTrials(:,trial);
+        periCueBlueDStrials(:,DStrialCount)= periCueBlueAllTrials(:,trial);
+        eventMaskDS(:,DStrialCount)= eventMaskCue(:,trial);
         eventMaskFirstPoxDStrials(:,DStrialCount)= eventMaskFirstPox(:,trial);
         eventMaskFirstLoxDStrials(:,DStrialCount)= eventMaskFirstLox(:,trial);
+        
+        periPoxBlueDStrials(:,DStrialCount)= periPoxBlueAllTrials(:,trial);
+        periLoxBlueDStrials(:,DStrialCount)= periLoxBlueAllTrials(:,trial);
     end
 end %end all trial loop
 
 
 for DStrial= 1:DStrialCount
-    F= cat(1, F, blueDStrials(:,DStrial)); %single column vector with fluorescence for every timestamp for every DS trial; all timestamps from each trial appended onto end 
+    F= cat(1, F, periCueBlueDStrials(:,DStrial)); %single column vector with fluorescence for every timestamp for every DS trial; all timestamps from each trial appended onto end 
     
 end %end DS trial loop
 
     N=  random(noiseDistroBlue, size(F)); %single column vector with noise; randomly sample values from noise distribution constructed above; same size as F (noise for every timestamp)
 %     plot(N, '.') %visualize estimated "noise"
 
-    %Binary coded event timestamps in (timestamp, event type) format
-    Z(:,1)= eventMaskFirstPoxDStrials(:); %first PE timestamps
-    Z(:,2)= eventMaskFirstLoxDStrials (:); %first lick timestamps
+    %save # of events, timestamps, trials for checking shape of outputs 
+    K= 3; %# events
+    T= size(timeLock,2); % # timestamps
+    M= DStrialCount; % # trials
+
+    %Binary coded event timestamps in (timestamp, event type) format; size MTxKT
+    %according to paper, but I've got MTxK??
+    
+%     Z= zeros(M*T,K*T); %preallocate appropriate size
+%     
+%     for M= 1:DStrialCount
+%         for eventType= 1:K
+%             
+%         end
+%     end
+%     
+    %This resulted in an MTxK matrix
+    Z(:,1)= eventMaskDS(:); %cue timestamps
+    Z(:,2)= eventMaskFirstPoxDStrials(:); %first PE timestamps
+    Z(:,3)= eventMaskFirstLoxDStrials (:); %first lick timestamps
     
 % Equation 3 from this paper: take equation 2, multiply by Zt and divide by # trials M
 % H' = (1/M)*VH + (1/M)*Z*N ; where H' = peri event histogram, M= #
-% trials,Z= binary coded event times, V= "convolution matrix" size KTxKT equivalent to Zt*Z that 'maps the K
+% trials,Z= binary coded event times, V= "convolution matrix" size KTxKT equivalent to Z'*Z that 'maps the K
 % event related fluorescence to the corresponding K PETHs', H= actual event
 % related fluorescence,
     %initialize
-    hPrime= []; %raw PETH for all events, KTx1 column vector
-    
-%     for DStrial= 
+    periEventsRaw= []; %raw peri event z score, analogous to H' or raw PETH for all events, KTx1 column vector
+        
+    periEventsRaw= [periCueBlueDStrials(:); periPoxBlueDStrials(:); periLoxBlueDStrials(:)];%append peri-event fluorescence into single column vector 
+        
+    %multiplication step to calculate V memory intensive bc result is very
+    %large matrix. To workaround, use a sparse matrix... This will work because we're using
+    %binary coding for event timestamps (so most elements will be==0)
 
+%     V=zeros(K*T) %545gb 
+%     V=zeros(K*T, 'uint8') %68.1gb 
+%     V= spalloc(K*T,K*T,K*T); %6.49mb %KTxKT matrix with some reserved spots for 1s
+
+
+    %convert Z to a sparse matrix and multiply
+    Z= sparse(Z);
+
+    %get convolution matrix V
+    V= Z*Z'; % 'convolution matrix' , sparse due to very large KTxKT dimensions and binary coding... size actually seems to be MTxMT ????
+    
+%     (1/M)*Z'*F %eq 3
+    
+    
+%Equation 5 from this paper- Find inverse of matrix V (to undo
+%convolution) and get normalized vector PETH (Hbar) 
+    
+    %Establish S, scaling factor less than half of the "largest eigenvalue
+    %of (1/M)V"
+    
+    
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Trying other regression based models
 % 
