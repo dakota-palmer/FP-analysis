@@ -109,14 +109,15 @@ for subj= 1:numel(subjects) %for each subject
            %Important step! Shifting event timestamp to match timeLock
           poxDS{trialCount,:}= interp1(timeLock,timeLock, poxDS{trialCount,:}, 'nearest'); %shift the event timestamp to the nearest in cutTime;
             
+          %fill eventMask with 1 where event occurs
            if ~isempty(poxDS{trialCount,:}) %only run if there's a valid pe on this trial
-              eventInd= find(timeLock(1,:)==poxDS{trialCount,:}(1)); %get index of timestamp corresponding to this event
-              eventMaskFirstPox(trialCount,eventInd)= 1;  %replace 0s with 1s for first pe on this trial
+              eventIndPox(trialCount)= find(timeLock(1,:)==poxDS{trialCount,:}(1)); %get index of timestamp corresponding to this event
+              eventMaskFirstPox(trialCount,eventIndPox(trialCount))= 1;  %replace 0s with 1s for first pe on this trial
               
-              eventMaskBfirstPox(tsThisTrial(eventInd), eventInd)= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
+              eventMaskBfirstPox(tsThisTrial(eventIndPox(trialCount)), eventIndPox(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
                            
               %debug, this should always return True
-              if eventInd~=find(eventMaskBfirstPox(tsThisTrial,eventInd)==1) %search for the timestamp that ==1 within eventInd column, and make sure it matches the relative eventInd timestamp for that trial (just matching row with column) 
+              if eventIndPox(trialCount)~=find(eventMaskBfirstPox(tsThisTrial,eventIndPox(trialCount))==1) %search for the timestamp that ==1 within eventInd column, and make sure it matches the relative eventInd timestamp for that trial (just matching row with column) 
                 warning('eventMaskBfirstPox index doesnt match: subj %s DS %s',num2str(subj),num2str(cue));
               end
       
@@ -124,7 +125,10 @@ for subj= 1:numel(subjects) %for each subject
                 timeShift(trialCount)= abs(poxDS{trialCount,:}(1)-currentSubj(session).behavior.DSpeLatency(cue));
                 if abs(timeShift(trialCount)) >flagThreshold %this will flag cues whose time shift deviates above a threshold (in seconds)
                     disp(strcat('>>Error *big pox time shift_', num2str(timeShift(trialCount)), '; subj_', num2str(subj), '; sess_', num2str(session), '; cue_',num2str(cue)));
-                end                
+                end 
+                
+           else %make eventInd nan if no pox on this trial
+               eventIndPox(trialCount)= nan;
            end
            
             %Get lick timestamps
@@ -140,14 +144,23 @@ for subj= 1:numel(subjects) %for each subject
           loxDS{trialCount,:}= interp1(timeLock,timeLock, loxDS{trialCount,:}, 'nearest'); %shift the event timestamp to the nearest in cutTime;
             
            if ~isempty(loxDS{trialCount,:}) %only run if there's a valid pe on this trial
-              eventInd= find(timeLock(1,:)==loxDS{trialCount,:}(1)); %get index of timestamp corresponding to this event
-              eventMaskFirstLox(trialCount,eventInd)= 1;  %replace 0s with 1s for first pe on this trial
+              eventIndLox(trialCount)= find(timeLock(1,:)==loxDS{trialCount,:}(1)); %get index of timestamp corresponding to this event
+              eventMaskFirstLox(trialCount,eventIndLox(trialCount))= 1;  %replace 0s with 1s for first pe on this trial
                             
               %flag event timestamps that have shifted too much
                 timeShift(trialCount)= abs(loxDS{trialCount,:}(1)-currentSubj(session).behavior.loxDSrel{cue}(1));
                 if abs(timeShift(trialCount)) >flagThreshold %this will flag cues whose time shift deviates above a threshold (in seconds)
                     disp(strcat('>>Error *big lox time shift_', num2str(timeShift(trialCount)), '; subj_', num2str(subj), '; sess_', num2str(session), '; cue_',num2str(cue)));
-                end                
+                end
+           else  %make eventInd nan if no pox on this trial
+               eventIndLox(trialCount)= nan;
+           end
+           
+           %flag trials where Lox precedes Pox
+           if ~isnan(eventIndLox(trialCount))
+               if eventIndLox(trialCount) <= eventIndPox(trialCount) || isnan(eventIndPox(trialCount))
+                   disp(strcat('>>Warning: lox before pox- Subj_ ', num2str(subj), '_session_',num2str(session),'_DS_',num2str(cue)));
+               end
            end
            
           %Get z score of 465nm photometry signal- timelocked to every event
@@ -202,14 +215,14 @@ for subj= 1:numel(subjects) %for each subject
           poxNS{trialCount,:}= interp1(timeLock,timeLock, poxNS{trialCount,:}, 'nearest'); %shift the event timestamp to the nearest in cutTime;
             
            if ~isempty(poxNS{trialCount,:}) %only run if there's a valid pe on this trial
-              eventInd= find(timeLock(1,:)==poxNS{trialCount,:}(1)); %get index of timestamp corresponding to this event
-              eventMaskFirstPox(trialCount,eventInd)= 1;  %replace 0s with 1s for first pe on this trial
+              eventIndPox(trialCount)= find(timeLock(1,:)==poxNS{trialCount,:}(1)); %get index of timestamp corresponding to this event
+              eventMaskFirstPox(trialCount,eventIndPox(trialCount))= 1;  %replace 0s with 1s for first pe on this trial
                             
            
-              eventMaskBfirstPox(tsThisTrial(eventInd), eventInd)= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
+              eventMaskBfirstPox(tsThisTrial(eventIndPox(trialCount)), eventIndPox(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
                            
               %debug, this should always return True
-              if eventInd~=find(eventMaskBfirstPox(tsThisTrial,eventInd)==1) %search for the timestamp that ==1 within eventInd column, and make sure it matches the relative eventInd timestamp for that trial (just matching row with column) 
+              if eventIndPox(trialCount)~=find(eventMaskBfirstPox(tsThisTrial,eventIndPox(trialCount))==1) %search for the timestamp that ==1 within eventInd column, and make sure it matches the relative eventInd timestamp for that trial (just matching row with column) 
                 warning('eventMaskBfirstPox index doesnt match: subj %s NS %s',num2str(subj),num2str(cue));
               end
                   
@@ -218,7 +231,9 @@ for subj= 1:numel(subjects) %for each subject
                 timeShift(trialCount)= abs(poxNS{trialCount,:}(1)-currentSubj(session).behavior.NSpeLatency(cue));
                 if abs(timeShift(trialCount)) >flagThreshold %this will flag cues whose time shift deviates above a threshold (in seconNS)
                     disp(strcat('>>Error *big pox time shift_', num2str(timeShift(trialCount)), '; subj_', num2str(subj), '; sess_', num2str(session), '; cue_',num2str(cue)));
-                end                
+                end
+           else %make eventInd nan if no pox on this trial
+               eventIndPox(trialCount)= nan;
            end
            
             %Get lick timestamps
@@ -234,14 +249,23 @@ for subj= 1:numel(subjects) %for each subject
           loxNS{trialCount,:}= interp1(timeLock,timeLock, loxNS{trialCount,:}, 'nearest'); %shift the event timestamp to the nearest in cutTime;
             
            if ~isempty(loxNS{trialCount,:}) %only run if there's a valid pe on this trial
-              eventInd= find(timeLock(1,:)==loxNS{trialCount,:}(1)); %get index of timestamp corresponding to this event
-              eventMaskFirstLox(trialCount,eventInd)= 1;  %replace 0s with 1s for first pe on this trial
+              eventIndLox(trialCount)= find(timeLock(1,:)==loxNS{trialCount,:}(1)); %get index of timestamp corresponding to this event
+              eventMaskFirstLox(trialCount,eventIndLox(trialCount))= 1;  %replace 0s with 1s for first pe on this trial
                             
               %flag event timestamps that have shifted too much
                 timeShift(trialCount)= abs(loxNS{trialCount,:}(1)-currentSubj(session).behavior.loxNSrel{cue}(1));
                 if abs(timeShift(trialCount)) >flagThreshold %this will flag cues whose time shift deviates above a threshold (in seconNS)
                     disp(strcat('>>Error *big lox time shift_', num2str(timeShift(trialCount)), '; subj_', num2str(subj), '; sess_', num2str(session), '; cue_',num2str(cue)));
-                end                
+                end
+           else %make eventInd nan if no pox on this trial
+               eventIndLox(trialCount)= nan;
+           end
+           
+             %flag trials where Lox precedes Pox
+           if ~isnan(eventIndLox(trialCount))
+               if eventIndLox(trialCount) <= eventIndPox(trialCount) || isnan(eventIndPox(trialCount))
+                   disp(strcat('>>Warning: lox before pox- Subj_ ', num2str(subj), '_session_',num2str(session),'_NS_',num2str(cue)));
+               end
            end
            
            if ~isempty(currentSubj(session).periNS.NS) %only run if NS present
@@ -296,6 +320,16 @@ end %end subject loop
 % %         scatter(timeLock(find(eventMaskFirstLox(trial,:)==1)), ones(1,numel(eventMaskFirstLox(eventMaskFirstLox(trial,:)==1))));
 %     end
 % end
+
+% %% Visualization - making sure eventMaskB timestamps look correct
+%PE visualization
+figure; plot(eventIndPox,'.'); title('eventIndPox'); xlabel('trial'); ylabel('timestamp');
+hold on; plot([xlim],[find(timeLock==0),find(timeLock==0)],'k--'); 
+
+%overlay lox visualization
+hold on; plot(eventIndLox,'.'); title('eventIndLox'); xlabel('trial'); ylabel('timestamp');
+hold on; plot([xlim],[find(timeLock==0),find(timeLock==0)],'k--'); legend('first PE (0=none)', 'cue onset', 'first lick (0=none)');
+
 
 %Transpose event masks into (timestamp, trial) format
 eventMaskCue= eventMaskCue';
@@ -373,6 +407,7 @@ end %end DS trial loop
 %     Z= zeros(M*T,K*T); %preallocate appropriate size
     
     %loop through events and assign timestamps for each trial
+
     for eventType= 1:K
 %         Z(
     end
