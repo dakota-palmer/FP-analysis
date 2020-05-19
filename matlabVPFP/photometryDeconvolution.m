@@ -87,14 +87,19 @@ for subj= 1:numel(subjects) %for each subject
           if trialCount==1
             tsThisTrial= 1:numel(timeLock);
           else
-             tsThisTrial= tsThisTrial(end)+1:tsThisTrial(end)+numel(timeLock); 
+            tsThisTrial= tsThisTrial(end)+1:tsThisTrial(end)+numel(timeLock); 
           end
            
        %Get cue timestamp TODO: change definition of trial start time to
        %introduce variability
            eventMaskCue(trialCount,:)=zeros(size(timeLock));
            eventMaskCue(trialCount, find(currentSubj(session).periDS.timeLock==0))= 1;
-            
+                      
+            %cue onset where timeLock==0           
+           eventIndCue(trialCount)= find(timeLock==0);
+           
+           eventMaskBcue(tsThisTrial(eventIndCue(trialCount)), eventIndCue(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
+
            
        %Get PE timestamps
            if ~isempty(currentSubj(session).behavior.poxDS{cue}) %only run if PE during this cue
@@ -201,6 +206,12 @@ for subj= 1:numel(subjects) %for each subject
        %introduce variability
            eventMaskCue(trialCount,:)=zeros(size(timeLock));
            eventMaskCue(trialCount, find(timeLock==0))= 1;
+           
+       %cue onset where timeLock==0           
+           eventIndCue(trialCount)= find(timeLock==0);
+           
+           eventMaskBcue(tsThisTrial(eventIndCue(trialCount)), eventIndCue(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
+
            
        %Get PE timestamps
            if ~isempty(currentSubj(session).behavior.poxNS{cue}) %only run if PE during this cue
@@ -323,12 +334,16 @@ end %end subject loop
 
 % %% Visualization - making sure eventMaskB timestamps look correct
 %PE visualization
-figure; plot(eventIndPox,'.'); title('eventIndPox'); xlabel('trial'); ylabel('timestamp');
-hold on; plot([xlim],[find(timeLock==0),find(timeLock==0)],'k--'); 
+figure; plot(eventIndPox,'.'); title('eventInd'); xlabel('trial'); ylabel('timestamp');
+hold on; 
+
+%overlay cue onset visualization
+plot(eventIndCue,'k.')
 
 %overlay lox visualization
-hold on; plot(eventIndLox,'.'); title('eventIndLox'); xlabel('trial'); ylabel('timestamp');
-hold on; plot([xlim],[find(timeLock==0),find(timeLock==0)],'k--'); legend('first PE (0=none)', 'cue onset', 'first lick (0=none)');
+plot(eventIndLox,'.');
+
+legend('first PE (0=none)', 'cue onset', 'first lick (0=none)');
 
 
 %Transpose event masks into (timestamp, trial) format
