@@ -39,16 +39,57 @@ for subj= 1:numel(subjects)
 end %end subj loop
 
 %% get timestamps of events and photometry data from all trials   
-trialCount= 0; %counter for total number of trials 
+
+%get total trial count to establish dimensions of matrices
+trialCount=0;
+DStrialCount= 0;
+NStrialCount= 0;
+for subj= 1:numel(subjects) %for each subject
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    for session = 1:numel(currentSubj)
+        for cue= 1:numel(currentSubj(session).periDS.DS)
+            trialCount= trialCount+1;
+            DStrialCount= DStrialCount+1;
+        end
+        
+        for cue = 1:numel(currentSubj(session).periNS.NS)
+            trialCount= trialCount+1;
+            NStrialCount= NStrialCount+1;
+        end
+    end
+end
+
+  %save # of events, timestamps, & trials for ensuring correct shape of
+  %matrices. M= # trials, K= # event types, T= # timestamps (letters used here are same as Ghazidadeh et al 2010 paper) 
+    timeLock= currentSubj(session).periDS.timeLock; %assume timeLock is concsistent among events
+ 
+    K= 3; %# events
+    T= size(timeLock,2); % # timestamps
+    M= trialCount; % # trials
+
+%initialize matrices with correct dimensions
+eventMaskBcue= zeros(M*T,T); %row for every timestamp in every trial, column for each timestamp in timeLock; will be binary coded
+eventMaskBfirstPox= zeros(M*T,T); 
+eventMaskBfirstLox= zeros(M*T,T);
+
+
+trialCount= 0; %counter for total number of trials (used for indexing) 
 
 for subj= 1:numel(subjects) %for each subject
    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
    for session = 1:numel(currentSubj) %for each training session this subject completed
-       timeLock= currentSubj(session).periDS.timeLock;
        for cue= 1:numel(currentSubj(session).periDS.DS) %for each cue (trial) in this session
                      
            trialCount=trialCount+1; %count all trials between sessions & subjects 
  
+          %for indexing rows easily as we build the eventMask, keep track 
+          %of timestamps (ts) that correspond to this trial 
+          if trialCount==1
+            tsThisTrial= 1:numel(timeLock);
+          else
+             tsThisTrial= tsThisTrial(end)+1:tsThisTrial(end)+numel(timeLock); 
+          end
+           
        %Get cue timestamp TODO: change definition of trial start time to
        %introduce variability
            eventMaskCue(trialCount,:)=zeros(size(timeLock));
@@ -64,13 +105,21 @@ for subj= 1:numel(subjects) %for each subject
            
            eventMaskFirstPox(trialCount,:)= zeros(size(timeLock));
            
+           
            %Important step! Shifting event timestamp to match timeLock
           poxDS{trialCount,:}= interp1(timeLock,timeLock, poxDS{trialCount,:}, 'nearest'); %shift the event timestamp to the nearest in cutTime;
             
            if ~isempty(poxDS{trialCount,:}) %only run if there's a valid pe on this trial
               eventInd= find(timeLock(1,:)==poxDS{trialCount,:}(1)); %get index of timestamp corresponding to this event
               eventMaskFirstPox(trialCount,eventInd)= 1;  %replace 0s with 1s for first pe on this trial
-                            
+              
+              eventMaskBfirstPox(tsThisTrial(eventInd), eventInd)= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
+                           
+              %debug, this should always return True
+              if eventInd~=find(eventMaskBfirstPox(tsThisTrial,eventInd)==1) %search for the timestamp that ==1 within eventInd column, and make sure it matches the relative eventInd timestamp for that trial (just matching row with column) 
+                warning('eventMaskBfirstPox index doesnt match: subj %s DS %s',num2str(subj),num2str(cue));
+              end
+      
               %flag event timestamps that have shifted too much
                 timeShift(trialCount)= abs(poxDS{trialCount,:}(1)-currentSubj(session).behavior.DSpeLatency(cue));
                 if abs(timeShift(trialCount)) >flagThreshold %this will flag cues whose time shift deviates above a threshold (in seconds)
@@ -127,6 +176,14 @@ for subj= 1:numel(subjects) %for each subject
        for cue= 1:numel(currentSubj(session).periNS.NS) %for each cue (trial) in this session
            trialCount=trialCount+1; %count all trials between sessions & subjects 
            
+              %for indexing rows easily as we build the eventMask, keep track 
+              %of timestamps (ts) that correspond to this trial 
+              if trialCount==1
+                tsThisTrial= 1:numel(timeLock);
+              else
+                 tsThisTrial= tsThisTrial(end)+1:tsThisTrial(end)+numel(timeLock); 
+              end
+           
        %Get cue timestamp TODO: change definition of trial start time to
        %introduce variability
            eventMaskCue(trialCount,:)=zeros(size(timeLock));
@@ -148,6 +205,15 @@ for subj= 1:numel(subjects) %for each subject
               eventInd= find(timeLock(1,:)==poxNS{trialCount,:}(1)); %get index of timestamp corresponding to this event
               eventMaskFirstPox(trialCount,eventInd)= 1;  %replace 0s with 1s for first pe on this trial
                             
+           
+              eventMaskBfirstPox(tsThisTrial(eventInd), eventInd)= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
+                           
+              %debug, this should always return True
+              if eventInd~=find(eventMaskBfirstPox(tsThisTrial,eventInd)==1) %search for the timestamp that ==1 within eventInd column, and make sure it matches the relative eventInd timestamp for that trial (just matching row with column) 
+                warning('eventMaskBfirstPox index doesnt match: subj %s NS %s',num2str(subj),num2str(cue));
+              end
+                  
+              
               %flag event timestamps that have shifted too much
                 timeShift(trialCount)= abs(poxNS{trialCount,:}(1)-currentSubj(session).behavior.NSpeLatency(cue));
                 if abs(timeShift(trialCount)) >flagThreshold %this will flag cues whose time shift deviates above a threshold (in seconNS)
@@ -297,15 +363,20 @@ end %end DS trial loop
     N=  random(noiseDistroBlue, size(F)); %single column vector with noise; randomly sample values from noise distribution constructed above; same size as F (noise for every timestamp)
 %     plot(N, '.') %visualize estimated "noise"
 
-    %save # of events, timestamps, trials for checking shape of outputs 
-    K= 3; %# events
-    T= size(timeLock,2); % # timestamps
-    M= DStrialCount; % # trials
-
     %Binary coded event timestamps in (timestamp, event type) format; size MTxKT
     %according to paper, but I've got MTxK??
     
+    %need to reorganize & code things differently: column for every
+    %timestamp in timeLock for each event type. 1s where timestamp in trial
+    %(row) matches timestamp in timeLock (column), else 0
+    
 %     Z= zeros(M*T,K*T); %preallocate appropriate size
+    
+    %loop through events and assign timestamps for each trial
+    for eventType= 1:K
+%         Z(
+    end
+    
 %     
 %     for M= 1:DStrialCount
 %         for eventType= 1:K
@@ -314,9 +385,9 @@ end %end DS trial loop
 %     end
 %     
     %This resulted in an MTxK matrix
-    Z(:,1)= eventMaskDS(:); %cue timestamps
-    Z(:,2)= eventMaskFirstPoxDStrials(:); %first PE timestamps
-    Z(:,3)= eventMaskFirstLoxDStrials (:); %first lick timestamps
+%     Z(:,1)= eventMaskDS(:); %cue timestamps
+%     Z(:,2)= eventMaskFirstPoxDStrials(:); %first PE timestamps
+%     Z(:,3)= eventMaskFirstLoxDStrials (:); %first lick timestamps
     
 % Equation 3 from this paper: take equation 2, multiply by Zt and divide by # trials M
 % H' = (1/M)*VH + (1/M)*Z*N ; where H' = peri event histogram, M= #
@@ -338,7 +409,7 @@ end %end DS trial loop
 
 
     %convert Z to a sparse matrix and multiply
-    Z= sparse(Z);
+%     Z= sparse(Z);
 
     %get convolution matrix V
     V= Z*Z'; % 'convolution matrix' , sparse due to very large KTxKT dimensions and binary coding... size actually seems to be MTxMT ????
