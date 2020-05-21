@@ -73,7 +73,9 @@ eventMaskBfirstPox= zeros(M*T,T);
 eventMaskBfirstLox= zeros(M*T,T);
 
 
-trialCount= 0; %counter for total number of trials (used for indexing) 
+trialCount= 0; %counter for total number of trials (used for indexing)
+DStrialCount=0;
+NStrialCount=0;
 
 for subj= 1:numel(subjects) %for each subject
    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
@@ -81,7 +83,8 @@ for subj= 1:numel(subjects) %for each subject
        for cue= 1:numel(currentSubj(session).periDS.DS) %for each cue (trial) in this session
                      
            trialCount=trialCount+1; %count all trials between sessions & subjects 
- 
+           DStrialCount= DStrialCount+1; %specifically count DS trials so that we can match them up with timestamps
+           
           %for indexing rows easily as we build the eventMask, keep track 
           %of timestamps (ts) that correspond to this trial 
           if trialCount==1
@@ -89,6 +92,10 @@ for subj= 1:numel(subjects) %for each subject
           else
             tsThisTrial= tsThisTrial(end)+1:tsThisTrial(end)+numel(timeLock); 
           end
+          
+        %Also save the timestamps so that we can later separate DS vs. NS
+        %trial types easily
+        tsThisDStrial(DStrialCount,:)= tsThisTrial;
            
        %Get cue timestamp TODO: change definition of trial start time to
        %introduce variability
@@ -151,6 +158,9 @@ for subj= 1:numel(subjects) %for each subject
            if ~isempty(loxDS{trialCount,:}) %only run if there's a valid pe on this trial
               eventIndLox(trialCount)= find(timeLock(1,:)==loxDS{trialCount,:}(1)); %get index of timestamp corresponding to this event
               eventMaskFirstLox(trialCount,eventIndLox(trialCount))= 1;  %replace 0s with 1s for first pe on this trial
+              
+              eventMaskBfirstLox(tsThisTrial(eventIndLox(trialCount)), eventIndLox(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
+
                             
               %flag event timestamps that have shifted too much
                 timeShift(trialCount)= abs(loxDS{trialCount,:}(1)-currentSubj(session).behavior.loxDSrel{cue}(1));
@@ -193,6 +203,7 @@ for subj= 1:numel(subjects) %for each subject
        %Now repeat for NS
        for cue= 1:numel(currentSubj(session).periNS.NS) %for each cue (trial) in this session
            trialCount=trialCount+1; %count all trials between sessions & subjects 
+           NStrialCount= NStrialCount+1;
            
               %for indexing rows easily as we build the eventMask, keep track 
               %of timestamps (ts) that correspond to this trial 
@@ -202,6 +213,8 @@ for subj= 1:numel(subjects) %for each subject
                  tsThisTrial= tsThisTrial(end)+1:tsThisTrial(end)+numel(timeLock); 
               end
            
+              tsThisNSTrial(NStrialCount,:)= tsThisTrial;
+              
        %Get cue timestamp TODO: change definition of trial start time to
        %introduce variability
            eventMaskCue(trialCount,:)=zeros(size(timeLock));
@@ -256,13 +269,16 @@ for subj= 1:numel(subjects) %for each subject
            
            eventMaskFirstLox(trialCount,:)= zeros(size(timeLock));
            
+           
            %Important step!! Shifting event timestamp to match timeLock
           loxNS{trialCount,:}= interp1(timeLock,timeLock, loxNS{trialCount,:}, 'nearest'); %shift the event timestamp to the nearest in cutTime;
             
            if ~isempty(loxNS{trialCount,:}) %only run if there's a valid pe on this trial
               eventIndLox(trialCount)= find(timeLock(1,:)==loxNS{trialCount,:}(1)); %get index of timestamp corresponding to this event
               eventMaskFirstLox(trialCount,eventIndLox(trialCount))= 1;  %replace 0s with 1s for first pe on this trial
-                            
+                        
+              eventMaskBfirstLox(tsThisTrial(eventIndLox(trialCount)), eventIndLox(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
+
               %flag event timestamps that have shifted too much
                 timeShift(trialCount)= abs(loxNS{trialCount,:}(1)-currentSubj(session).behavior.loxNSrel{cue}(1));
                 if abs(timeShift(trialCount)) >flagThreshold %this will flag cues whose time shift deviates above a threshold (in seconNS)
@@ -393,15 +409,41 @@ noiseDistroBlue= fitdist(noiseEst(:), 'Normal'); %construct a normal distro base
 for trial= 1:trialCount
     if trialTypeLabel(:,trial)==1
         DStrialCount= DStrialCount+1;
+        
+        %for indexing rows easily as we build the eventMask, keep track 
+          %of timestamps (ts) that correspond to this trial 
+          if DStrialCount==1
+            tsThisTrial= 1:numel(timeLock);
+          else
+            tsThisTrial= tsThisTrial(end)+1:tsThisTrial(end)+numel(timeLock); 
+          end
+        
         periCueBlueDStrials(:,DStrialCount)= periCueBlueAllTrials(:,trial);
-        eventMaskDS(:,DStrialCount)= eventMaskCue(:,trial);
-        eventMaskFirstPoxDStrials(:,DStrialCount)= eventMaskFirstPox(:,trial);
-        eventMaskFirstLoxDStrials(:,DStrialCount)= eventMaskFirstLox(:,trial);
+        
+%         eventMaskDS(:,DStrialCount)= eventMaskCue(:,trial); %old code,  misshaped eventMasks
+%         eventMaskFirstPoxDStrials(:,DStrialCount)= eventMaskFirstPox(:,trial);
+%         eventMaskFirstLoxDStrials(:,DStrialCount)= eventMaskFirstLox(:,trial);
+
+        %MTxK binary coded matrix for each event type
+        eventMaskDS(tsThisTrial,:)= eventMaskBcue(tsThisDStrial(DStrialCount,:),:);
+        eventMaskFirstPoxDStrials(tsThisTrial,:)= eventMaskBfirstPox(tsThisDStrial(DStrialCount,:),:);
+        eventMaskFirstLoxDStrials(tsThisTrial,:)= eventMaskBfirstLox(tsThisDStrial(DStrialCount,:),:);
+        
+        eventIndPoxDStrials(:,DStrialCount)= eventIndPox(:,trial);
         
         periPoxBlueDStrials(:,DStrialCount)= periPoxBlueAllTrials(:,trial);
         periLoxBlueDStrials(:,DStrialCount)= periLoxBlueAllTrials(:,trial);
     end
 end %end all trial loop
+
+ %Update # of events, timestamps, & trials for ensuring correct shape of
+  %matrices. M= # trials, K= # event types, T= # timestamps (letters used here are same as Ghazidadeh et al 2010 paper) 
+    timeLock= currentSubj(session).periDS.timeLock; %assume timeLock is concsistent among events
+ 
+    K= 3; %# events
+    T= size(timeLock,2); % # timestamps
+    M= DStrialCount; % # trials
+
 
 
 for DStrial= 1:DStrialCount
@@ -413,27 +455,13 @@ end %end DS trial loop
 %     plot(N, '.') %visualize estimated "noise"
 
     %Binary coded event timestamps in (timestamp, event type) format; size MTxKT
-    %according to paper, but I've got MTxK??
+    %according to paper... we've already got a separate MT x K matrix from
+    %the above code for every event type. Let's just combine them together
+    %into 1 matrix, Z
     
-    %need to reorganize & code things differently: column for every
-    %timestamp in timeLock for each event type. 1s where timestamp in trial
-    %(row) matches timestamp in timeLock (column), else 0
+    Z= [eventMaskDS, eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials];
     
-%     Z= zeros(M*T,K*T); %preallocate appropriate size
     
-    %loop through events and assign timestamps for each trial
-
-    for eventType= 1:K
-%         Z(
-    end
-    
-%     
-%     for M= 1:DStrialCount
-%         for eventType= 1:K
-%             
-%         end
-%     end
-%     
     %This resulted in an MTxK matrix
 %     Z(:,1)= eventMaskDS(:); %cue timestamps
 %     Z(:,2)= eventMaskFirstPoxDStrials(:); %first PE timestamps
@@ -445,9 +473,9 @@ end %end DS trial loop
 % event related fluorescence to the corresponding K PETHs', H= actual event
 % related fluorescence,
     %initialize
-    periEventsRaw= []; %raw peri event z score, analogous to H' or raw PETH for all events, KTx1 column vector
+    Hprime= []; %raw peri event z score, analogous to H' or raw PETH for all events, KTx1 column vector
         
-    periEventsRaw= [periCueBlueDStrials(:); periPoxBlueDStrials(:); periLoxBlueDStrials(:)];%append peri-event fluorescence into single column vector 
+    Hprime= [periCueBlueDStrials(:); periPoxBlueDStrials(:); periLoxBlueDStrials(:)];%append peri-event fluorescence into single column vector 
         
     %multiplication step to calculate V memory intensive bc result is very
     %large matrix. To workaround, use a sparse matrix... This will work because we're using
@@ -459,21 +487,94 @@ end %end DS trial loop
 
 
     %convert Z to a sparse matrix and multiply
-%     Z= sparse(Z);
+    Z= sparse(Z);
 
     %get convolution matrix V
-    V= Z*Z'; % 'convolution matrix' , sparse due to very large KTxKT dimensions and binary coding... size actually seems to be MTxMT ????
-    
-%     (1/M)*Z'*F %eq 3
+    V= Z'*Z; % 'convolution matrix' , sparse due to very large KTxKT dimensions and binary coding
     
     
+    
+    Hbar=(1/M)*Z'*F %eq 3; Hbar is a KTx1 vector with PETHs for all events... V is used to map PETHs onto ERFs (H)
+    
+%     Hbar2= (1/M)*(V*H) + (1/M)*Z'*N %eq 3 restated... results in matrix multiplication error for V*H because H is unknown
+    
+%% Equation 4 from this paper- find inverse of V using Neumann series... note that this really is a 
+%'series' in the mathematical sense, with an infinite number of loops (we can define some max # of iterations though)
+% we might also want to apply some test of convergence.. also note that
+% this equation uses the normalized version of V (1/MS*V) in order for the
+% series to converge
+    
+    I = eye(size(V,1)); %I = identity matrix with size = #rows in matrix V ; Not explicitly defined in the paper but conventional notation
+
+
+    %Establish S, scaling factor any real + number less than half of the "largest eigenvalue
+    %of (1/M)V" used to normalize H and V
+    S= abs(max(eigs((1/M)*V))/2)*4; %arbitrarily choosing to multiply largest eigenvalue/2 by 4 here so that it's guranteed to be more than half
+   
+   %Equation 4
+   numIterations= 10; %number of iterations to complete
+
+   sums=  nan(numIterations,1); 
+   for iter= 1:numIterations
+           Vinverse=  (I-((1/M*S)*V))^iter;
+           
+           mean(mean(V*Vinverse==I)) %This should always return true? why is it returning false? Is Vinverse incorrect??????? %looks like it's returning the of the Identity matrix but diagonal zeros instead of 1s
+                                        %maybe "hollow matrix" bc sparse-
+                                        %nope, full() looks same
+           sums(iter)= sum(sum(Vinverse)); %just trying to see if the matrix is changing over iterations to test "convergence"
+   end
+
+   scatter(1:numIterations,sums);
+   
 %Equation 5 from this paper- Find inverse of matrix V (to undo
-%convolution) and get normalized vector PETH (Hbar) 
+%convolution) and get normalized vector PETH (Hbar)... seems to be
+%normalized form of equation 3
     
-    %Establish S, scaling factor less than half of the "largest eigenvalue
-    %of (1/M)V"
+
+%     HbarS= (1/(M*S))*V*H+ (1/(M*S)) *Z'*N % Equation 5 from paper, error because H is unkown  
     
+%Equation 6- Iterative deconvolution in time
+    %not entirely sure what to iterate through... it's the Neumann series,
+    %so is that just every member of V (K*TxK*T)?
+         
+    for iter= 1:numIterations 
+        
+        %Equation 6a outputs unbiased estimator of ERFs, Hhat
+        Hhat(:,iter)= (Hbar/S) + (I- (1/M*S) *V)*(Hbar/S) + (I-(1/M*S)*V)^iter * (Hbar/S) % equation 6a
+        
+        %Equation 6b- Estimate of deconvolution error (E)
+            %not sure what lowercase n should be!
+                 
+%         E(:,iter)=  ((1/M*S) * ((I- (1/M*S))^iter) * Z'*N) - ((1/M*S) * (I-(1/(M*S))^iter) * V*H); %first equation under 6B, H unknown
+        E(:,iter)= Vinverse * Z' * N; %2nd equation uner 6B
+
+    end
     
+%Now that we have Hhat (KxT x #iterations), extract deconvolved response to each event type 
+ for eventType= 1:K   %for each event type, loop through to get correct timestamps %%NOTE NEED TO MATCH ORDER OF EVENTS 
+     if eventType==1
+        tsThisEvent= 1:numel(timeLock);     
+        
+        ERFcue = Hhat(tsThisEvent,:); %deconvolved ERF
+     else
+         tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+numel(timeLock); 
+         
+         if eventType==2
+             ERFfirstPE= Hhat(tsThisEvent,:)             
+         elseif eventType==3
+             ERFfirstLick= Hhat(tsThisEvent,:)
+         end
+     end    
+ end
+ 
+ %visualize- plotting final iteration for now
+     figure; hold on; title('DS trials only')
+     plot(timeLock,ERFcue(:,end)); plot(timeLock,ERFfirstPE(:,end)); plot(timeLock,ERFfirstLick(:,end)); legend('Cue','firstPE','firstLick');
+    
+%% Cross-validation
+    
+
+     
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Trying other regression based models
 % 
