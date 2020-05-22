@@ -38,6 +38,35 @@ for subj= 1:numel(subjects)
    
 end %end subj loop
 
+%% Create arbitrary trial start times (helps deconvolution)
+% we want to introduce some variability into cue onset on a trial-by-trial basis
+% to do so, let's sample trial start times from a normal distribution of
+% time before cue and then shift the cue/PE/lick event timestamps
+% accordingly
+
+%create a distribution of times to sample from
+trialStartDistro= makedist('Normal', 'mu', 0, 'sigma', 0.025); %time in seconds
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj})
+   for session = 1:numel(currentSubj)
+       trialStart= [];
+       for cue = 1:numel(currentSubj(session).periDS.DS)
+           trialStart(cue,:)= -random(trialStartDistro,1);
+       end
+       
+%       hist(trialStart); %visualize sampling from distro
+       
+      currentSubj(session).periDS.trialShift.trialStart= trialStart;
+      currentSubj(session).behavior.trialShift.poxDS
+      
+       
+   end
+end
+
+
+
+
 %% get timestamps of events and photometry data from all trials   
 
 %get total trial count to establish dimensions of matrices
@@ -452,7 +481,7 @@ for DStrial= 1:DStrialCount
 end %end DS trial loop
 
     N=  random(noiseDistroBlue, size(F)); %single column vector with noise; randomly sample values from noise distribution constructed above; same size as F (noise for every timestamp)
-%     plot(N, '.') %visualize estimated "noise"
+    plot(N, '.') %visualize estimated "noise"
 
     %Binary coded event timestamps in (timestamp, event type) format; size MTxKT
     %according to paper... we've already got a separate MT x K matrix from
@@ -514,13 +543,16 @@ end %end DS trial loop
    %Equation 4
    numIterations= 10; %number of iterations to complete
 
+    %this loop takes awhile; not actually necessary but maybe worth revisiting
    sums=  nan(numIterations,1); 
    for iter= 1:numIterations
            Vinverse=  (I-((1/M*S)*V))^iter;
            
-           mean(mean(V*Vinverse==I)) %This should always return true? why is it returning false? Is Vinverse incorrect??????? %looks like it's returning the of the Identity matrix but diagonal zeros instead of 1s
-                                        %maybe "hollow matrix" bc sparse-
-                                        %nope, full() looks same
+%            mean(mean(Vinverse==((1/M*S)*V)))
+%            
+%            mean(mean(V*Vinverse==I)) %This should always return true? why is it returning false? Is Vinverse incorrect??????? %looks like it's returning the of the Identity matrix but diagonal zeros instead of 1s
+%                                         %maybe "hollow matrix" bc sparse-
+%                                         %nope, full() looks same
            sums(iter)= sum(sum(Vinverse)); %just trying to see if the matrix is changing over iterations to test "convergence"
    end
 
@@ -568,7 +600,7 @@ end %end DS trial loop
  end
  
  %visualize- plotting final iteration for now
-     figure; hold on; title('DS trials only')
+     figure; hold on; title('DS trials only; deconvolved event response')
      plot(timeLock,ERFcue(:,end)); plot(timeLock,ERFfirstPE(:,end)); plot(timeLock,ERFfirstLick(:,end)); legend('Cue','firstPE','firstLick');
     
 %% Cross-validation

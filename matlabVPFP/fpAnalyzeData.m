@@ -594,7 +594,9 @@ for subj= 1:numel(subjects) %for each subject
            %initialize cell arrays, so they're all the same size for
             %convenience
             currentSubj(session).behavior.poxDS= cell(1,numel(currentSubj(session).DS));
+            currentSubj(session).behavior.poxDSrel= cell(1, numel(currentSubj(session).DS));
             currentSubj(session).behavior.outDS= cell(1,numel(currentSubj(session).DS));
+            currentSubj(session).behavior.outDSrel= cell(1,numel(currentSubj(session).DS));
             currentSubj(session).behavior.loxDS= cell(1,numel(currentSubj(session).DS));
             currentSubj(session).behavior.loxDSrel= cell(1,numel(currentSubj(session).DS));
 
@@ -623,6 +625,8 @@ for subj= 1:numel(subjects) %for each subject
                 for i = 1:numel(currentSubj(session).pox) % for every port entry logged during this session
                    if (cutTime(DSonset)<currentSubj(session).pox(i)) && (currentSubj(session).pox(i)<cutTime(DSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
                         currentSubj(session).behavior.poxDS{1,cue}(poxDScount,1)= currentSubj(session).pox(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
+                        %save timestamps of lick relative to cue onset
+                        currentSubj(session).behavior.poxDSrel{1,cue}(poxDScount,1)= currentSubj(session).pox(i)-cutTime(DSonset);
                         poxDScount=poxDScount+1; %iterate the counter
                    end
                 end
@@ -633,6 +637,7 @@ for subj= 1:numel(subjects) %for each subject
                 for i = 1:numel(currentSubj(session).out) % for every port entry logged during this session
                    if (cutTime(DSonset)<currentSubj(session).out(i)) && (currentSubj(session).out(i)<cutTime(DSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
                         currentSubj(session).behavior.outDS{1,cue}(outDScount,1)= currentSubj(session).out(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
+                        currentSubj(session).behavior.outDSrel{1,cue}(outDScount,1)= currentSubj(session).out(i)-cutTime(DSonset);
                         outDScount=outDScount+1; %iterate the counter
                    end
                 end
@@ -657,7 +662,9 @@ for subj= 1:numel(subjects) %for each subject
         end %end cue loop
                
             subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS= currentSubj(session).behavior.poxDS;
+            subjDataAnalyzed.(subjects{subj})(session).behavior.poxDSrel= currentSubj(session).behavior.poxDSrel;
             subjDataAnalyzed.(subjects{subj})(session).behavior.outDS= currentSubj(session).behavior.outDS;
+            subjDataAnalyzed.(subjects{subj})(session).behavior.outDSrel= currentSubj(session).behavior.outDSrel;
             subjDataAnalyzed.(subjects{subj})(session).behavior.loxDS= currentSubj(session).behavior.loxDS;
             subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel= currentSubj(session).behavior.loxDSrel;
 
@@ -686,7 +693,9 @@ for subj= 1:numel(subjects) %for each subject
            %initialize cell arrays, so they're all the same size for
             %convenience
             currentSubj(session).behavior.poxNS= cell(1,numel(currentSubj(session).NS));
+            currentSubj(session).behavior.poxNSrel= cell(1,numel(currentSubj(session).NS));
             currentSubj(session).behavior.outNS= cell(1,numel(currentSubj(session).NS));
+            currentSubj(session).behavior.outNSrel= cell(1,numel(currentSubj(session).NS));
             currentSubj(session).behavior.loxNS= cell(1,numel(currentSubj(session).NS));
             currentSubj(session).behavior.loxNSrel= cell(1,numel(currentSubj(session).NS));
 
@@ -716,6 +725,9 @@ for subj= 1:numel(subjects) %for each subject
                 for i = 1:numel(currentSubj(session).pox) % for every port entry logged during this session
                    if (cutTime(NSonset)<currentSubj(session).pox(i)) && (currentSubj(session).pox(i)<cutTime(NSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
                         currentSubj(session).behavior.poxNS{1,cue}(poxNScount,1)= currentSubj(session).pox(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
+                        
+                        %pox timestamp relative to cue onset
+                        currentSubj(session).behavior.poxNSrel{1,cue}(poxNScount,1)= currentSubj(session).pox(i)-cutTime(NSonset);
                         poxNScount=poxNScount+1; %iterate the counter
                    end
                 end
@@ -726,6 +738,9 @@ for subj= 1:numel(subjects) %for each subject
                 for i = 1:numel(currentSubj(session).out) % for every port entry logged during this session
                    if (cutTime(NSonset)<currentSubj(session).out(i)) && (currentSubj(session).out(i)<cutTime(NSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
                         currentSubj(session).behavior.outNS{1,cue}(outNScount,1)= currentSubj(session).out(i); %cell array containing all pox during the cue, empty [] if no pox during the cue
+                        
+                        %out timestamp relative to cue onset
+                        currentSubj(session).behavior.outNSrel{1,cue}(outNScount,1)= currentSubj(session).out(i)-cutTime(NSonset);
                         outNScount=outNScount+1; %iterate the counter
                    end
                 end
@@ -749,10 +764,11 @@ for subj= 1:numel(subjects) %for each subject
         end %end NS conditional
 
         %save the results
-        subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS= currentSubj(session).behavior.poxNS'; 
-        subjDataAnalyzed.(subjects{subj})(session).behavior.loxNS= currentSubj(session).behavior.outNS;
-        subjDataAnalyzed.(subjects{subj})(session).behavior.loxNS= currentSubj(session).behavior.loxNS;
-        
+        subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS= currentSubj(session).behavior.poxNS';
+        subjDataAnalyzed.(subjects{subj})(session).behavior.poxNSrel= currentSubj(session).behavior.poxNSrel;
+        subjDataAnalyzed.(subjects{subj})(session).behavior.outNS= currentSubj(session).behavior.outNS;
+        subjDataAnalyzed.(subjects{subj})(session).behavior.outNSrel= currentSubj(session).behavior.outNSrel;
+        subjDataAnalyzed.(subjects{subj})(session).behavior.loxNS= currentSubj(session).behavior.loxNS;   
         subjDataAnalyzed.(subjects{subj})(session).behavior.loxNSrel= currentSubj(session).behavior.loxNSrel;
         
         %debugging - view these side by side to verify pox during NS epoch
@@ -1775,7 +1791,6 @@ for subj= 1:numel(subjects) %for each subject
        
    end %end session loop
 end %end subject loop
-
 
 
 
