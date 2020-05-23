@@ -38,31 +38,6 @@ for subj= 1:numel(subjects)
    
 end %end subj loop
 
-%% Create arbitrary trial start times (helps deconvolution)
-% we want to introduce some variability into cue onset on a trial-by-trial basis
-% to do so, let's sample trial start times from a normal distribution of
-% time before cue and then shift the cue/PE/lick event timestamps
-% accordingly
-
-%create a distribution of times to sample from
-trialStartDistro= makedist('Normal', 'mu', 0, 'sigma', 0.025); %time in seconds
-
-for subj= 1:numel(subjects)
-    currentSubj= subjDataAnalyzed.(subjects{subj})
-   for session = 1:numel(currentSubj)
-       trialStart= [];
-       for cue = 1:numel(currentSubj(session).periDS.DS)
-           trialStart(cue,:)= -random(trialStartDistro,1);
-       end
-       
-%       hist(trialStart); %visualize sampling from distro
-       
-      currentSubj(session).periDS.trialShift.trialStart= trialStart;
-      currentSubj(session).behavior.trialShift.poxDS
-      
-       
-   end
-end
 
 
 
