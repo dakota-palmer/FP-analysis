@@ -15,7 +15,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
        
 %       So save the dates in a cell array
         allDates(session,subj) = currentSubj(session).date;
-        allDates(session)= currentSubj(session).date;
+%         allDates(session)= currentSubj(session).date;
                 
     end %end session loop
    
@@ -45,7 +45,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     subjDates= zeros(1,numel(allDates));
     emptyDates= [];
     
-    timeLock= [-periCueFrames:periCueFrames]/fs;
+    timeLock= [-preCueFrames:postCueFrames]/fs;
     
     %First find out which dates this subj has data for
     %get all dates for this subj
@@ -190,7 +190,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     %plot blue DS
 
-    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
     heatDSzblueMean= imagesc(timeLock,subjTrial,currentSubj(1).DSzblueSessionMean, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
     title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' daily avg blue z score response surrounding DS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
@@ -230,7 +230,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     hold on;
     subplot(2,2,2); %subplot for shared colorbar
 
-    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
     heatNSzblueMean= imagesc(timeLock,subjTrial,currentSubj(1).NSzblueSessionMean, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
     title(strcat('rat ', num2str(subjectsAnalyzed{subj}), 'avg blue z score response to NS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
@@ -405,7 +405,7 @@ allRats.subjTrialNS=[];
 
     %plot blue DS
 
-    timeLock = [-periCueFrames:periCueFrames]/fs;% [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    timeLock = [-preCueFrames:postCueFrames]/fs;% [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
     heatDSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzblue);
     title(' All rats avg blue z score response to DS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
@@ -447,7 +447,7 @@ allRats.subjTrialNS=[];
     hold on;
     subplot(2,2,2); %subplot for shared colorbar
 
-    timeLock = [-periCueFrames:periCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    timeLock = [-preCueFrames:postCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
     heatNSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandNSzblue, 'AlphaData', ~isnan(allRats.grandNSzpurple));
     title(' All rats avg blue z score response to NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
@@ -586,7 +586,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     figure(figureCount);
     hold on;
     
-    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
     
     %plot blue DS
 
@@ -916,7 +916,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     figure(figureCount);
     hold on;
     
-    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
     
     %plot blue DS
 

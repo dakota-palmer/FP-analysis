@@ -201,7 +201,7 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
         figureCount=figureCount+1;
         hold on;
 
-        timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+        timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
         %plot pump1 blue DSz
 
