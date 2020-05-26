@@ -7,9 +7,9 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
 
     %initialize/clear arrays between subjects
-    currentSubj(1).NSzblueAllTrials= [];
-    currentSubj(1).NSzpurpleAllTrials= [];
-    currentSubj(1).NSpeLatencyAllTrials= [];
+    currentSubj(1).NSzblueAllTrialsA= [];
+    currentSubj(1).NSzpurpleAllTrialsA= [];
+    currentSubj(1).NSpeLatencyAllTrialsA= [];
 
     sesCountA= 1;
     sesCountB= 1;
@@ -1057,7 +1057,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
 %     end
   
 
-    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
     %Plots!
     

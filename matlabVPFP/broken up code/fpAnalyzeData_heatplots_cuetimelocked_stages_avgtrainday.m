@@ -181,7 +181,7 @@ for subj= 1:numel(subjects) %for each subject
     
    
 
-    timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
         figure(figureCount);
         figureCount= figureCount+1;

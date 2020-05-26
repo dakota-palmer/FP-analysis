@@ -16,8 +16,6 @@ load(uigetfile('*.mat')); %choose the subjData file to open for your experiment 
 
 profile on; %For optimization/tracking performance of the code- this starts the Matlab profiler
 
-subjects= fieldnames(subjData); %access subjData struct with dynamic fieldnames; these are determined by fpExtractData and the metadata.xlsx
-
 figureCount= 1 ; %keep track of figure # throughout to prevent overwriting
 
 fs= 40; %This is important- if you change sampling frequency of photometry recordings for some reason, change this too! TODO: just save this in subjData as more metadata

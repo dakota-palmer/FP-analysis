@@ -780,9 +780,23 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
     pumpbluesignalDS=[];
     pumppurplesignalDS=[];
     pumpdayTimeLock=[];
-    pumpTimeLock=[];  
+    pumptimeLock=[]; 
+    pumpsessionDS=[];
     trialsDS=[];
-  
+    pumptrialsDS=[];
+    pump1alltrials=[];
+    pump1all=[];
+    pump1bluesignalall=[];
+    pump1purplesignalall=[];
+    pump1sessionall=[];
+    pump2alltrials=[];
+    pump2all=[];
+    pump2bluesignalall=[];
+    pump2purplesignalall=[];
+    pump2sessionall=[];
+    pump1TimeLock=[];
+    pump2TimeLock=[];
+    pumptimeLockDS=[];
     
      for day=1:numel(currentSubj); %for every session(training day)
      for trial=1:size(currentSubj(day).periDS.DSzblue,3)
@@ -895,36 +909,71 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
          
 
     
-     %FOR PROBES TRIALS: repeating the pump numbers to align with the length of the signal we
-    %are plotting.  
+     %FOR STAGE 8 w/PROBES TRIALS: repeating the pump numbers to align with the length of the signal we
+    %are plotting.  Also, the trials need to be split up by pumps so the
+    %vectors will be a different length than the vectors created above for
+    %all stages so we will make different vectors that contain the signal and the the catagorical organizing 
+    %variables for stage 8.
     
     if currentSubj(day).trainStage==8; %stage 8 is where probe trials occur
    
-    %assign pump 1 trials the #1 in a pump1 catagorical vector    
+    %pump1    
     for pump1trial=1:size(currentSubj(day).periDS.DSzbluePump1,2);
+   
+    pump1trials=repelem(pump1trial, length(currentSubj(day).periDS.DSzbluePump1(:,pump1trial)))';
+    %overriding so need to vertcat everthing within the loop
+    pump1alltrials=vertcat(pump1alltrials,pump1trials);
+    %assign pump 1 trials the #1 in a pump1 catagorical vector 
     pump1=repelem(1, length(currentSubj(day).periDS.DSzbluePump1(:,pump1trial)))';
+    pump1all=vertcat(pump1all,pump1);
+    %obtain all trials blue and purple signals
     pump1bluesignal= currentSubj(day).periDS.DSzbluePump1(:,pump1trial);
+    pump1bluesignalall=vertcat(pump1bluesignalall,pump1bluesignal);
     pump1purplesignal= currentSubj(day).periDS.DSzpurplePump1(:,pump1trial);
+    pump1purplesignalall=vertcat(pump1purplesignalall,pump1purplesignal);
+    %create catagorical vector for the session(day) of each trial
+    pump1session=repelem(currentSubj(day).trainDay, length(currentSubj(day).periDS.DSzbluePump1(:,pump1trial)))';
+    pump1sessionall=vertcat(pump1sessionall,pump1session);
+    %create vector with time points that align with all signals
+     pump1trialTimeLock=timeLock';
+     pump1TimeLock=vertcat(pump1TimeLock,pump1trialTimeLock);
     end
     
-   %assign pump 2 trials the #2 in a pump2 catagorical vector   
+    %pump2
     for pump2trial=1:size(currentSubj(day).periDS.DSzbluePump2,2);
-    pump2=repelem(2,length(currentSubj(day).periDS.DSzbluePump2(:,pump2trial)))';
+    pump2trials=repelem(pump2trial, length(currentSubj(day).periDS.DSzbluePump2(:,pump2trial)))';
+    %overriding so need to vertcat everthing within the loop
+    pump2alltrials=vertcat(pump2alltrials,pump2trials);
+    %assign pump 2 trials the #2 in a pump2 catagorical vector 
+    pump2=repelem(2, length(currentSubj(day).periDS.DSzbluePump2(:,pump2trial)))';
+    pump2all=vertcat(pump2all,pump2);
+    %obtain all trials blue and purple signals
     pump2bluesignal= currentSubj(day).periDS.DSzbluePump2(:,pump2trial);
-     pump2purplesignal= currentSubj(day).periDS.DSzpurplePump2(:,pump2trial);
+    pump2bluesignalall=vertcat(pump2bluesignalall,pump2bluesignal);
+    pump2purplesignal= currentSubj(day).periDS.DSzpurplePump2(:,pump2trial);
+    pump2purplesignalall=vertcat(pump2purplesignalall,pump2purplesignal);
+    %create catagorical vector for the session(day) of each trial
+    pump2session=repelem(currentSubj(day).trainDay, length(currentSubj(day).periDS.DSzbluePump2(:,pump2trial)))';
+    pump2sessionall=vertcat(pump2sessionall,pump2session);
+     %create vector with time points that align with all signals
+     pump2trialTimeLock=timeLock';
+     pump2TimeLock=vertcat(pump2TimeLock,pump2trialTimeLock);
     end 
     
    %concatenate vectors for all trials of each day for the subj
-    pumpday=vertcat(pump1,pump2);
-    
+   pumpsession=vertcat(pump1sessionall,pump2sessionall);
+   pumpday=vertcat(pump1all,pump2all);
+   pumptrials=vertcat(pump1alltrials,pump2alltrials);
+   pumptimeLock=vertcat(pump1TimeLock,pump2TimeLock);
    %concatenate vectors across all session in currentsubj
     pumpDS=vertcat(pumpDS,pumpday);
-    pumpbluesignalday=vertcat(pump1bluesignal,pump2bluesignal);
+    pumpsessionDS=vertcat(pumpsessionDS,pumpsession);
+    pumptrialsDS=vertcat(pumptrialsDS,pumptrials);
+    pumpbluesignalday=vertcat(pump1bluesignalall,pump2bluesignalall);
     pumpbluesignalDS=vertcat(pumpbluesignalDS,pumpbluesignalday);
-    pumppurplesignalday=vertcat(pump1purplesignal,pump2purplesignal);
+    pumppurplesignalday=vertcat(pump1purplesignalall,pump2purplesignalall);
     pumppurplesignalDS=vertcat(pumppurplesignalDS,pumppurplesignalday);
-    pumpdayTimeLock=vertcat(timeLock',timeLock');
-    pumpTimeLock=vertcat(pumpTimeLock,pumpdayTimeLock);
+    pumptimeLockDS=vertcat(pumptimeLockDS,pumptimeLock);
     end 
      
     
@@ -940,32 +989,50 @@ figure(figureCount) %one figure with poxCount across sessions for all subjects
 figureCount= figureCount+1;
 if find(unique(stageDS)==6)
 %Stage 6
-   g(1,1)=gramm('x',timeLocktracesDS,'y', DSzSessionblue,'color',daysDS,'subset',stageDS==6&trialsDS==8);
-   g(1,1).geom_line();
-   g(1,1).set_names('x','Time from Cue Onset (sec)','y','Z-Score','color','Training Day')
-   g(1,1).set_title(' Average DS 465 nm Z Score-Representative Trial-Stage 6')
-   g(1,1).axe_property('YLim',[-7 15])
-   g(1,1).set_color_options('map','brewer_dark')
+   g=gramm('x',timeLocktracesDS,'y', DSzSessionblue,'color',daysDS,'subset',stageDS==6);
+   g.facet_grid(trialsDS,[]);
+   g.stat_summary();
+   g.set_names('x','Time from Cue Onset (sec)','y','Z-Score','color','Training Day','row','Trial')
+   g.set_title(' Average DS 465 nm Z Score-Representative Trial-Stage 6')
+   g.axe_property('YLim',[-7 15])
+   g.set_color_options('map','brewer_dark')
    
- %Stage 7  
-   g(2,1)=gramm('x',timeLocktracesDS,'y', DSzSessionblue,'color',daysDS,'subset',stageDS==7&trialsDS==8);
-   g(2,1).geom_line();
-   g(2,1).set_names('x','Time from Cue Onset (sec)','y','Z-Score','color','Training Day')
-   g(2,1).set_title(' Average DS 465 nm Z Score-Representative Trial-Stage 7')
-   g(2,1).axe_property('YLim',[-7 15])
-   g(2,1).set_color_options('map','brewer_dark')
+   g.draw()
+   
+ %Stage 7 
+ 
+ figure(figureCount) %one figure with poxCount across sessions for all subjects
 
- %Stage 8
-   g(3,1)=gramm('x',timeLocktracesDS,'y', DSzSessionblue,'color',daysDS,'subset',stageDS==8&trialsDS==8);
-   g(3,1).geom_line();
-   g(3,1).set_names('x','Time from Cue Onset (sec)','y','Z-Score','color','Training Day')
-   g(3,1).set_title(' Average DS 465 nm Z Score-Representative Trial-Stage 8')
-   g(3,1).axe_property('YLim',[-7 15])
-   g(3,1).set_color_options('map','brewer_dark')  
+figureCount= figureCount+1;
+
+   g=gramm('x',timeLocktracesDS,'y', DSzSessionblue,'color',daysDS,'subset',stageDS==7);
+   g.facet_grid(trialsDS,[]);
+   g.stat_summary();
+   g.set_names('x','Time from Cue Onset (sec)','y','Z-Score','color','Training Day','row','Trial')
+   g.set_title(' Average DS 465 nm Z Score-Representative Trial-Stage 7')
+   g.axe_property('YLim',[-7 15])
+   g.set_color_options('map','brewer_dark')
+
+    g.draw()
+ 
+    
+%Stage 8
+%pump 1 trials
+ 
+  figure(figureCount) %one figure with poxCount across sessions for all subjects
+
+  figureCount= figureCount+1;
+   g=gramm('x',pumptimeLockDS,'y', pumpbluesignalDS,'color',pumpsessionDS,'subset',pumpDS==1);
+   g.facet_grid(pumptrialsDS,[]);
+   g.stat_summary();
+   g.set_names('x','Time from Cue Onset (sec)','y','Z-Score','color','Training Day','row','Trial')
+   g.set_title(' Average DS 465 nm Z Score-Representative Trial-Stage 8')
+   g.axe_property('YLim',[-7 15])
+   g.set_color_options('map','brewer_dark')  
    
    g.draw()
  
  
-   saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'cuelocked_trial8_traces','.fig'));
+   %saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'cuelocked_trial8_traces','.fig'));
 end %end if loop for later trial traces
 end%end subj loop
