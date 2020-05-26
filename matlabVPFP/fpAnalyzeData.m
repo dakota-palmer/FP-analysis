@@ -1319,6 +1319,7 @@ for subj= 1:numel(subjects)
             subjDataAnalyzed.(subjects{subj})(session).behavior.loxNSpoxRel=[];
         end
     end % end session loop
+
 end% end subj loop
 
 
@@ -1800,21 +1801,22 @@ end %end subject loop
 % get correct photometry signals
 
 %create a distribution of times to sample from
-trialStartDistro= makedist('Normal', 'mu', 0, 'sigma', 0.025); %time in seconds
+trialStartDistro= makedist('Normal', 'mu', 0, 'sigma', 0.050); %time in seconds
 
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
    for session = 1:numel(currentSubj)
        trialStart= [];
        trialTimeShift= [];
+       cutTime= subjData.(subjects{subj})(session).cutTime;
        for cue = 1:numel(currentSubj(session).periDS.DS)
-           %randomly sample trialStart
-           trialStart(:,cue)= -random(trialStartDistro,1);
+           %randomly sample trialStart ; abs() so only + values... these
+           %will be subtracted from cue onset time to give trialStart time
+           %& this shift will also be applied to events during trial to
+           %match up timestamps of photometry signal accordingly
+           trialTimeShift(:,cue)= abs(random(trialStartDistro,1));%random(trialStartDistro,1);
            
-           %save the amount of time shifted to be applied to behavioral events later
-           trialTimeShift(:,cue)= abs(trialStart(:,cue)); %+ change in time
-           
-           %subtract trialStart from actual cue onset timestamp- abs() so no negatives
+           %subtract trialStart from actual cue onset timestamp
            trialStart(:,cue)= currentSubj(session).periDS.DS(cue)- trialTimeShift(:,cue);
        end
             %match trial start timestamp to a valid timestamp in cutTime
@@ -1823,8 +1825,7 @@ for subj= 1:numel(subjects)
 
 %       hist(trialStart); %visualize sampling from distro
       subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialTimeShift= trialTimeShift;%+ amount of time shifted
-      subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialStart= trialStart;%arbitrary timestamp of trial start
-      subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSshifted = abs(trialStart); %+ timestamp for cue onset
+      subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialStart= trialStart;%timestamp of trial start (randomly sampled from trialStartDistro defined above)
           
    end
 end
@@ -1833,10 +1834,12 @@ end
 %get photometry signals timelocked to trialStart to correctly map shifted
 %event timestamps 
 
-for subj= 1:numel(subjects) %for each subject
+ for subj= 1:numel(subjects) %for each subject
 
     currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
+    currentSubjAnalyzed= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
 
+    
     disp(strcat('running trialStart-triggered analysis subject_',  subjects{subj}));
         
     for session = 1:numel(currentSubj) %for each training session this subject completed              
@@ -1846,10 +1849,10 @@ for subj= 1:numel(subjects) %for each subject
 
         DSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
 
-        for trial=1:length(subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialStart) %loop through DS trials
+        for trial=1:length(currentSubjAnalyzed(session).periDS.trialShift.trialStart) %loop through DS trials
                        
             %each entry in DS is a timestamp of the DS onset 
-            trialStartInd = find(cutTime==subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialStart(trial));
+            trialStartInd = find(cutTime==currentSubjAnalyzed(session).periDS.trialShift.trialStart(trial));
 
             %define the frames (datapoints) around each cue to analyze
             preEventTimeDS = trialStartInd-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
@@ -1873,56 +1876,87 @@ for subj= 1:numel(subjects) %for each subject
             %cue-related activity %TODO: maybe baseline& std for z score
             %should be based off of trialStart?
             %blueA
-            baselineMeanblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanblue(1,trial); %baseline mean blue 10s prior to DS onset for boxA
-            baselineStdblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdblue(1,trial); %baseline stdDev blue 10s prior to DS onset for boxA
+            baselineMeanblue= currentSubjAnalyzed(session).periDS.baselineMeanblue(1,trial); %baseline mean blue 10s prior to DS onset for boxA
+            baselineStdblue= currentSubjAnalyzed(session).periDS.baselineStdblue(1,trial); %baseline stdDev blue 10s prior to DS onset for boxA
             %purpleA
-            baselineMeanpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanpurple(1,trial); %baseline mean purple 10s prior to DS onset for boxA
-            baselineStdpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdpurple(1,trial); %baseline stdDev purple 10s prior to DS onset for boxA
+            baselineMeanpurple= currentSubjAnalyzed(session).periDS.baselineMeanpurple(1,trial); %baseline mean purple 10s prior to DS onset for boxA
+            baselineStdpurple= currentSubjAnalyzed(session).periDS.baselineStdpurple(1,trial); %baseline stdDev purple 10s prior to DS onset for boxA
             
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSshifted(trial) = currentSubj(session).DS(trial)+subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialStart(trial); %this way only included trials are saved
+            %shift cue timestamp
+            currentSubjAnalyzed(session).periDS.trialShift.DSrelShifted(trial) = abs(trialTimeShift(trial)); %0 + amount shifted; this is cue onset relative to trial start
+ 
 
             %shift behavior event timestamps according to trialShift
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.poxShifted{trial}= subjDataAnalyzed.(subjects{subj})(session).behavior.poxDSrel{trial} - subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialTimeShift(trial); %~ may want to do abs pox/lox instead of rel
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.loxShifted{trial}= subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel{trial} - subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialTimeShift(trial);
+            %note that behavior.poxDSrel & behavior.loxDSrel were
+            %calculated using DSshifted- so let's use that to keep relative
+            %timings constant
+            currentSubjAnalyzed(session).periDS.trialShift.poxDSrelTrialShifted{trial}= currentSubjAnalyzed(session).behavior.poxDSrel{trial} + currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial);
+            currentSubjAnalyzed(session).periDS.trialShift.loxDSrelTrialShifted{trial}= currentSubjAnalyzed(session).behavior.loxDSrel{trial} + currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial);
+
+%  currentSubjAnalyzed(session).behavior.poxDS{trial}
+%             currentSubjAnalyzed(session).periDS.trialShift.poxDSshifted{trial}= currentSubjAnalyzed(session).behavior.poxDS{trial} - currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial); %~ may want to do abs pox/lox instead of rel
+%  currentSubjAnalyzed(session).periDS.trialShift.poxDSshifted{trial}
+%             
+%             currentSubjAnalyzed(session).periDS.trialShift.poxDSrelTrialShifted{trial}= currentSubjAnalyzed(session).periDS.trialShift.poxDSshifted{trial} - currentSubjAnalyzed(session).periDS.trialShift.DSshifted(trial);
+%  
+% %             currentSubjAnalyzed(session).periDS.trialShift.poxDSrelTrialShifted{trial}= currentSubjAnalyzed(session).behavior.poxDSrel{trial} - currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial); %~ may want to do abs pox/lox instead of rel
+%             currentSubjAnalyzed(session).periDS.trialShift.loxDSrelTrialShifted{trial}= currentSubjAnalyzed(session).behavior.loxDSrel{trial} - currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial);
+%             
+%                 %match to nearest valid timestamp in cutTime      
+% %                 currentSubjAnalyzed(session).periDS.trialShift.poxDSshifted{trial}= interp1(cutTime,cutTime, currentSubjAnalyzed(session).periDS.trialShift.poxDSshifted{trial}, 'nearest');
+% currentSubjAnalyzed(session).periDS.trialShift.poxDSshifted{trial}
+
+%                 currentSubjAnalyzed(session).periDS.trialShift.poxDSrelTrialShifted{trial}= interp1(cutTime,cutTime, currentSubjAnalyzed(session).periDS.trialShift.poxDSrelTrialShifted{trial}, 'nearest');
+%                 currentSubjAnalyzed(session).periDS.trialShift.loxDSrelTrialShifted{trial} = interp1(cutTime,cutTime, currentSubjAnalyzed(session).periDS.trialShift.loxDSrelTrialShifted{trial}, 'nearest');
             
             %photometry signals
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftWindow(:,:,trial)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
+            currentSubjAnalyzed(session).periDS.trialShift.trialShiftWindow(:,:,trial)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSblue(:,:,trial)= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSpurple(:,:,trial)= currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);
+            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSblue(:,:,trial)= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);
+            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSpurple(:,:,trial)= currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);
                 
                 %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSzblue(:,:,trial)= (((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue); 
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSzpurple(:,:,trial)= (((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))- baselineMeanpurple))/(baselineStdpurple);
+            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSzblue(:,:,trial)= (((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue); 
+            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSzpurple(:,:,trial)= (((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))- baselineMeanpurple))/(baselineStdpurple);
 
             
             %dff - *******Relies upon previous photobleaching/baseline section
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSbluedff(:,:,trial)= subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff(preEventTimeDS:postEventTimeDS);
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSpurpledff(:,:,trial)= subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff(preEventTimeDS:postEventTimeDS);
+            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSbluedff(:,:,trial)= currentSubjAnalyzed(session).photometry.bluedff(preEventTimeDS:postEventTimeDS);
+            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSpurpledff(:,:,trial)= currentSubjAnalyzed(session).photometry.purpledff(preEventTimeDS:postEventTimeDS);
 
 
             %save timeLock time axis
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftTimeLock= [-preCueFrames:postCueFrames]/fs;
+            currentSubjAnalyzed(session).periDS.trialShift.trialShiftTimeLock= [-preCueFrames:postCueFrames]/fs;
+            
+            %Flag event timestmap shifts that have too large of a difference (>1/fs)... 
+            % if the difference is smaller than this then the timstamp will be the same (due to downsampling)
+            if currentSubjAnalyzed(session).behavior.poxDSrel{trial}-currentSubjAnalyzed(session).periDS.trialShift.poxDSrelTrialShifted{trial} > 1/fs
+               disp(strcat(' ~~~~~warning, pox trialShift too big: subj_',num2str(subj),';session_', num2str(session), ';trial_', num2str(trial))); 
+            end
 
-        end %end DS cue loop
+            if currentSubjAnalyzed(session).behavior.loxDSrel{trial}-currentSubjAnalyzed(session).periDS.trialShift.loxDSrelTrialShifted{trial} > 1/fs
+               disp(strcat(' ~~~~~warning, lox trialShift too big: subj_',num2str(subj),';session_', num2str(session), ';trial_', num2str(trial))); 
+            end
+
+            end %end DS cue loop
         
                 %get the mean response during DS trial for this session
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+            currentSubjAnalyzed(session).periDS.trialShift.DSblueMean = nanmean(currentSubjAnalyzed(session).periDS.DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
 
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+            currentSubjAnalyzed(session).periDS.trialShift.DSpurpleMean = nanmean(currentSubjAnalyzed(session).periDS.DSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
 
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSzblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue, 3);
+            currentSubjAnalyzed(session).periDS.trialShift.DSzblueMean = nanmean(currentSubjAnalyzed(session).periDS.DSzblue, 3);
 
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSzpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple, 3);     
+            currentSubjAnalyzed(session).periDS.trialShift.DSzpurpleMean = nanmean(currentSubjAnalyzed(session).periDS.DSzpurple, 3);     
         
    end %end session loop
 end %end subject loop
         
 
 
-subjectsAnalyzed = fieldnames(subjDataAnalyzed); %now, let's save an array containing all of the analyzed subject IDs (may be useful later if we decide to exclude subjects from analysis)
+ subjectsAnalyzed = fieldnames(subjDataAnalyzed); %now, let's save an array containing all of the analyzed subject IDs (may be useful later if we decide to exclude subjects from analysis)
 %% ~~~Individual subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 %% Establish common date axis across subjects
