@@ -51,7 +51,7 @@ NStrialCount= 0;
 for subj= 1:numel(subjects) %for each subject
     currentSubj= subjDataAnalyzed.(subjects{subj});
     for session = 1:numel(currentSubj)
-        for cue= 1:numel(currentSubj(session).periDS.DS)
+        for cue= 1:numel(currentSubj(session).periDS.trialShift.DSshifted)
             trialCount= trialCount+1;
             DStrialCount= DStrialCount+1;
         end
@@ -65,7 +65,7 @@ end
 
   %save # of events, timestamps, & trials for ensuring correct shape of
   %matrices. M= # trials, K= # event types, T= # timestamps (letters used here are same as Ghazidadeh et al 2010 paper) 
-    timeLock= currentSubj(session).periDS.timeLock; %assume timeLock is concsistent among events
+    timeLock= currentSubj(session).periDS.trialShift.trialShiftTimeLock; %assume timeLock is concsistent among events
  
     K= 3; %# events
     T= size(timeLock,2); % # timestamps
@@ -84,7 +84,7 @@ NStrialCount=0;
 for subj= 1:numel(subjects) %for each subject
    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
    for session = 1:numel(currentSubj) %for each training session this subject completed
-       for cue= 1:numel(currentSubj(session).periDS.DS) %for each cue (trial) in this session
+       for cue= 1:numel(currentSubj(session).periDS.trialShift.DSshifted) %for each cue (trial) in this session
                      
            trialCount=trialCount+1; %count all trials between sessions & subjects 
            DStrialCount= DStrialCount+1; %specifically count DS trials so that we can match them up with timestamps
@@ -101,10 +101,9 @@ for subj= 1:numel(subjects) %for each subject
         %trial types easily
         tsThisDStrial(DStrialCount,:)= tsThisTrial;
            
-       %Get cue timestamp TODO: change definition of trial start time to
-       %introduce variability
+       %Get cue timestamp relative to trialStart (= 0+trialTimeShift)
            eventMaskCue(trialCount,:)=zeros(size(timeLock));
-           eventMaskCue(trialCount, find(currentSubj(session).periDS.timeLock==0))= 1;
+           eventMaskCue(trialCount, find(timeLock==currentSubj(session).periDS.trialShift.trialTimeShift(cue)))= 1;
                       
             %cue onset where timeLock==0           
            eventIndCue(trialCount)= find(timeLock==0);
@@ -456,7 +455,7 @@ for DStrial= 1:DStrialCount
 end %end DS trial loop
 
     N=  random(noiseDistroBlue, size(F)); %single column vector with noise; randomly sample values from noise distribution constructed above; same size as F (noise for every timestamp)
-    plot(N, '.') %visualize estimated "noise"
+    figure; plot(N, '.') %visualize estimated "noise"
 
     %Binary coded event timestamps in (timestamp, event type) format; size MTxKT
     %according to paper... we've already got a separate MT x K matrix from
