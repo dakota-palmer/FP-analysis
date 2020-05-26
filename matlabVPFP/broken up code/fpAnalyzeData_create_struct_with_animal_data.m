@@ -5,8 +5,8 @@ clc
 close all
 
 % Make sure the figPath is correct!
-cd('\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP-analysis\matlabVPFP\broken up code');
-addpath('\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP-analysis\matlabVPFP\broken up code\Figs');
+cd('\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code');
+addpath('\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\Figs');
 figPath = '\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\GAD-VPFP DS Training\justrawFigs\VPFP\'; %location for output figures to be saved
 
 % %% Load struct containing data organized by subject

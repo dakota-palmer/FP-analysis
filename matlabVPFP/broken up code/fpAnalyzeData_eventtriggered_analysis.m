@@ -635,8 +635,29 @@ for subj= 1:numel(subjects) %for each subject
    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
    for session = 1:numel(currentSubj) %for each training session this subject completed
 
-       if ~isempty(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS) %can only run for sessions that have NS data
-        %get the NS cues
+         if currentSubj(session).trainStage < 5
+             subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSselected= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblue= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurple= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblue= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurple= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblueMean = [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurpleMean = [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblueMean = [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurpleMean = [];
+       elseif ~isempty(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS) % && currentSubj(session).trainStage >= 5 %can only run for sessions that have NS data
+        
+                %intialize
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSselected= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblue= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurple= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblue= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurple= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblueMean = [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurpleMean = [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblueMean = [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurpleMean = [];
+     
         NSselected= currentSubj(session).NS;  
 
        
