@@ -1885,15 +1885,12 @@ end
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
             %shift cue timestamp
-            currentSubjAnalyzed(session).periDS.trialShift.DSrelShifted(trial) = abs(trialTimeShift(trial)); %0 + amount shifted; this is cue onset relative to trial start
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSrelShifted(trial) = abs(trialTimeShift(trial)); %0 + amount shifted; this is cue onset relative to trial start
  
 
             %shift behavior event timestamps according to trialShift
-            %note that behavior.poxDSrel & behavior.loxDSrel were
-            %calculated using DSshifted- so let's use that to keep relative
-            %timings constant
-            currentSubjAnalyzed(session).periDS.trialShift.poxDSrelTrialShifted{trial}= currentSubjAnalyzed(session).behavior.poxDSrel{trial} + currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial);
-            currentSubjAnalyzed(session).periDS.trialShift.loxDSrelTrialShifted{trial}= currentSubjAnalyzed(session).behavior.loxDSrel{trial} + currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial);
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.poxDSrelTrialShifted{trial}= currentSubjAnalyzed(session).behavior.poxDSrel{trial} + currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial);
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.loxDSrelTrialShifted{trial}= currentSubjAnalyzed(session).behavior.loxDSrel{trial} + currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial);
 
 %  currentSubjAnalyzed(session).behavior.poxDS{trial}
 %             currentSubjAnalyzed(session).periDS.trialShift.poxDSshifted{trial}= currentSubjAnalyzed(session).behavior.poxDS{trial} - currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial); %~ may want to do abs pox/lox instead of rel
@@ -1912,44 +1909,44 @@ end
 %                 currentSubjAnalyzed(session).periDS.trialShift.loxDSrelTrialShifted{trial} = interp1(cutTime,cutTime, currentSubjAnalyzed(session).periDS.trialShift.loxDSrelTrialShifted{trial}, 'nearest');
             
             %photometry signals
-            currentSubjAnalyzed(session).periDS.trialShift.trialShiftWindow(:,:,trial)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftWindow(:,:,trial)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
-            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSblue(:,:,trial)= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);
-            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSpurple(:,:,trial)= currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSblue(:,:,trial)= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSpurple(:,:,trial)= currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);
                 
                 %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
-            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSzblue(:,:,trial)= (((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue); 
-            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSzpurple(:,:,trial)= (((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))- baselineMeanpurple))/(baselineStdpurple);
+           subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSzblue(:,:,trial)= (((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue); 
+           subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSzpurple(:,:,trial)= (((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))- baselineMeanpurple))/(baselineStdpurple);
 
             
             %dff - *******Relies upon previous photobleaching/baseline section
-            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSbluedff(:,:,trial)= currentSubjAnalyzed(session).photometry.bluedff(preEventTimeDS:postEventTimeDS);
-            currentSubjAnalyzed(session).periDS.trialShift.trialShiftDSpurpledff(:,:,trial)= currentSubjAnalyzed(session).photometry.purpledff(preEventTimeDS:postEventTimeDS);
+           subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSbluedff(:,:,trial)= currentSubjAnalyzed(session).photometry.bluedff(preEventTimeDS:postEventTimeDS);
+           subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftDSpurpledff(:,:,trial)= currentSubjAnalyzed(session).photometry.purpledff(preEventTimeDS:postEventTimeDS);
 
 
             %save timeLock time axis
-            currentSubjAnalyzed(session).periDS.trialShift.trialShiftTimeLock= [-preCueFrames:postCueFrames]/fs;
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.trialShiftTimeLock= [-preCueFrames:postCueFrames]/fs;
             
             %Flag event timestmap shifts that have too large of a difference (>1/fs)... 
             % if the difference is smaller than this then the timstamp will be the same (due to downsampling)
-            if currentSubjAnalyzed(session).behavior.poxDSrel{trial}-currentSubjAnalyzed(session).periDS.trialShift.poxDSrelTrialShifted{trial} > 1/fs
+            if subjDataAnalyzed.(subjects{subj})(session).behavior.poxDSrel{trial}-subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.poxDSrelTrialShifted{trial} > 1/fs
                disp(strcat(' ~~~~~warning, pox trialShift too big: subj_',num2str(subj),';session_', num2str(session), ';trial_', num2str(trial))); 
             end
 
-            if currentSubjAnalyzed(session).behavior.loxDSrel{trial}-currentSubjAnalyzed(session).periDS.trialShift.loxDSrelTrialShifted{trial} > 1/fs
+            if subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel{trial}-subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.loxDSrelTrialShifted{trial} > 1/fs
                disp(strcat(' ~~~~~warning, lox trialShift too big: subj_',num2str(subj),';session_', num2str(session), ';trial_', num2str(trial))); 
             end
 
             end %end DS cue loop
         
                 %get the mean response during DS trial for this session
-            currentSubjAnalyzed(session).periDS.trialShift.DSblueMean = nanmean(currentSubjAnalyzed(session).periDS.DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSblueMean = nanmean(currentSubjAnalyzed(session).periDS.DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
 
-            currentSubjAnalyzed(session).periDS.trialShift.DSpurpleMean = nanmean(currentSubjAnalyzed(session).periDS.DSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSpurpleMean = nanmean(currentSubjAnalyzed(session).periDS.DSpurple, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
 
-            currentSubjAnalyzed(session).periDS.trialShift.DSzblueMean = nanmean(currentSubjAnalyzed(session).periDS.DSzblue, 3);
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSzblueMean = nanmean(currentSubjAnalyzed(session).periDS.DSzblue, 3);
 
-            currentSubjAnalyzed(session).periDS.trialShift.DSzpurpleMean = nanmean(currentSubjAnalyzed(session).periDS.DSzpurple, 3);     
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSzpurpleMean = nanmean(currentSubjAnalyzed(session).periDS.DSzpurple, 3);     
         
    end %end session loop
 end %end subject loop
