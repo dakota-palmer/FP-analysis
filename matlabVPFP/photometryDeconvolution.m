@@ -38,20 +38,42 @@ for subj= 1:numel(subjects)
    
 end %end subj loop
 
-
-
-
-
 %% get timestamps of events and photometry data from all trials   
 
 %get total trial count to establish dimensions of matrices
-trialCount=0;
-DStrialCount= 0;
-NStrialCount= 0;
+% trialCount=0;
+% DStrialCount= 0;
+% NStrialCount= 0;
+% for subj= 1:numel(subjects) %for each subject
+%     currentSubj= subjDataAnalyzed.(subjects{subj});
+%     for session = 1:numel(currentSubj)
+%         for cue= 1:numel(currentSubj(session).periDS.trialShift.DSrelShifted)
+%             trialCount= trialCount+1;
+%             DStrialCount= DStrialCount+1;
+%         end
+%         
+%         for cue = 1:numel(currentSubj(session).periNS.NS)
+%             trialCount= trialCount+1;
+%             NStrialCount= NStrialCount+1;
+%         end
+%     end
+% end
+
 for subj= 1:numel(subjects) %for each subject
-    currentSubj= subjDataAnalyzed.(subjects{subj});
+   currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   
+   %initialize
+   eventMaskCue = [];
+   eventMaskFirstPox= [];
+   eventMaskFirstLox= [];
+   
+   
+   %get total trial count to establish dimensions of matrices
+    trialCount=0;
+    DStrialCount= 0;
+    NStrialCount= 0;
     for session = 1:numel(currentSubj)
-        for cue= 1:numel(currentSubj(session).periDS.trialShift.DSshifted)
+        for cue= 1:numel(currentSubj(session).periDS.trialShift.DSrelShifted)
             trialCount= trialCount+1;
             DStrialCount= DStrialCount+1;
         end
@@ -61,10 +83,9 @@ for subj= 1:numel(subjects) %for each subject
             NStrialCount= NStrialCount+1;
         end
     end
-end
-
-  %save # of events, timestamps, & trials for ensuring correct shape of
-  %matrices. M= # trials, K= # event types, T= # timestamps (letters used here are same as Ghazidadeh et al 2010 paper) 
+   
+     %save # of events, timestamps, & trials for ensuring correct shape of
+     %matrices. M= # trials, K= # event types, T= # timestamps (letters used here are same as Ghazidadeh et al 2010 paper) 
     timeLock= currentSubj(session).periDS.trialShift.trialShiftTimeLock; %assume timeLock is concsistent among events
  
     K= 3; %# events
@@ -80,11 +101,8 @@ eventMaskBfirstLox= zeros(M*T,T);
 trialCount= 0; %counter for total number of trials (used for indexing)
 DStrialCount=0;
 NStrialCount=0;
-
-for subj= 1:numel(subjects) %for each subject
-   currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
    for session = 1:numel(currentSubj) %for each training session this subject completed
-       for cue= 1:numel(currentSubj(session).periDS.trialShift.DSshifted) %for each cue (trial) in this session
+       for cue= 1:numel(currentSubj(session).periDS.trialShift.DSrelShifted) %for each cue (trial) in this session
                      
            trialCount=trialCount+1; %count all trials between sessions & subjects 
            DStrialCount= DStrialCount+1; %specifically count DS trials so that we can match them up with timestamps
@@ -102,18 +120,21 @@ for subj= 1:numel(subjects) %for each subject
         tsThisDStrial(DStrialCount,:)= tsThisTrial;
            
        %Get cue timestamp relative to trialStart (= 0+trialTimeShift)
+          DStrialShifted= interp1(timeLock,timeLock, currentSubj(session).periDS.trialShift.DSrelShifted, 'nearest'); %shift the event timestamp to the nearest in cutTime;
+
+       
            eventMaskCue(trialCount,:)=zeros(size(timeLock));
-           eventMaskCue(trialCount, find(timeLock==currentSubj(session).periDS.trialShift.trialTimeShift(cue)))= 1;
+           eventMaskCue(trialCount, find(timeLock==DStrialShifted(cue)))= 1;
                       
             %cue onset where timeLock==0           
-           eventIndCue(trialCount)= find(timeLock==0);
+           eventIndCue(trialCount)= find(timeLock(1,:)==DStrialShifted(cue));
            
            eventMaskBcue(tsThisTrial(eventIndCue(trialCount)), eventIndCue(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
 
            
        %Get PE timestamps
-           if ~isempty(currentSubj(session).behavior.poxDS{cue}) %only run if PE during this cue
-               poxDS{trialCount,:}= currentSubj(session).behavior.poxDS{cue}-currentSubj(session).periDS.DS(cue); %get timestamps of PEs relative to DS
+           if ~isempty(currentSubj(session).periDS.trialShift.poxDSrelTrialShifted{cue}) %only run if PE during this cue
+               poxDS{trialCount,:}= currentSubj(session).periDS.trialShift.poxDSrelTrialShifted{cue}; %get timestamps of PEs relative to DS
            else
                poxDS{trialCount,:}= []; %if no pe during this trial, make empty
            end
@@ -147,8 +168,8 @@ for subj= 1:numel(subjects) %for each subject
            end
            
             %Get lick timestamps
-           if ~isempty(currentSubj(session).behavior.loxDS{cue}) %only run if PE during this cue
-               loxDS{trialCount,:}= currentSubj(session).behavior.loxDS{cue}-currentSubj(session).periDS.DS(cue); %get timestamps of licks relative to DS
+           if ~isempty(currentSubj(session).periDS.trialShift.loxDSrelTrialShifted{cue}) %only run if PE during this cue
+               loxDS{trialCount,:}= currentSubj(session).periDS.trialShift.loxDSrelTrialShifted{cue}; %get timestamps of licks relative to DS
            else
                loxDS{trialCount,:}= []; %if no pe during this trial, make empty
            end
@@ -182,11 +203,13 @@ for subj= 1:numel(subjects) %for each subject
            end
            
           %Get z score of 465nm photometry signal- timelocked to every event
+          periTrialBlueAllTrials(:,trialCount)= currentSubj(session).periDS.trialShift.trialShiftDSzblue(:,:,cue); %timelock to arbitrary trial start
           periCueBlueAllTrials(:,trialCount)= currentSubj(session).periDS.DSzblue(:,:,cue);
           periPoxBlueAllTrials(:,trialCount)= currentSubj(session).periDSpox.DSzpoxblue(:,:,cue);
           periLoxBlueAllTrials(:,trialCount)= currentSubj(session).periDSlox.DSzloxblue(:,:,cue);
           
           %Get z score of 405nm photometry signal- timelocked to every event
+          periTrialPurpleAllTrials(:,trialCount)= currentSubj(session).periDS.trialShift.trialShiftDSzpurple(:,:,cue); %timelock to arbitrary trial start
           periCuePurpleAllTrials(:, trialCount)= currentSubj(session).periDS.DSzpurple(:,:,cue);
           periPoxPurpleAllTrials(:,trialCount)= currentSubj(session).periDSpox.DSzpoxpurple(:,:,cue);
           periLoxPurpleAllTrials(:,trialCount)= currentSubj(session).periDSlox.DSzloxpurple(:,:,cue);
@@ -332,7 +355,7 @@ for subj= 1:numel(subjects) %for each subject
        end %end NS cue (trial) loop
                   
    end %end session loop
-end %end subject loop
+% end %end subject loop
 
 % %% visualization- just checking if event timestamp mask looks appropriate (should be no negative PE timestamps etc.)
 % %really slow bc scattering in a loop
@@ -353,7 +376,7 @@ end %end subject loop
 
 % %% Visualization - making sure eventMaskB timestamps look correct
 %PE visualization
-figure; plot(eventIndPox,'.'); title('eventInd'); xlabel('trial'); ylabel('timestamp');
+figure; plot(eventIndPox,'.'); title(strcat('subj-', subjects{subj},'-eventInd')); xlabel('trial'); ylabel('timestamp');
 hold on; 
 
 %overlay cue onset visualization
@@ -421,7 +444,7 @@ for trial= 1:trialCount
             tsThisTrial= tsThisTrial(end)+1:tsThisTrial(end)+numel(timeLock); 
           end
         
-        periCueBlueDStrials(:,DStrialCount)= periCueBlueAllTrials(:,trial);
+        periTrialBlueDSTrials(:,DStrialCount)= periTrialBlueAllTrials(:,trial);
         
 %         eventMaskDS(:,DStrialCount)= eventMaskCue(:,trial); %old code,  misshaped eventMasks
 %         eventMaskFirstPoxDStrials(:,DStrialCount)= eventMaskFirstPox(:,trial);
@@ -434,6 +457,7 @@ for trial= 1:trialCount
         
         eventIndPoxDStrials(:,DStrialCount)= eventIndPox(:,trial);
         
+        periCueBlueDStrials(:,DStrialCount)= periCueBlueAllTrials(:,trial);
         periPoxBlueDStrials(:,DStrialCount)= periPoxBlueAllTrials(:,trial);
         periLoxBlueDStrials(:,DStrialCount)= periLoxBlueAllTrials(:,trial);
     end
@@ -450,7 +474,7 @@ end %end all trial loop
 
 
 for DStrial= 1:DStrialCount
-    F= cat(1, F, periCueBlueDStrials(:,DStrial)); %single column vector with fluorescence for every timestamp for every DS trial; all timestamps from each trial appended onto end 
+    F= cat(1, F, periTrialBlueDSTrials(:,DStrial)); %single column vector with fluorescence for every timestamp for every DS trial; all timestamps from each trial appended onto end 
     
 end %end DS trial loop
 
@@ -530,7 +554,7 @@ end %end DS trial loop
            sums(iter)= sum(sum(Vinverse)); %just trying to see if the matrix is changing over iterations to test "convergence"
    end
 
-   scatter(1:numIterations,sums);
+%    scatter(1:numIterations,sums);
    
 %Equation 5 from this paper- Find inverse of matrix V (to undo
 %convolution) and get normalized vector PETH (Hbar)... seems to be
@@ -574,9 +598,10 @@ end %end DS trial loop
  end
  
  %visualize- plotting final iteration for now
-     figure; hold on; title('DS trials only; deconvolved event response')
+     figure; hold on; title(strcat('subj-', subjects{subj}, '-DS trials only; deconvolved event response'))
      plot(timeLock,ERFcue(:,end)); plot(timeLock,ERFfirstPE(:,end)); plot(timeLock,ERFfirstLick(:,end)); legend('Cue','firstPE','firstLick');
     
+end %end subj loop
 %% Cross-validation
     
 
