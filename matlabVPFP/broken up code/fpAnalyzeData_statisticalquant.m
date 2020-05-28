@@ -167,46 +167,7 @@ bincriteriastage5allLED=vertcat(bincriteriastage5allblue,bincriteriastage5allpur
 binidallLED=repmat(binidall,2,1);
 
 
-%ANOVA on 465nm DS and NS vs. 405nm DS and NS on day meet criteria
 
-%find the z scores in the binned data that are from the day the animals
-%meet criteria
-[criteriaindexblue,~]=find(bincriteriastage5allblue==1);
-[criteriaindexpurple,~]=find(bincriteriastage5allpurple==1);
-
-% % want a colum in matrix that has strings
-% bincuetypeblue=cell2mat(bincuetypeblue);
-% bincuetypepurple=cell2mat(bincuetypepurple);
-
-
-anovacell={binzblueall(criteriaindexblue) binzpurpleall(criteriaindexpurple) binidall(criteriaindexblue) bincuetypeblue(criteriaindexblue) bincuetypepurple(criteriaindexpurple) };
-
-%need to average z-score signal for each animal
-
-rat=unique(anovacell{3});
-anovamatrix=[];
-
-
-%get every animals mean for blue
-
-%DS loop
-for ratid=1:length(rat)
-idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
-DSidindex=contains(anovacell{4}(idindex),'DS');
-DSidindex=idindex(DSidindex);
-anovamatrix(ratid,1)=mean(anovacell{1}(DSidindex));%mean DS blue signal
-anovamatrix(ratid,2)=mean(anovacell{2}(DSidindex));%mean DS purple signal
-
-end
-for ratid=1:length(rat)
-idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
-NSidindex=contains(anovacell{4}(idindex),'NS');
-NSidindex=idindex(NSidindex);
-anovamatrix(1+length(anovamatrix(:,1)),1)=mean(anovacell{1}(NSidindex));%mean NS blue signal
-anovamatrix(length(anovamatrix(:,2)),2)=mean(anovacell{2}(NSidindex));%mean NS purple signal
-end
-
-[p,tbl,stats] = anova2(anovamatrix,5)
 
 
 %Overlay bar plotaverage for cue type across all
@@ -255,16 +216,110 @@ b.draw()
 % saveas(gcf, strcat(figPath,'AvgzscoreBAR_SEM'),'fig');
 % %         close; %close
 
+%% Gather data for Repeated Measures ANOVA and GLMM on 465nm DS and NS vs. 405nm DS and NS on day meet criteria
+
+%find the z scores in the binned data that are from the day the animals
+%meet criteria
+[criteriaindexblue,~]=find(bincriteriastage5allblue==1);
+[criteriaindexpurple,~]=find(bincriteriastage5allpurple==1);
+
+% % want a colum in matrix that has strings
+% bincuetypeblue=cell2mat(bincuetypeblue);
+% bincuetypepurple=cell2mat(bincuetypepurple);
+
+
+anovacell={binzblueall(criteriaindexblue) binzpurpleall(criteriaindexpurple) binidall(criteriaindexblue) bincuetypeblue(criteriaindexblue) bincuetypepurple(criteriaindexpurple) };
+
+%need to average z-score signal for each animal
+
+rat=unique(anovacell{3});
+anovamatrix=[];
+
+
+%get every animals mean for all responses for anova
+
+%DS loop
+for ratid=1:length(rat)
+idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
+DSidindex=contains(anovacell{4}(idindex),'DS');
+DSidindex=idindex(DSidindex);
+anovamatrix(ratid,1)=mean(anovacell{1}(DSidindex));%mean DS blue signal
+anovamatrix(ratid,2)=mean(anovacell{2}(DSidindex));%mean DS purple signal
+
+end
+%NS loop
+for ratid=1:length(rat)
+idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
+NSidindex=contains(anovacell{4}(idindex),'NS');
+NSidindex=idindex(NSidindex);
+anovamatrix(1+length(anovamatrix(:,1)),1)=mean(anovacell{1}(NSidindex));%mean NS blue signal
+anovamatrix(length(anovamatrix(:,2)),2)=mean(anovacell{2}(NSidindex));%mean NS purple signal
+end
+
+%get every animals mean for all responses for repeated measures anova
+rmanovamatrix=[];
+%DS loop
+for ratid=1:length(rat)
+idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
+DSidindex=contains(anovacell{4}(idindex),'DS');
+DSidindex=idindex(DSidindex);
+rmanovamatrix(1,ratid)=mean(anovacell{1}(DSidindex));%mean DS blue signal
+rmanovamatrix(2,ratid)=mean(anovacell{2}(DSidindex));%mean DS purple signal
+
+end
+%NS loop
+for ratid=1:length(rat)
+idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
+NSidindex=contains(anovacell{4}(idindex),'NS');
+NSidindex=idindex(NSidindex);
+rmanovamatrix(3,ratid)=mean(anovacell{1}(NSidindex));%mean NS blue signal
+rmanovamatrix(4,ratid)=mean(anovacell{2}(NSidindex));%mean NS purple signal
+end
+
+
+%% Repeated Measures ANOVA
+
+for r=1:size(rmanovamatrix,2)
+rmresponsematrix(r,:)=rmanovamatrix(:,r)';%rat "r" four responses
+end
+
+rmcuetypeDS=repelem({'D'},size(rmanovamatrix,1)*0.5)';
+rmcuetypeNS=repelem({'N'},size(rmanovamatrix,1)*0.5)';
+rmcue_type=vertcat(rmcuetypeDS,rmcuetypeNS);
+rmblueLED=repelem('B',size(rmanovamatrix,1)*.25)';
+rmpurpleLED=repelem('P',size(rmanovamatrix,1)*.25)';
+rmLED_type=vertcat(rmblueLED,rmpurpleLED,rmblueLED,rmpurpleLED);
+
+% get responses for each rat (rows) for each group(CueType+LEDType)
+rmanovaresponses=table();
+rmanovaresponses=array2table(rmresponsematrix,'VariableNames',{'y1','y2','y3','y4'});
+
+
+% Convert factors to categorical.
+rmfactors={'rmcue_type','rmLED_type'};
+within=table();
+within = table(cellstr(rmcue_type),cellstr(rmLED_type),'VariableNames',rmfactors);
+within.rmcue_type = categorical(within.rmcue_type);
+within.rmLED_type = categorical(within.rmLED_type);
+
+
+% Create a formula for fitrm() funtion
+rmanovaformula='y1-y4~1';
+
+% fit a repeated measures model to data
+rm = fitrm(rmanovaresponses, rmanovaformula, 'WithinDesign', within);
+
+% run a repeated measures anova, indicating wich terms interact within the
+% model
+[rmanovatbl]=ranova(rm,'WithinModel','rmcue_type*rmLED_type');
+
 
 %% GLMM(general linear mixed models)
 
-%data must be organized in a table with both response, fixed and random
+%glmm data must be organized in a table with both response, fixed and random
 %variables in colums
 
-
-
-
-%creat components of table, recording 4 types of responses per animal,
+%creat components of glmetable, recording 4 types of responses per animal,
 %DSCueBlue,DSCuePruple, NSCueBlue and NSCuePurple
 rat_ID=repmat(rat,4,1);
 cuetypeDS=repelem({'D'},(length(rat_ID))*.5)';
@@ -281,10 +336,12 @@ NSz_blue_response=anovamatrix(1:length(unique(rat)),2);
 NSz_purple_response=anovamatrix(length(unique(rat))+1:end,2);
 Z_response=vertcat(DSz_blue_response,DSz_purple_response,NSz_blue_response,NSz_purple_response);
 
+
 glmetable=table(rat_ID,cue_type,LED_type,Z_response);
-formula='Z_response~1+cue_type*LED_type+(1|rat_ID)'
-glme=fitglme(glmetable,formula)
+glmeformula='Z_response~1+cue_type*LED_type+(1|rat_ID)'
+glme=fitglme(glmetable,glmeformula)
 save('GLMM_results.mat','glme');
+
 %% Plot GLMM
 observedZvalues=[];
 modelZvalues = [];
