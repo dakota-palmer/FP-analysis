@@ -338,9 +338,19 @@ Z_response=vertcat(DSz_blue_response,DSz_purple_response,NSz_blue_response,NSz_p
 
 
 glmetable=table(rat_ID,cue_type,LED_type,Z_response);
-glmeformula='Z_response~1+cue_type*LED_type+(1|rat_ID)'
-glme=fitglme(glmetable,glmeformula)
+glmeformula='Z_response~1+cue_type*LED_type+(1|rat_ID)';
+glme=fitglme(glmetable,glmeformula);
 save('GLMM_results.mat','glme');
+
+%% LME
+%can more easily adjust covariate structure with fitlme() function so may
+%just use this for the rest of data analysis.  Inputs are the same and
+%fitglme().
+
+lmetable=glmetable;
+lmeformula='Z_response~1+cue_type*LED_type+(1|rat_ID)';
+lme=fitlme(lmetable,lmeformula);
+save('LME_results.mat','lme');
 
 %% Plot GLMM
 observedZvalues=[];
