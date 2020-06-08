@@ -1856,6 +1856,7 @@ for subj= 1:numel(subjects)
    end
 end
 
+
 %% TIMELOCK TO TRIAL START
 %get photometry signals timelocked to trialStart to correctly map shifted
 %event timestamps 
@@ -1980,6 +1981,27 @@ end
 end %end subject loop
         
 
+%% visualize side by side timelock to cue,pe,lick, trial
+for subj= 1:numel(subjects)
+    timeLock= [-preCueFrames:postCueFrames]/fs;
+    currentSubj= subjDataAnalyzed.(subjects{subj})
+    for session= 1:numel(currentSubj)
+        if currentSubj(session).trainStage== 7 %plot only certain sessions
+        figure; sgtitle(strcat('subj_',subjects{subj}))
+        subplot(4,1,1); title('timelock to CUE');
+%         plot(timeLock, squeeze(currentSubj(session).periDS.DSzblue), 'b');
+        plot(timeLock, currentSubj(session).periDS.DSzblueMean, 'b');
+        subplot(4,1,2); title('timelock to first PE');
+%         plot(timeLock,squeeze(currentSubj(session).periDSpox.DSzpoxblue), 'b');
+        plot(timeLock, currentSubj(session).periDSpox.DSzpoxblueMean, 'b');
+        subplot(4,1,3); title('timelock to first lick');
+%         plot(timeLock,squeeze(currentSubj(session).periDSpox.DSzpoxblue), 'b');
+        plot(timeLock, currentSubj(session).periDSlox.DSzloxblueMean, 'b');
+        subplot(4,1,4); title('timelock to trial start');
+        plot(timeLock, currentSubj(session).periDS.trialShift.DSzblueMean, 'b');
+        end
+    end% end session loop
+end%end subj loop
 
  subjectsAnalyzed = fieldnames(subjDataAnalyzed); %now, let's save an array containing all of the analyzed subject IDs (may be useful later if we decide to exclude subjects from analysis)
 %% ~~~Individual subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

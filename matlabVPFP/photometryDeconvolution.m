@@ -608,11 +608,11 @@ end %end all trial loop
     %this loop takes awhile; not actually necessary but maybe worth revisiting
 %    sums=  nan(numIterations,1); 
    for iter= 1:numIterations
-           Vinverse=  (I-((1/M*S)*V))^iter; %eq 4 normalized?
+           Vinverse=  (I-V)^iter; %eq 4 normalized?
 %            Vinverse= (I-V)^iter; %eq 4
 %            mean(mean(Vinverse==((1/M*S)*V)))
 %            
-%            mean(mean(V*Vinverse==I)) %This should always return true? why is it returning false? Is Vinverse incorrect??????? %looks like it's returning the of the Identity matrix but diagonal zeros instead of 1s
+%            mean(mean(V*Vinverse==I)) %This should always return true??? why is it returning false? Is Vinverse incorrect??????? %looks like it's returning the of the Identity matrix but diagonal zeros instead of 1s
 %                                         %maybe "hollow matrix" bc sparse-
 %                                         %nope, full() looks same
 %            sums(iter)= sum(sum(Vinverse)); %just trying to see if the matrix is changing over iterations to test "convergence"
