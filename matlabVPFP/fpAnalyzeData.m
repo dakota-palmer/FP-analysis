@@ -536,22 +536,23 @@ for subj= 1:numel(subjects) %for each subject
        end %end lick loop
        
        currentSubj(session).lickBouts= lickBouts;
-       
+     
+       %save the lick bout data
+       subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts= currentSubj(session).lickBouts;
+
+
+%       % %    %visualization -- takes long time bc looping thru cell array
+%        figure(figureCount);
+%        figureCount= figureCount+1;
+% 
+%        for currentBout = 1:numel(currentSubj(session).lickBouts)
+%            hold on;
+%            title('lick bout # over time');
+%            scatter(currentSubj(session).lickBouts{currentBout},ones(size(currentSubj(session).lickBouts{currentBout}))*currentBout);
+%        end
+
    end %end session loop
-   
-   %save the lick bout data
-   subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts= currentSubj(session).lickBouts;
-   
-% %   % %    %visualization
-% %    figure(figureCount);
-% %    figureCount= figureCount+1;
-% %    
-% %    for currentBout = 1:numel(currentSubj(session).lickBouts)
-% %        hold on;
-% %        title('lick bout # over time');
-% %        scatter(currentSubj(session).lickBouts{currentBout},ones(size(currentSubj(session).lickBouts{currentBout}))*currentBout);
-% %    end
-% %    
+
 end %end subject loop
 
 
@@ -599,6 +600,8 @@ for subj= 1:numel(subjects) %for each subject
             currentSubj(session).behavior.outDSrel= cell(1,numel(currentSubj(session).DS));
             currentSubj(session).behavior.loxDS= cell(1,numel(currentSubj(session).DS));
             currentSubj(session).behavior.loxDSrel= cell(1,numel(currentSubj(session).DS));
+            currentSubj(session).behavior.lickBoutsDS= cell(1,numel(currentSubj(session).DS));
+            currentSubj(session).behavior.lickBoutsDSrel= cell(1,numel(currentSubj(session).DS));
 
         %First, let's establish the cue duration based on training stage
         if currentSubj(session).trainStage == 1
@@ -657,6 +660,25 @@ for subj= 1:numel(subjects) %for each subject
                        loxDScount=loxDScount+1; %iterate the counter
                    end
                 end
+                
+                
+                  %find and save lickBouts during the cue duration
+                  %looping a bit different because lickBouts organized in cell array
+                lickBoutDScount= 1; %counter for indexing
+                    
+                for i = 1:numel(subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts) % for every port entry logged during this session %cue onset + cueLength if within cue ; cueonset + periCueFrames if within the heatplot window
+                    lickBoutsDS= subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts{i}(subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts{i}>cutTime(DSonset)& subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts{i} < cutTime(DSonset+postCueFrames));
+                    if (cutTime(DSonset)<subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts{i}) & subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts{i}<cutTime(DSonset+postCueFrames) %if the lick occurs between this cue's onset and this cue's onset, assign it to this cue 
+                       %save absolute timestamps  
+                       currentSubj(session).behavior.lickBoutsDS{1,cue}= lickBoutsDS; %cell array containing all pox during the cue, empty [] if no licks during the cue
+                        
+                       %save timestamps of lick relative to cue onset
+                       currentSubj(session).behavior.lickBoutsDSrel{1,cue}= subjDataAnalyzed.(subjects{subj})(session).behavior.lickBouts{i}-cutTime(DSonset);
+                       
+                       lickBoutDScount=lickBoutDScount+1; %iterate the counter
+                   end
+                end
+                
                                
           end %end cue too close to end conditional
         end %end cue loop
@@ -667,6 +689,10 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).behavior.outDSrel= currentSubj(session).behavior.outDSrel;
             subjDataAnalyzed.(subjects{subj})(session).behavior.loxDS= currentSubj(session).behavior.loxDS;
             subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel= currentSubj(session).behavior.loxDSrel;
+            
+            subjDataAnalyzed.(subjects{subj})(session).behavior.lickBoutsDS= currentSubj(session).behavior.lickBoutsDS;
+            subjDataAnalyzed.(subjects{subj})(session).behavior.lickBoutsDSrel= currentSubj(session).behavior.lickBoutsDSrel;
+
 
    end %end session loop
      
@@ -1801,7 +1827,7 @@ end %end subject loop
 % get correct photometry signals
 
 %create a distribution of times to sample from
-trialStartDistro= makedist('Normal', 'mu', 0, 'sigma', 0.050); %time in seconds
+trialStartDistro= makedist('Normal', 'mu', 0, 'sigma', 1); %time in seconds
 
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
@@ -1882,10 +1908,12 @@ end
             baselineMeanpurple= currentSubjAnalyzed(session).periDS.baselineMeanpurple(1,trial); %baseline mean purple 10s prior to DS onset for boxA
             baselineStdpurple= currentSubjAnalyzed(session).periDS.baselineStdpurple(1,trial); %baseline stdDev purple 10s prior to DS onset for boxA
             
-            %save all of the following data in the subjDataAnalyzed struct under the periDS field
+            %calculate shifted timestamps for events during trial so that
+            %they match up with photometry signals
+            %save all of the following data in the subjDataAnalyzed struct under the periDS.trislShift field
 
             %shift cue timestamp
-            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSrelShifted(trial) = abs(trialTimeShift(trial)); %0 + amount shifted; this is cue onset relative to trial start
+            subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSrelShifted(trial) = abs(currentSubjAnalyzed(session).periDS.trialShift.trialTimeShift(trial)); %0 + amount shifted; this is cue onset relative to trial start
  
 
             %shift behavior event timestamps according to trialShift
@@ -1937,7 +1965,7 @@ end
                disp(strcat(' ~~~~~warning, lox trialShift too big: subj_',num2str(subj),';session_', num2str(session), ';trial_', num2str(trial))); 
             end
 
-            end %end DS cue loop
+        end %end DS cue loop
         
                 %get the mean response during DS trial for this session
             subjDataAnalyzed.(subjects{subj})(session).periDS.trialShift.DSblueMean = nanmean(currentSubjAnalyzed(session).periDS.DSblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
