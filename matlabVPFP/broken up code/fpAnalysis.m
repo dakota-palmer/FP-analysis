@@ -6,6 +6,7 @@ fpAnalyzeData_eventtriggered_analysis;
 %% Plot Analyzed Data
 fpAnalyzeData_heatplots_cuetimelocked;
 fpAnalyzeData_heatplots_portentrytimelocked;
+fpAnalyzeData_heatplots_firstlicktimelocked;
 fpAnalyzeData_heatplots_cuetimelocked_variablereward;
 fpAnalyzeData_heatplots_portentrytimelocked_variablereward;
 fpAnalyzeData_behavioralplots;
@@ -17,5 +18,9 @@ fpAnalyzeData_statisticalquant;
 %% Save
 fpAnalyzeData_save;
 
+%%  Speed test /optimizing
+
+profile viewer;
+% %things that should be optimized:
 %% Denote the end
 disp('all done');
