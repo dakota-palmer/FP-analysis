@@ -725,6 +725,48 @@ end %end subj loop
 
      
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+%% Impulse resposne function
+
+%Should be able to visualize/approximate impulse response function (to cue) by
+%excluding all timestamps after port entry & averaging result
+
+%only including trials w PE
+
+for subj= 1:numel(subjects)
+    currentSubj=subjDataAnalyzed.(subjects{subj});
+    
+    figure; hold on; title(strcat(subjects{subj}, '; estimated impulse response to DS cue'));
+    for session= 1:numel(currentSubj)
+       impulseCue= [];
+       for cue= 1:numel(currentSubj(session).periDS.trialShift.DSrelShifted)
+           if ~isnan(currentSubj(session).periDS.trialShift.DSrelShifted(cue)) %skip excluded trials
+               tsExcluded= [];
+               
+               tsExcluded= find(timeLock>=currentSubj(session).behavior.poxDSrel{cue}(1));
+           
+               %make excluded timestamps nan
+                %exclude ts after first PE
+               currentSubj(session).periDS.DSzblue(tsExcluded,:,cue)= nan; 
+               
+               impulseCue(:,cue)= currentSubj(session).periDS.DSzblue(:,:,cue);
+           end %end exclusion conditional
+       end %end DS loop
+       
+       
+       %visualize
+       for trial= 1:size(impulseCue,2)
+           plot(timeLock,impulseCue(:,trial), 'b');
+       end
+            %overlay mean
+       plot(timeLock,nanmean(impulseCue,2), 'k');
+       legend('trial', 'mean')
+
+       
+    end%end session loop
+end%end subj loop
+
+
 %% OLD- Trying other regression based models
 % 
 % %% Get data into proper table format for model
