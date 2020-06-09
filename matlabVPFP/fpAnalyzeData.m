@@ -1410,6 +1410,7 @@ for subj= 1:numel(subjects) %for each subject
             if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
                 disp(strcat('****firstPoxDS cue ', num2str(cue), ' too close to end, continueing out'));
                 DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
+                DSselected(cue)= nan; %make this cue nan so that it's skipped in subsequent analysis
                 continue %continue out of the loop and move onto the next DS cue
             end
 

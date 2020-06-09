@@ -245,7 +245,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
                   end %end Cond B
                   
               %Condition C
-               if currentSubj(session).trainStage >5
+               if currentSubj(session).trainStage==5
                    
                     if sesCountC== 1 
                         currentSubj(1).DSzblueAllTrialsC= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
@@ -343,12 +343,12 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
                          %later, we need to reshape the lox cell array from nested
                          %{session}{cue} to just {cue}
                           for cue = 1:numel(currentSubj(1).DSloxAllTrialsC{sesCountD})
-                              DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsC{sesCountD}{cue};
+                              DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsD{sesCountD}{cue};
                               trialDcount=trialDcount+1;
                           end           
                                             
                         for cue= 1:numel(currentSubj(1).NSloxAllTrialsD{sesCountD})
-                            NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsC{sesCountD}{cue};
+                            NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsD{sesCountD}{cue};
                             trialDNScount=trialDNScount+1;
                         end
 
@@ -403,13 +403,13 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
                          %in order to sort licks according to trial by PE latency
                          %later, we need to reshape the lox cell array from nested
                          %{session}{cue} to just {cue}
-                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsC{sesCountD})
-                              DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsC{sesCountD}{cue};
+                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsD{sesCountD})
+                              DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsD{sesCountD}{cue};
                               trialDcount=trialDcount+1;
                           end           
                                             
                         for cue= 1:numel(currentSubj(1).NSloxAllTrialsD{sesCountD})
-                            NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsC{sesCountD}{cue};
+                            NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsD{sesCountD}{cue};
                             trialDNScount=trialDNScount+1;
                         end
 
@@ -485,7 +485,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
    
                
                    %Condition F
-               elseif currentSubj(session).trainStage ==8
+               elseif currentSubj(session).trainStage>=8 %more than 8 stages possible, for now just group together
                    
                    if sesCountD== 1 
                         currentSubj(1).DSzblueAllTrialsD= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
@@ -521,13 +521,13 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
                          %in order to sort licks according to trial by PE latency
                          %later, we need to reshape the lox cell array from nested
                          %{session}{cue} to just {cue}
-                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsC{sesCountD})
-                              DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsC{sesCountD}{cue};
+                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsD{sesCountD})
+                              DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsD{sesCountD}{cue};
                               trialDcount=trialDcount+1;
                           end           
                                             
                         for cue= 1:numel(currentSubj(1).NSloxAllTrialsD{sesCountD})
-                            NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsC{sesCountD}{cue};
+                            NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsD{sesCountD}{cue};
                             trialDNScount=trialDNScount+1;
                         end
 
@@ -970,7 +970,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
      bottomDSzpurpleE= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsE, 0, 2))));
       
       %cond F
-      elseif currentSubj(session).trainStage ==8
+      elseif currentSubj(session).trainStage >=8 %stage 8 or higher
      
      topDSzblueD= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
      topDSzpurpleD= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
@@ -1022,7 +1022,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
       elseif currentSubj(session).trainStage==7
          bottoms2= [bottomDSzblueD, bottomDSzblueE];
           tops2= [topDSzblueD, topDSzblueE];
-      elseif currentSubj(session).trainStage==8
+      elseif currentSubj(session).trainStage>=8 %if stage 8 or higher
         bottoms2= [bottomDSzblueD, bottomDSzblueE, bottomDSzblueF, bottomDSzpurpleD, bottomDSzpurpleE, bottomDSzpurpleF];
         tops2=[topDSzblueD, topDSzblueE, topDSzblueF, topDSzpurpleD, topDSzpurpleE, topDSzpurpleF];
      
