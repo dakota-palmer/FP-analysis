@@ -133,6 +133,8 @@ for subj= 1:numel(subjects) %for each subject
 eventMaskBcue= zeros(M*T,T); %row for every timestamp in every trial, column for each timestamp in timeLock; will be binary coded
 eventMaskBfirstPox= zeros(M*T,T); 
 eventMaskBfirstLox= zeros(M*T,T);
+eventMaskAllPox= zeros(M*T,T);
+eventMaskAllLox= zeros(M*T,T);
 
 
 trialCount= 0; %counter for total number of trials (used for indexing)
@@ -202,7 +204,13 @@ NStrialCount=0;
               eventMaskFirstPox(trialCount,eventIndPox(trialCount))= 1;  %replace 0s with 1s for first pe on this trial
               
               eventMaskBfirstPox(tsThisTrial(eventIndPox(trialCount)), eventIndPox(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
-                           
+                    
+               %doing all Pox %loop takes awhile
+               for pox = 1:numel(poxDS{trialCount,:}) %looping through because was getting invalid indices without loop
+                  eventIndAllPox{trialCount}(pox)= find(timeLock(1,:)==poxDS{trialCount,:}(pox)); %get index of timestamp corresponding to this event
+
+                  eventMaskAllPox(tsThisTrial(eventIndAllPox{trialCount}), eventIndAllPox{trialCount})=1; %replace 0s with 1 where timestamp in timelock(column) intersects with timestamp on this trial(row)
+               end
               %debug, this should always return True
               if eventIndPox(trialCount)~=find(eventMaskBfirstPox(tsThisTrial,eventIndPox(trialCount))==1) %search for the timestamp that ==1 within eventInd column, and make sure it matches the relative eventInd timestamp for that trial (just matching row with column) 
                 warning('eventMaskBfirstPox index doesnt match: subj %s DS %s',num2str(subj),num2str(cue));
@@ -216,6 +224,7 @@ NStrialCount=0;
                 
            else %make eventInd nan if no pox on this trial
                eventIndPox(trialCount)= nan;
+               eventIndAllPox{trialCount}= nan;
            end
            
             %Get lick timestamps
@@ -242,6 +251,13 @@ NStrialCount=0;
               
               eventMaskBfirstLox(tsThisTrial(eventIndLox(trialCount)), eventIndLox(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
 
+              %doing all Lox %loop takes awhile
+               for lox = 1:numel(loxDS{trialCount,:}) %looping through because was getting invalid indices without loop
+                  eventIndAllLox{trialCount}(lox)= find(timeLock(1,:)==loxDS{trialCount,:}(lox)); %get index of timestamp corresponding to this event
+
+                  eventMaskAllLox(tsThisTrial(eventIndAllLox{trialCount}), eventIndAllLox{trialCount})=1; %replace 0s with 1 where timestamp in timelock(column) intersects with timestamp on this trial(row)
+               end
+              
                             
               %flag event timestamps that have shifted too much %this was
               %done in fpAnalyzeData.m
@@ -251,6 +267,8 @@ NStrialCount=0;
                 end
            else  %make eventInd nan if no pox on this trial
                eventIndLox(trialCount)= nan;
+               
+               eventInAllLox{trialCount}= nan;
            end
            
            %flag trials where Lox precedes Pox
@@ -329,6 +347,14 @@ NStrialCount=0;
            
               eventMaskBfirstPox(tsThisTrial(eventIndPox(trialCount)), eventIndPox(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
                            
+              %doing all Pox %loop takes awhile
+               for pox = 1:numel(poxNS{trialCount,:}) %looping through because was getting invalid indices without loop
+                  eventIndAllPox{trialCount}(pox)= find(timeLock(1,:)==poxNS{trialCount,:}(pox)); %get index of timestamp corresponding to this event
+
+                  eventMaskAllPox(tsThisTrial(eventIndAllPox{trialCount}), eventIndAllPox{trialCount})=1; %replace 0s with 1 where timestamp in timelock(column) intersects with timestamp on this trial(row)
+               end
+              
+              
               %debug, this should always return True
               if eventIndPox(trialCount)~=find(eventMaskBfirstPox(tsThisTrial,eventIndPox(trialCount))==1) %search for the timestamp that ==1 within eventInd column, and make sure it matches the relative eventInd timestamp for that trial (just matching row with column) 
                 warning('eventMaskBfirstPox index doesnt match: subj %s NS %s',num2str(subj),num2str(cue));
@@ -342,6 +368,8 @@ NStrialCount=0;
                 end
            else %make eventInd nan if no pox on this trial
                eventIndPox(trialCount)= nan;
+               
+               eventIndAllPox{trialCount}= nan;
            end
            
             %Get lick timestamps
@@ -363,6 +391,13 @@ NStrialCount=0;
                         
               eventMaskBfirstLox(tsThisTrial(eventIndLox(trialCount)), eventIndLox(trialCount))= 1; %replace 0 with 1 where timestamp in timeLock(column) intersects with timestamp on this trial(row) 
 
+               %doing all Lox %loop takes awhile
+               for lox = 1:numel(loxNS{trialCount,:}) %looping through because was getting invalid indices without loop
+                  eventIndAllLox{trialCount}(lox)= find(timeLock(1,:)==loxNS{trialCount,:}(lox)); %get index of timestamp corresponding to this event
+
+                  eventMaskAllLox(tsThisTrial(eventIndAllLox{trialCount}), eventIndAllLox{trialCount})=1; %replace 0s with 1 where timestamp in timelock(column) intersects with timestamp on this trial(row)
+               end
+              
               %flag event timestamps that have shifted too much
                 timeShift(trialCount)= abs(loxNS{trialCount,:}(1)-currentSubj(session).behavior.loxNSrel{cue}(1));
                 if abs(timeShift(trialCount)) >flagThreshold %this will flag cues whose time shift deviates above a threshold (in seconNS)
@@ -370,6 +405,8 @@ NStrialCount=0;
                 end
            else %make eventInd nan if no pox on this trial
                eventIndLox(trialCount)= nan;
+               
+               eventIndAllLox{trialCount}= nan;
            end
            
              %flag trials where Lox precedes Pox
@@ -515,6 +552,9 @@ for trial= 1:trialCount
         eventMaskFirstPoxDStrials(tsThisTrial,:)= eventMaskBfirstPox(tsThisDStrial(DStrialCount,:),:);
         eventMaskFirstLoxDStrials(tsThisTrial,:)= eventMaskBfirstLox(tsThisDStrial(DStrialCount,:),:);
         
+        eventMaskAllPoxDStrials(tsThisTrial,:)= eventMaskAllPox(tsThisDStrial(DStrialCount,:),:);
+        eventMaskAllLoxDStrials(tsThisTrial,:)= eventMaskAllLox(tsThisDStrial(DStrialCount,:),:);
+        
         eventIndPoxDStrials(:,DStrialCount)= eventIndPox(:,trial);
         
         periCueBlueDStrials(:,DStrialCount)= periCueBlueAllTrials(:,trial);
@@ -544,7 +584,8 @@ end %end all trial loop
     %the above code for every event type. Let's just combine them together
     %into 1 matrix, Z
     
-    Z= [eventMaskDS, eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials];
+%     Z= [eventMaskDS, eventMaskFirstPoxDStrials, eventMaskFirstLoxDStrials]; %only first PE & lox
+    Z= [eventMaskDS, eventMaskAllPoxDStrials, eventMaskAllLoxDStrials]; %ALL PE & Lox
     
     
     %This resulted in an MTxK matrix
@@ -583,7 +624,7 @@ end %end all trial loop
         
     
     Hbar=(1/M)*Z'*F; %Equation 3; Hbar is a KTx1 vector with PETHs for all events... V is used to map PETHs onto ERFs (H)
-%         this works, but because multiplying by Z (mostly 0)- most
+%         this works, but because multiplying by Z' (mostly 0)- most
 %         timestamps end up being 0
 
 %     Hbar2= (1/M)*(V*H) + (1/M)*Z'*N %eq 3 restated... results in matrix multiplication error for V*H because H is unknown
@@ -720,13 +761,12 @@ plot(timeLock, periLoxBlueDStrials, 'b');
 plot(timeLock, HbarFirstLick, 'r');
     
 end %end subj loop
+
 %% Cross-validation 
     
-
-     
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-%% Impulse resposne function
+%% Impulse response function
 
 %Should be able to visualize/approximate impulse response function (to cue) by
 %excluding all timestamps after port entry & averaging result
