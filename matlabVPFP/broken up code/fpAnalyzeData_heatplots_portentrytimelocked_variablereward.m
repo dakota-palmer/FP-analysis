@@ -148,17 +148,17 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
 
          stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
 
-         topDSzpoxbluePump1= stdFactor*abs(mean((std(currentSubj(1).DSzpoxbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         topDSzpoxbluePump2= stdFactor*abs(mean((std(currentSubj(1).DSzpoxbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         topDSzpoxbluePump3= stdFactor*abs(mean((std(currentSubj(1).DSzpoxbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzpoxbluePump1= stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzpoxbluePump2= stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzpoxbluePump3= stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
          
          
 %          topDSzpurple= stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-         bottomDSzpoxbluePump1 = -stdFactor*abs(mean((std(currentSubj(1).DSzpoxbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         bottomDSzpoxbluePump2 = -stdFactor*abs(mean((std(currentSubj(1).DSzpoxbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         bottomDSzpoxbluePump3 = -stdFactor*abs(mean((std(currentSubj(1).DSzpoxbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzpoxbluePump1 = -stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzpoxbluePump2 = -stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzpoxbluePump3 = -stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
          
 %          bottomDSzpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));

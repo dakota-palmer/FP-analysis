@@ -685,7 +685,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         currentSubj(1).NSpoxcueonsetAllTrials=[]; 
     for session = 1:numel(currentSubj) %for each training session this subject completed
        
-        clear NSselected
+        clear NSselected DSselected
         
         %We can only include trials that have a PE latency, so we need to
         %selectively extract these data first
@@ -733,6 +733,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
            else
                continue %continue if no NS data
            end
+           
         else %add subsequent sessions using cat()
             currentSubj(1).DSzpoxblueAllTrials = cat(2, currentSubj.DSzpoxblueAllTrials, (squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
             currentSubj(1).DSzpoxpurpleAllTrials = cat(2, currentSubj.DSzpoxpurpleAllTrials, (squeeze(currentSubj(session).periDSpox.DSzpoxpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
@@ -746,7 +747,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
                 currentSubj(1).NSpoxpeLatencyAllTrials = cat(2,currentSubj(1).NSpoxpeLatencyAllTrials,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
                 
             else
-                continue %continue if nos NS data
+                continue %continue if no NS data
             end
         end        
     end %end session loop

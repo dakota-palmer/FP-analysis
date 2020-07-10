@@ -351,7 +351,20 @@ end %end subj loop
        subjDataAnalyzed.(subjects{subj})(session).fileName= currentSubj(session).fileName;
        subjDataAnalyzed.(subjects{subj})(session).trainDay= currentSubj(session).trainDay;
        subjDataAnalyzed.(subjects{subj})(session).trainStage= currentSubj(session).trainStage;
-       subjDataAnalyzed.(subjects{subj})(session).box= currentSubj(session).box;       
+       subjDataAnalyzed.(subjects{subj})(session).box= currentSubj(session).box;     
+       
+       %saving raw data here probably makes variable too big/slows things
+       %save raw event timestamps too- will be useful for deconvolution later
+       subjDataAnalyzed.(subjects{subj})(session).raw.pox= currentSubj(session).pox;
+       subjDataAnalyzed.(subjects{subj})(session).raw.out= currentSubj(session).out;
+       subjDataAnalyzed.(subjects{subj})(session).raw.lox= currentSubj(session).lox;
+       
+       %save photometry signals- will be useful for deconvolution later
+       subjDataAnalyzed.(subjects{subj})(session).raw.cutTime= currentSubj(session).cutTime;
+       subjDataAnalyzed.(subjects{subj})(session).raw.reblue= currentSubj(session).reblue;
+       subjDataAnalyzed.(subjects{subj})(session).raw.repurple= currentSubj(session).repurple;
+
+       
    end %end session loop
 end %end subject loop
 
@@ -1410,6 +1423,7 @@ for subj= 1:numel(subjects) %for each subject
             if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
                 disp(strcat('****firstPoxDS cue ', num2str(cue), ' too close to end, continueing out'));
                 DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
+                DSselected(cue)= nan; %make this cue nan so that it's skipped in subsequent analysis
                 continue %continue out of the loop and move onto the next DS cue
             end
 
@@ -1856,6 +1870,7 @@ for subj= 1:numel(subjects)
    end
 end
 
+
 %% TIMELOCK TO TRIAL START
 %get photometry signals timelocked to trialStart to correctly map shifted
 %event timestamps 
@@ -1980,6 +1995,27 @@ end
 end %end subject loop
         
 
+%% visualize side by side timelock to cue,pe,lick, trial
+for subj= 1:numel(subjects)
+    timeLock= [-preCueFrames:postCueFrames]/fs;
+    currentSubj= subjDataAnalyzed.(subjects{subj})
+    for session= 1:numel(currentSubj)
+        if currentSubj(session).trainStage== 7 %plot only certain sessions
+        figure; sgtitle(strcat('subj_',subjects{subj}))
+        subplot(4,1,1); title('timelock to CUE');
+%         plot(timeLock, squeeze(currentSubj(session).periDS.DSzblue), 'b');
+        plot(timeLock, currentSubj(session).periDS.DSzblueMean, 'b');
+        subplot(4,1,2); title('timelock to first PE');
+%         plot(timeLock,squeeze(currentSubj(session).periDSpox.DSzpoxblue), 'b');
+        plot(timeLock, currentSubj(session).periDSpox.DSzpoxblueMean, 'b');
+        subplot(4,1,3); title('timelock to first lick');
+%         plot(timeLock,squeeze(currentSubj(session).periDSpox.DSzpoxblue), 'b');
+        plot(timeLock, currentSubj(session).periDSlox.DSzloxblueMean, 'b');
+        subplot(4,1,4); title('timelock to trial start');
+        plot(timeLock, currentSubj(session).periDS.trialShift.DSzblueMean, 'b');
+        end
+    end% end session loop
+end%end subj loop
 
  subjectsAnalyzed = fieldnames(subjDataAnalyzed); %now, let's save an array containing all of the analyzed subject IDs (may be useful later if we decide to exclude subjects from analysis)
 %% ~~~Individual subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3785,6 +3821,8 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
         timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
+
+        
         %plot pump1 blue DSz
 
         subplot(3,1,1); %subplot for shared colorbar
@@ -3862,7 +3900,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 end %end subject loop
 
 
-%% Variable reward Session AVG z response heatplot
+%% Variable reward Session AVG z response heatplot & 2d plot
 
 
 for subj= 1:numel(subjectsAnalyzed) %for each subject
@@ -3872,87 +3910,107 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 rewardSessionCount= 0; %counter for sessions with valid variable reward data 
 
 
+%     %was trying to programmatically assign reward values %first get all unique stages with variable reward
+%     for session = 1:numel(currentSubj) %for each training session this subject completed
+%         if ~isempty(currentSubj(session).reward) 
+%             rewardSessionCount= rewardSessionCount+1;
+%                   
+%             
+%             trainStage{1,rewardSessionCount}= currentSubj(session).trainStage;
+%             trainStage{2,rewardSessionCount}= currentSubj(session).reward.pump1; %pump 1
+%             trainStage{3,rewardSessionCount}= currentSubj(session).reward.pump2; %pump 2 
+%             trainStage{4,rewardSessionCount}= currentSubj(session).reward.pump3; %pump 3
+%         end
+%     end
+%     
+%     %get only unique train stages & associated rewards
+%     trainStage= unique(trainStage();
+            
     for session = 1:numel(currentSubj) %for each training session this subject completed
-                
-        %clear between sessions
-        indPump1= [];
-        indPump2= [];
-        indPump3= [];
+
+%         if currentSubj(session).trainStage==12 %manually plotting only specific sessions (same stage= same rewards)
+    
         
-        
-        if ~isempty(currentSubj(session).reward) %make sure this is a valid stage with multiple rewards
-            
-            rewardSessionCount= rewardSessionCount+1; %counter for sessions with valid variable reward data 
+            %clear between sessions
+            indPump1= [];
+            indPump2= [];
+            indPump3= [];
 
-            
-            %first we need to get the z score data surrounding either pump1,
-            %pump2, or pump3 DS trials. To do this, we'll use the reward
-            %identities (reward.DSreward) as an indidices to get the right DS trials
-           
 
-            indPump1= find(currentSubj(session).reward.DSreward==1);
-            indPump2= find(currentSubj(session).reward.DSreward==2);
-            indPump3= find(currentSubj(session).reward.DSreward==3);
-            
-            %it's possible that indPump1,2, or 3 will result in an invalid
-            %index (for a cue that was excluded in the peri cue analyses)
-            %so let's check for that and exclude these (this may not be the
-            %best method)
-           
-            for i= 1:numel(indPump1)
-                if indPump1(i) > size(currentSubj(session).periDS.DSzblue,3)
-                   indPump1(i:end) = [];
-                   break;
+            if ~isempty(currentSubj(session).reward) %make sure this is a valid stage with multiple rewards
+
+                rewardSessionCount= rewardSessionCount+1; %counter for sessions with valid variable reward data 
+
+
+                %first we need to get the z score data surrounding either pump1,
+                %pump2, or pump3 DS trials. To do this, we'll use the reward
+                %identities (reward.DSreward) as an indidices to get the right DS trials
+
+
+                indPump1= find(currentSubj(session).reward.DSreward==1);
+                indPump2= find(currentSubj(session).reward.DSreward==2);
+                indPump3= find(currentSubj(session).reward.DSreward==3);
+
+                %it's possible that indPump1,2, or 3 will result in an invalid
+                %index (for a cue that was excluded in the peri cue analyses)
+                %so let's check for that and exclude these (this may not be the
+                %best method)
+
+                for i= 1:numel(indPump1)
+                    if indPump1(i) > size(currentSubj(session).periDS.DSzblue,3)
+                       indPump1(i:end) = [];
+                       break;
+                    end
                 end
-            end
-            
-            for i= 1:numel(indPump2)
-                if indPump2(i) > size(currentSubj(session).periDS.DSzblue,3)
-                   indPump2(i:end) = []; 
-                  break;
+
+                for i= 1:numel(indPump2)
+                    if indPump2(i) > size(currentSubj(session).periDS.DSzblue,3)
+                       indPump2(i:end) = []; 
+                      break;
+                    end
                 end
-            end
 
-            for i= 1:numel(indPump3)
-                if indPump3(i) > size(currentSubj(session).periDS.DSzblue,3)
-                   indPump3(i:end) = []; 
-                   break;
+                for i= 1:numel(indPump3)
+                    if indPump3(i) > size(currentSubj(session).periDS.DSzblue,3)
+                       indPump3(i:end) = []; 
+                       break;
+                    end
                 end
-            end
 
-            %collect all z score responses to every single DS across all sessions
-            if rewardSessionCount==1 %for first session, initialize 
-                
-                %now we'll use the reward identity (pump) indices to get only responses to those specific trials 
-                currentSubj(1).DSzbluePump1= squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump1)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-                currentSubj(1).DSzbluePump2= squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump2)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-                currentSubj(1).DSzbluePump3= squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump3)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-                
-%                 currentSubj(1).DSzpurpleAllTrials= squeeze(currentSubj(session).periDS.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-% 
-%                 currentSubj(1).NSzblueAllTrials= squeeze(currentSubj(session).periNS.NSzblue); 
-%                 currentSubj(1).NSzpurpleAllTrials= squeeze(currentSubj(session).periNS.NSzpurple);
-            else %add subsequent sessions using cat()
-                currentSubj(1).DSzbluePump1 = cat(2, currentSubj(1).DSzbluePump1, squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump1))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                currentSubj(1).DSzbluePump2 = cat(2, currentSubj(1).DSzbluePump2, squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump2))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                currentSubj(1).DSzbluePump3 = cat(2, currentSubj(1).DSzbluePump3, squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump3))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+                %collect all z score responses to every single DS across all sessions
+                if rewardSessionCount==1 %for first session, initialize 
 
-% currentSubj(1).DSzpurpleAllTrials = cat(2, currentSubj.DSzpurpleAllTrials, (squeeze(currentSubj(session).periDS.DSzpurple))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-% 
-%                 currentSubj(1).NSzblueAllTrials = cat(2, currentSubj.NSzblueAllTrials, (squeeze(currentSubj(session).periNS.NSzblue))); 
-%                 currentSubj(1).NSzpurpleAllTrials = cat(2, currentSubj.NSzpurpleAllTrials, (squeeze(currentSubj(session).periNS.NSzpurple))); 
-            end
-            
-            %get the Mean z value for each timepoint by taking mean z score for each timestamp across all
-            %cues in this session
-            currentSubj(1).DSzbluePump1mean(rewardSessionCount,:)= nanmean(squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump1)),2)';
-            currentSubj(1).DSzbluePump2mean(rewardSessionCount,:)= nanmean(squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump2)),2)';
-            currentSubj(1).DSzbluePump3mean(rewardSessionCount,:)= nanmean(squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump3)),2)';
+                    %now we'll use the reward identity (pump) indices to get only responses to those specific trials 
+                    currentSubj(1).DSzbluePump1= squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump1)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+                    currentSubj(1).DSzbluePump2= squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump2)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+                    currentSubj(1).DSzbluePump3= squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump3)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
 
-    %         currentSubj(session).DSzbluePump2mean= nanmean(currentSubj(1).DSzbluePump2,2);
-    %         currentSubj(session).DSzbluePump3mean= nanmean(currentSubj(1).DSzbluePump3,2);
+    %                 currentSubj(1).DSzpurpleAllTrials= squeeze(currentSubj(session).periDS.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+    % 
+    %                 currentSubj(1).NSzblueAllTrials= squeeze(currentSubj(session).periNS.NSzblue); 
+    %                 currentSubj(1).NSzpurpleAllTrials= squeeze(currentSubj(session).periNS.NSzpurple);
+                else %add subsequent sessions using cat()
+                    currentSubj(1).DSzbluePump1 = cat(2, currentSubj(1).DSzbluePump1, squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump1))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+                    currentSubj(1).DSzbluePump2 = cat(2, currentSubj(1).DSzbluePump2, squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump2))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+                    currentSubj(1).DSzbluePump3 = cat(2, currentSubj(1).DSzbluePump3, squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump3))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
 
-        end %end session loop
+    % currentSubj(1).DSzpurpleAllTrials = cat(2, currentSubj.DSzpurpleAllTrials, (squeeze(currentSubj(session).periDS.DSzpurple))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+    % 
+    %                 currentSubj(1).NSzblueAllTrials = cat(2, currentSubj.NSzblueAllTrials, (squeeze(currentSubj(session).periNS.NSzblue))); 
+    %                 currentSubj(1).NSzpurpleAllTrials = cat(2, currentSubj.NSzpurpleAllTrials, (squeeze(currentSubj(session).periNS.NSzpurple))); 
+                end
+
+                %get the Mean z value for each timepoint by taking mean z score for each timestamp across all
+                %cues in this session
+                currentSubj(1).DSzbluePump1mean(rewardSessionCount,:)= nanmean(squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump1)),2)';
+                currentSubj(1).DSzbluePump2mean(rewardSessionCount,:)= nanmean(squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump2)),2)';
+                currentSubj(1).DSzbluePump3mean(rewardSessionCount,:)= nanmean(squeeze(currentSubj(session).periDS.DSzblue(:,:,indPump3)),2)';
+
+        %         currentSubj(session).DSzbluePump2mean= nanmean(currentSubj(1).DSzbluePump2,2);
+        %         currentSubj(session).DSzbluePump3mean= nanmean(currentSubj(1).DSzbluePump3,2);
+
+            end %end session loop
+%         end %end trainStage conditional 
     end %end ~isempty reward conditional (alternative to stage conditional)
     
        
@@ -4038,11 +4096,15 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
         %Heatplots!  
 
         %DS z plot
+        
+    %SEPARATE FIGURES FOR EACH STAGE (each reward combination)
+        %todo: programatically asisgn labels, currently manual
+        
         figure(figureCount);
         figureCount=figureCount+1;
         hold on;
 
-        sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), 'avg response to DS resulting in different reward'));
+        sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), 'avg response to DS stage 8'));
         
         timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
@@ -4095,7 +4157,7 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
         %TODO: add purple plot
         
                set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
+            
                
                
        % ~~~~ 2d plot of all session means ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4104,22 +4166,28 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
        figureCount=figureCount+1;
        
           hold on;
+%           sgtitle(strcat(subjects{subj},'-','stage12-All'));
           plot(timeLock,currentSubj(1).DSzbluePump1mean, 'k');
           plot(timeLock,currentSubj(1).DSzbluePump2mean, 'r');
           plot(timeLock,currentSubj(1).DSzbluePump3mean, 'g');
+%           legend('empty','empty','empty');
           set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+%           saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'stage12rewardAll','.fig'));
           
           
       %~~~ 2d plot of grand mean of session mean
       
       figure(figureCount);
       figureCount= figureCount+1;
+%       sgtitle(strcat(subjects{subj},'-','stage12-Mean'));
       hold on;
       plot(timeLock,nanmean(currentSubj(1).DSzbluePump1mean, 1), 'k');
       plot(timeLock,nanmean(currentSubj(1).DSzbluePump2mean, 1), 'r');
       plot(timeLock,nanmean(currentSubj(1).DSzbluePump3mean, 1), 'g');
+%       legend('empty','empty', 'empty')
       set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving               
-               
+%       saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'stage12rewardMean','.fig'));         
+      
     end %end variable reward conditional
 end %end subject loop
 
@@ -7795,7 +7863,9 @@ end%end subj loop
 
 %% Save the analyzed data 
 %save the subjDataAnalyzed struct for later analysis
-save(strcat(experimentName,'-', date, 'subjDataAnalyzed.mat'), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
+
+%saving as v7.3 takes longer, but necessary if >2gb
+save(strcat(experimentName,'-', date, 'subjDataAnalyzed.mat'), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 .mat for files >2gb
 
 allRats.preCueFrames= preCueFrames;
 allRats.postCueFrames= postCueFrames;

@@ -73,17 +73,23 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
      subjTable = struct2table(currentSubj); % convert the struct array to a table
      subjTableSorted = sortrows(subjTable, 'date'); % sort the table by 'date'
      currentSubj = table2struct(subjTableSorted); %convert back to struct
-
     
     %now get the actual photometry data
+    currentSubj(1).DSzloxblueSessionMean= []
+    currentSubj(1).DSzloxpurpleSessionMean= []
     for session = 1:numel(currentSubj) %for each training session this subject completed       
+        if isempty(currentSubj(session).rat) %if no data for this date, fill with nan
+            currentSubj(session).periDSlox.DSzloxblueMean= nan(size(timeLock'));
+            currentSubj(session).periDSlox.DSzloxpurpleMean= nan(size(timeLock'));
+        else
             if session ==1 %for the first session, get this sessions periDS blue z score response
-                        currentSubj(1).DSzloxblueSessionMean= currentSubj(session).periDSlox.DSzloxblueMean; 
-                        currentSubj(1).DSzloxpurpleSessionMean= currentSubj(session).periDSlox.DSzloxpurpleMean;
-            elseif ~isnan(currentSubj(session).rat) % add on periDS response for subsequent sessions
-                        currentSubj(1).DSzloxblueSessionMean= cat(2, currentSubj(1).DSzloxblueSessionMean, currentSubj(session).periDSlox.DSzloxblueMean);
-                        currentSubj(1).DSzloxpurpleSessionMean= cat(2, currentSubj(1).DSzloxpurpleSessionMean, currentSubj(session).periDSlox.DSzloxpurpleMean);
+                currentSubj(1).DSzloxblueSessionMean= currentSubj(session).periDSlox.DSzloxblueMean; 
+                currentSubj(1).DSzloxpurpleSessionMean= currentSubj(session).periDSlox.DSzloxpurpleMean;
+            else
+                currentSubj(1).DSzloxblueSessionMean= cat(2, currentSubj(1).DSzloxblueSessionMean, currentSubj(session).periDSlox.DSzloxblueMean);
+                currentSubj(1).DSzloxpurpleSessionMean= cat(2, currentSubj(1).DSzloxpurpleSessionMean, currentSubj(session).periDSlox.DSzloxpurpleMean);
             end
+        end %end empty data conditional
     end %end session loop
  
     
@@ -100,22 +106,27 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     
     %photometry signals sorted by trial, timelocked to NS
     
-    for session = 1:numel(currentSubj) %for each training session this subject completed
-        %if there's no NS data, fill with NaNs first
-        if ~isnan(currentSubj(session).rat);
-        if isempty(currentSubj(session).periNSlox.NSzloxblueMean)
-            currentSubj(session).periNSlox.NSzloxblueMean= NaN(size(timeLock'));
-            currentSubj(session).periNSlox.NSzloxpurpleMean= NaN(size(timeLock'));
-        end
-        end
-        if session ==1 %for the first session, get this sessions periDS blue z score response
+    currentSubj(1).NSzloxblueSessionMean= [];
+    currentSubj(1).NSzloxpurpleSessionMean= [];
+    for session = 1:numel(currentSubj) %for each training session this subject completed       
+               
+        if isempty(currentSubj(session).rat) %if no data for this date, fill with nan
+            currentSubj(session).periNSlox.NSzloxblueMean= nan(size(timeLock'));
+            currentSubj(session).periNSlox.NSzloxpurpleMean= nan(size(timeLock'));
+        else
+            if isempty(currentSubj(session).periNS.NSzblueMean) %if no NS data on this session, make nan
+               currentSubj(session).periNSlox.NSzloxblueMean= nan(size(timeLock'));
+               currentSubj(session).periNSlox.NSzloxpurpleMean= nan(size(timeLock'));
+            end
+            
+            if session ==1 %for the first session, get this sessions periNS blue z score response
                 currentSubj(1).NSzloxblueSessionMean= currentSubj(session).periNSlox.NSzloxblueMean; 
                 currentSubj(1).NSzloxpurpleSessionMean= currentSubj(session).periNSlox.NSzloxpurpleMean;
-        elseif ~isnan(currentSubj(session).rat) % add on periDS response for subsequent sessions
+            else
                 currentSubj(1).NSzloxblueSessionMean= cat(2, currentSubj(1).NSzloxblueSessionMean, currentSubj(session).periNSlox.NSzloxblueMean);
                 currentSubj(1).NSzloxpurpleSessionMean= cat(2, currentSubj(1).NSzloxpurpleSessionMean, currentSubj(session).periNSlox.NSzloxpurpleMean);
-        end
-
+            end
+        end %end empty data conditional
     end %end session loop
     
     
