@@ -25,7 +25,7 @@ for neuron=1:numel(neurons)
     time_back_orig=2;
     time_forward_orig=6;
     
-    type1= 'time_shift';  %'spline','time_shift'
+    type1= 'spline';  %'spline','time_shift'
     
     shift_con=1;   %Should we shift the stimulus events so they start at 0?
     
@@ -225,30 +225,28 @@ for neuron=1:numel(neurons)
     %above code calculates b, so we should be able to calculate event
     %kernels using this equation
     
-    %NOTE: this should work for 'spline' mode, not sure yet how 'time_
-    %shift' mode will work... seems like ts becomes spline set 
-    
-    % Bjk = regression coeff for jth spline basis fxn and kth behavioral event
-    % Sj= jth spline basis fxn at time point i with length of 81 time bins
-    
-    k= con; %I think this is the number of event types
+    %if in spline mode, use eq 4 from 2019 preprint
+    %if in time shift mode, simply use regression coefficients as kernel
+        
+    k= con; %the number of event types
     
     if strcmp(type1,'spline')==1 %if in spline mode
-        %if in spline mode, references to 'ts' below become spline set I think!
+         % Bjk = regression coeff for jth spline basis fxn and kth behavioral event
+         % Sj= jth spline basis fxn at time point i with length of 81 time bins
         for eventType = 1:k
 
              %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
               if eventType==1
-                splineThisEvent= 1:(numel(b)/k);
+                splineThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
               else
                 splineThisEvent= splineThisEvent(end)+1:splineThisEvent(end)+(numel(b)/k); 
               end
 
            sumTerm= []; %clear between event types
-
-           for ts= 1:81 %81 manually here bc an extra ts is added after LASSO somehow? %numel((b)/k) %loop through ts; using 'ts' for each timestamp instead of 'i'
-               %this seems to fit- there should be 81 time bins in the example
-               %data x 7 event types ~ 568
+               
+           %something is off about this equation- confused about 'ts' vs spline
+           %basis sets here
+           for ts= 1:numel(b)/k  %loop through ts; using 'ts' for each timestamp instead of 'i' in formula
                for j= 1:size(basis_set,2) %loop over each df of spline basis function
                    sumTerm(ts,j)= b(splineThisEvent(j))*basis_set(ts,j);
                end
@@ -264,30 +262,26 @@ for neuron=1:numel(neurons)
         plot(timeLock,kernel);
         legend(cons);
 
-        figure;
-        hold on;
-        title('linear sum kernels (spline)');
-        plot(timeLock,sum(kernel,2));
+%         figure; %not useful- will need to go trial by trial and shift by
+%         event timestamps in order to produce modeled GCaMP signal
+%         hold on;
+%         title('linear sum kernels (spline)');
+%         plot(timeLock,sum(kernel,2));
         
     elseif strcmp(type1, 'time_shift')==1
             %if in timeshift mode, references to 'ts' below are timestamps
         for eventType = 1:k
              %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
               if eventType==1
-                tsThisEvent= 1:(numel(b)/k);
+                tsThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
               else
                 tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
               end
 
            sumTerm= []; %clear between event types
 
-           for ts= 1:81 %manually 81 here bc an extra ts is added after LASSO somehow? %loop through ts; using 'ts' for each timestamp instead of 'i'
-%                %this seems to fit- there should be 81 time bins in the example
-%                %data x 7 event types ~ 568
-%                for j= 1:size(shifts,2) %loop over each df of spline basis function
-%                    sumTerm(ts,j)= b(tsThisEvent(j))*shifts(ts,j);
-%                end
-%                kernel(ts,eventType)= sum(sum(sumTerm,1));  %kernel with row=ts (or spline set) ; column=event type           
+           for ts= 1:(numel(b)/k) %loop through ts; using 'ts' for each timestamp instead of 'i'
+%                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
                 kernel(ts,eventType) = b(tsThisEvent(ts));
            end
         end
@@ -302,10 +296,11 @@ for neuron=1:numel(neurons)
         plot(timeLock,kernel);
         legend(cons);
 
-        figure; %according to 2016 paper, 'each kernel is time shifted according to time of the corresponding events and then summed together to generate modeled gcamp6f trace' so- need to do the time shifting before summation
-        hold on;
-        title('linear sum kernels (time shift)');
-        plot(timeLock,sum(kernel,2));
+%         figure; %not useful- will need to go trial by trial and shift by
+%         event timestamps in order to produce modeled GCaMP signal%         
+%         hold on;
+%         title('linear sum kernels (time shift)');
+%         plot(timeLock,sum(kernel,2));
 
     end
     
