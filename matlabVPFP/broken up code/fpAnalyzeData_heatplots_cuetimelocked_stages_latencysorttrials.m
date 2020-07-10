@@ -749,8 +749,8 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
            if currentSubj(session).trainStage ==6
     currentSubj(1).DSzblueAllTrialsD= currentSubj(1).DSzblueAllTrialsD(:,DSsortIndD);
     currentSubj(1).DSzpurpleAllTrialsD= currentSubj(1).DSzpurpleAllTrialsD(:,DSsortIndD);
-    currentSubj(1).NSzblueAllTrialsD = currentSubj(1).NSzblueAllTrialsC(:,NSsortIndD);
-    currentSubj(1).NSzpurpleAllTrialsD= currentSubj(1).NSzpurpleAllTrialsC(:,NSsortIndD);
+    currentSubj(1).NSzblueAllTrialsD = currentSubj(1).NSzblueAllTrialsD(:,NSsortIndD);
+    currentSubj(1).NSzpurpleAllTrialsD= currentSubj(1).NSzpurpleAllTrialsD(:,NSsortIndD);
                % sort licks
              currentSubj(1).DSloxAllTrialsD= DSloxAllTrialsD;
              currentSubj(1).DSloxAllTrialsD= currentSubj(1).DSloxAllTrialsD(:,DSsortIndD);

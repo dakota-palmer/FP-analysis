@@ -76,7 +76,7 @@ for subj= 1:numel(subjects) %for each subject
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
             subjDataAnalyzed.(subjects{subj})(session).periDS.DS(cue) = currentSubj(session).DS(cue); %this way only included cues are saved
-
+            subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(cue)= DSonset;% DS onset index in cutTime
             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
             subjDataAnalyzed.(subjects{subj})(session).periDS.DSblue(:,:,cue)= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);
@@ -137,6 +137,7 @@ for subj= 1:numel(subjects) %for each subject
       if isnan(currentSubj(session).NS) %If there's no NS present, save data as empty arrays
           
         subjDataAnalyzed.(subjects{subj})(session).periNS.NS = [];
+        subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset= [];
         subjDataAnalyzed.(subjects{subj})(session).periNS.periNSwindow= [];
         subjDataAnalyzed.(subjects{subj})(session).periNS.NSblue=[]; 
         subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurple=[]; 
@@ -191,7 +192,7 @@ for subj= 1:numel(subjects) %for each subject
                 %save the data in the subjDataAnalyzed struct under the periNS field
                 
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NS(cue)= currentSubj(session).NS(cue); %this way only analyzed cues are included
-                
+                subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(cue)= NSonset;% save index in cutTime
                 subjDataAnalyzed.(subjects{subj})(session).periNS.periNSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeNS:postEventTimeNS);
                 
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NSblue(:,:,cue)= currentSubj(session).reblue(preEventTimeNS:postEventTimeNS);
@@ -307,66 +308,63 @@ for subj= 1:numel(subjects) %for each subject
                
                
                  %find the minimum PE timestamp during the cue epoch (this is the 1st pe)
+                firstPox=[];
+                firstPoxind=[];
                 firstPox= min(subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS{cue});
-             
+
                 %use interp to find closest timestamp in cutTime to this firstPox ( TODO: or we could add a timestamp and interp the photometry values?)
                 firstPox = interp1(cutTime,cutTime, firstPox, 'nearest');
 
                 %get the index of this timestamp in cutTime
                 firstPoxind= find(cutTime==firstPox);
                 
-                %define the frames (datapoints) around each cue to analyze
-                preEventTime = firstPoxind-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
-                postEventTime = firstPoxind+postCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
+                
+                
+            %define the frames (datapoints) around each cue to analyze
+            preEventTime = firstPoxind-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
+            postEventTime = firstPoxind+postCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
+            
+            
+            if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
+                disp(strcat('****firstPoxdS ', num2str(cue), ' too close to beginning, continueing out'));
+                DSskipped= DSskipped+1;
+                continue
+            end
 
-                if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
-                    disp(strcat('****firstPoxdS ', num2str(cue), ' too close to beginning, continueing out'));
-                    DSskipped= DSskipped+1;
-                    DSselected(cue)= nan; %make this cue nan so that it's skipped in subsequent analysis
-                    continue
-                end
+            if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
+                disp(strcat('****firstPoxDS cue ', num2str(cue), ' too close to end, continueing out'));
+                DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
+                continue %continue out of the loop and move onto the next DS cue
+            end
 
-                if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
-                    disp(strcat('****firstPoxDS cue ', num2str(cue), ' too close to end, continueing out'));
-                    DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
-                    DSselected(cue)= nan; %make this cue nan so that it's skipped in subsequent analysis
-                    continue %continue out of the loop and move onto the next DS cue
-                end
+            % Calculate average baseline mean&stdDev 10s prior to DS for z-score
+            %we'll retrieve the baselines calculated when we timelocked to
+            %DS, so our z score is relative to a baseline prior to any
+            %cue-related activity
+            %blueA
+            baselineMeanblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanblue(1,cue); %baseline mean blue 10s prior to DS onset for boxA
+            baselineStdblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdblue(1,cue); %baseline stdDev blue 10s prior to DS onset for boxA
+            %purpleA
+            baselineMeanpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanpurple(1,cue); %baseline mean purple 10s prior to DS onset for boxA
+            baselineStdpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdpurple(1,cue); %baseline stdDev purple 10s prior to DS onset for boxA
 
-                % Calculate average baseline mean&stdDev 10s prior to DS for z-score
-                %we'll retrieve the baselines calculated when we timelocked to
-                %DS, so our z score is relative to a baseline prior to any
-                %cue-related activity
-                %blueA
-                baselineMeanblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanblue(1,cue); %baseline mean blue 10s prior to DS onset for boxA
-                baselineStdblue= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdblue(1,cue); %baseline stdDev blue 10s prior to DS onset for boxA
-                %purpleA
-                baselineMeanpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanpurple(1,cue); %baseline mean purple 10s prior to DS onset for boxA
-                baselineStdpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdpurple(1,cue); %baseline stdDev purple 10s prior to DS onset for boxA
+            %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
-                %save all of the following data in the subjDataAnalyzed struct under the periDS field
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected= DSselected;
+           
+%             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
-                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected(cue)= DSselected(cue);
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(:,:,cue)= currentSubj(session).reblue(preEventTime:postEventTime);
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple(:,:,cue)= currentSubj(session).repurple(preEventTime:postEventTime);
+                
+                %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
 
-    %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
-
-                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(:,:,cue)= currentSubj(session).reblue(preEventTime:postEventTime);
-                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple(:,:,cue)= currentSubj(session).repurple(preEventTime:postEventTime);
-
-                    %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
-                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
-                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
-
-           elseif isnan(DSselected(cue)) %if there are no valid licks this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected(cue)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(1:periCueFrames+1,1,cue)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple(1:periCueFrames+1,1,cue)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(1:periCueFrames+1,1,cue)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(1:periCueFrames+1,1,cue)= nan;
-           end
-       
-        end%end DSselected loop
-            %get the mean response to the DS for this session
+            
+            
+            
+                %get the mean response to the DS for this session
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple, 3); 
@@ -374,7 +372,19 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue, 3);
 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple, 3);
-                      
+           end
+           
+           %save DSlox data
+                if ~isnan(DSselected(cue))
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(cue,1)= firstPox;
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(cue,1)= firstPoxind;%index in cut time
+                else
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(cue,1)= nan;
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(cue,1)= nan;    
+                end
+       
+       end %end DSselected loop
+       
    end %end session loop
 end %end subject loop
 
@@ -390,6 +400,8 @@ for subj= 1:numel(subjects) %for each subject
 
        if currentSubj(session).trainStage < 5
              subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSselected= [];
+             subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPoxind=[];
+             subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox=[];
                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblue= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurple= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblue= [];
@@ -402,6 +414,8 @@ for subj= 1:numel(subjects) %for each subject
         
                 %intialize
                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSselected= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPoxind=[];
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox=[];
                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblue= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurple= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblue= [];
@@ -448,15 +462,6 @@ for subj= 1:numel(subjects) %for each subject
                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblue(1:periCueFrames+1,1,cue)= nan;
                 subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurple(1:periCueFrames+1,1,cue)= nan;
 
-               subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblueMean(1:periCueFrames+1,1)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxblueMean(1:periCueFrames+1,1)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSpoxpurpleMean(1:periCueFrames+1,1)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblueMean(1:periCueFrames+1,1)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurpleMean(1:periCueFrames+1,1)= nan;
-
-               
-               
-               subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSselected(cue)=nan;
 
               
            else %if this is a selected NS
@@ -470,6 +475,8 @@ for subj= 1:numel(subjects) %for each subject
                 %get the index of this timestamp in cutTime
                 firstPoxind= find(cutTime==firstPox);
                 
+               
+                
             %define the frames (datapoints) around each cue to analyze
             preEventTime = firstPoxind-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
             postEventTime = firstPoxind+postCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
@@ -477,14 +484,12 @@ for subj= 1:numel(subjects) %for each subject
             if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
                 disp(strcat('****firstPoxNS ', num2str(cue), ' too close to beginning, continueing out'));
                 NSskipped= NSskipped+1;
-                NSselected(cue)= nan; %make this cue nan so that it's skipped in subsequent analysis
             continue
             end
 
             if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
-            disp(strcat('****firstPoxNS cue ', num2str(cue), ' too close to end, continueing out'));
+            disp(strcat('****firstPoxDS cue ', num2str(cue), ' too close to end, continueing out'));
             NSskipped= NSskipped+1;  %iterate the counter for skipped DS cues
-            NSselected(cue)= nan; %make this cue nan so that it's skipped in subsequent analysis
             continue %continue out of the loop and move onto the next DS cue
             end
 
@@ -501,7 +506,7 @@ for subj= 1:numel(subjects) %for each subject
 
             %save all of the following data in the subjDataAnalyzed struct under the periNSpox field
 
-            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSselected(cue)= NSselected(cue);
+            subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSselected= NSselected;
             
 %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
@@ -520,10 +525,17 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxblue, 3);
 
             subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periNSpox.NSzpoxpurple, 3);
+           end
            
-            end
-           
-       
+           %save NSlox data
+                if ~isnan(NSselected(cue))
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(cue,1)= firstPox;
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPoxind(cue,1)= firstPoxind;%index in cut time
+                elseif isnan(NSselected(cue))
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(cue,1)= nan;
+                subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPoxind(cue,1)= nan
+                end
+                
        end %end cue loop
        end %end stage conditional
    end %end session loop
@@ -577,6 +589,8 @@ for subj= 1:numel(subjects) %for each subject
                 %get the index of this timestamp in cutTime
                 firstLoxind= find(cutTime==firstLox);
                 
+                
+               
             %define the frames (datapoints) around each cue to analyze
             preEventTime = firstLoxind-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
             postEventTime = firstLoxind+postCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
@@ -584,14 +598,12 @@ for subj= 1:numel(subjects) %for each subject
             if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
                 disp(strcat('****firstLoxdS ', num2str(cue), ' too close to beginning, continueing out'));
                 DSskipped= DSskipped+1;
-                DSselected(cue)=nan;
                 continue
             end
 
             if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
                 disp(strcat('****firstLoxDS cue ', num2str(cue), ' too close to end, continueing out'));
                 DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
-                DSselected(cue)=nan;
                 continue %continue out of the loop and move onto the next DS cue
             end
 
@@ -608,7 +620,7 @@ for subj= 1:numel(subjects) %for each subject
 
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
-            subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSselected(cue)= DSselected(cue);
+            subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSselected= DSselected;
 
 %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
@@ -628,6 +640,15 @@ for subj= 1:numel(subjects) %for each subject
                subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxblue(1:periCueFrames+1,1,cue)= nan;
                subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSzloxpurple(1:periCueFrames+1,1,cue)= nan;
            end
+           
+           %save first Lox data 
+                if ~isnan(DSselected(cue))
+                  subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(cue,1)= firstLox;
+                  subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLoxind(cue,1)= firstLoxind;%index in cut time
+                  else
+                  subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(cue,1)= nan;
+                  subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLoxind(cue,1)= nan;    
+                 end
             
         end %end DSselected loop
 
@@ -655,6 +676,8 @@ for subj= 1:numel(subjects) %for each subject
 
          if currentSubj(session).trainStage < 5
              subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSselected= [];
+             subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLoxind=[];
+             subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblue= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurple= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblue= [];
@@ -668,6 +691,8 @@ for subj= 1:numel(subjects) %for each subject
                 %intialize
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSselected= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblue= [];
+                subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLoxind=[];
+                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurple= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblue= [];
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurple= [];
@@ -704,6 +729,8 @@ for subj= 1:numel(subjects) %for each subject
             
            if isnan(NSselected(cue)) %skip over trials where animal was in port at cue onset or did not make a PE during cue epoch, but save empty arrays
                
+                
+                
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxblue(1:periCueFrames+1,1,cue)= nan;
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSloxpurple(1:periCueFrames+1,1,cue)= nan;
 
@@ -720,8 +747,6 @@ for subj= 1:numel(subjects) %for each subject
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxblueMean(1:periCueFrames+1,1,cue) = nan;
                 subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurpleMean(1:periCueFrames+1,1,cue) = nan;
                 
-                subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSselected(cue)= nan;
-               
            else %if this is a selected NS
                
                  %find the minimum PE timestamp during the cue epoch (this is the 1st pe)
@@ -732,6 +757,8 @@ for subj= 1:numel(subjects) %for each subject
 
                 %get the index of this timestamp in cutTime
                 firstLoxind= find(cutTime==firstLox);
+                 
+                
                 
             %define the frames (datapoints) around each cue to analyze
             preEventTime = firstLoxind-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
@@ -740,14 +767,12 @@ for subj= 1:numel(subjects) %for each subject
             if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
                 disp(strcat('****firstLoxNS ', num2str(cue), ' too close to beginning, continueing out'));
                 NSskipped= NSskipped+1;
-                NSselected(cue)=nan;
             continue
             end
 
             if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
             disp(strcat('****firstLoxDS cue ', num2str(cue), ' too close to end, continueing out'));
             NSskipped= NSskipped+1;  %iterate the counter for skipped DS cues
-            NSselected(cue)= nan;
             continue %continue out of the loop and move onto the next DS cue
             end
 
@@ -764,7 +789,7 @@ for subj= 1:numel(subjects) %for each subject
 
             %save all of the following data in the subjDataAnalyzed struct under the periNS field
 
-            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSselected(cue)= NSselected(cue);
+            subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSselected= NSselected;
 
 %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
@@ -776,8 +801,17 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).periNSlox.NSzloxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
  
            end
-       
-       end %end NSselected loop
+           
+           %save
+                if ~isnan(NSselected(cue))
+                  subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(cue,1)= firstLox;
+                  subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLoxind(cue,1)= firstLoxind;%index in cut time
+                elseif isnan(NSselected(cue))
+                  subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(cue,1)= nan;
+                  subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLoxind(cue,1)= NaN;    
+                end
+                
+       end %end DSselected loop
        end %end NS conditional
        
                  %get the mean response to the NS for this session

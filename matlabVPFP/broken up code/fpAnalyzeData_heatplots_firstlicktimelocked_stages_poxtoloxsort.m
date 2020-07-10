@@ -785,7 +785,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
                end %end Cond all late stages
     end %end session loop
     
-    %Sort PE latencies and retrieve an index of the sorted order that
+    %Sort first timestamp of first PE to Lick latencies and retrieve an index of the sorted order that
     %we'll use to sort the photometry data and other behavioralevents(licks)
     
     %cond a

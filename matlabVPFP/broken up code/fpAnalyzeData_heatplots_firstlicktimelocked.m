@@ -423,7 +423,7 @@ allRats.subjTrialNSlox=[];
     timeLock =[-preCueFrames:postCueFrames]/fs;% [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
     heatDSzblueMeanalllox= imagesc(timeLock,subjTrial,allRats.grandDSzloxblue);
-    title(' All rats avg blue z score response to DS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    title(' All rats avg blue z score response to Frist Lick after DS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from First Lick');
     ylabel('training day');
     set(gca, 'ytick', subjTrial); %label trials appropriately
@@ -438,7 +438,7 @@ allRats.subjTrialNSlox=[];
     subplot(2,2,3);
     heatDSzpurpleMeanalllox= imagesc(timeLock,subjTrial,allRats.grandDSzloxpurple); 
 
-    title(' All rats avg purple z score response to DS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
+    title(' All rats avg purple z score response to First Lick after DS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from First Lick');
     ylabel('training day');
 
@@ -465,7 +465,7 @@ allRats.subjTrialNSlox=[];
     timeLock = [-preCueFrames:postCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
 
     heatNSzblueMeanalllox= imagesc(timeLock,subjTrial,allRats.grandNSzloxblue, 'AlphaData', ~isnan(allRats.grandNSzloxpurple));
-    title(' All rats avg blue z score response to NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    title(' All rats avg blue z score response to First Lick after NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from First Lick');
     ylabel('training day');
     set(gca, 'ytick', subjTrial); %label trials appropriately
@@ -480,7 +480,7 @@ allRats.subjTrialNSlox=[];
     subplot(2,2,4);
     heatNSzpurpleMeanalllox= imagesc(timeLock,subjTrial,allRats.grandNSzloxpurple, 'AlphaData', ~isnan(allRats.grandNSzloxpurple)); 
 
-    title(' All rats avg purple z score response to NS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
+    title(' All rats avg purple z score response to First Lick after NS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from First Lick');
     ylabel('training day');
 
@@ -511,7 +511,6 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         if session==1 %for first session, initialize 
             currentSubj(1).DSzloxblueAllTrials= squeeze(currentSubj(session).periDSlox.DSzloxblue); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
             currentSubj(1).DSzloxpurpleAllTrials= squeeze(currentSubj(session).periDSlox.DSzloxpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-            
             currentSubj(1).NSzloxblueAllTrials= squeeze(currentSubj(session).periNSlox.NSzloxblue); 
             currentSubj(1).NSzloxpurpleAllTrials= squeeze(currentSubj(session).periNSlox.NSzloxpurple);
         else %add subsequent sessions using cat()
@@ -531,7 +530,10 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     currentSubj(1).NSzloxpurpleAllTrials= currentSubj(1).NSzloxpurpleAllTrials';
       
     
-    %remove nan trials (NSzpox arrays retain nan values bc of the 3d structure)
+    %remove nan trials 
+    currentSubj(1).DSzloxblueAllTrials= currentSubj(1).DSzloxblueAllTrials(all(~isnan(currentSubj(1).DSzloxblueAllTrials),2),:); 
+    currentSubj(1).DSzloxpurpleAllTrials= currentSubj(1).DSzloxpurpleAllTrials(all(~isnan(currentSubj(1).DSzloxpurpleAllTrials),2),:); 
+
     currentSubj(1).NSzloxblueAllTrials= currentSubj(1).NSzloxblueAllTrials(all(~isnan(currentSubj(1).NSzloxblueAllTrials),2),:); 
     currentSubj(1).NSzloxpurpleAllTrials= currentSubj(1).NSzloxpurpleAllTrials(all(~isnan(currentSubj(1).NSzloxpurpleAllTrials),2),:); 
 
@@ -608,7 +610,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     subplot(2,2,1); %subplot for shared colorbar
     
     heatDSzloxblueAllTrials= imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzloxblueAllTrials);
-    title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding first PE in DS epoch')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding first Lick in DS epoch')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
     xlabel('seconds from First Lick');
     ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
 %     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
@@ -623,7 +625,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     subplot(2,2,3);
     heatDSzloxpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzloxpurpleAllTrials); 
 
-    title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding first PE in DS epoch')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+    title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding first Lick in DS epoch')) %'(n= ', num2str(unique(trialDSnum)),')')); 
     xlabel('seconds from First Lick');
     ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
 
@@ -645,7 +647,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         subplot(2,2,2); %subplot for shared colorbar
 
         heatNSzloxblueAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzloxblueAllTrials);
-        title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding first PE in NS epoch ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+        title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding first Lick in NS epoch ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
         xlabel('seconds from First Lick');
         ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNScount(end)), ')'));
     %     set(gca, 'ytick', currentSubj(1).totalNScount); %label trials appropriately
@@ -660,7 +662,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         subplot(2,2,4);
         heatNSzloxpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzloxpurpleAllTrials); 
 
-        title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding first PE in NS epoch ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+        title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding first Lick in NS epoch ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
         xlabel('seconds from First Lick ');
         ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNScount(end)), ')'));
 
@@ -983,6 +985,314 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
       scatter(-NSloxrelpoxAllTrials,currentSubj(1).totalNSloxcount', 'm.');
    end
  saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periLOXZ_AllTrials_latencysorted','.fig')); %save the current figure in fig format
+    figureCount= figureCount+1;
+   
+end %end subject loop
+
+
+%% POX TO LOX SORTED HEAT PLOT OF RESPONSE TO EVERY INDIVIDUAL CUE PRESENTATION
+
+%Same as before, but now sorted by PE latency
+
+%we'll pull from the subjDataAnalyzed struct to make our heatplots
+
+for subj= 1:numel(subjectsAnalyzed) %for each subject
+currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+
+ 
+        %initialize arrays for convenience
+        currentSubj(1).NSzloxblueAllTrials= [];
+        currentSubj(1).NSzloxpurpleAllTrials= [];
+        currentSubj(1).NSloxpeLatencyAllTrials= [];
+        currentSubj(1).NSloxrelpoxAllTrials=[]; 
+        
+    for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+        clear NSselected
+        
+        %We can only include trials that have a PE latency, so we need to
+        %selectively extract these data first
+        
+            %get the DS cues
+        DSselected= currentSubj(session).periDSlox.DSselected;  % all the DS cues
+
+        %First, let's exclude trials where animal was already in port
+        %to do so, find indices of subjDataAnalyzed.behavior.inPortDS that
+        %have a non-nan value and use these to exclude DS trials from this
+        %analysis (we'll make them nan)
+        
+        
+        %lets convert this to an index of trials with a valid value 
+        DSselected= find(~isnan(DSselected));
+        
+            
+        %Repeat above for NS 
+        if ~isempty(currentSubj(session).periNSlox.NSselected)
+             NSselected= currentSubj(session).periNSlox.NSselected;  
+
+            
+            %lets convert this to an index of trials with a valid value 
+            NSselected= find(~isnan(NSselected));
+        end %end NS conditional       
+       
+        
+        
+        %collect all z score responses to every single DS across all sessions
+        %we'll use DSselected and NSselected as indices to pull only data
+        %from trials with port entries
+        if session==1 %for first session, initialize 
+            
+    
+            
+           currentSubj(1).DSzloxblueAllTrials= squeeze(currentSubj(session).periDSlox.DSzloxblue(:,:,DSselected)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+           currentSubj(1).DSzloxpurpleAllTrials= squeeze(currentSubj(session).periDSlox.DSzloxpurple(:,:,DSselected)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
+           currentSubj(1).DSloxpeLatencyAllTrials= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
+           currentSubj(1).DSloxrelpoxAllTrials=currentSubj(session).behavior.loxDSpoxRel(DSselected);% utilize time between PE and licks to plot cue on set and PE
+           if ~isempty(currentSubj(session).periNSlox.NSselected) %if there's valid NS data
+                currentSubj(1).NSzloxblueAllTrials= squeeze(currentSubj(session).periNSlox.NSzloxblue(:,:,NSselected)); 
+                currentSubj(1).NSzloxpurpleAllTrials= squeeze(currentSubj(session).periNSlox.NSzloxpurple(:,:,NSselected));
+                currentSubj(1).NSloxpeLatencyAllTrials= currentSubj(session).behavior.NSpeLatency(NSselected);
+                currentSubj(1).NSloxrelpoxAllTrials=currentSubj(session).behavior.loxNSpoxRel(NSselected);
+
+           else
+               continue %continue if no NS data
+           end
+        else %add subsequent sessions using cat()
+            currentSubj(1).DSzloxblueAllTrials = cat(2, currentSubj.DSzloxblueAllTrials, (squeeze(currentSubj(session).periDSlox.DSzloxblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+            currentSubj(1).DSzloxpurpleAllTrials = cat(2, currentSubj.DSzloxpurpleAllTrials, (squeeze(currentSubj(session).periDSlox.DSzloxpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+            currentSubj(1).DSloxpeLatencyAllTrials = cat(2,currentSubj(1).DSloxpeLatencyAllTrials,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
+            currentSubj(1).DSloxrelpoxAllTrials=cat(2,currentSubj(1).DSloxrelpoxAllTrials,currentSubj(session).behavior.loxDSpoxRel(DSselected));
+            
+            
+            if ~isempty(currentSubj(session).periNSlox.NSselected)
+                currentSubj(1).NSzloxblueAllTrials = cat(2, currentSubj.NSzloxblueAllTrials, (squeeze(currentSubj(session).periNSlox.NSzloxblue(:,:,NSselected)))); 
+                currentSubj(1).NSzloxpurpleAllTrials = cat(2, currentSubj.NSzloxpurpleAllTrials, (squeeze(currentSubj(session).periNSlox.NSzloxpurple(:,:,NSselected)))); 
+                currentSubj(1).NSloxpeLatencyAllTrials = cat(2,currentSubj(1).NSloxpeLatencyAllTrials,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+                currentSubj(1).NSloxrelpoxAllTrials=cat(2,currentSubj(1).NSloxrelpoxAllTrials,currentSubj(session).behavior.loxNSpoxRel(NSselected));
+            
+            else
+                continue %continue if nos NS data
+            end
+        end        
+    end %end session loop
+    
+    
+  
+    % get first timestamp of first lick relative to PE for plotting cue
+    % onset and PE
+    %initialize
+    DSloxrelpoxAllTrials=[];
+    NSloxrelpoxAllTrials=[];
+    for trial=1:numel(currentSubj(1).DSloxrelpoxAllTrials)
+    DSloxrelpoxAllTrials(1,trial)= currentSubj(1).DSloxrelpoxAllTrials{1,trial}(1,1);
+    end
+    
+    for trial=1:numel(currentSubj(1).NSloxrelpoxAllTrials)
+    NSloxrelpoxAllTrials(1,trial)=currentSubj(1).NSloxrelpoxAllTrials{1,trial}(1,1);
+    end
+    
+    %Sort PE to First Lick latencies and retrieve an index of the sorted order that
+    %we'll use to sort the photometry data
+    [DSloxrelpoxAllTrialsSorted,DSsortInd] = sort(DSloxrelpoxAllTrials); 
+
+    [NSloxrelpoxAllTrialsSorted,NSsortInd] = sort(NSloxrelpoxAllTrials);
+    
+    %Sort Cue to PE latencies 
+    DSloxpeLatency= currentSubj(1).DSloxpeLatencyAllTrials(:,DSsortInd);
+    NSloxpeLatency= currentSubj(1).NSloxpeLatencyAllTrials(:,NSsortInd);
+    
+    
+    %Sort all trials by PE latency
+    currentSubj(1).DSzloxblueAllTrials= currentSubj(1).DSzloxblueAllTrials(:,DSsortInd);
+    currentSubj(1).DSzloxpurpleAllTrials= currentSubj(1).DSzloxpurpleAllTrials(:,DSsortInd);
+    currentSubj(1).NSzloxblueAllTrials = currentSubj(1).NSzloxblueAllTrials(:,NSsortInd);
+    currentSubj(1).NSzloxpurpleAllTrials= currentSubj(1).NSzloxpurpleAllTrials(:,NSsortInd);
+    
+    %Transpose these data for readability
+    currentSubj(1).DSzloxblueAllTrials= currentSubj(1).DSzloxblueAllTrials';
+    currentSubj(1).DSzloxpurpleAllTrials= currentSubj(1).DSzloxpurpleAllTrials';    
+    currentSubj(1).NSzloxblueAllTrials= currentSubj(1).NSzloxblueAllTrials';
+    currentSubj(1).NSzloxpurpleAllTrials= currentSubj(1).NSzloxpurpleAllTrials';
+
+    %get a trial count to use for the heatplot ytick
+    currentSubj(1).totalDSloxcount= 1:size(currentSubj(1).DSzloxblueAllTrials,1); 
+    currentSubj(1).totalNSloxcount= 1:size(currentSubj(1).NSzloxblueAllTrials,1);
+    
+    
+    %TODO: split up yticks by session (this would show any clear differences between days)
+    
+     %Color axes   
+     
+     %First, we'll want to establish boundaries for our colormaps based on
+     %the std of the z score response. We want to have equidistant
+     %color axis max and min so that 0 sits directly in the middle
+     
+     %TODO: should this be a pooled std calculation (pooled blue & purple)?
+     
+     %define DS color axes
+     
+     %get the avg std in the blue and purple z score responses to all cues,
+     %get absolute value and then multiply this by some factor to define a color axis max and min
+     
+     stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
+     
+     topDSzloxblue= stdFactor*abs(mean((std(currentSubj(1).DSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzloxpurple= stdFactor*abs(mean((std(currentSubj(1).DSzloxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+
+     bottomDSzloxblue = -stdFactor*abs(mean((std(currentSubj(1).DSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     bottomDSzloxpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzloxpurpleAllTrials, 0, 2))));
+     
+     %now choose the most extreme of these two (between blue and
+     %purple)to represent the color axis 
+     bottomAllDSlox= min(bottomDSzloxblue, bottomDSzloxpurple);
+     topAllDSlox= max(topDSzloxblue, topDSzloxpurple);
+     
+    %same, but defining color axes for NS
+    if ~isempty(currentSubj(1).NSzloxblueAllTrials) %only run this if there's NS data
+        topNSzloxblue= stdFactor*abs(mean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+        topNSzloxpurple= stdFactor*abs(mean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+
+        bottomNSzloxblue= -stdFactor*abs(mean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));
+        bottomNSzloxpurple= -stdFactor*abs(mean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));
+
+        bottomAllNSlox= min(bottomNSzloxblue, bottomNSzloxpurple);
+        topAllNSlox= max(topNSzloxblue, topNSzloxpurple);
+    end
+    
+    %Establish a shared bottom and top for shared color axis of DS & NS
+    if ~isempty(currentSubj(1).NSzloxblueAllTrials) %if there is an NS
+        bottomAllSharedlox= 2/3*(min(bottomAllDSlox, bottomAllNSlox)); %find the absolute min value
+        topAllSharedlox= 2/3*(max(topAllDSlox, topAllNSlox)); %find the absolute min value
+    else
+        bottomAllSharedlox= 2/3*(bottomAllDSlox);
+        topAllSharedlox= 2/3*(topAllDSlox);
+    end
+    
+    %save for later 
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDSlox.totalDSloxcount= currentSubj(1).totalDSloxcount;
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDSlox.bottomAllSharedlox= bottomAllSharedlox;
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(1).periDSlox.topAllSharedlox= topAllSharedlox;
+    
+    %Heatplots!  
+    
+    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+    
+    %DS z plot
+    figure(figureCount);
+    hold on;
+    
+   
+    %plot blue DS
+
+    subplot(2,2,1); %subplot for shared colorbar
+    
+    heatDSzblueAllTrialslox= imagesc(timeLock,currentSubj(1).totalDSloxcount,currentSubj(1).DSzloxblueAllTrials);
+    title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding DS trials with valid PE - sorted by POX to LOX latency (Lo-Hi)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+    xlabel('seconds from First Lick');
+    ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDSloxcount(end)), ')'));
+%     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+    caxis manual;
+    caxis([bottomAllSharedlox topAllSharedlox]); %use a shared color axis to encompass all values
+
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+
+    %   plot purple DS (subplotted for shared colorbar)
+    subplot(2,2,3);
+    heatDSzpurpleAllTrialslox= imagesc(timeLock,currentSubj(1).totalDSloxcount,currentSubj(1).DSzloxpurpleAllTrials); 
+
+    title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding DS trials with valid PE - sorted by POX to LOX latency (Lo-Hi) ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+    xlabel('seconds from First Lick');
+    ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDSloxcount(end)), ')'));
+
+%     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+
+    caxis manual;
+    caxis([bottomAllSharedlox topAllSharedlox]); %use a shared color axis to encompass all values
+    
+    c= colorbar; %colorbar legend
+    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+%     saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
+
+    if ~isempty(currentSubj(1).NSzloxblueAllTrials) %if there is NS data
+        
+        %plot blue NS
+        subplot(2,2,2); %subplot for shared colorbar
+
+        heatNSzblueAllTrialslox= imagesc(timeLock,currentSubj(1).totalNSloxcount,currentSubj(1).NSzloxblueAllTrials);
+        title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding NS trials with valid PE - sorted by POX to LOX latency (Lo-Hi) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+        xlabel('seconds from First Lick');
+        ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNSloxcount(end)), ')'));
+    %     set(gca, 'ytick', currentSubj(1).totalNScount); %label trials appropriately
+        caxis manual;
+        caxis([bottomAllSharedlox topAllSharedlox]); %use a shared color axis to encompass all values
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+        
+        
+           %   plot purple NS (subplotted for shared colorbar)
+        subplot(2,2,4);
+        heatNSzpurpleAllTrialslox= imagesc(timeLock,currentSubj(1).totalNSloxcount,currentSubj(1).NSzloxpurpleAllTrials); 
+
+        title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding NS trials with valid PE - sorted by POX to LOX latency (Lo-Hi) ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+        xlabel('seconds from First Lick');
+        ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNSloxcount(end)), ')'));
+
+    %     set(gca, 'ytick', currentSubj(1).totalNScount); %label trials appropriately
+
+        caxis manual;
+        caxis([bottomAllSharedlox topAllSharedlox]); %use a shared color axis to encompass all values
+
+        c= colorbar; %colorbar legend
+        c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+    end   
+    
+   
+    %Overlay scatter of Cue onset (-Time from Cue to PE + - Time from PE to
+    %First Lick)
+   subplot(2,2,1) %DS blue
+   hold on
+   scatter(-DSloxpeLatency-DSloxrelpoxAllTrialsSorted,currentSubj(1).totalDSloxcount', 'k.');
+   subplot(2,2,3) %DS purple
+   hold on
+   scatter(-DSloxpeLatency-DSloxrelpoxAllTrialsSorted,currentSubj(1).totalDSloxcount', 'k.');
+   
+   if ~isempty(currentSubj(1).NSzloxblueAllTrials)
+      subplot(2,2,2) %NS blue
+      hold on
+      scatter(-NSloxpeLatency-NSloxrelpoxAllTrialsSorted,currentSubj(1).totalNSloxcount', 'k.');
+     
+      subplot(2,2,4) %NS purple
+      hold on
+      scatter(-NSloxpeLatency-NSloxrelpoxAllTrialsSorted,currentSubj(1).totalNSloxcount', 'k.');
+   end
+   
+   %Overlay scatter of PE (- Time from PE to First Lick)
+   subplot(2,2,1) %DS blue
+   hold on
+   scatter(-DSloxrelpoxAllTrialsSorted,currentSubj(1).totalDSloxcount', 'm.');
+   subplot(2,2,3) %DS purple
+   hold on
+   scatter(-DSloxrelpoxAllTrialsSorted,currentSubj(1).totalDSloxcount', 'm.');
+   
+   if ~isempty(currentSubj(1).NSzloxblueAllTrials)
+      subplot(2,2,2) %NS blue
+      hold on
+      scatter(-NSloxrelpoxAllTrialsSorted,currentSubj(1).totalNSloxcount', 'm.');
+     
+      subplot(2,2,4) %NS purple
+      hold on
+      scatter(-NSloxrelpoxAllTrialsSorted,currentSubj(1).totalNSloxcount', 'm.');
+   end
+ saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periLOXZ_AllTrials_POXtoLOXsorted','.fig')); %save the current figure in fig format
     figureCount= figureCount+1;
    
 end %end subject loop
