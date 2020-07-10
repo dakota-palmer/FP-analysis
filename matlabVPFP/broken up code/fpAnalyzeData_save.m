@@ -1,6 +1,6 @@
 %% Save the analyzed data 
 %save the subjDataAnalyzed struct for later analysis
-structpath='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP-analysis\matlabVPFP\broken up code\'
+structpath='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\'
 save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
 
 %% save data from each stage from each animal for ERT analysis
@@ -117,3 +117,76 @@ ERTData.timeLock=timeLock;
 
 %save 
 save(fullfile(ERTpath,strcat(experimentName,'-', 'ERTData')), 'ERTData');
+
+%% Save variables to input into Parker encoding model
+
+% Here, only data from the day each animal reached criteria will be saved
+% to the data to input 
+
+encodinginputpath='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\Parker encoding model\Richard_data_to_input\';
+data_to_input_GADVPFP=struct();
+subj=[];
+session=[];
+
+for subj=1:numel(subjects);
+   for session = 1:numel(subjData.(subjects{subj}));
+       if subjData.(subjectsAnalyzed{subj})(session).box == 1
+           if subjData.(subjects{subj})(session).Acriteria==1  %if the animal reached criteria, add this data to the struct
+           fieldname=strcat('rat',num2str(subj));
+           %DS data
+           data_to_input_GADVPFP.output(subj).DSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DS(:)';
+           data_to_input_GADVPFP.output(subj).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
+           data_to_input_GADVPFP.output(subj).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
+           
+          %NS data- TODO: NSpox and NSlox cut off the nan's at the end of
+          %the vectors, but nans exist at the end of the vectors shorter
+          %than 30 to fill in the missing values to make the vector length
+          %30
+           data_to_input_GADVPFP.output(subj).NSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NS(:)';
+           data_to_input_GADVPFP.output(subj).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
+           data_to_input_GADVPFP.output(subj).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
+      
+           %g_camp_405
+           data_to_input_GADVPFP.g_output(subj).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
+          
+           %g_camp_465
+           data_to_input_GADVPFP.g_output(subj).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+           
+           %sampling rate
+            data_to_input_GADVPFP.g_output(subj).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+           
+           
+           end
+       
+       elseif subjData.(subjectsAnalyzed{subj})(session).box == 2
+           if subjData.(subjects{subj})(session).Bcriteria==1  
+           fieldname=strcat('rat',num2str(subj));
+           %DS data
+           data_to_input_GADVPFP.output(subj).DSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DS(:)';
+           data_to_input_GADVPFP.output(subj).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
+           data_to_input_GADVPFP.output(subj).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
+           
+          %NS data- TODO: NSpox and NSlox cut off the nan's at the end of
+          %the vectors, but nans exist at the end of the vectors shorter
+          %than 30 to fill in the missing values to make the vector length
+          %30
+           data_to_input_GADVPFP.output(subj).NSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NS(:)';
+           data_to_input_GADVPFP.output(subj).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
+           data_to_input_GADVPFP.output(subj).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
+      
+           %g_camp_405
+           data_to_input_GADVPFP.g_output(subj).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
+          
+           %g_camp_465
+           data_to_input_GADVPFP.g_output(subj).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+           
+           %sampling rate
+            data_to_input_GADVPFP.g_output(subj).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+            
+           end
+       end
+   end
+end
+
+%save 
+save(fullfile(encodinginputpath,strcat(experimentName,'-', 'data_to_input_GADVPFP')), 'data_to_input_GADVPFP');
