@@ -9,7 +9,7 @@
 
 %% ~~~Inferential stats (T-Test & Bar Graph)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-%% T-test of data within the 0.5-1 sec time bin
+%% Plot data within the 0.5-1 sec time bin
 % here I want to average the z-score of every trial in stage 5,6,7,8 within
 % the time frame of 0.5 sec to 1 sec ( the time of which we presume a cue
 % response is occurring) for  every animal.  Thus, every animal has one
