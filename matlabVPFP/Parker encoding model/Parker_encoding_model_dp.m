@@ -25,7 +25,7 @@ for neuron=1:numel(neurons)
     time_back_orig=2;
     time_forward_orig=6;
     
-    type1= 'spline';  %'spline','time_shift'
+    type1= 'time_shift';  %'spline','time_shift'
     
     shift_con=1;   %Should we shift the stimulus events so they start at 0?
     
@@ -226,7 +226,7 @@ for neuron=1:numel(neurons)
     %kernels using this equation
     
     %if in spline mode, use eq 4 from 2019 preprint
-    %if in time shift mode, simply use regression coefficients as kernel
+    %if in time shift mode, simply use regression coefficients as kernel (I think that's what they did in 2016 paper)
         
     k= con; %the number of event types
     
@@ -244,30 +244,27 @@ for neuron=1:numel(neurons)
 
            sumTerm= []; %clear between event types
                
-           %something is off about this equation- confused about 'ts' vs spline
-           %basis sets here
-           for ts= 1:numel(b)/k  %loop through ts; using 'ts' for each timestamp instead of 'i' in formula
+           %summation loop over all degrees of freedom (Nsp) of each spline basis
+           %set; on each iteration take product of Bjk * Sj(ts) ; sum the
+           %results
+           for ts= 1:size(basis_set,1)  %loop through ts; using 'ts' for each timestamp instead of 'i' in formula
                for j= 1:size(basis_set,2) %loop over each df of spline basis function
-                   sumTerm(ts,j)= b(splineThisEvent(j))*basis_set(ts,j);
+                   sumTerm(ts,j)= b(splineThisEvent(j))*basis_set(ts,j); %save data to be summed at end of loop
                end
-               kernel(ts,eventType)= sum(sum(sumTerm,1));  %kernel with row=ts (or spline set) ; column=event type           
            end
+          kernel(:,eventType)= (sum(sumTerm,2));  %kernel with row=ts (or spline set) ; column=event type           
         end
         
         %visualize
         timeLock= linspace(0,size(kernel,1)/g_output.samp_rate, size(kernel,1)); %x axis in s
 
-        figure; 
+        figure; hold on;
         title('kernels (spline)');
         plot(timeLock,kernel);
+        ylabel('regression coefficient b?');
+        xlabel('time (s)');
         legend(cons);
 
-%         figure; %not useful- will need to go trial by trial and shift by
-%         event timestamps in order to produce modeled GCaMP signal
-%         hold on;
-%         title('linear sum kernels (spline)');
-%         plot(timeLock,sum(kernel,2));
-        
     elseif strcmp(type1, 'time_shift')==1
             %if in timeshift mode, references to 'ts' below are timestamps
         for eventType = 1:k
@@ -295,12 +292,6 @@ for neuron=1:numel(neurons)
         xlabel('time (s)');
         plot(timeLock,kernel);
         legend(cons);
-
-%         figure; %not useful- will need to go trial by trial and shift by
-%         event timestamps in order to produce modeled GCaMP signal%         
-%         hold on;
-%         title('linear sum kernels (time shift)');
-%         plot(timeLock,sum(kernel,2));
 
     end
     
