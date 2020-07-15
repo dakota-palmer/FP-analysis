@@ -124,69 +124,91 @@ save(fullfile(ERTpath,strcat(experimentName,'-', 'ERTData')), 'ERTData');
 % to the data to input 
 
 encodinginputpath='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\Parker encoding model\Richard_data_to_input\';
-data_to_input_GADVPFP=struct();
+
 subj=[];
 session=[];
+data_to_input_GADVPFP=struct(); 
+   
 
 for subj=1:numel(subjects);
-   for session = 1:numel(subjData.(subjects{subj}));
+    fieldname=string(subjects(subj));
+    x=0;
+    for session = 1:numel(subjData.(subjects{subj}));
        if subjData.(subjectsAnalyzed{subj})(session).box == 1
            if subjData.(subjects{subj})(session).Acriteria==1  %if the animal reached criteria, add this data to the struct
-           fieldname=strcat('rat',num2str(subj));
+            x=1;
+               
            %DS data
-           data_to_input_GADVPFP.output(subj).DSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DS(:)';
-           data_to_input_GADVPFP.output(subj).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
-           data_to_input_GADVPFP.output(subj).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
+           data_to_input_GADVPFP.output(1).DSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DS(:)';
+           data_to_input_GADVPFP.output(1).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
+           data_to_input_GADVPFP.output(1).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
            
           %NS data- TODO: NSpox and NSlox cut off the nan's at the end of
           %the vectors, but nans exist at the end of the vectors shorter
           %than 30 to fill in the missing values to make the vector length
           %30
-           data_to_input_GADVPFP.output(subj).NSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NS(:)';
-           data_to_input_GADVPFP.output(subj).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
-           data_to_input_GADVPFP.output(subj).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
+           data_to_input_GADVPFP.output(1).NSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NS(:)';
+           data_to_input_GADVPFP.output(1).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
+           data_to_input_GADVPFP.output(1).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
       
-           %g_camp_405
-           data_to_input_GADVPFP.g_output(subj).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
-          
            %g_camp_465
-           data_to_input_GADVPFP.g_output(subj).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+           data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
+           
+           %moving median g_camp_465
+           data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff';
+           
+           %g_camp_405
+           data_to_input_GADVPFP.g_output(1).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+           
+           %moving median g_camp_405
+           data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff';
            
            %sampling rate
-            data_to_input_GADVPFP.g_output(subj).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+            data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
            
            
            end
        
        elseif subjData.(subjectsAnalyzed{subj})(session).box == 2
            if subjData.(subjects{subj})(session).Bcriteria==1  
-           fieldname=strcat('rat',num2str(subj));
+           x=1;
            %DS data
-           data_to_input_GADVPFP.output(subj).DSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DS(:)';
-           data_to_input_GADVPFP.output(subj).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
-           data_to_input_GADVPFP.output(subj).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
+           data_to_input_GADVPFP.output(1).DSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DS(:)';
+           data_to_input_GADVPFP.output(1).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
+           data_to_input_GADVPFP.output(1).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
            
           %NS data- TODO: NSpox and NSlox cut off the nan's at the end of
           %the vectors, but nans exist at the end of the vectors shorter
           %than 30 to fill in the missing values to make the vector length
           %30
-           data_to_input_GADVPFP.output(subj).NSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NS(:)';
-           data_to_input_GADVPFP.output(subj).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
-           data_to_input_GADVPFP.output(subj).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
-      
-           %g_camp_405
-           data_to_input_GADVPFP.g_output(subj).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
-          
+           data_to_input_GADVPFP.output(1).NSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NS(:)';
+           data_to_input_GADVPFP.output(1).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
+           data_to_input_GADVPFP.output(1).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
+           
            %g_camp_465
-           data_to_input_GADVPFP.g_output(subj).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+           data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
+           
+           %moving median g_camp_465
+           data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff';
+           
+           %g_camp_405
+           data_to_input_GADVPFP.g_output(1).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+           
+           %moving median g_camp_405
+           data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff';
            
            %sampling rate
-            data_to_input_GADVPFP.g_output(subj).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+            data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
             
            end
        end
-   end
-end
+    end
 
+ 
+if x==1
 %save 
-save(fullfile(encodinginputpath,strcat(experimentName,'-', 'data_to_input_GADVPFP')), 'data_to_input_GADVPFP');
+save(fullfile(encodinginputpath,strcat(experimentName,'_',fieldname,'_', 'data_to_input_GADVPFP')), 'data_to_input_GADVPFP');
+end 
+
+data_to_input_GADVPFP=struct();
+end
