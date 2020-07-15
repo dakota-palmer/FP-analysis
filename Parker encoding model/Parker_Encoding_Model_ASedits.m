@@ -19,7 +19,7 @@ end
     
 
 condition = 'Richard_data_to_input';
-neurons = 1%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
+neurons = [1 2 3 4 5 ];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
 
 for neuron=1:numel(neurons)
@@ -64,24 +64,30 @@ for neuron=1:numel(neurons)
     %'output' & 'g_output' are actually loaded at the beginning of this
     %script -- dp
     % converting into hertz for every event occuring during recording
-    DSTimes=data_to_input_GADVPFP.output(neuron).DSonset.* data_to_input_GADVPFP.g_output(neuron).samp_rate;
+    DSTimes=data_to_input_GADVPFP.output(1).DSonset.* data_to_input_GADVPFP.g_output(1).samp_rate;
     
-    DSPETimes=data_to_input_GADVPFP.output(neuron).DSpox.*data_to_input_GADVPFP.g_output(neuron).samp_rate;
+    DSPETimes=data_to_input_GADVPFP.output(1).DSpox.*data_to_input_GADVPFP.g_output(1).samp_rate;
     
-    DSLickTimes=data_to_input_GADVPFP.output(neuron).DSlox.*data_to_input_GADVPFP.g_output(neuron).samp_rate;
+    DSLickTimes=data_to_input_GADVPFP.output(1).DSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
     
-    NSTimes=data_to_input_GADVPFP.output(neuron).NSonset.* data_to_input_GADVPFP.g_output(neuron).samp_rate;
+    NSTimes=data_to_input_GADVPFP.output(1).NSonset.* data_to_input_GADVPFP.g_output(1).samp_rate;
     
-    NSPETimes=data_to_input_GADVPFP.output(neuron).NSpox.*data_to_input_GADVPFP.g_output(neuron).samp_rate;
+    NSPETimes=data_to_input_GADVPFP.output(1).NSpox.*data_to_input_GADVPFP.g_output(1).samp_rate;
     
-    NSLickTimes=data_to_input_GADVPFP.output(neuron).NSlox.*data_to_input_GADVPFP.g_output(neuron).samp_rate;
+    NSLickTimes=data_to_input_GADVPFP.output(1).NSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
+    
+    %movmean g_camp
+    
+    gcamp_y_blue=data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue;
+    gcamp_y_purple=data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple;
     
     %Normalize gcamp signal by the max -- COMMENT OUT WHEN NOT NEEDED
     % gcamp_y=g_output.gcamp;
     % gcamp_y=g_output.gcamp./max(g_output.gcamp);
-    gcamp_y_blue=(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.blue-mean(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.blue))./std(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.blue); fprintf('blue Z-scored \n')
-    gcamp_y_purple=(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.purple-mean(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.purple))./std(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.purple); fprintf('purple Z-scored \n')
     
+%     gcamp_y_blue=(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.blue-mean(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.blue))./std(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.blue); fprintf('blue Z-scored \n')
+%     gcamp_y_purple=(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.purple-mean(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.purple))./std(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.purple); fprintf('purple Z-scored \n')
+%     
     % %Choice/ outcome modulation for initial submission
     % cons={'NPTimes','LeverPresent','LeverTimes','LeverTimesI'...
     %     'CS','CSRew'};
@@ -154,8 +160,8 @@ for neuron=1:numel(neurons)
             %NORMAL REGRESSION
         elseif strcmp(type1,'time_shift')==1
             x_con=[];
-            shift_back=data_to_input_GADVPFP.g_output(neuron).samp_rate*time_back;   %how many points to shift forward and backwards in Hz
-            shift_forward=data_to_input_GADVPFP.g_output(neuron).samp_rate*time_forward;
+            shift_back=data_to_input_GADVPFP.g_output(1).samp_rate*time_back;   %how many points to shift forward and backwards in Hz
+            shift_forward=data_to_input_GADVPFP.g_output(1).samp_rate*time_forward;
             %             gcamp_temp=gcamp_y(shift_forward+1:end-shift_back);
             gcamp_temp=gcamp_y_blue;
             
@@ -184,13 +190,104 @@ for neuron=1:numel(neurons)
     b=[stats.p.Intercept(stats.p.IndexMinMSE) ; stats.beta(:,stats.p.IndexMinMSE)];  %selects betas based on lambda
     
     %Save file
-    long_name=strcat('subject_',string(neuron),'_',char(files(neurons(neuron))));
+    long_name=strcat('lasso','_',char(files(neurons(neuron))));
     dot_stop=find(long_name=='.');
     save_name=long_name;
-    samp_rate=data_to_input_GADVPFP.g_output(neuron).samp_rate;
+    samp_rate=data_to_input_GADVPFP.g_output(1).samp_rate;
     
     cd(save_folder)
     save(save_name,'b');
     cd(curr_dir)
     toc
-end
+
+%% Visualize
+        
+    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Kernel calculation & vis~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    %dp trying to implement equation 4 from 2019 preprint
+    %above code calculates b, so we should be able to calculate event
+    %kernels using this equation
+    
+    %if in spline mode, use eq 4 from 2019 preprint
+    %if in time shift mode, simply use regression coefficients as kernel (I think that's what they did in 2016 paper)
+        
+    k= con; %the number of event types
+    
+    if strcmp(type1,'spline')==1 %if in spline mode
+         % Bjk = regression coeff for jth spline basis fxn and kth behavioral event
+         % Sj= jth spline basis fxn at time point i with length of 81 time bins
+        for eventType = 1:k
+
+             %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
+              if eventType==1
+                splineThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
+              else
+                splineThisEvent= splineThisEvent(end)+1:splineThisEvent(end)+(numel(b)/k); 
+              end
+
+           sumTerm= []; %clear between event types
+               
+           %summation loop over all degrees of freedom (Nsp) of each spline basis
+           %set; on each iteration take product of Bjk * Sj(ts) ; sum the
+           %results
+           for ts= 1:size(basis_set,1)  %loop through ts; using 'ts' for each timestamp instead of 'i' in formula
+               for j= 1:size(basis_set,2) %loop over each df of spline basis function
+                   sumTerm(ts,j)= b(splineThisEvent(j))*basis_set(ts,j); %save data to be summed at end of loop
+               end
+           end
+          kernel(:,eventType)= (sum(sumTerm,2));  %kernel with row=ts (or spline set) ; column=event type           
+        end
+        
+        %visualize
+        timeLock= linspace(0,size(kernel,1)/g_output.samp_rate, size(kernel,1)); %x axis in s
+
+        figure; hold on;
+        title('kernels (spline)');
+        plot(timeLock,kernel);
+        ylabel('regression coefficient b?');
+        xlabel('time (s)');
+        legend(cons);
+
+    elseif strcmp(type1, 'time_shift')==1
+            %if in timeshift mode, references to 'ts' below are timestamps
+        for eventType = 1:k
+             %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
+              if eventType==1
+                tsThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
+              else
+                tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
+              end
+
+           sumTerm= []; %clear between event types
+
+           for ts= 1:(numel(b)/k) %loop through ts; using 'ts' for each timestamp instead of 'i'
+%                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
+                kernel(ts,eventType) = b(tsThisEvent(ts));
+           end
+        end
+        
+        %0:8 sec
+        %visualize
+        timeLock= linspace(0,size(kernel,1)/data_to_input_GADVPFP.g_output(1).samp_rate, size(kernel,1)); %x axis in s
+
+        figure; hold on;
+        title('kernels (time shift)');
+        ylabel('regression coefficient b');
+        xlabel('time (s)');
+        plot(timeLock,kernel(:,1));
+        legend(cons(1));
+        
+         %-2:6 sec
+        
+            %visualize
+        timeLock= linspace(-2,size(kernel,1)/data_to_input_GADVPFP.g_output(1).samp_rate, size(kernel,1)); %x axis in s
+
+        figure; hold on;
+        title('kernels (time shift)');
+        ylabel('regression coefficient b');
+        xlabel('time (s)');
+        plot(timeLock,kernel(:,2:3));
+        legend(cons(2:3));
+        
+        
+    end
+    end
