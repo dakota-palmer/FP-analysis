@@ -18,6 +18,29 @@ savePath= strcat(pwd,'\data_to_input\');
 
 subjects= fieldnames(subjDataAnalyzed);
 
+%% Exclude data
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    excludedSessions= [];
+    for session= 1:numel(currentSubj)
+        if currentSubj(session).trainStage ~= 7 %only include stage 7 days
+           excludedSessions= cat(2,excludedSessions,session);
+        end
+    end%end session loop
+   subjDataAnalyzed.(subjects{subj})(excludedSessions)= []; 
+   
+   currentSubj= subjDataAnalyzed.(subjects{subj});
+   excludedSessions= [];
+   for session= 1:numel(currentSubj) %loop through again and get rid of all except final stage 7 day
+       if session<numel(currentSubj)
+           excludedSessions= cat(2,excludedSessions,session);
+       end
+   end%end session loop 2
+   
+   subjDataAnalyzed.(subjects{subj})(excludedSessions)= []; 
+   
+end %end subj loop
+
 %loop through each session and save a .mat of events & photometry data
 %the .mat will contain 'output' and 'g_output' structs
 for subj= 1:numel(subjects)
@@ -34,9 +57,30 @@ for subj= 1:numel(subjects)
        %fill output struct with task event timestamps
        output.DS= currentSubj(session).periDS.DS;
        output.NS= currentSubj(session).periNS.NS;
-       output.pox= currentSubj(session).raw.pox;
-       output.lox= currentSubj(session).raw.lox;
-       output.out= currentSubj(session).raw.out;
+
+       %        output.poxDS= currentSubj(session).behavior.poxDS; %note this would be ALL PEs during cue (not just first)
+
+       %to get only first lox & pox during cue, using cellfun
+       index= ~cellfun('isempty',currentSubj(session).behavior.poxDS); %using this index accounts for empty cells
+       output.firstPoxDS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.poxDS(index));
+       output.firstPoxDS(output.firstPoxDS==0)=nan; %replace 0s with nan
+       
+       index= ~cellfun('isempty',currentSubj(session).behavior.loxDS); %using this index accounts for empty cells
+       output.firstLoxDS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.loxDS(index));
+       output.firstLoxDS(output.firstLoxDS==0)=nan; %replace 0s with nan
+
+       index= ~cellfun('isempty',currentSubj(session).behavior.poxNS); %using this index accounts for empty cells
+       output.firstPoxNS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.poxNS(index));
+       output.firstPoxNS(output.firstPoxNS==0)=nan; %replace 0s with nan
+       
+       index= ~cellfun('isempty',currentSubj(session).behavior.loxNS); %using this index accounts for empty cells
+       output.firstLoxNS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.loxNS(index));
+       output.firstLoxNS(output.firstLoxNS==0)=nan; %replace 0s with nan
+       
+       
+%        output.pox= currentSubj(session).raw.pox;
+%        output.lox= currentSubj(session).raw.lox;
+%        output.out= currentSubj(session).raw.out;
        
        %fill g_output struct with photometry signal
        g_output.reblue= currentSubj(session).raw.reblue;

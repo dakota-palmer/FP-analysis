@@ -101,6 +101,13 @@ for neuron=1:numel(neurons)
     RewardEnterI=output.RewardEnter(output.RewardEnter~=0 & output.IpsPress==1).*g_output.samp_rate; %only reward cup entry ipsi press
     RewardEnterC=output.RewardEnter(output.RewardEnter~=0 & output.IpsPress==-1).*g_output.samp_rate; %only reward cup entry contra
     
+    %DS TASK EVENTS~~~
+%     DS= output.DS; %.*g_output.samp_rate;
+%     NS= output.NS; %.*g_output.samp_rate;
+%     
+%     pox= output.pox; %.*g_output.samp_rate; %consider breaking into rewarded/unrewarded 
+%     lox= output.lox; %.*g_output.samp_rate;
+%     out= output.lox; %.*g_output.samp_rate;
     
     %Normalize gcamp signal by the max -- COMMENT OUT WHEN NOT NEEDED
     %TODO: dp- looks like the third option here uses a simple mean and std for
@@ -144,6 +151,28 @@ for neuron=1:numel(neurons)
     event_times_mat=[];
     num_bins=numel(gcamp_y); %number of time bins
     
+    %VISUALIZING CON TIMES & CON BINNED
+    figure; 
+    subplot(2,1,1); hold on; title('con times');
+    plot(gcamp_y);
+    plot(NPTimes, ones(size(NPTimes)*1), 'k.')
+    plot(LeverPresent, ones(size(LeverPresent))*2, 'g.')
+    plot(LeverTimesI, ones(size(LeverTimesI))*3, 'c.')
+    plot(LeverTimesC, ones(size(LeverTimesC))*4, 'r.')
+    plot(CSRew, ones(size(CSRew))*5, 'm.')
+    plot(CSNoRew, ones(size(CSNoRew))*6, 'y.')
+    plot(RewardEnter, ones(size(RewardEnter))*7, 'w.')
+
+    
+    
+    legend([{'465'},cons]);
+    
+    subplot(2,1,2); hold on; title('con binned'); %FOR VISUALIZING CON_TIMES %dp
+    plot(gcamp_y);
+    conColors= {'k','g','c','r','m','y', 'w'};
+    
+    
+    
     
     for con=1:numel(cons) %for each event type (condition) included in the model
         
@@ -164,9 +193,14 @@ for neuron=1:numel(neurons)
         %Creates vector with binary indication of events (reset between event types (con))
         con_binned=zeros(1,num_bins); %create empty matrix with 0 for all timestamps
             %make =1 when event occurs
-        con_binned(int32(con_times))=1; %~~dp unclear why int32() was used here-maybe to save memory? results seem same as below
+        con_binned(int32(con_times))=1; %~~dp unclear why int32() was used here-maybe to save memory, maybe rounding? results seem same as below
 %         con_binned(con_times)=1;
         
+
+    %visualizing binary coded event times
+        plot(find(con_binned==1), ones(size(find(con_binned==1)))*con, strcat(conColors{con},'.'))      
+        
+
         if strcmp(type1,'spline')==1 %IF running in spline mode
             con_binned=circshift(con_binned,[0,-time_back*g_output.samp_rate]);
             event_times_mat=vertcat(event_times_mat,con_binned);
@@ -224,6 +258,9 @@ for neuron=1:numel(neurons)
             con_iden=[con_iden ones(1,size(x_con,2))*con]; % 1 x (num shifts * num event types) vector ; simply a label of event type (con)
         end
     end
+    
+        legend([{'465'},cons]); %for visualizing binary coded event times
+
     
     %Merges CS+ and Rew
     if max(con_iden)==7 && strcmp(cons{5},'CS')==1
