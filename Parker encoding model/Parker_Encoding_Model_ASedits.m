@@ -17,14 +17,14 @@ else
     cd ../..
 end
     
-
+figsave_folder='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\Parker encoding model\encoding_results\figs\10 Hz\15 to 5 sec move Z\15sect to 5 sec before ( no data point in average)\';
 condition = 'Richard_data_to_input';
 neurons = [1 2 3 4 5 ];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
 
 for neuron=1:numel(neurons)
     
-    clearvars -except curr_dir save_folder condition neurons neuron
+    clearvars -except curr_dir save_folder figsave_folder condition neurons neuron
     
     tic
     %how much time should you shift back (in seconds)
@@ -76,18 +76,58 @@ for neuron=1:numel(neurons)
     
     NSLickTimes=data_to_input_GADVPFP.output(1).NSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
     
-    %movmean g_camp
+    % g_camp
     
-    gcamp_y_blue=data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue;
-    gcamp_y_purple=data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple;
+    gcamp_y_blue=data_to_input_GADVPFP.g_output(1).gcamp_raw.blue;
+    gcamp_y_purple=data_to_input_GADVPFP.g_output(1).gcamp_raw.purple;
+    
+    gcamp_y_blue_baseline=rmovmean( gcamp_y_blue,150,50);
+    gcamp_y_purple_baseline=rmovmean( gcamp_y_purple,150,50);
+
+    % cutTime
+    
+    cutTime=data_to_input_GADVPFP.g_output(1).cutTime;  
     
     %Normalize gcamp signal by the max -- COMMENT OUT WHEN NOT NEEDED
     % gcamp_y=g_output.gcamp;
     % gcamp_y=g_output.gcamp./max(g_output.gcamp);
     
-%     gcamp_y_blue=(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.blue-mean(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.blue))./std(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.blue); fprintf('blue Z-scored \n')
-%     gcamp_y_purple=(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.purple-mean(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.purple))./std(data_to_input_GADVPFP.g_output(neuron).gcamp_raw.purple); fprintf('purple Z-scored \n')
+    z_blue= ( gcamp_y_blue-gcamp_y_blue_baseline)./std( gcamp_y_blue); fprintf('blue Z-scored \n') 
+    z_purple= ( gcamp_y_purple-gcamp_y_purple_baseline)./std( gcamp_y_purple); fprintf('purple Z-scored \n') 
+    
+    %remove nans
+    blue_nan=~isnan(z_blue);
+    purple_nan=~isnan(z_purple);
+    
+    z_blue= z_blue(blue_nan); 
+    z_purple= z_purple(purple_nan); 
+
+    
+    % plot z-scores
+    figure()
+    plot(cutTime(blue_nan),z_blue);
+    title('blue Z-score');
+    
+    figure()
+    plot(cutTime(purple_nan),z_purple);
+    title('purple Z-score');
+    %% Moving Z-score
 %     
+% 
+   
+%     for DS=1:size(DSTimes,2)
+%          for time=1:size(gcamp_y_blue,2)
+%             DSonset=find(cutTime<=DSTimes(1));
+%             DSonset=max(DSonset);
+%             DSonset_y=gcamp_y_blue(DSonset);
+%     Z_basline=mean(DSonset_y-10:DSonset_y);%basline to use until next DS cue
+%     gcamp_y_blue=(data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue-mean(data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue))./std(data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue); fprintf('blue Z-scored \n')
+%     gcamp_y_purple=(data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple-mean(data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple))./std(data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple); fprintf('purple Z-scored \n')
+%          end
+%     end
+    
+    
+    
     % %Choice/ outcome modulation for initial submission
     % cons={'NPTimes','LeverPresent','LeverTimes','LeverTimesI'...
     %     'CS','CSRew'};
@@ -99,7 +139,7 @@ for neuron=1:numel(neurons)
     % con_shift=[0 1 0 0 1 1 0];
     
     
-    % %Event modulation for initial submission
+    %% %Event modulation for initial submission
     cons={'DSTimes','DSPETimes','DSLickTimes'}; %...
 %         'NSTimes','NSPETimes','NSLickTimes'};
     con_shift=[1 0 0];% 0 1 1]; %stimulus events time window is 0:8s, action events it is -2:6s, this defines when to time-lock
@@ -110,7 +150,7 @@ for neuron=1:numel(neurons)
     con_iden=[];
     x_basic=[];    %No interaction terms, simply event times
     event_times_mat=[];
-    num_bins=numel(gcamp_y_blue);
+    num_bins=numel(z_blue);
     
  
     % for each event ( aka con) 
@@ -163,7 +203,7 @@ for neuron=1:numel(neurons)
             shift_back=data_to_input_GADVPFP.g_output(1).samp_rate*time_back;   %how many points to shift forward and backwards in Hz
             shift_forward=data_to_input_GADVPFP.g_output(1).samp_rate*time_forward;
             %             gcamp_temp=gcamp_y(shift_forward+1:end-shift_back);
-            gcamp_temp=gcamp_y_blue;
+            gcamp_temp=z_blue;
             
             %             for shifts = 1:shift_back+shift_forward+1
             %                 x_con=horzcat(x_con,con_binned(shift_back+shift_forward+2-shifts:end-shifts+1)')
@@ -198,7 +238,7 @@ for neuron=1:numel(neurons)
     cd(save_folder)
     save(save_name,'b');
     cd(curr_dir)
-    toc
+    
 
 %% Visualize
         
@@ -276,6 +316,12 @@ for neuron=1:numel(neurons)
         plot(timeLock,kernel(:,1));
         legend(cons(1));
         
+        gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('DSonset_',name);
+        cd(figsave_folder);
+        savefig(figsave_name);
+%         
          %-2:6 sec
         
             %visualize
@@ -287,6 +333,17 @@ for neuron=1:numel(neurons)
         xlabel('time (s)');
         plot(timeLock,kernel(:,2:3));
         legend(cons(2:3));
+        
+        gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('DSPE_',name);
+        cd(figsave_folder);
+        savefig(figsave_name);
+        cd(curr_dir);
+        
+
+toc
+        
         
         
     end
