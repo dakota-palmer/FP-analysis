@@ -88,6 +88,29 @@ for subj= 1:numel(subjects) %for each subject
     
     subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff= dffblue;
     subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff= dffpurple;
+    subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime= cutTime;
+   end %end session loop
+end %end subject loop
+
+%% Fitting and df/f 
+for subj= 1:numel(subjects) %for each subject
+   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+   for session = 1:numel(currentSubj) %for each training session this subject completed
+       
+       clear cutTime reblue repurple fit fit
+       
+       cutTime= currentSubj(session).cutTime;
+       reblue= currentSubj(session).reblue;
+       repurple= currentSubj(session).repurple;
+       
+% ControlFit (fits 2 signals together)
+       fit= controlFit(reblue, repurple);
+       subjDataAnalyzed.(subjects{subj})(session).photometry.fit= fit;
+
+% Delta F/F 
+       df = deltaFF(reblue,fit); %This is dF for boxA in %, calculated by running the deltaFF function on the resampled blue data from boxA and the fitted data from boxA
+       subjDataAnalyzed.(subjects{subj})(session).photometry.df= df;
+       
    end %end session loop
 end %end subject loop
 %% ~~~Reward identification ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
