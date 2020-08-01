@@ -137,9 +137,13 @@ for subj=1:numel(subjects);
        if subjData.(subjectsAnalyzed{subj})(session).box == 1
            if subjData.(subjects{subj})(session).Acriteria==1  %if the animal reached criteria, add this data to the struct
             x=1;
-               
+            
+           %cutTime for moving z-score
+           cutTime=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+            
            %DS data
-           data_to_input_GADVPFP.output(1).DSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DS(:)';
+           data_to_input_GADVPFP.output(1).DSTimes(:)=cutTime(subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:));
+           data_to_input_GADVPFP.output(1).DSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
            data_to_input_GADVPFP.output(1).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
            data_to_input_GADVPFP.output(1).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
            
@@ -147,7 +151,8 @@ for subj=1:numel(subjects);
           %the vectors, but nans exist at the end of the vectors shorter
           %than 30 to fill in the missing values to make the vector length
           %30
-           data_to_input_GADVPFP.output(1).NSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NS(:)';
+           data_to_input_GADVPFP.output(1).NSTimes(:)=cutTime(subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:));
+           data_to_input_GADVPFP.output(1).NSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:);
            data_to_input_GADVPFP.output(1).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
            data_to_input_GADVPFP.output(1).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
       
@@ -164,16 +169,28 @@ for subj=1:numel(subjects);
            data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff';
            
            %sampling rate
-            data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
            
+           %cutTime for moving z-score
+           data_to_input_GADVPFP.g_output(1).cutTime(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime;
            
+           %fitted signal
+           data_to_input_GADVPFP.g_output(1).fit(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.fit;
+           
+           %df/f signal
+           data_to_input_GADVPFP.g_output(1).df(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.df;
            end
        
        elseif subjData.(subjectsAnalyzed{subj})(session).box == 2
            if subjData.(subjects{subj})(session).Bcriteria==1  
            x=1;
+           
+           %cutTime for moving z-score
+           cutTime=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+           
            %DS data
-           data_to_input_GADVPFP.output(1).DSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DS(:)';
+           data_to_input_GADVPFP.output(1).DSTimes(:)=cutTime(subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:));
+           data_to_input_GADVPFP.output(1).DSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
            data_to_input_GADVPFP.output(1).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
            data_to_input_GADVPFP.output(1).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
            
@@ -181,7 +198,8 @@ for subj=1:numel(subjects);
           %the vectors, but nans exist at the end of the vectors shorter
           %than 30 to fill in the missing values to make the vector length
           %30
-           data_to_input_GADVPFP.output(1).NSonset(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NS(:)';
+           data_to_input_GADVPFP.output(1).NSTimes(:)=cutTime(subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:));
+           data_to_input_GADVPFP.output(1).NSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:);
            data_to_input_GADVPFP.output(1).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
            data_to_input_GADVPFP.output(1).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
            
@@ -200,6 +218,17 @@ for subj=1:numel(subjects);
            %sampling rate
             data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
             
+           %cutTime for moving z-score
+           data_to_input_GADVPFP.g_output(1).cutTime(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+           
+           %fitted signal
+           data_to_input_GADVPFP.g_output(1).fit(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.fit;
+           
+           %df/f signal
+           data_to_input_GADVPFP.g_output(1).df(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.df;
+           
+           
+           
            end
        end
     end
