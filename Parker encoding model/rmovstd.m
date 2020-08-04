@@ -4,7 +4,7 @@ v2=movstd(v1,[r1 0]);
 out=zeros(1,size(v1,2));
 
 for i=1:size(v1,2);
-  if i<=r2;
+  if i<=r1;
    out(1,i)=nan; 
   else
    out(1,i)=(r1*v2(i-r2))/(r1);
