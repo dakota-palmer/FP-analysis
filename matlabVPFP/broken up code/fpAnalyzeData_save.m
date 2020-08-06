@@ -146,6 +146,9 @@ for subj=1:numel(subjects);
            data_to_input_GADVPFP.output(1).DSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
            data_to_input_GADVPFP.output(1).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
            data_to_input_GADVPFP.output(1).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
+           data_to_input_GADVPFP.output(1).DSPElatencey(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
+           data_to_input_GADVPFP.output(1).inPortDS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
+           data_to_input_GADVPFP.output(1).poxDS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
            
           %NS data- TODO: NSpox and NSlox cut off the nan's at the end of
           %the vectors, but nans exist at the end of the vectors shorter
@@ -155,7 +158,9 @@ for subj=1:numel(subjects);
            data_to_input_GADVPFP.output(1).NSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:);
            data_to_input_GADVPFP.output(1).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
            data_to_input_GADVPFP.output(1).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
-      
+           data_to_input_GADVPFP.output(1).NSPElatencey(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.NSpeLatency(:);
+           data_to_input_GADVPFP.output(1).inPortNS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS;
+           data_to_input_GADVPFP.output(1).poxNS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS;
            %g_camp_465
            data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
            
@@ -193,7 +198,9 @@ for subj=1:numel(subjects);
            data_to_input_GADVPFP.output(1).DSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
            data_to_input_GADVPFP.output(1).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
            data_to_input_GADVPFP.output(1).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
-           
+           data_to_input_GADVPFP.output(1).DSPElatencey(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
+           data_to_input_GADVPFP.output(1).inPortDS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
+           data_to_input_GADVPFP.output(1).poxDS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
           %NS data- TODO: NSpox and NSlox cut off the nan's at the end of
           %the vectors, but nans exist at the end of the vectors shorter
           %than 30 to fill in the missing values to make the vector length
@@ -202,6 +209,9 @@ for subj=1:numel(subjects);
            data_to_input_GADVPFP.output(1).NSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:);
            data_to_input_GADVPFP.output(1).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
            data_to_input_GADVPFP.output(1).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
+           data_to_input_GADVPFP.output(1).NSPElatencey(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.NSpeLatency(:);
+           data_to_input_GADVPFP.output(1).inPortNS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS;
+           data_to_input_GADVPFP.output(1).poxNS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS;
            
            %g_camp_465
            data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
