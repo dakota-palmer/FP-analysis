@@ -128,7 +128,7 @@ encodinginputpath='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\
 subj=[];
 session=[];
 data_to_input_GADVPFP=struct(); 
-   
+gcamp_raw=struct();   
 
 for subj=1:numel(subjects);
     fieldname=string(subjects(subj));
@@ -136,106 +136,231 @@ for subj=1:numel(subjects);
     for session = 1:numel(subjData.(subjects{subj}));
        if subjData.(subjectsAnalyzed{subj})(session).box == 1
            if subjData.(subjects{subj})(session).Acriteria==1  %if the animal reached criteria, add this data to the struct
-            x=1;
-            
+           
+            x=1;%use for saving files and not saving subj files that do not meet criteria
+           
+            %g_camp_465
+           gcamp_raw.blue_criteria=subjData.(subjects{subj})(session).reblue'; 
+           gcamp_raw.blue_dayb4criteria=subjData.(subjects{subj})(session-1).reblue';
+           gcamp_raw.blue_2dayb4criteria=subjData.(subjects{subj})(session-2).reblue'; 
+
+           gcamp_raw_blue_cat=horzcat( gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria,gcamp_raw.blue_2dayb4criteria);
+           % use this temp array to elongate the rest of the variables with
+           % appropriate time stamps for the full concatenated signal
+           temp_gcamp_raw_blue_dayb4criteria=horzcat(gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria);
+           
            %cutTime for moving z-score
-           cutTime=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+           cutTime_criteria=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+           cutTime_dayb4criteria=subjDataAnalyzed.(subjects{subj})(session-1).photometry.cutTime + length(gcamp_raw.blue_criteria(:)); 
+           cutTime_2dayb4criteria=subjDataAnalyzed.(subjects{subj})(session-2).photometry.cutTime + length(temp_gcamp_raw_blue_dayb4criteria(:)); 
+           
+           cutTime_cat=horzcat(cutTime_criteria,cutTime_dayb4criteria,cutTime_2dayb4criteria);
+           %DS Index
+           DSonsetindex_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
+           DSonsetindex_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDS.DSonset(:)+ length(gcamp_raw.blue_criteria(:));
+           DSonsetindex_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDS.DSonset(:)+ length(temp_gcamp_raw_blue_dayb4criteria(:));
+           
+           DSonset_cat=horzcat( DSonsetindex_criteria, DSonsetindex_dayb4criteria,DSonsetindex_2dayb4criteria);
+           %DS Times
+           DSTimes_criteria(:)=cutTime_cat( DSonsetindex_criteria(:));
+           DSTimes_dayb4criteria(:)=cutTime_cat(DSonsetindex_dayb4criteria(:));
+           DSTimes_2dayb4criteria(:)=cutTime_cat(DSonsetindex_2dayb4criteria(:));
+           
+           DSTimes_cat=horzcat(DSTimes_criteria,DSTimes_dayb4criteria,DSTimes_2dayb4criteria);
+           %DS Pox
+           DSpox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
+           DSpox_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDSpox.firstPox(:)';
+           DSpox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSpox.firstPox(:)';
+           
+           DSpox_cat=horzcat(DSpox_criteria,DSpox_dayb4criteria,DSpox_2dayb4criteria);
+           %DS Lox
+           DSlox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
+           DSlox_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDSlox.firstLox(:)';
+           DSlox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSlox.firstLox(:)';
+           
+           DSlox_cat=horzcat(DSlox_criteria,DSlox_dayb4criteria,DSlox_2dayb4criteria);
+           %DS latency
+           DSPElatency_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
+           DSPElatency_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.DSpeLatency(:);
+           DSPElatency_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.DSpeLatency(:);
+
+           DSPElatency_cat=horzcat(DSPElatency_criteria,DSPElatency_dayb4criteria,DSPElatency_2dayb4criteria);
+           %inPortDS
+           inPortDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
+           inPortDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.inPortDS;
+           inPortDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.inPortDS;
+           
+           inPortDS_cat=horzcat(inPortDS_criteria,inPortDS_dayb4criteria,inPortDS_2dayb4criteria);
+           
+           %poxDS
+           poxDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
+           poxDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.poxDS;
+           poxDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.poxDS;
+           
+           poxDS_cat=horzcat(poxDS_criteria,poxDS_dayb4criteria,poxDS_2dayb4criteria);
+           
+           %DS criteria day data- save to struct
+           data_to_input_GADVPFP.output(1).DSTimes_criteria(:)=DSTimes_criteria;
+           data_to_input_GADVPFP.output(1).DSonsetindex_criteria(:)=DSonsetindex_criteria;
+           data_to_input_GADVPFP.output(1).DSpox_criteria(:)=DSpox_criteria;
+           data_to_input_GADVPFP.output(1).DSlox_criteria(:)=DSlox_criteria;
+           data_to_input_GADVPFP.output(1).DSPElatency_criteria(:)=DSPElatency_criteria;
+           data_to_input_GADVPFP.output(1).inPortDS_criteria(:)=inPortDS_criteria;
+           data_to_input_GADVPFP.output(1).poxDS_criteria(:)=poxDS_criteria;% all pox not just index of first pox
+           
+           %DS stage 5 data- 3 days concatenated- save to struct 
+           data_to_input_GADVPFP.output(1).DSTimes_cat(:)=DSTimes_cat;
+           data_to_input_GADVPFP.output(1).DSonsetindex_cat(:)=DSonset_cat;
+           data_to_input_GADVPFP.output(1).DSpox_cat(:)=DSpox_cat;
+           data_to_input_GADVPFP.output(1).DSlox_cat(:)=DSlox_cat(:)';
+           data_to_input_GADVPFP.output(1).DSPElatency_cat(:)=DSPElatency_cat;
+           data_to_input_GADVPFP.output(1).inPortDS_cat(:)=inPortDS_cat;
+           data_to_input_GADVPFP.output(1).poxDS_cat(:)= poxDS_cat;
+           
+           
+%TODO: ADD NS DATA
+%            %g_camp_465
+%            data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
+%            
+%            %moving median g_camp_465
+%            data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff';
+%            
+%            %g_camp_405
+%            data_to_input_GADVPFP.g_output(1).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+%            
+%            %moving median g_camp_405
+%            data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff';
+%                      %fitted signal
+%           data_to_input_GADVPFP.g_output(1).fit(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.fit;
+%            
+%            %df/f signal
+%            data_to_input_GADVPFP.g_output(1).df(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.df; 
             
-           %DS data
-           data_to_input_GADVPFP.output(1).DSTimes(:)=cutTime(subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:));
-           data_to_input_GADVPFP.output(1).DSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
-           data_to_input_GADVPFP.output(1).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
-           data_to_input_GADVPFP.output(1).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
-           data_to_input_GADVPFP.output(1).DSPElatencey(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
-           data_to_input_GADVPFP.output(1).inPortDS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
-           data_to_input_GADVPFP.output(1).poxDS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
-           
-          %NS data- TODO: NSpox and NSlox cut off the nan's at the end of
-          %the vectors, but nans exist at the end of the vectors shorter
-          %than 30 to fill in the missing values to make the vector length
-          %30
-           data_to_input_GADVPFP.output(1).NSTimes(:)=cutTime(subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:));
-           data_to_input_GADVPFP.output(1).NSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:);
-           data_to_input_GADVPFP.output(1).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
-           data_to_input_GADVPFP.output(1).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
-           data_to_input_GADVPFP.output(1).NSPElatencey(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.NSpeLatency(:);
-           data_to_input_GADVPFP.output(1).inPortNS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS;
-           data_to_input_GADVPFP.output(1).poxNS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS;
-           %g_camp_465
-           data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
-           
-           %moving median g_camp_465
-           data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff';
-           
-           %g_camp_405
-           data_to_input_GADVPFP.g_output(1).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
-           
-           %moving median g_camp_405
-           data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff';
-           
-           %sampling rate
+% save g.ouput data to struct
+            data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)= gcamp_raw.blue_criteria;
+           data_to_input_GADVPFP.g_output(1).gcamp_raw.blue_cat(:)= gcamp_raw_blue_cat;
+
+            %sampling rate
            data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
            
            %cutTime for moving z-score
-           data_to_input_GADVPFP.g_output(1).cutTime(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime;
+           data_to_input_GADVPFP.g_output(1).cutTime_criteria(:)=cutTime_criteria;
+           data_to_input_GADVPFP.g_output(1).cutTime_cat(:)=cutTime_cat;
            
-           %fitted signal
-           data_to_input_GADVPFP.g_output(1).fit(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.fit;
-           
-           %df/f signal
-           data_to_input_GADVPFP.g_output(1).df(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.df;
+
            end
        
        elseif subjData.(subjectsAnalyzed{subj})(session).box == 2
            if subjData.(subjects{subj})(session).Bcriteria==1  
            x=1;
            
-           %cutTime for moving z-score
-           cutTime=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
-           
-           %DS data
-           data_to_input_GADVPFP.output(1).DSTimes(:)=cutTime(subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:));
-           data_to_input_GADVPFP.output(1).DSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
-           data_to_input_GADVPFP.output(1).DSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
-           data_to_input_GADVPFP.output(1).DSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
-           data_to_input_GADVPFP.output(1).DSPElatencey(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
-           data_to_input_GADVPFP.output(1).inPortDS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
-           data_to_input_GADVPFP.output(1).poxDS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
-          %NS data- TODO: NSpox and NSlox cut off the nan's at the end of
-          %the vectors, but nans exist at the end of the vectors shorter
-          %than 30 to fill in the missing values to make the vector length
-          %30
-           data_to_input_GADVPFP.output(1).NSTimes(:)=cutTime(subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:));
-           data_to_input_GADVPFP.output(1).NSonsetindex(:)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSonset(:);
-           data_to_input_GADVPFP.output(1).NSpox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSpox.firstPox(:)';
-           data_to_input_GADVPFP.output(1).NSlox(:)=subjDataAnalyzed.(subjects{subj})(session).periNSlox.firstLox(:)';
-           data_to_input_GADVPFP.output(1).NSPElatencey(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.NSpeLatency(:);
-           data_to_input_GADVPFP.output(1).inPortNS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS;
-           data_to_input_GADVPFP.output(1).poxNS(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS;
-           
            %g_camp_465
-           data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
+           gcamp_raw.blue_criteria(:)=subjData.(subjects{subj})(session).reblue'; 
+           gcamp_raw.blue_dayb4criteria(:)=subjData.(subjects{subj})(session-1).reblue';
+           gcamp_raw.blue_2dayb4criteria(:)=subjData.(subjects{subj})(session-2).reblue'; 
+
+           gcamp_raw_blue_cat=horzcat( gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria,gcamp_raw.blue_2dayb4criteria);
+           % use this temp array to elongate the rest of the variables with
+           % appropriate time stamps for the full concatenated signal
+           temp_gcamp_raw_blue_dayb4criteria=horzcat(gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria);
            
-           %moving median g_camp_465
-           data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff';
-           
-           %g_camp_405
-           data_to_input_GADVPFP.g_output(1).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
-           
-           %moving median g_camp_405
-           data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff';
-           
-           %sampling rate
-            data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
-            
            %cutTime for moving z-score
-           data_to_input_GADVPFP.g_output(1).cutTime(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+           cutTime_criteria=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+           cutTime_dayb4criteria=subjDataAnalyzed.(subjects{subj})(session-1).photometry.cutTime + length(gcamp_raw.blue_criteria(:)); 
+           cutTime_2dayb4criteria=subjDataAnalyzed.(subjects{subj})(session-2).photometry.cutTime + length(temp_gcamp_raw_blue_dayb4criteria(:)); 
            
-           %fitted signal
-           data_to_input_GADVPFP.g_output(1).fit(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.fit;
+           cutTime_cat=horzcat(cutTime_criteria,cutTime_dayb4criteria,cutTime_2dayb4criteria);
+           %DS Index
+           DSonsetindex_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
+           DSonsetindex_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDS.DSonset(:)+ length(gcamp_raw.blue_criteria(:));
+           DSonsetindex_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDS.DSonset(:)+ length(temp_gcamp_raw_blue_dayb4criteria(:));
            
-           %df/f signal
-           data_to_input_GADVPFP.g_output(1).df(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.df;
+           DSonset_cat=horzcat( DSonsetindex_criteria, DSonsetindex_dayb4criteria,DSonsetindex_2dayb4criteria);
+           %DS Times
+           DSTimes_criteria(:)=cutTime_cat( DSonsetindex_criteria(:));
+           DSTimes_dayb4criteria(:)=cutTime_cat(DSonsetindex_dayb4criteria(:));
+           DSTimes_2dayb4criteria(:)=cutTime_cat(DSonsetindex_2dayb4criteria(:));
+           
+           DSTimes_cat=horzcat(DSTimes_criteria,DSTimes_dayb4criteria,DSTimes_2dayb4criteria);
+           %DS Pox
+           DSpox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(:)';
+           DSpox_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDSpox.firstPox(:)';
+           DSpox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSpox.firstPox(:)';
+           
+           DSpox_cat=horzcat(DSpox_criteria,DSpox_dayb4criteria,DSpox_2dayb4criteria);
+           %DS Lox
+           DSlox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLox(:)';
+           DSlox_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDSlox.firstLox(:)';
+           DSlox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSlox.firstLox(:)';
+           
+           DSlox_cat=horzcat(DSlox_criteria,DSlox_dayb4criteria,DSlox_2dayb4criteria);
+           %DS latency
+           DSPElatency_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
+           DSPElatency_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.DSpeLatency(:);
+           DSPElatency_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.DSpeLatency(:);
+
+           DSPElatency_cat=horzcat(DSPElatency_criteria,DSPElatency_dayb4criteria,DSPElatency_2dayb4criteria);
+           %inPortDS
+           inPortDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
+           inPortDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.inPortDS;
+           inPortDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.inPortDS;
+           
+           inPortDS_cat=horzcat(inPortDS_criteria,inPortDS_dayb4criteria,inPortDS_2dayb4criteria);
+           
+           %poxDS
+           poxDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
+           poxDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.poxDS;
+           poxDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.poxDS;
+           
+           poxDS_cat=horzcat(poxDS_criteria,poxDS_dayb4criteria,poxDS_2dayb4criteria);
+           
+           %DS criteria day data- save to struct
+           data_to_input_GADVPFP.output(1).DSTimes_criteria(:)=DSTimes_criteria;
+           data_to_input_GADVPFP.output(1).DSonsetindex_criteria(:)=DSonsetindex_criteria;
+           data_to_input_GADVPFP.output(1).DSpox_criteria(:)=DSpox_criteria;
+           data_to_input_GADVPFP.output(1).DSlox_criteria(:)=DSlox_criteria;
+           data_to_input_GADVPFP.output(1).DSPElatency_criteria(:)=DSPElatency_criteria;
+           data_to_input_GADVPFP.output(1).inPortDS_criteria(:)=inPortDS_criteria;
+           data_to_input_GADVPFP.output(1).poxDS_criteria(:)=poxDS_criteria;% all pox not just index of first pox
+           
+           %DS stage 5 data- 3 days concatenated- save to struct 
+           data_to_input_GADVPFP.output(1).DSTimes_cat(:)=DSTimes_cat;
+           data_to_input_GADVPFP.output(1).DSonsetindex_cat(:)=DSonset_cat;
+           data_to_input_GADVPFP.output(1).DSpox_cat(:)=DSpox_cat;
+           data_to_input_GADVPFP.output(1).DSlox_cat(:)=DSlox_cat(:)';
+           data_to_input_GADVPFP.output(1).DSPElatencey_cat(:)=DSPElatency_cat;
+           data_to_input_GADVPFP.output(1).inPortDS_cat(:)=inPortDS_cat;
+           data_to_input_GADVPFP.output(1).poxDS_cat(:)= poxDS_cat;
+           
+           
+%TODO: ADD NS DATA
+%            %g_camp_465
+%            data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
+%            
+%            %moving median g_camp_465
+%            data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff';
+%            
+%            %g_camp_405
+%            data_to_input_GADVPFP.g_output(1).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+%            
+%            %moving median g_camp_405
+%            data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff';
+%                      %fitted signal
+%           data_to_input_GADVPFP.g_output(1).fit(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.fit;
+%            
+%            %df/f signal
+%            data_to_input_GADVPFP.g_output(1).df(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.df; 
+            
+            % save g.ouput data to struct
+            data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)= gcamp_raw.blue_criteria;
+           data_to_input_GADVPFP.g_output(1).gcamp_raw.blue_cat(:)= gcamp_raw_blue_cat;
+
+            %sampling rate
+           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+           
+           %cutTime for moving z-score
+           data_to_input_GADVPFP.g_output(1).cutTime_criteria(:)=cutTime_criteria;
+           data_to_input_GADVPFP.g_output(1).cutTime_cat(:)=cutTime_cat;
            
            
            
@@ -248,6 +373,6 @@ if x==1
 %save 
 save(fullfile(encodinginputpath,strcat(experimentName,'_',fieldname,'_', 'data_to_input_GADVPFP')), 'data_to_input_GADVPFP');
 end 
-
+gcamp_raw=struct();   
 data_to_input_GADVPFP=struct();
 end
