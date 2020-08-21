@@ -23,9 +23,9 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 
 %% Remove excluded subjects
 
-excludedSubjs= {'rat10'}; %cell array with strings of excluded subj fieldnames
-
-subjData= rmfield(subjData,excludedSubjs);
+% excludedSubjs= {'rat10'}; %cell array with strings of excluded subj fieldnames
+% 
+% subjData= rmfield(subjData,excludedSubjs);
 
 subjects= fieldnames(subjData); %get an updated list of included subjs
 
@@ -57,25 +57,41 @@ subjIncluded= subjects;
 %      
 %        
 %        % Raw session plots- within subjects
+% %         subplot(numel(subjData.(subjects{subj})),1,session); %one subplot per session
+% %         hold on
+% %         plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b'); %plot 465nm trace
+% %         plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m'); %plot 405nm trace
+% %         title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled ', ' box ', num2str(currentSubj(session).box)));
+% %         xlabel('time (s)');
+% %         ylabel('mV');
+% %         legend('blue (465)',' purple (405)');
+% %         
+%         % Fitted session plots (so that 2 signals overlap)
+%         fitPurple= controlFit(currentSubj(session).reblue, currentSubj(session).repurple);
+%         
+%         subplot(numel                             (subjData.(subjects{subj})),1,session);
+%         
 %         subplot(numel(subjData.(subjects{subj})),1,session); %one subplot per session
 %         hold on
 %         plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b'); %plot 465nm trace
-%         plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m'); %plot 405nm trace
+%         plot(currentSubj(session).cutTime, fitPurple,'m'); %plot 405nm trace
 %         title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled ', ' box ', num2str(currentSubj(session).box)));
 %         xlabel('time (s)');
 %         ylabel('mV');
-%         legend('blue (465)',' purple (405)');
+%         legend('blue (465)',' fitted purple (405)');
+%         
+%         
 %    end  
 %         %make figure full screen, save, and close this figure
 %         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 % %         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
-%         close; %close 
+% %         close; %close 
 % end
 
 
-%% Within-subjects raw photometry plots- separate figures
-for subj= 1:numel(subjects) %for each subject
-    
+% %% Within-subjects raw photometry plots- separate figures
+% for subj= 1:numel(subjects) %for each subject
+%     
 %     currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
 %     
 %     disp(strcat('plotting photometry data for_', subjects{subj}));
@@ -105,11 +121,11 @@ for subj= 1:numel(subjects) %for each subject
 %          %make figure full screen, save, and close this figure
 %         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 % % %         waitforbuttonpress();
-% %         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'session',num2str(currentSubj(session).trainDay),'_downsampled_trace','.fig'));
+%         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'session',num2str(currentSubj(session).trainDay),'_downsampled_trace','.fig'));
 %         close; %close
 %    end  
-    
-end
+%     
+% end
 
 
 %% ~~~Photometry Signal processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -648,7 +664,7 @@ for subj= 1:numel(subjects) %for each subject
                 end
 
 
-                %find and save port exits during the cue
+                %find and save port exits during the cue 
                 outDScount= 1;
                 for i = 1:numel(currentSubj(session).out) % for every port entry logged during this session
                    if (cutTime(DSonset)<currentSubj(session).out(i)) && (currentSubj(session).out(i)<cutTime(DSonset+cueLength)) %if the port entry occurs between this cue's onset and this cue's onset, assign it to this cue 
@@ -2075,10 +2091,10 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     end %end session loop
     
     %now find out which dates from allDates this subj has data for 
-    for thisDate = allDates %loop through all dates
-        if isempty(subjDates(subjDates==thisDate)) %if this subj doesn't have valid data on this date
+    for thisDate = 1:numel(allDates) %loop through all dates
+        if isempty(subjDates(subjDates==allDates(thisDate))) %if this subj doesn't have valid data on this date
 %                 emptyDates= cat(1, emptyDates,thisDate); %save this empty date to an array (add onto array by using cat())
-                currentSubj(end+1).date= thisDate; %use end+1 to add a new empty session
+                currentSubj(end+1).date= allDates(thisDate); %use end+1 to add a new empty session
                 
                 %fill relevant fields with NaN for later 
                 currentSubj(end).periDS.DSzblueMean= NaN(size(timeLock'));
@@ -2577,12 +2593,13 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     hold on;
     plot(timeLock,currentSubj(1).DSzblueAllTrials, 'b');
     plot(timeLock,currentSubj(1).DSzpurpleAllTrials, 'm');
-    subplot(2,1,2);
-    title('NS');
-    hold on;
-    plot(timeLock,currentSubj(1).NSzblueAllTrials, 'b');
-    plot(timeLock,currentSubj(1).NSzpurpleAllTrials, 'm');
-    
+    if ~isempty(currentSubj(1).NSzblueAllTrials)
+        subplot(2,1,2);
+        title('NS');
+        hold on;
+        plot(timeLock,currentSubj(1).NSzblueAllTrials, 'b');
+        plot(timeLock,currentSubj(1).NSzpurpleAllTrials, 'm');
+    end
 end %end subject loop
 
 
@@ -4211,10 +4228,10 @@ end %end subject loop
     end %end session loop
     
     %now find out which dates from allDates this subj has data for 
-    for thisDate = allDates %loop through all dates
-        if isempty(subjDates(subjDates==thisDate)) %if this subj doesn't have valid data on this date
+    for thisDate = 1:numel(allDates) %loop through all dates
+        if isempty(subjDates(subjDates==allDates(thisDate))) %if this subj doesn't have valid data on this date
 %                 emptyDates= cat(1, emptyDates,thisDate); %save this empty date to an array (add onto array by using cat())
-                currentSubj(end+1).date= thisDate; %use end+1 to add a new empty session
+                currentSubj(end+1).date= allDates(thisDate); %use end+1 to add a new empty session
                 
                 %fill relevant fields with NaN for later 
                 currentSubj(end).periDS.DSzblueMean= NaN(size(timeLock'));

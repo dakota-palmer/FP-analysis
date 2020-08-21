@@ -41,18 +41,61 @@ for subj= 1:numel(subjects)
    
 end %end subj loop
 
-%loop through each session and save a .mat of events & photometry data
+%% Visualize photometry data
+% for subj= 1:numel(subjects) %for each subject
+%     
+%     currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+%     
+%     disp(strcat('plotting photometry data for_', subjects{subj}));
+%            
+%    for session = 1:numel(subjDataAnalyzed.(subjects{subj})) %for each training session this subject completed
+%        
+%        
+%         figure() %one figure per SESSION       
+%        
+%        currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
+%       
+%        %  session plots- within subject
+%        
+% %        fitPurple= controlFit(currentSubj(session).raw.reblue, currentSubj(session).raw.repurple);
+% 
+%        
+%         hold on;
+%         plot(currentSubj(session).raw.cutTime, currentSubj(session).raw.reblue, 'b'); %plot 465nm trace
+%         plot(currentSubj(session).raw.cutTime, currentSubj(session).raw.repurple,'m'); %plot 405nm trace
+%         title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled ', ' box ', num2str(currentSubj(session).box)));
+%         xlabel('time (s)');
+%         ylabel('mV');
+%         legend('blue (465)',' purple (405)');
+%         
+%         
+%          %make figure full screen, save, and close this figure
+%         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% %         close; %close
+%    end  
+%     
+% end
+
+
+%% loop through each session and save a .mat of events & photometry data
 %the .mat will contain 'output' and 'g_output' structs
 for subj= 1:numel(subjects)
    currentSubj= subjDataAnalyzed.(subjects{subj}); %save for easy indexing
+   
    
    for session= 1:numel(currentSubj)
    
        %Clear structs between sessions
        output= [];
        g_output= [];
+       metadata= [];
+       
        
        experimentName= currentSubj(session).experiment;
+       
+       %save metadata field for easy recovery of other analyzed data from this subj & session
+       metadata.subject= subjects(subj);
+       metadata.date= currentSubj(session).date;
 
        %fill output struct with task event timestamps
        output.DS= currentSubj(session).periDS.DS;
@@ -86,7 +129,7 @@ for subj= 1:numel(subjects)
        g_output.reblue= currentSubj(session).raw.reblue;
        g_output.samp_rate= fs; 
        
-       save(strcat(savePath,experimentName,'-',subjects{subj},'-ses-',num2str(currentSubj(session).date),'.mat'), 'g_output', 'output'); %the second argument here is the variable being saved, the first is the filename 
+       save(strcat(savePath,experimentName,'-',subjects{subj},'-ses-',num2str(currentSubj(session).date),'.mat'), 'g_output', 'output', 'metadata'); %the second argument here is the variable being saved, the first is the filename 
        
    end %end session loop
     

@@ -9,7 +9,7 @@ else
     cd(save_folder)
     delete('*')
     cd ../..
-end
+end                                                                                                                    
     
 
 condition = 'data_to_input/example';
@@ -269,11 +269,18 @@ for neuron=1:numel(neurons)
     
         %the mean_center() function here goes through every column (every time shift) of x_basic, gets a mean value for that shift (should be the same for every shift of the same event type?) then goes through every row (time bin) and subtracts this mean from actual value (0 or 1) of x_basic
         %so there should be + values only when event occurred (1-mean)??
-    x_all=mean_center(x_basic); %num time bins x (num event types*num shifts) matrix 
+            %This means our signal shouldn't have - values?? If it does,
+            %we might get some nonzero regression coefficient otherwise it
+            %will approach 0
+%     x_all=mean_center(x_basic); %num time bins x (num event types*num shifts) matrix 
+    
+    x_all= x_basic; %trying without mean_center (just 0 and 1)
+    
     gcamp_y=gcamp_temp;
     
     %run regression
     %result of LASSO here is (num event types * num shifts) x lambda matrix of b coefficients, stats.beta 
+        %so each column of x_all is a shifted version of the (mean_center) of event timings
     [stats.beta,stats.p]= lasso(x_all,gcamp_y','cv',5);    %Lasso with cross-validation
     sum_betas=max(stats.beta(:,stats.p.IndexMinMSE));    %Selects betas that minimize MSE
     if sum_betas==0; stats.p.IndexMinMSE=max(find(max(stats.beta)>0.0001)); end  %Makes sure there are no all zero betas
