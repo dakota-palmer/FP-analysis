@@ -295,27 +295,7 @@ for subject=1:numel(subjects)
                 %we've normalized all timestamps above, now go into
                 %peri-cue periods and replace those values with values used
                 %in heatplots
-                
-                   %this doubled the noarmalization through the whole trace
-                   %I think
-%             if cue== 1 %if this is the first cue, start at first timestamp and go to the last timestamp in the periDS window
-%                 tsToNormalize= 1:find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue));
-%             
-%             elseif cue~= length(currentSubj(session).periDS.DS) %if this isn't the last cue, start at end of last time window +1 and go to the last timestamp in the current time window    
-%                 tsToNormalize= [find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue-1))+1:find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue))];
-%             elseif cue== length(currentSubj(session).periDS.DS) %if this is the last cue, start at end of last time window +1 and go to the end of cutTime
-%                 tsToNormalize= [find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue-1)):numel(cutTime)];
-%             end
-%             
-              
-%             if cue== 1 %if this is the first cue, start at first timestamp and go to the last timestamp in the periDS window
-%                 tsToNormalize= 1:find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue));
-            
-%             if cue~= length(currentSubj(session).periDS.DS) %if this isn't the last cue, get the timestamps to normalize (first pericue timestamp: last pericue timestamp)
-                tsToNormalize= [find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,1,cue)):find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue))];
-%             elseif cue== length(currentSubj(session).periDS.DS) %if this is the last cue, start at end of last time window +1 and go to the end of cutTime
-%                 tsToNormalize= [find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue-1)):numel(cutTime)];
-%             end
+            tsToNormalize= [find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,1,cue)):find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue))];
 
             gcamp_normalized(tsToNormalize)= (g_output.reblue(tsToNormalize)-currentSubj(session).periDS.baselineMeanblue(cue))/currentSubj(session).periDS.baselineStdblue(cue);
             
