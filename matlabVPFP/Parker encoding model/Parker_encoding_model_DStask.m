@@ -22,7 +22,7 @@ load(uigetfile('*.mat')); %choose the subjDataAnalyzed.mat file to open for your
 
 
 condition = 'data_to_input' %/example';
-subjects =  [1,2]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
+subjects =  [1]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
 
 
 for subject=1:numel(subjects)
@@ -287,7 +287,6 @@ for subject=1:numel(subjects)
             %Here, we will identify timesstamps within the peri-cue period
             %whose z scores should be recalculated based on pre-cue
             %activity alone (tsToNormalize), then we'll calculate z score for these timestamps based on the pre-cue baseline 
-            tsToNormalize= []; %reset between cues
             
                 %For now this is just pulling the same baselines used in
                 %fpAnalyzeData.m , but we might want to adjust
@@ -295,9 +294,9 @@ for subject=1:numel(subjects)
                 %we've normalized all timestamps above, now go into
                 %peri-cue periods and replace those values with values used
                 %in heatplots
-            tsToNormalize= [find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,1,cue)):find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue))];
+            tsToNormalize(:,cue)= [find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,1,cue)):find(currentSubj(session).raw.cutTime==currentSubj(session).periDS.periDSwindow(:,end,cue))];
 
-            gcamp_normalized(tsToNormalize)= (g_output.reblue(tsToNormalize)-currentSubj(session).periDS.baselineMeanblue(cue))/currentSubj(session).periDS.baselineStdblue(cue);
+            gcamp_normalized(tsToNormalize(:,cue))= (g_output.reblue(tsToNormalize(:,cue))-currentSubj(session).periDS.baselineMeanblue(cue))/currentSubj(session).periDS.baselineStdblue(cue);
             
             %save new peri-cue data from normalized trace (with same
             %parameters, these timestamps should look the same)
@@ -305,38 +304,11 @@ for subject=1:numel(subjects)
             
             %for visualizing cue periods, save pre & postEventTimeDS
             %(should help ID if sudden changes are being introduced)
+            %not that these are indices of cutTime that correspond to start
+            %& end of peri-cue window
             periDSstarts= [periDSstarts, preEventTimeDS]; %cat start into this array
             periDSends= [periDSends, postEventTimeDS]; %cat end into this array
             
-
-            
-%             % Calculate average baseline mean&stdDev 10s prior to DS for z-score
-%             %RAW blueA  
-%             baselineMeanblue=nanmean(currentSubj(session).raw.reblue((DSonset-slideTime):DSonset)); %baseline mean blue 10s prior to DS onset for boxA
-%             baselineStdblue=std(currentSubj(session).raw.reblue((DSonset-slideTime):DSonset)); %baseline stdDev blue 10s prior to DS onset for boxA
-%             %RAW purpleA
-%             baselineMeanpurple=nanmean(currentSubj(session).repurple((DSonset-slideTime):DSonset)); %baseline mean purple 10s prior to DS onset for boxA
-%             baselineStdpurple=std(currentSubj(session).repurple((DSonset-slideTime):DSonset)); %baseline stdDev purple 10s prior to DS onset for boxA
-% 
-%                 %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue(:,:,cue)= (((currentSubj(session).reblue(preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue); 
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTimeDS:postEventTimeDS))- baselineMeanpurple))/(baselineStdpurple);
-% 
-% 
-%             %dff - *******Relies upon previous photobleaching/baseline section
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.DSbluedff(:,:,cue)= subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff(preEventTimeDS:postEventTimeDS);
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurpledff(:,:,cue)= subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff(preEventTimeDS:postEventTimeDS);
-% 
-%             %lets save the baseline mean and std used for z score calc- so
-%             %that we can use this same baseline for other analyses
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanblue(1,cue)= baselineMeanblue;
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdblue(1,cue)= baselineStdblue;
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.baselineMeanpurple(1,cue)= baselineMeanpurple;
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdpurple(1,cue)= baselineStdpurple;
-% 
-%             %save timeLock time axis
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.timeLock= [-preCueFrames:postCueFrames]/fs;
-% 
 
         end %end DS cue loop
         
@@ -345,9 +317,9 @@ for subject=1:numel(subjects)
         plot(gcamp_normalized);
         %overlay vertical line for peri-cue start and end times to visualize cue periods
         %(should help ID if this method introduces sudden shifts)
-        for DS= 1:numel(periDSstarts)
-           plot([periDSstarts(DS), periDSstarts(DS)], ylim, 'g--');
-           plot([periDSends(DS), periDSends(DS)], ylim, 'r--');
+        for DStrial= 1:numel(periDSstarts)
+           plot([periDSstarts(DStrial), periDSstarts(DStrial)], ylim, 'g--');
+           plot([periDSends(DStrial), periDSends(DStrial)], ylim, 'r--');
         end
         legend('465', 'periDS start', 'periDS end');
         
@@ -363,18 +335,119 @@ for subject=1:numel(subjects)
         plot(mean(currentSubj(session).deconvolution.periDS.DSzblueNormalized,3), 'r', 'LineWidth', 2);
         
         
-
-
+    %Exclude all intervening data between trials (only include peri-cue
+    %data in regression)... the idea here is that we already know some
+    %cue/reward related activity is happening, but we want an estimate of
+    %how much each event type contributes to overall observed fluorescence.
+    %If we include intervening data, noise & other things may be driving changes in 
+    %fluorescence (and those unknowns aren't included in the encoding model)
+    
+    %clear events between sessions???????
+    DS= [];% %output.DS;% [];
+    NS= []; %output.NS;% [];
+    poxDS= []; %output.firstPoxDS;%[]; 
+    loxDS= []; %output.firstLoxDS;%[];
+    
+    gcamp_y= nan(size(gcamp_normalized));
+        %loop through trials and exclude events that occur outside of the
+        %periDS window for each trial
+    for cue=1:length(currentSubj(session).periDS.DS) % for each DS Trial 
+        if output.DS(cue)> cutTime(periDSstarts(cue)) &&  output.DS(cue) < cutTime(periDSends(cue)) %if this cue onset occurs between periDS window start and end, keep this DS
+             DS= [DS, output.DS(cue)];
+             
+        else
+            DS= [DS, nan];
+        end
+        
+         if output.firstPoxDS(cue)> cutTime(periDSstarts(cue)) &&  output.firstPoxDS(cue) < cutTime(periDSends(cue))
+             poxDS= [poxDS, output.firstPoxDS(cue)];
+             
+         else
+             poxDS= [poxDS, nan];
+         end
+         
+         if output.firstLoxDS(cue)> cutTime(periDSstarts(cue)) &&  output.firstLoxDS(cue) < cutTime(periDSends(cue))
+             loxDS= [loxDS, output.firstLoxDS(cue)];
+             
+         else
+             loxDS= [loxDS,nan];
+         end
+        
             
-            
+        %exclude photometry data outside of trials (easier to just make nan because elimnating timestamps will require remapping of event times?)
+%         gcamp_y= [gcamp_y,gcamp_normalized(periDSstarts(cue):periDSends(cue))]; 
+
+        gcamp_y(periDSstarts(cue):periDSends(cue))= gcamp_normalized(periDSstarts(cue):periDSends(cue));
+
+    end %end DS loop
+           
+    %linearize gcamp_y
+    gcamp_y= gcamp_y(:);
+    
+    %convert event timestamps to Hz bc we are analyzing based on time bin?
+    %visualize to see difference
+    %CONVERSION TO HZ IS MESSING UP ALIGNMENT
+    %simply multiplying by fs won't be sufficient because we excluded
+    %timestamps (cut beginning and end of recording to remove artifacts = cutTime)
+    figure(); subplot(3,1,1); hold on; title('plot by time in s');
+    plot(cutTime, gcamp_y);
+    plot(DS, ones(size(DS)*1), 'k.')
+%     plot(NS, ones(size(NS))*2, 'g.')
+    plot(poxDS, ones(size(poxDS))*3, 'c.')
+    plot(loxDS, ones(size(loxDS))*4, 'r.')
+    subplot(3,1,2); hold on; title('plot by time BIN, calculated by simple multiplication');
+    plot(gcamp_y);
+    plot(DS*g_output.samp_rate, ones(size(DS)*1), 'k.')
+%     plot(NS*g_output.samp_rate, ones(size(NS))*2, 'g.')
+    plot(poxDS*g_output.samp_rate, ones(size(poxDS))*3, 'c.')
+    plot(loxDS*g_output.samp_rate, ones(size(loxDS))*4, 'r.')
+    
+    %SO, we need to find the matching timestamp in cutTime and then get the corresponding time BIN 
+    % for each event in order to accurately convert to Hz
+    
+        %interp1() to find the nearest timestamp in cutTime 
+    DSshifted= interp1(cutTime,cutTime, DS, 'nearest'); %get nearest timestamp in cutTime to actual
+    poxDSshifted= interp1(cutTime,cutTime, poxDS, 'nearest'); %get nearest timestamp in cutTime to actual
+    loxDSshifted= interp1(cutTime,cutTime, loxDS, 'nearest'); %get nearest timestamp in cutTime to actual
+    
+        %then use find() to get the matching index of this timestamp (this
+        %is the time bin)
+    for DStrial= 1:numel(currentSubj(session).periDS.DS) %loop through each trial and find matching index of all events in this trial (if no event, make nan)
+       DShz(DStrial)= find(cutTime==DSshifted(DStrial));
+       if ~isnan(poxDSshifted(DStrial))
+            poxDShz(DStrial)= find(cutTime==poxDSshifted(DStrial));
+       else
+            poxDShz(DStrial)=nan;
+       end
+       
+       if ~isnan(loxDSshifted(DStrial))
+            loxDShz(DStrial)= find(cutTime==loxDSshifted(DStrial));
+       else
+           loxDShz(DStrial)= nan;
+       end
+    end
+    
+    %now visualize the correctly calculated time bins
+    subplot(3,1,3); hold on; title('plot by time BIN- correctly shifted');
+    plot(gcamp_y);
+    plot(DShz, ones(size(DS)*1), 'k.')
+    plot(poxDShz, ones(size(poxDS))*3, 'c.')
+    plot(loxDShz, ones(size(loxDS))*4, 'r.')
+    
+    DS= DShz;
+    poxDS= poxDShz;
+    loxDS= loxDShz;
+    
     % ~~~~~~~~ prep for regression ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     % %Event modulation for initial submission % ~looks like this is where
     % events to be included in the model are defined (and what time window
     % should be used for timelocking (1 for stimulus, 0 for action event?)
-    cons={'DS','NS','poxDS','loxDS'};%...
-       % 'out'};
-    con_shift=[1, 1, 0, 0]; %stimulus events time window is 0:8s, action events it is -2:6s, this defines when to time-lock
+%     cons={'DS','NS','poxDS','loxDS'};%...
+%     con_shift=[1, 1, 0, 0]; %stimulus events time window is 0:8s, action events it is -2:6s, this defines when to time-lock
+  
+    cons= {'DS', 'poxDS'};
+    con_shift= [1,0];
     
     %---- Regression data prep ----
     
@@ -396,6 +469,7 @@ for subject=1:numel(subjects)
     subplot(2,1,2); hold on; title('con binned'); %FOR VISUALIZING CON_TIMES %dp
     plot(gcamp_y);
     conColors= {'k','g','c','r'};
+   
     
     for con=1:numel(cons) %for each event type (condition) included in the model
         
@@ -488,18 +562,60 @@ for subject=1:numel(subjects)
     
         %the mean_center() function here goes through every column (every time shift) of x_basic, gets a mean value for that shift (should be the same for every shift of the same event type?) then goes through every row (time bin) and subtracts this mean from actual value (0 or 1) of x_basic
         %so there should be + values only when event occurred (1-mean)??
-%     x_all=mean_center(x_basic); %num time bins x (num event types*num shifts) matrix 
+    x_all=mean_center(x_basic); %num time bins x (num event types*num shifts) matrix 
 
-    x_all = x_basic; %trying without mean_center (just 0 and 1s)
+%     x_all = x_basic; %trying without mean_center (just 0 and 1s)
 
     gcamp_y=gcamp_temp;
+    
+    
+    
+    %~~~~~~~trying to debug cue-adjusted norm & event timings ~~~~~~~~~~~~~~~~~~~~
+     figure; 
+    subplot(2,1,1); hold on; title('con times');
+    plot(gcamp_y);
+    plot(DS, ones(size(DS)*1), 'k.')
+    plot(NS, ones(size(NS))*2, 'g.')
+    plot(poxDS, ones(size(poxDS))*3, 'c.')
+    plot(loxDS, ones(size(loxDS))*4, 'r.')
+    legend('465','DS', 'NS', 'poxDS', 'loxDS');
+    
+   %overlay vertical line for peri-cue start and end times to visualize cue periods
+        %(should help ID if this method introduces sudden shifts)
+        for cue= 1:numel(periDSstarts)
+           plot([periDSstarts(cue), periDSstarts(cue)], ylim, 'g--');
+           plot([periDSends(cue), periDSends(cue)], ylim, 'r--');
+        end
+        legend('465', 'periDS start', 'periDS end');
+        
+    
+    subplot(2,1,2); hold on; title('con binned'); %FOR VISUALIZING CON_TIMES %dp
+    plot(gcamp_y);
+    conColors= {'k','g','c','r'};
+    
+    
+   %overlay vertical line for peri-cue start and end times to visualize cue periods
+        %(should help ID if this method introduces sudden shifts)
+        for DStrial= 1:numel(periDSstarts)
+           plot([periDSstarts(DStrial), periDSstarts(DStrial)], ylim, 'g--');
+           plot([periDSends(DStrial), periDSends(DStrial)], ylim, 'r--');
+        end
+        legend('465', 'periDS start', 'periDS end');
+        
+    
+    
     
     % ~~~~~~~~~~~~~~~ Run regression ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     %result of LASSO here is (num event types * num shifts) x lambda matrix of b coefficients, stats.beta 
         %so each column of x_all is a shifted version of the (mean_center) of event timings
     [stats.beta,stats.p]= lasso(x_all,gcamp_y','cv',5);    %Lasso with cross-validation
     sum_betas=max(stats.beta(:,stats.p.IndexMinMSE));    %Selects betas that minimize MSE
-    if sum_betas==0; stats.p.IndexMinMSE=max(find(max(stats.beta)>0.0001)); end  %Makes sure there are no all zero betas
+%     if sum_betas==0; stats.p.IndexMinMSE=max(find(max(stats.beta)>0.0001)); end  %Makes sure there are no all zero betas
+    
+    %replacing above to accomodate negative regression coefficients- using abs()
+    if sum_betas==0; stats.p.IndexMinMSE=max(find((max(abs(stats.beta)))>0.0001)); end  %Makes sure there are no all zero betas
+
+    
     %cat ing intercept here , so size= (num event types * num shifts) +1 x 1 column vector of betas 
     b=[stats.p.Intercept(stats.p.IndexMinMSE) ; stats.beta(:,stats.p.IndexMinMSE)];  %selects betas based on lambda
     

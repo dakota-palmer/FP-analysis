@@ -31,11 +31,11 @@ for subj= 1:numel(subjects)
    
    currentSubj= subjDataAnalyzed.(subjects{subj});
    excludedSessions= [];
-   for session= 1:numel(currentSubj) %loop through again and get rid of all except final stage 7 day
-       if session<numel(currentSubj)
-           excludedSessions= cat(2,excludedSessions,session);
-       end
-   end%end session loop 2
+%    for session= 1:numel(currentSubj) %loop through again and get rid of all except final stage 7 day
+%        if session<numel(currentSubj)
+%            excludedSessions= cat(2,excludedSessions,session);
+%        end
+%    end%end session loop 2
    
    subjDataAnalyzed.(subjects{subj})(excludedSessions)= []; 
    
