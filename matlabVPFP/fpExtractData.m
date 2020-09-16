@@ -27,7 +27,7 @@ nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 % figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-experimentName= 'VP-VTA-FP-round3'; %change experiment name for automatic naming of figures
+experimentName= 'VP-VTA-FPround3'; %change experiment name for automatic naming of figures
 
 %% Loop through each nex file, extracting data
 
@@ -454,3 +454,24 @@ profile viewer;
 % %things that should be optimized: cleavars takes awhile ; timeDifflox
 % takes awhile (prob bc lots of licks happen) took like 7/20min for 42
 % sessions
+
+   
+% code here for quickly examining traces to check for dynamic signal
+        % Fitted session plots (so that 2 signals overlap)
+%         fitPurpleA= controlFit(reblueA, repurpleA);
+%         figure;
+%         hold on
+%         plot(cutTime, reblueA, 'b'); %plot 465nm trace
+%         plot(cutTime, fitPurpleA,'m'); %plot 405nm trace
+%         xlabel('time (s)');
+%         ylabel('mV');
+%         legend('blue (465)',' fitted purple (405)');
+%         
+%         fitPurpleB= controlFit(reblueB, repurpleB);
+%         figure;
+%         hold on
+%         plot(cutTime, reblueB, 'b'); %plot 465nm trace
+%         plot(cutTime, fitPurpleB,'m'); %plot 405nm trace
+%         xlabel('time (s)');
+%         ylabel('mV');
+%         legend('blue (465)',' fitted purple (405)');

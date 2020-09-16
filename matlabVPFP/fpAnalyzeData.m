@@ -33,11 +33,11 @@ subjIncluded= subjects;
 
 %% ~~~Photometry plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Within-subjects raw photometry plots - all in 1 figure
-%In this section, we'll plot the "raw" (it's been preprocessed and
-%downsampled) 405nm and 465nm photometry traces from each session. This makes 
-%one figure per subject with all session traces subplotted so may be slow if you have a lot of sessions
-%useful if you have a few sessions, but too unwieldy with >10sessions
-
+% In this section, we'll plot the "raw" (it's been preprocessed and
+% downsampled) 405nm and 465nm photometry traces from each session. This makes 
+% one figure per subject with all session traces subplotted so may be slow if you have a lot of sessions
+% useful if you have a few sessions, but too unwieldy with >10sessions
+% 
 % for subj= 1:numel(subjects) %for each subject
 %     
 %     currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
@@ -89,26 +89,26 @@ subjIncluded= subjects;
 % end
 
 
-% %% Within-subjects raw photometry plots- separate figures
-% for subj= 1:numel(subjects) %for each subject
-%     
-%     currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-%     
-%     disp(strcat('plotting photometry data for_', subjects{subj}));
-%            
-%    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
-%        
-%        
-%         figure(figureCount) %one figure per SESSION
-%         figureCount= figureCount+1;
-%        
-%        
-%        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
-%       
-%        
-%       
-%        
-%        % Raw session plots- within subjects
+%% Within-subjects raw photometry plots- separate figures
+for subj= 1:numel(subjects) %for each subject
+    
+    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+    
+    disp(strcat('plotting photometry data for_', subjects{subj}));
+           
+   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+       
+       
+        figure(figureCount) %one figure per SESSION
+        figureCount= figureCount+1;
+       
+       
+       currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
+      
+       
+      
+       
+       % Raw session plots
 %         hold on;
 %         plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b'); %plot 465nm trace
 %         plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m'); %plot 405nm trace
@@ -116,16 +116,28 @@ subjIncluded= subjects;
 %         xlabel('time (s)');
 %         ylabel('mV');
 %         legend('blue (465)',' purple (405)');
-%         
-%         
-%          %make figure full screen, save, and close this figure
-%         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-% % %         waitforbuttonpress();
-%         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'session',num2str(currentSubj(session).trainDay),'_downsampled_trace','.fig'));
-%         close; %close
-%    end  
-%     
-% end
+
+       % Fitted session plots
+        fitPurple= controlFit(currentSubj(session).reblue, currentSubj(session).repurple);
+        
+        hold on;
+        plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b'); %plot 465nm trace
+        plot(currentSubj(session).cutTime, fitPurple,'m'); %plot 405nm trace
+        title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled ', ' box ', num2str(currentSubj(session).box)));
+        xlabel('time (s)');
+        ylabel('mV');
+        legend('blue (465)',' fitted purple (405)');
+        
+        
+        
+         %make figure full screen, save, and close this figure
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% %         waitforbuttonpress();
+        saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'session',num2str(currentSubj(session).trainDay),'_downsampled_trace','.fig'));
+        close; %close
+   end  
+    
+end
 
 
 %% ~~~Photometry Signal processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
