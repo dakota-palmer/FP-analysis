@@ -23,8 +23,8 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 
 %% Remove excluded subjects
 
-% excludedSubjs= {'rat10'}; %cell array with strings of excluded subj fieldnames
-% 
+% excludedSubjs= {'rat20', 'rat16'};%{'rat10'}; %cell array with strings of excluded subj fieldnames
+% % 
 % subjData= rmfield(subjData,excludedSubjs);
 
 subjects= fieldnames(subjData); %get an updated list of included subjs
@@ -86,7 +86,7 @@ subjIncluded= subjects;
 %         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 % %         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
 % %         close; %close 
-% end
+% end1
 
 
 %% Within-subjects raw photometry plots- separate figures
@@ -2846,7 +2846,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
-%     saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
+    saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
 
     if ~isempty(currentSubj(1).NSzblueAllTrials) %if there is NS data
         
@@ -2883,7 +2883,6 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
-        saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
     end   
     
    
@@ -2907,6 +2906,9 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     figureCount= figureCount+1;
    
+    saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials_latSort','.fig')); %save the current figure in fig format
+
+    
 end %end subject loop
 
 %% HEAT PLOT OF RESPONSE TO FIRST PE IN CUE EPOCH
@@ -2944,6 +2946,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     currentSubj(1).NSzpoxblueAllTrials= currentSubj(1).NSzpoxblueAllTrials';
     currentSubj(1).NSzpoxpurpleAllTrials= currentSubj(1).NSzpoxpurpleAllTrials';
       
+    
+    %remove nan trials (trials with no PE)
+    currentSubj(1).DSzpoxblueAllTrials=  currentSubj(1).DSzpoxblueAllTrials(all(~isnan(currentSubj(1).DSzpoxblueAllTrials),2),:);
+    currentSubj(1).DSzpoxpurpleAllTrials=  currentSubj(1).DSzpoxpurpleAllTrials(all(~isnan(currentSubj(1).DSzpoxpurpleAllTrials),2),:);
+
     
     %remove nan trials (NSzpox arrays retain nan values bc of the 3d structure)
     currentSubj(1).NSzpoxblueAllTrials= currentSubj(1).NSzpoxblueAllTrials(all(~isnan(currentSubj(1).NSzpoxblueAllTrials),2),:); 
@@ -3130,6 +3137,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     currentSubj(1).NSzloxblueAllTrials= currentSubj(1).NSzloxblueAllTrials';
     currentSubj(1).NSzloxpurpleAllTrials= currentSubj(1).NSzloxpurpleAllTrials';
       
+    
+      %remove nan trials (trials w/ no lick)
+    currentSubj(1).DSzloxblueAllTrials= currentSubj(1).DSzloxblueAllTrials(all(~isnan(currentSubj(1).DSzloxblueAllTrials),2),:); 
+    currentSubj(1).DSzloxpurpleAllTrials= currentSubj(1).DSzloxblueAllTrials(all(~isnan(currentSubj(1).DSzloxblueAllTrials),2),:); 
+
     
     %remove nan trials (NSzlox arrays retain nan values bc of the 3d structure)
     currentSubj(1).NSzloxblueAllTrials= currentSubj(1).NSzloxblueAllTrials(all(~isnan(currentSubj(1).NSzloxblueAllTrials),2),:); 
