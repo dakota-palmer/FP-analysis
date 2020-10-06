@@ -16,44 +16,48 @@ load(uigetfile('*.mat')); %choose the subjDataAnalyzed.mat file to open for your
 fs= 40; %make sure the sampling frequency is correct!
 savePath= strcat(pwd,'\data_to_input\');
 
-subjects= fieldnames(subjDataAnalyzed);
+%Exclude subjects here if necessary
+excludedSubjs= {'rat12','rat13'}; %cell array with strings of excluded subj fieldnames
+% 
+subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
+subjectsAnalyzed= fieldnames(subjDataAnalyzed);
 
-%% Exclude data
-for subj= 1:numel(subjects)
-    currentSubj= subjDataAnalyzed.(subjects{subj});
+%% Exclude sessions
+for subj= 1:numel(subjectsAnalyzed)
+    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj});
     excludedSessions= [];
     for session= 1:numel(currentSubj)
-        if currentSubj(session).trainStage ~= 7 %only include stage 7 days
+        if currentSubj(session).trainStage ~= 8%7 %only include stage 7 days
            excludedSessions= cat(2,excludedSessions,session);
         end
     end%end session loop
-   subjDataAnalyzed.(subjects{subj})(excludedSessions)= []; 
+   subjDataAnalyzed.(subjectsAnalyzed{subj})(excludedSessions)= []; 
    
-   currentSubj= subjDataAnalyzed.(subjects{subj});
+   currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj});
    excludedSessions= [];
-%    for session= 1:numel(currentSubj) %loop through again and get rid of all except final stage 7 day
-%        if session<numel(currentSubj)
-%            excludedSessions= cat(2,excludedSessions,session);
-%        end
-%    end%end session loop 2
+   for session= 1:numel(currentSubj) %loop through again and get rid of all except final stage 7 day
+       if session<numel(currentSubj)
+           excludedSessions= cat(2,excludedSessions,session);
+       end
+   end%end session loop 2
    
-   subjDataAnalyzed.(subjects{subj})(excludedSessions)= []; 
+   subjDataAnalyzed.(subjectsAnalyzed{subj})(excludedSessions)= []; 
    
 end %end subj loop
 
 %% Visualize photometry data
-% for subj= 1:numel(subjects) %for each subject
+% for subj= 1:numel(subjectsAnalyzed) %for each subject
 %     
-%     currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+%     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
 %     
-%     disp(strcat('plotting photometry data for_', subjects{subj}));
+%     disp(strcat('plotting photometry data for_', subjectsAnalyzed{subj}));
 %            
-%    for session = 1:numel(subjDataAnalyzed.(subjects{subj})) %for each training session this subject completed
+%    for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
 %        
 %        
 %         figure() %one figure per SESSION       
 %        
-%        currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
+%        currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the curret subject within the struct
 %       
 %        %  session plots- within subject
 %        
@@ -79,8 +83,8 @@ end %end subj loop
 
 %% loop through each session and save a .mat of events & photometry data
 %the .mat will contain 'output' and 'g_output' structs
-for subj= 1:numel(subjects)
-   currentSubj= subjDataAnalyzed.(subjects{subj}); %save for easy indexing
+for subj= 1:numel(subjectsAnalyzed)
+   currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %save for easy indexing
    
    
    for session= 1:numel(currentSubj)
@@ -94,7 +98,7 @@ for subj= 1:numel(subjects)
        experimentName= currentSubj(session).experiment;
        
        %save metadata field for easy recovery of other analyzed data from this subj & session
-       metadata.subject= subjects(subj);
+       metadata.subject= subjectsAnalyzed(subj);
        metadata.date= currentSubj(session).date;
 
        %fill output struct with task event timestamps
@@ -129,7 +133,7 @@ for subj= 1:numel(subjects)
        g_output.reblue= currentSubj(session).raw.reblue;
        g_output.samp_rate= fs; 
        
-       save(strcat(savePath,experimentName,'-',subjects{subj},'-ses-',num2str(currentSubj(session).date),'.mat'), 'g_output', 'output', 'metadata'); %the second argument here is the variable being saved, the first is the filename 
+       save(strcat(savePath,experimentName,'-',subjectsAnalyzed{subj},'-ses-',num2str(currentSubj(session).date),'.mat'), 'g_output', 'output', 'metadata'); %the second argument here is the variable being saved, the first is the filename 
        
    end %end session loop
     

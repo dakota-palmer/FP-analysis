@@ -23,9 +23,9 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 
 %% Remove excluded subjects
 
-% excludedSubjs= {'rat20', 'rat16'};%{'rat10'}; %cell array with strings of excluded subj fieldnames
-% % 
-% subjData= rmfield(subjData,excludedSubjs);
+excludedSubjs= {'rat20', 'rat16','rat10'}; %cell array with strings of excluded subj fieldnames
+
+subjData= rmfield(subjData,excludedSubjs);
 
 subjects= fieldnames(subjData); %get an updated list of included subjs
 
@@ -37,7 +37,7 @@ subjIncluded= subjects;
 % downsampled) 405nm and 465nm photometry traces from each session. This makes 
 % one figure per subject with all session traces subplotted so may be slow if you have a lot of sessions
 % useful if you have a few sessions, but too unwieldy with >10sessions
-% 
+%  
 % for subj= 1:numel(subjects) %for each subject
 %     
 %     currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
@@ -89,55 +89,55 @@ subjIncluded= subjects;
 % end1
 
 
-%% Within-subjects raw photometry plots- separate figures
-for subj= 1:numel(subjects) %for each subject
-    
-    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-    
-    disp(strcat('plotting photometry data for_', subjects{subj}));
-           
-   for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
-       
-       
-        figure(figureCount) %one figure per SESSION
-        figureCount= figureCount+1;
-       
-       
-       currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
-      
-       
-      
-       
-       % Raw session plots
+% %% Within-subjects raw photometry plots- separate figures
+% for subj= 1:numel(subjects) %for each subject
+%     
+%     currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+%     
+%     disp(strcat('plotting photometry data for_', subjects{subj}));
+%            
+%    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+%        
+%        
+%         figure(figureCount) %one figure per SESSION
+%         figureCount= figureCount+1;
+%        
+%        
+%        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
+%       
+%        
+%       
+%        
+%        % Raw session plots
+% %         hold on;
+% %         plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b'); %plot 465nm trace
+% %         plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m'); %plot 405nm trace
+% %         title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled ', ' box ', num2str(currentSubj(session).box)));
+% %         xlabel('time (s)');
+% %         ylabel('mV');
+% %         legend('blue (465)',' purple (405)');
+% 
+%        % Fitted session plots
+%         fitPurple= controlFit(currentSubj(session).reblue, currentSubj(session).repurple);
+%         
 %         hold on;
 %         plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b'); %plot 465nm trace
-%         plot(currentSubj(session).cutTime, currentSubj(session).repurple,'m'); %plot 405nm trace
+%         plot(currentSubj(session).cutTime, fitPurple,'m'); %plot 405nm trace
 %         title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled ', ' box ', num2str(currentSubj(session).box)));
 %         xlabel('time (s)');
 %         ylabel('mV');
-%         legend('blue (465)',' purple (405)');
-
-       % Fitted session plots
-        fitPurple= controlFit(currentSubj(session).reblue, currentSubj(session).repurple);
-        
-        hold on;
-        plot(currentSubj(session).cutTime, currentSubj(session).reblue, 'b'); %plot 465nm trace
-        plot(currentSubj(session).cutTime, fitPurple,'m'); %plot 405nm trace
-        title(strcat('Rat #',num2str(currentSubj(session).rat),' training day :', num2str(currentSubj(session).trainDay), ' downsampled ', ' box ', num2str(currentSubj(session).box)));
-        xlabel('time (s)');
-        ylabel('mV');
-        legend('blue (465)',' fitted purple (405)');
-        
-        
-        
-         %make figure full screen, save, and close this figure
-        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-% %         waitforbuttonpress();
-        saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'session',num2str(currentSubj(session).trainDay),'_downsampled_trace','.fig'));
-        close; %close
-   end  
-    
-end
+%         legend('blue (465)',' fitted purple (405)');
+%         
+%         
+%         
+%          %make figure full screen, save, and close this figure
+%         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% % %         waitforbuttonpress();
+%         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'session',num2str(currentSubj(session).trainDay),'_downsampled_trace','.fig'));
+%         close; %close
+%    end  
+%     
+% end
 
 
 %% ~~~Photometry Signal processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2023,27 +2023,27 @@ end
 end %end subject loop
         
 
-%% visualize side by side timelock to cue,pe,lick, trial
-for subj= 1:numel(subjects)
-    timeLock= [-preCueFrames:postCueFrames]/fs;
-    currentSubj= subjDataAnalyzed.(subjects{subj})
-    for session= 1:numel(currentSubj)
-        if currentSubj(session).trainStage== 7 %plot only certain sessions
-        figure; sgtitle(strcat('subj_',subjects{subj}))
-        subplot(4,1,1); title('timelock to CUE');
-%         plot(timeLock, squeeze(currentSubj(session).periDS.DSzblue), 'b');
-        plot(timeLock, currentSubj(session).periDS.DSzblueMean, 'b');
-        subplot(4,1,2); title('timelock to first PE');
-%         plot(timeLock,squeeze(currentSubj(session).periDSpox.DSzpoxblue), 'b');
-        plot(timeLock, currentSubj(session).periDSpox.DSzpoxblueMean, 'b');
-        subplot(4,1,3); title('timelock to first lick');
-%         plot(timeLock,squeeze(currentSubj(session).periDSpox.DSzpoxblue), 'b');
-        plot(timeLock, currentSubj(session).periDSlox.DSzloxblueMean, 'b');
-        subplot(4,1,4); title('timelock to trial start');
-        plot(timeLock, currentSubj(session).periDS.trialShift.DSzblueMean, 'b');
-        end
-    end% end session loop
-end%end subj loop
+% %% visualize side by side timelock to cue,pe,lick, trial
+% for subj= 1:numel(subjects)
+%     timeLock= [-preCueFrames:postCueFrames]/fs;
+%     currentSubj= subjDataAnalyzed.(subjects{subj});
+%     for session= 1:numel(currentSubj)
+%         if currentSubj(session).trainStage== 7 %plot only certain sessions
+%         figure; sgtitle(strcat('subj_',subjects{subj}))
+%         subplot(4,1,1); hold on; title('timelock to CUE');
+% %         plot(timeLock, squeeze(currentSubj(session).periDS.DSzblue), 'b');
+%         plot(timeLock, currentSubj(session).periDS.DSzblueMean, 'b');
+%         subplot(4,1,2); hold on; title('timelock to first PE');
+% %         plot(timeLock,squeeze(currentSubj(session).periDSpox.DSzpoxblue), 'b');
+%         plot(timeLock, currentSubj(session).periDSpox.DSzpoxblueMean, 'b');
+%         subplot(4,1,3); hold on; title('timelock to first lick');
+% %         plot(timeLock,squeeze(currentSubj(session).periDSpox.DSzpoxblue), 'b');
+%         plot(timeLock, currentSubj(session).periDSlox.DSzloxblueMean, 'b');
+%         subplot(4,1,4); hold on; title('timelock to trial start');
+%         plot(timeLock, currentSubj(session).periDS.trialShift.DSzblueMean, 'b');
+%         end
+%     end% end session loop
+% end%end subj loop
 
  subjectsAnalyzed = fieldnames(subjDataAnalyzed); %now, let's save an array containing all of the analyzed subject IDs (may be useful later if we decide to exclude subjects from analysis)
 %% ~~~Individual subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4232,6 +4232,339 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
     end %end variable reward conditional
 end %end subject loop
 
+
+%% Extract data from specific sessions- EXAMPLE
+%dp 9/20/2020 more efficient way to get data from specific stages
+%rather than using a bunch of conditionals and repeated loops, get the
+%number of unique training stages and loop through sessions to save data from each stage together
+%should also prevent errors by not referencing specific stages that don't exist (e.g. if
+%animals are partially through training but haven't reached a stage)
+
+% for subj= 1:numel(subjects)
+%     currentSubj= subjDataAnalyzed.(subjects{subj});
+%     allStages= unique([currentSubj.trainStage]);
+%     for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+%         includedSessions= []; %excluded sessions will reset between unique stages
+%         
+%         %loop through all sessions and record index of sessions that correspond only to this stage
+%         for session= 1:numel(currentSubj)
+%             if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+%                includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+%             end
+%         end%end session loop
+%     
+%         
+%         figure(figureCount); hold on; sgtitle('plot by stages example');
+%         subplot(2, allStages(end), thisStage); title(strcat('DS stage-',num2str(thisStage)));
+%         subplot(2,allStages(end), allStages(end)+thisStage); title(strcat('NS stage-', num2str(thisStage)));
+% 
+%     end %end Stage loop 
+%       figureCount= figureCount+1;
+% end %end subj loop
+
+%% Peri-DS 2d plots by stage
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    allStages= unique([currentSubj.trainStage]);
+    
+    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+        includedSessions= []; %excluded sessions will reset between unique stages
+        
+        %loop through all sessions and record index of sessions that correspond only to this stage
+        for session= 1:numel(currentSubj)
+            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+            end
+        end%end session loop
+    
+        %create empty arrays that we'll use to extract data from each included session
+        DSblue= [];
+        DSpurple= [];
+        NSblue= [];
+        NSpurple= [];
+        
+        for includedSession= includedSessions %loop through only sessions that match this stage
+            %Extracting periDS (timelocked to DS) photometry signals
+            DSblue= [DSblue,squeeze(currentSubj(includedSession).periDS.DSzblue)]; %squeeze to make 2d and concatenate
+            DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple)];
+            NSblue= [NSblue, squeeze(currentSubj(includedSession).periNS.NSzblue)];
+            NSpurple= [NSpurple, squeeze(currentSubj(includedSession).periNS.NSzpurple)];
+        end
+        
+    
+        
+     %generate heatplots
+        figure(figureCount); hold on; sgtitle(strcat(subjects{subj},'-peri-DSz by stages'));
+        subplot(2, allStages(end), thisStage); title(strcat('465nm Stage-',num2str(thisStage))); hold on;
+        
+%         plot(timeLock, DSblue, 'k--'); %plot all individual trials
+        plot(timeLock, nanmean(DSblue, 2), 'b'); %plot mean
+        xlabel('time to cue (s)'); ylabel('mean z-score 465nm');
+       
+        
+        subplot(2, allStages(end), allStages(end)+thisStage); title(strcat('405nm Stage-', num2str(thisStage))); hold on;
+
+%         plot(timeLock, DSpurple, 'k--'); %plot all individual trials
+        plot(timeLock, nanmean(DSpurple, 2), 'm'); %plot mean
+        xlabel('time to cue (s)'); ylabel('mean z-score 405nm');
+
+            
+    end %end Stage loop 
+       
+    linkaxes; %make axes of subplots equal for nicer look & sense of scale
+    
+    figureCount= figureCount+1;
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+end %end subj loop
+
+%% peri-DS heatplots by stage
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    allStages= unique([currentSubj.trainStage]);
+    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+        includedSessions= []; %excluded sessions will reset between unique stages
+        
+        %loop through all sessions and record index of sessions that correspond only to this stage
+        for session= 1:numel(currentSubj)
+            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+            end
+        end%end session loop
+    
+        %create empty arrays that we'll use to extract data from each included session
+        DSblue= [];
+        DSpurple= [];
+        NSblue= [];
+        NSpurple= [];
+        
+        for includedSession= includedSessions %loop through only sessions that match this stage
+            %Extracting periDS (timelocked to DS) photometry signals
+            DSblue= [DSblue,squeeze(currentSubj(includedSession).periDS.DSzblue)]; %squeeze to make 2d and concatenate
+            DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple)];
+            NSblue= [NSblue, squeeze(currentSubj(includedSession).periNS.NSzblue)];
+            NSpurple= [NSpurple, squeeze(currentSubj(includedSession).periNS.NSzpurple)];
+        end
+        
+     %get a shared color axis for all subplots
+     stdFactor= 4; %multiplicative factor- how many stds away should we set our max & min color value? 
+     
+     topDSzblue= stdFactor*abs(nanmean((std(DSblue, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzpurple= stdFactor*abs(nanmean((std(DSpurple, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+
+     bottomDSzblue = -stdFactor*abs(nanmean((std(DSblue, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     bottomDSzpurple= -stdFactor*abs(nanmean((std(DSpurple, 0, 2))));
+     
+     %now choose the most extreme of these two (between blue and
+     %purple)to represent the color axis 
+     bottomAllDS= min(bottomDSzblue, bottomDSzpurple);
+     topAllDS= max(topDSzblue, topDSzpurple);
+        
+     %generate heatplots
+        figure(figureCount); hold on; sgtitle(strcat(subjects{subj},'-peri-DSz by stages'));
+        subplot(2, allStages(end), thisStage); title(strcat('465nm Stage-',num2str(thisStage))); hold on;
+        
+        imagesc(timeLock, 1:size(DSblue,2), DSblue');
+        xlabel('time to cue (s)'); ylabel('trial');
+        set(gca,'YDir','reverse'); %for some reason y axis is flipped using imagesc()
+        ylim([1,size(DSblue,2)]); %this eliminates any extra white space
+        caxis([bottomAllDS,topAllDS]);
+       
+        
+        subplot(2, allStages(end), allStages(end)+thisStage); title(strcat('405nm Stage-', num2str(thisStage))); hold on;
+
+        imagesc(timeLock, 1:size(DSpurple,2), DSpurple');
+        xlabel('time to cue (s)'); ylabel('trial');
+        set(gca,'YDir','reverse'); %for some reason y axis is flipped using imagesc()
+        ylim([1,size(DSpurple,2)]); %this eliminates any extra white space
+        caxis([bottomAllDS,topAllDS]);
+
+            
+    end %end Stage loop 
+    
+    figure(figureCount)
+    cbar= colorbar; %just add one colorbar at the very end for each figure... no straightforward way to make this appear separate from a subplot
+    cbar.Position= [.92,.1, .02, .8]; %manually position colorbar to prevent downsizing of last subplot
+%     colorbar('Location','eastoutside'); %could do this but subplot is made smaller
+    %todo: this can be done https://www.mathworks.com/matlabcentral/answers/78635-how-to-display-only-one-legend-for-a-figure-with-multiple-plots
+    
+    figureCount= figureCount+1;
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+end %end subj loop
+
+%% Peri-DSpox 2d plots by stage
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    allStages= unique([currentSubj.trainStage]);
+    
+    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+        includedSessions= []; %excluded sessions will reset between unique stages
+        
+        %loop through all sessions and record index of sessions that correspond only to this stage
+        for session= 1:numel(currentSubj)
+            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+            end
+        end%end session loop
+    
+        %create empty arrays that we'll use to extract data from each included session
+        DSblue= [];
+        DSpurple= [];
+        NSblue= [];
+        NSpurple= [];
+        
+        for includedSession= includedSessions %loop through only sessions that match this stage
+            %Extracting periDS (timelocked to DS) photometry signals
+            DSblue= [DSblue,squeeze(currentSubj(includedSession).periDSpox.DSzpoxblue)]; %squeeze to make 2d and concatenate
+            DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDSpox.DSzpoxpurple)];
+            NSblue= [NSblue, squeeze(currentSubj(includedSession).periNSpox.NSzpoxblue)];
+            NSpurple= [NSpurple, squeeze(currentSubj(includedSession).periNSpox.NSzpoxpurple)];
+        end
+        
+    
+        
+     %generate plots
+        figure(figureCount); hold on; sgtitle(strcat(subjects{subj},'-peri first PE in DS epoch by stages'));
+        subplot(2, allStages(end), thisStage); title(strcat('465nm Stage-',num2str(thisStage))); hold on;
+        
+%         plot(timeLock, DSblue, 'k--'); %plot all individual trials
+        plot(timeLock, nanmean(DSblue, 2), 'b'); %plot mean
+        xlabel('time to first PE after DS (s)'); ylabel('mean z-score 465nm');
+        
+%             %calculate SEM for this subject (will be used to overlay this SEM or even between subjects SEM later)
+        sem(:,thisStage,subj)= (nanstd(DSblue,0,2))/sqrt(size(DSblue,2));
+        semLinePos= nanmean(DSblue,2)+sem(:,thisStage,subj); %save mean + sem and mean - s for easier patch() overlay
+        semLineNeg= nanmean(DSblue,2)-sem(:,thisStage,subj);
+%              %calculate std for trials in this stage (will be used to overlay std for some measure of variability)
+%         stdLinePos= nanmean(DSblue,2)+nanstd(DSblue,0,2); %save mean + std and mean - std for easier patch() overlay
+%         stdLineNeg= nanmean(DSblue,2)-nanstd(DSblue,0,2);
+             
+        patch([timeLock,timeLock(end:-1:1)],[semLinePos',semLineNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.5);
+
+        %add only one legend for the first subplot (seems to be easiest solution)
+        if thisStage== allStages(1)
+            legend('mean', 'within-subject SEM (n=# trials)');
+        end
+        
+        subplot(2, allStages(end), allStages(end)+thisStage); title(strcat('405nm Stage-', num2str(thisStage))); hold on;
+
+%         plot(timeLock, DSpurple, 'k--'); %plot all individual trials
+        plot(timeLock, nanmean(DSpurple, 2), 'm'); %plot mean
+        xlabel('time to first PE after DS (s)'); ylabel('mean z-score 405nm');
+
+        %             %calculate SEM for this subject (will be used to overlay this SEM or even between subjects SEM later)
+        sem(:,thisStage,subj)= (nanstd(DSpurple,0,2))/sqrt(size(DSpurple,2));
+        semLinePos= nanmean(DSpurple,2)+sem(:,thisStage,subj); %save mean + sem and mean - s for easier patch() overlay
+        semLineNeg= nanmean(DSpurple,2)-sem(:,thisStage,subj);
+%              %calculate std for trials in this stage (will be used to overlay std for some measure of variability)
+%         stdLinePos= nanmean(DSblue,2)+nanstd(DSblue,0,2); %save mean + std and mean - std for easier patch() overlay
+%         stdLineNeg= nanmean(DSblue,2)-nanstd(DSblue,0,2);
+             
+        patch([timeLock,timeLock(end:-1:1)],[semLinePos',semLineNeg(end:-1:1)'],'m','EdgeColor','None');alpha(0.5);
+
+        %add only one legend for the first subplot (seems to be easiest solution)
+        if thisStage== allStages(1)
+            legend('mean', 'within-subject SEM (n=# trials)');
+        end
+            
+    end %end Stage loop 
+       
+    linkaxes; %make axes of subplots equal for nicer look & sense of scale
+    
+    figureCount= figureCount+1;
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+end %end subj loop
+
+%% Peri-DSlox 2d plots by stage
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    allStages= unique([currentSubj.trainStage]);
+    
+    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+        includedSessions= []; %excluded sessions will reset between unique stages
+        
+        %loop through all sessions and record index of sessions that correspond only to this stage
+        for session= 1:numel(currentSubj)
+            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+            end
+        end%end session loop
+    
+        %create empty arrays that we'll use to extract data from each included session
+        DSblue= [];
+        DSpurple= [];
+        NSblue= [];
+        NSpurple= [];
+        
+        for includedSession= includedSessions %loop through only sessions that match this stage
+            %Extracting periDS (timelocked to DS) photometry signals
+            DSblue= [DSblue,squeeze(currentSubj(includedSession).periDSlox.DSzloxblue)]; %squeeze to make 2d and concatenate
+            DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDSlox.DSzloxpurple)];
+            NSblue= [NSblue, squeeze(currentSubj(includedSession).periNSlox.NSzloxblue)];
+            NSpurple= [NSpurple, squeeze(currentSubj(includedSession).periNSlox.NSzloxpurple)];
+        end
+        
+    
+        
+     %generate plots
+        figure(figureCount); hold on; sgtitle(strcat(subjects{subj},'-peri first LICK in DS epoch by stages'));
+        subplot(2, allStages(end), thisStage); title(strcat('465nm Stage-',num2str(thisStage))); hold on;
+        
+%         plot(timeLock, DSblue, 'k--'); %plot all individual trials
+        plot(timeLock, nanmean(DSblue, 2), 'b'); %plot mean
+        xlabel('time to first lick after DS (s)'); ylabel('mean z-score 465nm');
+        
+%             %calculate SEM for this subject (will be used to overlay this SEM or even between subjects SEM later)
+        sem(:,thisStage,subj)= (nanstd(DSblue,0,2))/sqrt(size(DSblue,2));
+        semLinePos= nanmean(DSblue,2)+sem(:,thisStage,subj); %save mean + sem and mean - s for easier patch() overlay
+        semLineNeg= nanmean(DSblue,2)-sem(:,thisStage,subj);
+%              %calculate std for trials in this stage (will be used to overlay std for some measure of variability)
+%         stdLinePos= nanmean(DSblue,2)+nanstd(DSblue,0,2); %save mean + std and mean - std for easier patch() overlay
+%         stdLineNeg= nanmean(DSblue,2)-nanstd(DSblue,0,2);
+             
+        patch([timeLock,timeLock(end:-1:1)],[semLinePos',semLineNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.5);
+
+        %add only one legend for the first subplot (seems to be easiest solution)
+        if thisStage== allStages(1)
+            legend('mean', 'within-subject SEM (n=# trials)');
+        end
+        
+        subplot(2, allStages(end), allStages(end)+thisStage); title(strcat('405nm Stage-', num2str(thisStage))); hold on;
+
+%         plot(timeLock, DSpurple, 'k--'); %plot all individual trials
+        plot(timeLock, nanmean(DSpurple, 2), 'm'); %plot mean
+        xlabel('time to first lick after DS (s)'); ylabel('mean z-score 405nm');
+
+        %             %calculate SEM for this subject (will be used to overlay this SEM or even between subjects SEM later)
+        sem(:,thisStage,subj)= (nanstd(DSpurple,0,2))/sqrt(size(DSpurple,2));
+        semLinePos= nanmean(DSpurple,2)+sem(:,thisStage,subj); %save mean + sem and mean - s for easier patch() overlay
+        semLineNeg= nanmean(DSpurple,2)-sem(:,thisStage,subj);
+%              %calculate std for trials in this stage (will be used to overlay std for some measure of variability)
+%         stdLinePos = nanmean(DSblue,2)+nanstd(DSblue,0,2); %save mean + std and mean - std for easier patch() overlay
+%         stdLineNeg= nanmean(DSblue,2)-nanstd(DSblue,0,2);
+             
+        patch([timeLock,timeLock(end:-1:1)],[semLinePos',semLineNeg(end:-1:1)'],'m','EdgeColor','None');alpha(0.5);
+
+        %add only one legend for the first subplot (seems to be easiest solution)
+        if thisStage== allStages(1)
+            legend('mean', 'within-subject SEM (n=# trials)');
+        end
+            
+    end %end Stage loop 
+       
+    linkaxes; %make axes of subplots equal for nicer look & sense of scale
+    
+    figureCount= figureCount+1;
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+end %end subj loop
+
+
 %% ~~ Between subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Between subjects- Heatplot of Avg response to cue (by date)
  
@@ -4445,27 +4778,27 @@ allRats.subjTrialNS=[];
 
     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
-%% Between subjects response to cue on key transition sessions
-%avg response timelocked to ALL CUES on key transition sessions
-%(e.g. first day of training, first day with NS, last day of stage 5
-btwnSubjAllCues();
-
-%% Between subjects response to FIRST PE after cue on key transition sessions
-%avg response timelocked to FIRST PE on key transition sessions
-%(e.g. first day of training, first day with NS, last day of stage 5
-
-btwnSubjFirstPox();
-
-%% Between subj response to cue- TRIALS NO PE 
-
-btwnSubjNoPE();
-
-%% Between subj response to cue- TRIALS WITH PE
-
-btwnSubjonlyPE();
-
-%% Between subj response to cue- TRIALS WHEN ALREADY IN PORT
-btwnSubjonlyInPort();
+ %% Between subjects response to cue on key transition sessions
+% %avg response timelocked to ALL CUES on key transition sessions
+% %(e.g. first day of training, first day with NS, last day of stage 5
+% btwnSubjAllCues();
+% 
+% %% Between subjects response to FIRST PE after cue on key transition sessions
+% %avg response timelocked to FIRST PE on key transition sessions
+% %(e.g. first day of training, first day with NS, last day of stage 5
+% 
+% btwnSubjFirstPox();
+% 
+% %% Between subj response to cue- TRIALS NO PE 
+% 
+% btwnSubjNoPE();
+% 
+% %% Between subj response to cue- TRIALS WITH PE
+% 
+% btwnSubjonlyPE();
+% 
+% %% Between subj response to cue- TRIALS WHEN ALREADY IN PORT
+% btwnSubjonlyInPort();
 
 %% Trying some stat with visualization
 
@@ -4493,7 +4826,7 @@ for subj= 1:numel(subjects)
     for session= 1:numel(currentSubj)
 
         for cue = 1:numel(currentSubj(session).behavior.poxDS)
-            
+%             cueResponse(:,cue)= [];
         end
         
     end %end session loop
@@ -4501,387 +4834,387 @@ end %end subj loop
     
 %% Scatter of cue-elicited response vs. port entry latency
 %This only includes trials that had a valid PE
-
-%first set parameters
-cueResponseFrames=1*fs; %time after cue over which to take avg activity 
-cueOnsetFrame= (periCueFrames-postCueFrames)+1;
-
-for subj= 1:numel(subjects) %for each subject
-   currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-       
-    %initialize/clear arrays between subjects
-    currentSubj(1).NSzblueAllTrials= [];
-    currentSubj(1).NSzpurpleAllTrials= [];
-    currentSubj(1).NSpeLatencyAllTrials= [];
-
-    sesCountA= 1;
-    sesCountB= 1;
-    sesCountC= 1;
-    sesCountD=1;
-
-    subjSessA= [];
-    subjSessB= [];
-    subjSessC= [];
-    subjSessD= [];
-    
-    trialAcount= 1;
-    trialBcount=1;
-    trialCcount=1;
-    trialDcount=1;
-    
-    trialBNScount=1;
-    trialCNScount=1;
-    trialDNScount=1;
-    
-    DSloxAllTrialsA = [];
-    DSloxAllTrialsB= [];
-    DSloxAllTrialsC= [];
-    DSloxAllTrialsD= [];
-    
-    NSloxAllTrialsA= [];
-    NSloxAllTrialsB= [];
-    NSloxAllTrialsC= [];
-    NSloxAllTrialsD= [];
-    
-    for session = 1:numel(currentSubj) %for each training session this subject completed
-       
-        clear NSselected
-        
-        %We can only include trials that have a PE latency, so we need to
-        %selectively extract these data first
-        
-            %get the DS cues
-        DSselected= currentSubj(session).periDS.DS;  % all the DS cues
-
-        %First, let's exclude trials where animal was already in port
-        %to do so, find indices of subjDataAnalyzed.behavior.inPortDS that
-        %have a non-nan value and use these to exclude DS trials from this
-        %analysis (we'll make them nan)
-            
-        %We have to throw in an extra conditional in case we've excluded
-        %cues in our peri cue analysis due to being too close to the
-        %beginning or end. Otherwise, we can get an out of range error
-        %because the inPortDS array doesn't exclude these cues.
-        for inPortTrial = find(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS))
-            if inPortTrial < numel(DSselected) 
-                DSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS)) = nan;
-            end
-        end
-        %Then, let's exclude trials where animal didn't make a PE during
-        %the cue epoch. To do so, get indices of empty cells in
-        %subjDataAnalyzed.behavior.poxDS (these are trials where no PE
-        %happened during the cue epoch) and then use these to set that DS =
-        %nan
-        
-        %same here, we need an extra conditional in case cues were excluded
-        for noPEtrial = find(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS))
-            if noPEtrial < numel(DSselected)
-                DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
-            end
-        end
-        
-        %this may create some zeros, so let's make those nan as well
-        DSselected(DSselected==0) = nan;
-        
-        %lets convert this to an index of trials with a valid value 
-        DSselected= find(~isnan(DSselected));
-        
-            %Repeat above for NS 
-        if ~isempty(currentSubj(session).periNS.NS)
-             NSselected= currentSubj(session).periNS.NS;  
-
-            %First, let's exclude trials where animal was already in port
-            %to do so, find indices of subjDataAnalyzed.behavior.inPortNS that
-            %have a non-nan value and use these to exclude NS trials from this
-            %analysis (we'll make them nan)
-
-            NSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS)) = nan;
-
-            %Then, let's exclude trials where animal didn't make a PE during
-            %the cue epoch. To do so, get indices of empty cells in
-            %subjDataAnalyzed.behavior.poxNS (these are trials where no PE
-            %happened during the cue epoch) and then use these to set that NS =
-            %nan
-            NSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS)) = nan;
-
-       
-            %lets convert this to an index of trials with a valid value 
-            NSselected= find(~isnan(NSselected));
-        end %end NS conditional       
-        
-        %Condition A
-            if currentSubj(session).trainStage <5
-                if sesCountA== 1 
-                    currentSubj(1).DSzblueAllTrialsA= squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
-                    currentSubj(1).DSzpurpleAllTrialsA= squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
-                    currentSubj(1).DSpeLatencyAllTrialsA= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
-                    
-%                     currentSubj(1).DSloxAllTrialsA= currentSubj(session).behavior.loxDS{DSselected};
-                    if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
-                        currentSubj(1).NSzblueAllTrialsA= squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)); 
-                        currentSubj(1).NSzpurpleAllTrialsA= squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected));
-                        currentSubj(1).NSpeLatencyAllTrialsA= currentSubj(session).behavior.NSpeLatency(NSselected); 
-                        
-                     else
-%                        continue %continue if no NS data
-                     end
-                else %add subsequent sessions using cat()
-                    currentSubj(1).DSzblueAllTrialsA = cat(2, currentSubj.DSzblueAllTrialsA, (squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                    currentSubj(1).DSzpurpleAllTrialsA = cat(2, currentSubj.DSzpurpleAllTrialsA, (squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                    currentSubj(1).DSpeLatencyAllTrialsA = cat(2,currentSubj(1).DSpeLatencyAllTrialsA,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-
-%                     currentSubj(1).DSloxAllTrialsA= cat(2,currentSubj(1).DSloxAllTrialsA,currentSubj(session).behavior.loxDS{DSselected});
-
-                    if ~isempty(currentSubj(session).periNS.NS)
-                        currentSubj(1).NSzblueAllTrialsA = cat(2, currentSubj.NSzblueAllTrialsA, (squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
-                        currentSubj(1).NSzpurpleAllTrialsA = cat(2, currentSubj.NSzpurpleAllTrialsA, (squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
-                        currentSubj(1).NSpeLatencyAllTrialsA = cat(2,currentSubj(1).NSpeLatencyAllTrialsA,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
-                    else
-%                         continue %continue if no NS data
-                    end
-                end %end sesCount conditional
-
-                    % licks
-                    currentSubj(1).DSloxAllTrialsA{sesCountA}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
-                
-                     %in order to sort licks according to trial by PE latency
-                     %later, we need to reshape the lox cell array from nested
-                     %{session}{cue} to just {cue}
-                      for cue = 1:numel(currentSubj(1).DSloxAllTrialsA{session})
-                          DSloxAllTrialsA{trialAcount} = currentSubj(1).DSloxAllTrialsA{session}{cue};
-                          trialAcount=trialAcount+1;
-                      end           
-
-%                       trialAcount=1; %reset counter
-%                       % NS licks
-%                     currentSubj(1).NSloxAllTrialsA{session}= currentSubj(session).behavior.loxNSrel(NSselected);
+% 
+% %first set parameters
+% cueResponseFrames=1*fs; %time after cue over which to take avg activity 
+% cueOnsetFrame= (periCueFrames-postCueFrames)+1;
+% 
+% for subj= 1:numel(subjects) %for each subject
+%    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+%        
+%     %initialize/clear arrays between subjects
+%     currentSubj(1).NSzblueAllTrials= [];
+%     currentSubj(1).NSzpurpleAllTrials= [];
+%     currentSubj(1).NSpeLatencyAllTrials= [];
+% 
+%     sesCountA= 1;
+%     sesCountB= 1;
+%     sesCountC= 1;
+%     sesCountD=1;
+% 
+%     subjSessA= [];
+%     subjSessB= [];
+%     subjSessC= [];
+%     subjSessD= [];
+%     
+%     trialAcount= 1;
+%     trialBcount=1;
+%     trialCcount=1;
+%     trialDcount=1;
+%     
+%     trialBNScount=1;
+%     trialCNScount=1;
+%     trialDNScount=1;
+%     
+%     DSloxAllTrialsA = [];
+%     DSloxAllTrialsB= [];
+%     DSloxAllTrialsC= [];
+%     DSloxAllTrialsD= [];
+%     
+%     NSloxAllTrialsA= [];
+%     NSloxAllTrialsB= [];
+%     NSloxAllTrialsC= [];
+%     NSloxAllTrialsD= [];
+%     
+%     for session = 1:numel(currentSubj) %for each training session this subject completed
+%        
+%         clear NSselected
+%         
+%         %We can only include trials that have a PE latency, so we need to
+%         %selectively extract these data first
+%         
+%             %get the DS cues
+%         DSselected= currentSubj(session).periDS.DS;  % all the DS cues
+% 
+%         %First, let's exclude trials where animal was already in port
+%         %to do so, find indices of subjDataAnalyzed.behavior.inPortDS that
+%         %have a non-nan value and use these to exclude DS trials from this
+%         %analysis (we'll make them nan)
+%             
+%         %We have to throw in an extra conditional in case we've excluded
+%         %cues in our peri cue analysis due to being too close to the
+%         %beginning or end. Otherwise, we can get an out of range error
+%         %because the inPortDS array doesn't exclude these cues.
+%         for inPortTrial = find(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS))
+%             if inPortTrial < numel(DSselected) 
+%                 DSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS)) = nan;
+%             end
+%         end
+%         %Then, let's exclude trials where animal didn't make a PE during
+%         %the cue epoch. To do so, get indices of empty cells in
+%         %subjDataAnalyzed.behavior.poxDS (these are trials where no PE
+%         %happened during the cue epoch) and then use these to set that DS =
+%         %nan
+%         
+%         %same here, we need an extra conditional in case cues were excluded
+%         for noPEtrial = find(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS))
+%             if noPEtrial < numel(DSselected)
+%                 DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
+%             end
+%         end
+%         
+%         %this may create some zeros, so let's make those nan as well
+%         DSselected(DSselected==0) = nan;
+%         
+%         %lets convert this to an index of trials with a valid value 
+%         DSselected= find(~isnan(DSselected));
+%         
+%             %Repeat above for NS 
+%         if ~isempty(currentSubj(session).periNS.NS)
+%              NSselected= currentSubj(session).periNS.NS;  
+% 
+%             %First, let's exclude trials where animal was already in port
+%             %to do so, find indices of subjDataAnalyzed.behavior.inPortNS that
+%             %have a non-nan value and use these to exclude NS trials from this
+%             %analysis (we'll make them nan)
+% 
+%             NSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS)) = nan;
+% 
+%             %Then, let's exclude trials where animal didn't make a PE during
+%             %the cue epoch. To do so, get indices of empty cells in
+%             %subjDataAnalyzed.behavior.poxNS (these are trials where no PE
+%             %happened during the cue epoch) and then use these to set that NS =
+%             %nan
+%             NSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS)) = nan;
+% 
+%        
+%             %lets convert this to an index of trials with a valid value 
+%             NSselected= find(~isnan(NSselected));
+%         end %end NS conditional       
+%         
+%         %Condition A
+%             if currentSubj(session).trainStage <5
+%                 if sesCountA== 1 
+%                     currentSubj(1).DSzblueAllTrialsA= squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
+%                     currentSubj(1).DSzpurpleAllTrialsA= squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
+%                     currentSubj(1).DSpeLatencyAllTrialsA= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
 %                     
-%                     for cue= 1:numel(currentSubj(1).NSloxAllTrialsA{session})
-%                         NSloxAllTrialsA{trialAcount}= currentSubj(1).NSloxAllTrialsA{session}{cue};
-%                         trialAcount=trialAcount+1;
-%                     end
+% %                     currentSubj(1).DSloxAllTrialsA= currentSubj(session).behavior.loxDS{DSselected};
+%                     if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
+%                         currentSubj(1).NSzblueAllTrialsA= squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)); 
+%                         currentSubj(1).NSzpurpleAllTrialsA= squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected));
+%                         currentSubj(1).NSpeLatencyAllTrialsA= currentSubj(session).behavior.NSpeLatency(NSselected); 
 %                         
-                      
-                sesCountA= sesCountA+1;
-                subjSessA= cat(2, subjSessA, currentSubj(session).trainDay); %day count for y axis
-
-            end %end Cond A
-            
-            %Condition B
-                   if currentSubj(session).trainStage ==5
-                        if sesCountB== 1 
-                            currentSubj(1).DSzblueAllTrialsB= squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
-                            currentSubj(1).DSzpurpleAllTrialsB= squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
-                            currentSubj(1).DSpeLatencyAllTrialsB= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
-                             if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
-                                currentSubj(1).NSzblueAllTrialsB= squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)); 
-                                currentSubj(1).NSzpurpleAllTrialsB= squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected));
-                                currentSubj(1).NSpeLatencyAllTrialsB= currentSubj(session).behavior.NSpeLatency(NSselected); 
-                             else
-%                                continue %continue if no NS data
-                             end
-                        else %add subsequent sessions using cat()
-                            currentSubj(1).DSzblueAllTrialsB = cat(2, currentSubj.DSzblueAllTrialsB, (squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                            currentSubj(1).DSzpurpleAllTrialsB = cat(2, currentSubj.DSzpurpleAllTrialsB, (squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                            currentSubj(1).DSpeLatencyAllTrialsB = cat(2,currentSubj(1).DSpeLatencyAllTrialsB,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-
-                            if ~isempty(currentSubj(session).periNS.NS)
-                                currentSubj(1).NSzblueAllTrialsB = cat(2, currentSubj.NSzblueAllTrialsB, (squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
-                                currentSubj(1).NSzpurpleAllTrialsB = cat(2, currentSubj.NSzpurpleAllTrialsB, (squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
-                                currentSubj(1).NSpeLatencyAllTrialsB = cat(2,currentSubj(1).NSpeLatencyAllTrialsB,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
-                            else
-%                                 continue %continue if nos NS data
-                            end
-                        end %end sesCount conditional
-
-                        
-                         %licks
-                        currentSubj(1).DSloxAllTrialsB{sesCountB}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
-
-                        currentSubj(1).NSloxAllTrialsB{sesCountB}= currentSubj(session).behavior.loxNSrel(NSselected);
-
-                        
-                         %in order to sort licks according to trial by PE latency
-                         %later, we need to reshape the lox cell array from nested
-                         %{session}{cue} to just {cue}
-                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsB{sesCountB})
-                              DSloxAllTrialsB{trialBcount} = currentSubj(1).DSloxAllTrialsB{sesCountB}{cue};
-                              trialBcount=trialBcount+1;
-                          end           
-                                            
-                        for cue= 1:numel(currentSubj(1).NSloxAllTrialsB{sesCountB})
-                            NSloxAllTrialsB{trialBNScount}= currentSubj(1).NSloxAllTrialsB{sesCountB}{cue};
-                            trialBNScount=trialBNScount+1;
-                        end
-
-                        
-                        sesCountB= sesCountB+1;
-                        subjSessB= cat(2, subjSessB, currentSubj(session).trainDay); %day count for y axis
-
-                  end %end Cond B
-                  
-              %Condition C
-               if currentSubj(session).trainStage== 6 || currentSubj(session).trainStage ==7
-                   
-                    if sesCountC== 1 
-                        currentSubj(1).DSzblueAllTrialsC= squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
-                        currentSubj(1).DSzpurpleAllTrialsC= squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
-                        currentSubj(1).DSpeLatencyAllTrialsC= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
-                         if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
-                            currentSubj(1).NSzblueAllTrialsC= squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)); 
-                            currentSubj(1).NSzpurpleAllTrialsC= squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected));
-                            currentSubj(1).NSpeLatencyAllTrialsC= currentSubj(session).behavior.NSpeLatency(NSselected); 
-                         else
-%                            continue %continue if no NS data
-                         end
-                    else %add subsequent sessions using cat()
-                        currentSubj(1).DSzblueAllTrialsC = cat(2, currentSubj.DSzblueAllTrialsC, (squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                        currentSubj(1).DSzpurpleAllTrialsC = cat(2, currentSubj.DSzpurpleAllTrialsC, (squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                        currentSubj(1).DSpeLatencyAllTrialsC = cat(2, currentSubj(1).DSpeLatencyAllTrialsC, currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-
-                        if ~isempty(currentSubj(session).periNS.NS)
-                            currentSubj(1).NSzblueAllTrialsC = cat(2, currentSubj.NSzblueAllTrialsC, (squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
-                            currentSubj(1).NSzpurpleAllTrialsC = cat(2, currentSubj.NSzpurpleAllTrialsC, (squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
-                            currentSubj(1).NSpeLatencyAllTrialsC = cat(2,currentSubj(1).NSpeLatencyAllTrialsC,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
-                        else
-%                             continue %continue if nos NS data
-                        end
-                    end %end sesCount conditional
-
-                        %licks
-                        currentSubj(1).DSloxAllTrialsC{sesCountC}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
-
-                        currentSubj(1).NSloxAllTrialsC{sesCountC}= currentSubj(session).behavior.loxNSrel(NSselected);
-
-                        
-                         %in order to sort licks according to trial by PE latency
-                         %later, we need to reshape the lox cell array from nested
-                         %{session}{cue} to just {cue}
-                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsC{sesCountC})
-                              DSloxAllTrialsC{trialCcount} = currentSubj(1).DSloxAllTrialsC{sesCountC}{cue};
-                              trialCcount=trialCcount+1;
-                          end           
-                                            
-                        for cue= 1:numel(currentSubj(1).NSloxAllTrialsC{sesCountC})
-                            NSloxAllTrialsC{trialCNScount}= currentSubj(1).NSloxAllTrialsC{sesCountC}{cue};
-                            trialCNScount=trialCNScount+1;
-                        end
-
-                    sesCountC= sesCountC+1;
-                    subjSessC= cat(2, subjSessC, currentSubj(session).trainDay); %day count for y axis
-
-              end %end Cond C
-              
-                     
-              %Condition D
-               if currentSubj(session).trainStage==8
-                   
-                    if sesCountD== 1 
-                        currentSubj(1).DSzblueAllTrialsD= squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
-                        currentSubj(1).DSzpurpleAllTrialsD= squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
-                        currentSubj(1).DSpeLatencyAllTrialsD= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
-                         if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
-                            currentSubj(1).NSzblueAllTrialsD= squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)); 
-                            currentSubj(1).NSzpurpleAllTrialsD= squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected));
-                            currentSubj(1).NSpeLatencyAllTrialsD= currentSubj(session).behavior.NSpeLatency(NSselected); 
-                         else
-%                            continue %continue if no NS data
-                         end
-                    else %add subsequent sessions using cat()
-                        currentSubj(1).DSzblueAllTrialsD = cat(2, currentSubj.DSzblueAllTrialsD, (squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                        currentSubj(1).DSzpurpleAllTrialsD = cat(2, currentSubj.DSzpurpleAllTrialsD, (squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                        currentSubj(1).DSpeLatencyAllTrialsD = cat(2, currentSubj(1).DSpeLatencyAllTrialsD, currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-
-                        if ~isempty(currentSubj(session).periNS.NS)
-                            currentSubj(1).NSzblueAllTrialsD = cat(2, currentSubj.NSzblueAllTrialsD, (squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
-                            currentSubj(1).NSzpurpleAllTrialsD = cat(2, currentSubj.NSzpurpleAllTrialsD, (squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
-                            currentSubj(1).NSpeLatencyAllTrialsD = cat(2,currentSubj(1).NSpeLatencyAllTrialsD,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
-                        else
-%                             continue %continue if nos NS data
-                        end
-                    end %end sesCount conditional
-
-                        %licks
-                        currentSubj(1).DSloxAllTrialsD{sesCountD}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
-
-                        currentSubj(1).NSloxAllTrialsD{sesCountD}= currentSubj(session).behavior.loxNSrel(NSselected);
-
-                        
-                         %in order to sort licks according to trial by PE latency
-                         %later, we need to reshape the lox cell array from nested
-                         %{session}{cue} to just {cue}
-                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsD{sesCountD})
-                              DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsD{sesCountD}{cue};
-                              trialDcount=trialDcount+1;
-                          end           
-                                            
-                        for cue= 1:numel(currentSubj(1).NSloxAllTrialsD{sesCountD})
-                            NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsD{sesCountD}{cue};
-                            trialDNScount=trialDNScount+1;
-                        end
-
-                    sesCountD= sesCountD+1;
-                    subjSessD= cat(2, subjSessD, currentSubj(session).trainDay); %day count for y axis
-
-              end %end Cond D
-             
-   end %end session loop
-   
-   
-   %now get the mean z value within the cueResponseFrames
-        %cond A
-   currentSubj(1).meanDSzblueResponseA= nanmean(currentSubj(1).DSzblueAllTrialsA,1);
-   currentSubj(1).meanDSzpurpleResponseA= nanmean(currentSubj(1).DSzpurpleAllTrialsA,1);
-   
-        %cond B
-   currentSubj(1).meanDSzblueResponseB= nanmean(currentSubj(1).DSzblueAllTrialsB,1);
-   currentSubj(1).meanDSzpurpleResponseB= nanmean(currentSubj(1).DSzpurpleAllTrialsB,1);
-   currentSubj(1).meanNSzblueResponseB= nanmean(currentSubj(1).NSzblueAllTrialsB,1);
-   currentSubj(1).meanNSzpurpleResponseB= nanmean(currentSubj(1).NSzpurpleAllTrialsB,1);
-        %cond C
-   currentSubj(1).meanDSzblueResponseC= nanmean(currentSubj(1).DSzblueAllTrialsC,1);
-   currentSubj(1).meanDSzpurpleResponseC= nanmean(currentSubj(1).DSzpurpleAllTrialsC,1);
-   currentSubj(1).meanNSzblueResponseC= nanmean(currentSubj(1).NSzblueAllTrialsC,1);
-   currentSubj(1).meanNSzpurpleResponseC= nanmean(currentSubj(1).NSzpurpleAllTrialsC,1);
-        %cond D
-   currentSubj(1).meanDSzblueResponseD= nanmean(currentSubj(1).DSzblueAllTrialsD,1);
-   currentSubj(1).meanDSzpurpleResponseD= nanmean(currentSubj(1).DSzpurpleAllTrialsD,1);
-   currentSubj(1).meanNSzblueResponseD= nanmean(currentSubj(1).NSzblueAllTrialsD,1);
-   currentSubj(1).meanNSzpurpleResponseD= nanmean(currentSubj(1).NSzpurpleAllTrialsD,1);
-
-   
-   figure(figureCount);
-   figureCount=figureCount+1;
- 
-   sgtitle(strcat('Rat #',num2str(currentSubj(1).rat),'PE latency by mean cue-evoked photometry response (within 1s)'));
-   
-   subplot(4,1,1); %cond A
-   scatter(currentSubj(1).meanDSzblueResponseA, currentSubj(1).DSpeLatencyAllTrialsA);
-   xlabel('465nm z score');
-   ylabel('PE latency (s)');
-   
-   subplot(4,1,2); %cond B
-   scatter(currentSubj(1).meanDSzblueResponseB, currentSubj(1).DSpeLatencyAllTrialsB);
-   xlabel('z score');
-   ylabel('PE latency (s)');
-   
-   subplot(4,1,3); %cond C
-   scatter(currentSubj(1).meanDSzblueResponseC, currentSubj(1).DSpeLatencyAllTrialsC);
-   xlabel('465nm z score');
-   ylabel('PE latency (s)');
-   
-    
-   subplot(4,1,4); %cond D
-   scatter(currentSubj(1).meanDSzblueResponseD, currentSubj(1).DSpeLatencyAllTrialsD);
-   xlabel('465nm z score');
-   ylabel('PE latency (s)');
-   
-   set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-   
-end %end subject loop
-
-
+%                      else
+% %                        continue %continue if no NS data
+%                      end
+%                 else %add subsequent sessions using cat()
+%                     currentSubj(1).DSzblueAllTrialsA = cat(2, currentSubj.DSzblueAllTrialsA, (squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                     currentSubj(1).DSzpurpleAllTrialsA = cat(2, currentSubj.DSzpurpleAllTrialsA, (squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                     currentSubj(1).DSpeLatencyAllTrialsA = cat(2,currentSubj(1).DSpeLatencyAllTrialsA,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
+% 
+% %                     currentSubj(1).DSloxAllTrialsA= cat(2,currentSubj(1).DSloxAllTrialsA,currentSubj(session).behavior.loxDS{DSselected});
+% 
+%                     if ~isempty(currentSubj(session).periNS.NS)
+%                         currentSubj(1).NSzblueAllTrialsA = cat(2, currentSubj.NSzblueAllTrialsA, (squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
+%                         currentSubj(1).NSzpurpleAllTrialsA = cat(2, currentSubj.NSzpurpleAllTrialsA, (squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
+%                         currentSubj(1).NSpeLatencyAllTrialsA = cat(2,currentSubj(1).NSpeLatencyAllTrialsA,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+%                     else
+% %                         continue %continue if no NS data
+%                     end
+%                 end %end sesCount conditional
+% 
+%                     % licks
+%                     currentSubj(1).DSloxAllTrialsA{sesCountA}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
+%                 
+%                      %in order to sort licks according to trial by PE latency
+%                      %later, we need to reshape the lox cell array from nested
+%                      %{session}{cue} to just {cue}
+%                       for cue = 1:numel(currentSubj(1).DSloxAllTrialsA{session})
+%                           DSloxAllTrialsA{trialAcount} = currentSubj(1).DSloxAllTrialsA{session}{cue};
+%                           trialAcount=trialAcount+1;
+%                       end           
+% 
+% %                       trialAcount=1; %reset counter
+% %                       % NS licks
+% %                     currentSubj(1).NSloxAllTrialsA{session}= currentSubj(session).behavior.loxNSrel(NSselected);
+% %                     
+% %                     for cue= 1:numel(currentSubj(1).NSloxAllTrialsA{session})
+% %                         NSloxAllTrialsA{trialAcount}= currentSubj(1).NSloxAllTrialsA{session}{cue};
+% %                         trialAcount=trialAcount+1;
+% %                     end
+% %                         
+%                       
+%                 sesCountA= sesCountA+1;
+%                 subjSessA= cat(2, subjSessA, currentSubj(session).trainDay); %day count for y axis
+% 
+%             end %end Cond A
+%             
+%             %Condition B
+%                    if currentSubj(session).trainStage ==5
+%                         if sesCountB== 1 
+%                             currentSubj(1).DSzblueAllTrialsB= squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
+%                             currentSubj(1).DSzpurpleAllTrialsB= squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
+%                             currentSubj(1).DSpeLatencyAllTrialsB= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
+%                              if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
+%                                 currentSubj(1).NSzblueAllTrialsB= squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)); 
+%                                 currentSubj(1).NSzpurpleAllTrialsB= squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected));
+%                                 currentSubj(1).NSpeLatencyAllTrialsB= currentSubj(session).behavior.NSpeLatency(NSselected); 
+%                              else
+% %                                continue %continue if no NS data
+%                              end
+%                         else %add subsequent sessions using cat()
+%                             currentSubj(1).DSzblueAllTrialsB = cat(2, currentSubj.DSzblueAllTrialsB, (squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                             currentSubj(1).DSzpurpleAllTrialsB = cat(2, currentSubj.DSzpurpleAllTrialsB, (squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                             currentSubj(1).DSpeLatencyAllTrialsB = cat(2,currentSubj(1).DSpeLatencyAllTrialsB,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
+% 
+%                             if ~isempty(currentSubj(session).periNS.NS)
+%                                 currentSubj(1).NSzblueAllTrialsB = cat(2, currentSubj.NSzblueAllTrialsB, (squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
+%                                 currentSubj(1).NSzpurpleAllTrialsB = cat(2, currentSubj.NSzpurpleAllTrialsB, (squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
+%                                 currentSubj(1).NSpeLatencyAllTrialsB = cat(2,currentSubj(1).NSpeLatencyAllTrialsB,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+%                             else
+% %                                 continue %continue if nos NS data
+%                             end
+%                         end %end sesCount conditional
+% 
+%                         
+%                          %licks
+%                         currentSubj(1).DSloxAllTrialsB{sesCountB}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
+% 
+%                         currentSubj(1).NSloxAllTrialsB{sesCountB}= currentSubj(session).behavior.loxNSrel(NSselected);
+% 
+%                         
+%                          %in order to sort licks according to trial by PE latency
+%                          %later, we need to reshape the lox cell array from nested
+%                          %{session}{cue} to just {cue}
+%                           for cue = 1:numel(currentSubj(1).DSloxAllTrialsB{sesCountB})
+%                               DSloxAllTrialsB{trialBcount} = currentSubj(1).DSloxAllTrialsB{sesCountB}{cue};
+%                               trialBcount=trialBcount+1;
+%                           end           
+%                                             
+%                         for cue= 1:numel(currentSubj(1).NSloxAllTrialsB{sesCountB})
+%                             NSloxAllTrialsB{trialBNScount}= currentSubj(1).NSloxAllTrialsB{sesCountB}{cue};
+%                             trialBNScount=trialBNScount+1;
+%                         end
+% 
+%                         
+%                         sesCountB= sesCountB+1;
+%                         subjSessB= cat(2, subjSessB, currentSubj(session).trainDay); %day count for y axis
+% 
+%                   end %end Cond B
+%                   
+%               %Condition C
+%                if currentSubj(session).trainStage== 6 || currentSubj(session).trainStage ==7
+%                    
+%                     if sesCountC== 1 
+%                         currentSubj(1).DSzblueAllTrialsC= squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
+%                         currentSubj(1).DSzpurpleAllTrialsC= squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
+%                         currentSubj(1).DSpeLatencyAllTrialsC= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
+%                          if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
+%                             currentSubj(1).NSzblueAllTrialsC= squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)); 
+%                             currentSubj(1).NSzpurpleAllTrialsC= squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected));
+%                             currentSubj(1).NSpeLatencyAllTrialsC= currentSubj(session).behavior.NSpeLatency(NSselected); 
+%                          else
+% %                            continue %continue if no NS data
+%                          end
+%                     else %add subsequent sessions using cat()
+%                         currentSubj(1).DSzblueAllTrialsC = cat(2, currentSubj.DSzblueAllTrialsC, (squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                         currentSubj(1).DSzpurpleAllTrialsC = cat(2, currentSubj.DSzpurpleAllTrialsC, (squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                         currentSubj(1).DSpeLatencyAllTrialsC = cat(2, currentSubj(1).DSpeLatencyAllTrialsC, currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
+% 
+%                         if ~isempty(currentSubj(session).periNS.NS)
+%                             currentSubj(1).NSzblueAllTrialsC = cat(2, currentSubj.NSzblueAllTrialsC, (squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
+%                             currentSubj(1).NSzpurpleAllTrialsC = cat(2, currentSubj.NSzpurpleAllTrialsC, (squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
+%                             currentSubj(1).NSpeLatencyAllTrialsC = cat(2,currentSubj(1).NSpeLatencyAllTrialsC,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+%                         else
+% %                             continue %continue if nos NS data
+%                         end
+%                     end %end sesCount conditional
+% 
+%                         %licks
+%                         currentSubj(1).DSloxAllTrialsC{sesCountC}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
+% 
+%                         currentSubj(1).NSloxAllTrialsC{sesCountC}= currentSubj(session).behavior.loxNSrel(NSselected);
+% 
+%                         
+%                          %in order to sort licks according to trial by PE latency
+%                          %later, we need to reshape the lox cell array from nested
+%                          %{session}{cue} to just {cue}
+%                           for cue = 1:numel(currentSubj(1).DSloxAllTrialsC{sesCountC})
+%                               DSloxAllTrialsC{trialCcount} = currentSubj(1).DSloxAllTrialsC{sesCountC}{cue};
+%                               trialCcount=trialCcount+1;
+%                           end           
+%                                             
+%                         for cue= 1:numel(currentSubj(1).NSloxAllTrialsC{sesCountC})
+%                             NSloxAllTrialsC{trialCNScount}= currentSubj(1).NSloxAllTrialsC{sesCountC}{cue};
+%                             trialCNScount=trialCNScount+1;
+%                         end
+% 
+%                     sesCountC= sesCountC+1;
+%                     subjSessC= cat(2, subjSessC, currentSubj(session).trainDay); %day count for y axis
+% 
+%               end %end Cond C
+%               
+%                      
+%               %Condition D
+%                if currentSubj(session).trainStage==8
+%                    
+%                     if sesCountD== 1 
+%                         currentSubj(1).DSzblueAllTrialsD= squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
+%                         currentSubj(1).DSzpurpleAllTrialsD= squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected));
+%                         currentSubj(1).DSpeLatencyAllTrialsD= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
+%                          if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
+%                             currentSubj(1).NSzblueAllTrialsD= squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)); 
+%                             currentSubj(1).NSzpurpleAllTrialsD= squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected));
+%                             currentSubj(1).NSpeLatencyAllTrialsD= currentSubj(session).behavior.NSpeLatency(NSselected); 
+%                          else
+% %                            continue %continue if no NS data
+%                          end
+%                     else %add subsequent sessions using cat()
+%                         currentSubj(1).DSzblueAllTrialsD = cat(2, currentSubj.DSzblueAllTrialsD, (squeeze(currentSubj(session).periDS.DSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                         currentSubj(1).DSzpurpleAllTrialsD = cat(2, currentSubj.DSzpurpleAllTrialsD, (squeeze(currentSubj(session).periDS.DSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                         currentSubj(1).DSpeLatencyAllTrialsD = cat(2, currentSubj(1).DSpeLatencyAllTrialsD, currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
+% 
+%                         if ~isempty(currentSubj(session).periNS.NS)
+%                             currentSubj(1).NSzblueAllTrialsD = cat(2, currentSubj.NSzblueAllTrialsD, (squeeze(currentSubj(session).periNS.NSzblue(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
+%                             currentSubj(1).NSzpurpleAllTrialsD = cat(2, currentSubj.NSzpurpleAllTrialsD, (squeeze(currentSubj(session).periNS.NSzpurple(cueOnsetFrame:cueOnsetFrame+cueResponseFrames,:,NSselected)))); 
+%                             currentSubj(1).NSpeLatencyAllTrialsD = cat(2,currentSubj(1).NSpeLatencyAllTrialsD,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+%                         else
+% %                             continue %continue if nos NS data
+%                         end
+%                     end %end sesCount conditional
+% 
+%                         %licks
+%                         currentSubj(1).DSloxAllTrialsD{sesCountD}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
+% 
+%                         currentSubj(1).NSloxAllTrialsD{sesCountD}= currentSubj(session).behavior.loxNSrel(NSselected);
+% 
+%                         
+%                          %in order to sort licks according to trial by PE latency
+%                          %later, we need to reshape the lox cell array from nested
+%                          %{session}{cue} to just {cue}
+%                           for cue = 1:numel(currentSubj(1).DSloxAllTrialsD{sesCountD})
+%                               DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsD{sesCountD}{cue};
+%                               trialDcount=trialDcount+1;
+%                           end           
+%                                             
+%                         for cue= 1:numel(currentSubj(1).NSloxAllTrialsD{sesCountD})
+%                             NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsD{sesCountD}{cue};
+%                             trialDNScount=trialDNScount+1;
+%                         end
+% 
+%                     sesCountD= sesCountD+1;
+%                     subjSessD= cat(2, subjSessD, currentSubj(session).trainDay); %day count for y axis
+% 
+%               end %end Cond D
+%              
+%    end %end session loop
+%    
+%    
+%    %now get the mean z value within the cueResponseFrames
+%         %cond A
+%    currentSubj(1).meanDSzblueResponseA= nanmean(currentSubj(1).DSzblueAllTrialsA,1);
+%    currentSubj(1).meanDSzpurpleResponseA= nanmean(currentSubj(1).DSzpurpleAllTrialsA,1);
+%    
+%         %cond B
+%    currentSubj(1).meanDSzblueResponseB= nanmean(currentSubj(1).DSzblueAllTrialsB,1);
+%    currentSubj(1).meanDSzpurpleResponseB= nanmean(currentSubj(1).DSzpurpleAllTrialsB,1);
+%    currentSubj(1).meanNSzblueResponseB= nanmean(currentSubj(1).NSzblueAllTrialsB,1);
+%    currentSubj(1).meanNSzpurpleResponseB= nanmean(currentSubj(1).NSzpurpleAllTrialsB,1);
+%         %cond C
+%    currentSubj(1).meanDSzblueResponseC= nanmean(currentSubj(1).DSzblueAllTrialsC,1);
+%    currentSubj(1).meanDSzpurpleResponseC= nanmean(currentSubj(1).DSzpurpleAllTrialsC,1);
+%    currentSubj(1).meanNSzblueResponseC= nanmean(currentSubj(1).NSzblueAllTrialsC,1);
+%    currentSubj(1).meanNSzpurpleResponseC= nanmean(currentSubj(1).NSzpurpleAllTrialsC,1);
+%         %cond D
+%    currentSubj(1).meanDSzblueResponseD= nanmean(currentSubj(1).DSzblueAllTrialsD,1);
+%    currentSubj(1).meanDSzpurpleResponseD= nanmean(currentSubj(1).DSzpurpleAllTrialsD,1);
+%    currentSubj(1).meanNSzblueResponseD= nanmean(currentSubj(1).NSzblueAllTrialsD,1);
+%    currentSubj(1).meanNSzpurpleResponseD= nanmean(currentSubj(1).NSzpurpleAllTrialsD,1);
+% 
+%    
+%    figure(figureCount);
+%    figureCount=figureCount+1;
+%  
+%    sgtitle(strcat('Rat #',num2str(currentSubj(1).rat),'PE latency by mean cue-evoked photometry response (within 1s)'));
+%    
+%    subplot(4,1,1); %cond A
+%    scatter(currentSubj(1).meanDSzblueResponseA, currentSubj(1).DSpeLatencyAllTrialsA);
+%    xlabel('465nm z score');
+%    ylabel('PE latency (s)');
+%    
+%    subplot(4,1,2); %cond B
+%    scatter(currentSubj(1).meanDSzblueResponseB, currentSubj(1).DSpeLatencyAllTrialsB);
+%    xlabel('z score');
+%    ylabel('PE latency (s)');
+%    
+%    subplot(4,1,3); %cond C
+%    scatter(currentSubj(1).meanDSzblueResponseC, currentSubj(1).DSpeLatencyAllTrialsC);
+%    xlabel('465nm z score');
+%    ylabel('PE latency (s)');
+%    
+%     
+%    subplot(4,1,4); %cond D
+%    scatter(currentSubj(1).meanDSzblueResponseD, currentSubj(1).DSpeLatencyAllTrialsD);
+%    xlabel('465nm z score');
+%    ylabel('PE latency (s)');
+%    
+%    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% 
+%    
+% end %end subject loop
+% 
+% 
 
 
 %% ~~~Behavioral plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -5939,317 +6272,225 @@ end %end subject loop
 
 %% stage 1-4 , 5, and 6+ session DS plots
 
-for subj= 1:numel(subjects) %for each subject
-   currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-   
-   
-  sesCountA= 1;
-  sesCountB= 1;
-  sesCountC= 1;
-  
-  sesCountD= 1;
-  
-  subjSessA= [];
-  subjSessB= [];
-  subjSessC= [];
-  
-  subjSessD= [];
-
-   for session = 1:numel(currentSubj) %for each training session this subject completed
-              
-       %compare avg response to cue for each session across stages
-       
-       %First get data from sessions on stages <5
-       if currentSubj(session).trainStage <5
-            if sesCountA ==1 %for the first session, get this sessions periDS blue z score response
-                        currentSubj(1).DSzblueSessionMeanA= currentSubj(session).periDS.DSzblueMean; 
-                        currentSubj(1).DSzpurpleSessionMeanA= currentSubj(session).periDS.DSzpurpleMean;
-                else % add on periDS response for subsequent sessions
-                        currentSubj(1).DSzblueSessionMeanA= cat(2, currentSubj(1).DSzblueSessionMeanA, currentSubj(session).periDS.DSzblueMean);
-                        currentSubj(1).DSzpurpleSessionMeanA= cat(2, currentSubj(1).DSzpurpleSessionMeanA, currentSubj(session).periDS.DSzpurpleMean);
-            end
-            sesCountA= sesCountA+1;
-            subjSessA= cat(2, subjSessA, currentSubj(session).trainDay); %day count for y axis
-       end %end conditional A
-       
-       %now get data from sessions on stage 5
-       if currentSubj(session).trainStage == 5
-              if sesCountB ==1 %for the first session, get this sessions periDS blue z score response
-                        currentSubj(1).DSzblueSessionMeanB= currentSubj(session).periDS.DSzblueMean; 
-                        currentSubj(1).DSzpurpleSessionMeanB= currentSubj(session).periDS.DSzpurpleMean;
-                        currentSubj(1).NSzblueSessionMeanB= currentSubj(session).periNS.NSzblueMean;
-                        currentSubj(1).NSzpurpleSessionMeanB= currentSubj(session).periNS.NSzpurpleMean;
-              else % add on periDS response for subsequent sessions
-                        currentSubj(1).DSzblueSessionMeanB= cat(2, currentSubj(1).DSzblueSessionMeanB, currentSubj(session).periDS.DSzblueMean);
-                        currentSubj(1).DSzpurpleSessionMeanB= cat(2, currentSubj(1).DSzpurpleSessionMeanB, currentSubj(session).periDS.DSzpurpleMean);
-                        currentSubj(1).NSzblueSessionMeanB= cat(2, currentSubj(1).NSzblueSessionMeanB, currentSubj(session).periNS.NSzblueMean);
-                        currentSubj(1).NSzpurpleSessionMeanB= cat(2, currentSubj(1).NSzpurpleSessionMeanB, currentSubj(session).periNS.NSzpurpleMean);
-              end
-              sesCountB= sesCountB+1;
-              subjSessB= cat(2, subjSessB, currentSubj(session).trainDay); %day count for y axis
-
-       end %end conditional B
-       
-       %now get data from sessions above stages 6-7 (where delay introduced)
-       if currentSubj(session).trainStage==6 || currentSubj(session).trainStage==7
-            if sesCountC ==1 %for the first session, get this sessions periDS blue z score response
-                        currentSubj(1).DSzblueSessionMeanC= currentSubj(session).periDS.DSzblueMean; 
-                        currentSubj(1).DSzpurpleSessionMeanC= currentSubj(session).periDS.DSzpurpleMean;
-                        currentSubj(1).NSzblueSessionMeanC= currentSubj(session).periNS.NSzblueMean;
-                        currentSubj(1).NSzpurpleSessionMeanC= currentSubj(session).periNS.NSzpurpleMean;
-             else % add on periDS response for subsequent sessions
-                        currentSubj(1).DSzblueSessionMeanC= cat(2, currentSubj(1).DSzblueSessionMeanC, currentSubj(session).periDS.DSzblueMean);
-                        currentSubj(1).DSzpurpleSessionMeanC= cat(2, currentSubj(1).DSzpurpleSessionMeanC, currentSubj(session).periDS.DSzpurpleMean);
-                        currentSubj(1).NSzblueSessionMeanC= cat(2, currentSubj(1).NSzblueSessionMeanC, currentSubj(session).periNS.NSzblueMean);
-                        currentSubj(1).NSzpurpleSessionMeanC= cat(2, currentSubj(1).NSzpurpleSessionMeanC, currentSubj(session).periNS.NSzpurpleMean);
-            end
-            sesCountC= sesCountC+1;
-            subjSessC= cat(2, subjSessC, currentSubj(session).trainDay); %day count for y axis
-
-       end %end conditional C
-       
-       
-       if currentSubj(session).trainStage == 8
-           
-           if sesCountD ==1 %for the first session, get this sessions periDS blue z score response
-                        currentSubj(1).DSzblueSessionMeanD= currentSubj(session).periDS.DSzblueMean; 
-                        currentSubj(1).DSzpurpleSessionMeanD= currentSubj(session).periDS.DSzpurpleMean;
-                        currentSubj(1).NSzblueSessionMeanD= currentSubj(session).periNS.NSzblueMean;
-                        currentSubj(1).NSzpurpleSessionMeanD= currentSubj(session).periNS.NSzpurpleMean;
-             else % add on periDS response for subsequent sessions
-                        currentSubj(1).DSzblueSessionMeanD= cat(2, currentSubj(1).DSzblueSessionMeanD, currentSubj(session).periDS.DSzblueMean);
-                        currentSubj(1).DSzpurpleSessionMeanD= cat(2, currentSubj(1).DSzpurpleSessionMeanD, currentSubj(session).periDS.DSzpurpleMean);
-                        currentSubj(1).NSzblueSessionMeanD= cat(2, currentSubj(1).NSzblueSessionMeanD, currentSubj(session).periNS.NSzblueMean);
-                        currentSubj(1).NSzpurpleSessionMeanD= cat(2, currentSubj(1).NSzpurpleSessionMeanD, currentSubj(session).periNS.NSzpurpleMean);
-            end
-            sesCountD= sesCountD+1;
-            subjSessD= cat(2, subjSessD, currentSubj(session).trainDay); %day count for y axis
-
-       end %end conditional D
-       
-    end %end session loop
- 
-    
-    %Transpose for readability
-    currentSubj(1).DSzblueSessionMeanA= currentSubj(1).DSzblueSessionMeanA';
-    currentSubj(1).DSzpurpleSessionMeanA= currentSubj(1).DSzpurpleSessionMeanA';
-    
-    currentSubj(1).DSzblueSessionMeanB= currentSubj(1).DSzblueSessionMeanB';
-    currentSubj(1).DSzpurpleSessionMeanB= currentSubj(1).DSzpurpleSessionMeanB';
-    currentSubj(1).NSzblueSessionMeanB= currentSubj(1).NSzblueSessionMeanB';
-    currentSubj(1).NSzpurpleSessionMeanB= currentSubj(1).NSzpurpleSessionMeanB';
-    
-    currentSubj(1).DSzblueSessionMeanC= currentSubj(1).DSzblueSessionMeanC';
-    currentSubj(1).DSzpurpleSessionMeanC= currentSubj(1).DSzpurpleSessionMeanC';
-    currentSubj(1).NSzblueSessionMeanC= currentSubj(1).NSzblueSessionMeanC';
-    currentSubj(1).NSzpurpleSessionMeanC= currentSubj(1).NSzpurpleSessionMeanC';
-    
-    
-    currentSubj(1).DSzblueSessionMeanD= currentSubj(1).DSzblueSessionMeanD';
-    currentSubj(1).DSzpurpleSessionMeanD= currentSubj(1).DSzpurpleSessionMeanD';
-    currentSubj(1).NSzblueSessionMeanD= currentSubj(1).NSzblueSessionMeanD';
-    currentSubj(1).NSzpurpleSessionMeanD= currentSubj(1).NSzpurpleSessionMeanD';
-    
-
-%     %get list of session days for heatplot y axis (transposed for readability)
-%     subjTrial= cat(2, currentSubj.trainDay).'; %this is only training days for this subj
-
-  
-    
-    %get list of session days for heatplot y axis
-%     subjTrialNS=[]; %keep track of sessions that have valid NS trials
-%     dateNS= [];
-%     for session = 1:numel(currentSubj) %for each training session this subject completed
-%         if ~isempty(currentSubj(session).periNS.NSzblueMean) %if there's an NS trial in this session, add it to the array that will mark the y axis
-% %              subjTrialNS= cat(2, subjTrialNS, currentSubj(session).trainDay); %old method based on trainDay
-%                 dateNS= cat(2, dateNS, currentSubj(session).date);
-%         end
+% for subj= 1:numel(subjects) %for each subject
+%    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+%    
+%    
+%   sesCountA= 1;
+%   sesCountB= 1;
+%   sesCountC= 1;
+%   
+%   sesCountD= 1;
+%   
+%   subjSessA= [];
+%   subjSessB= [];
+%   subjSessC= [];
+%   
+%   subjSessD= [];
+% 
+%    for session = 1:numel(currentSubj) %for each training session this subject completed
+%               
+%        %compare avg response to cue for each session across stages
+%        
+%        %First get data from sessions on stages <5
+%        if currentSubj(session).trainStage <5
+%             if sesCountA ==1 %for the first session, get this sessions periDS blue z score response
+%                         currentSubj(1).DSzblueSessionMeanA= currentSubj(session).periDS.DSzblueMean; 
+%                         currentSubj(1).DSzpurpleSessionMeanA= currentSubj(session).periDS.DSzpurpleMean;
+%                 else % add on periDS response for subsequent sessions
+%                         currentSubj(1).DSzblueSessionMeanA= cat(2, currentSubj(1).DSzblueSessionMeanA, currentSubj(session).periDS.DSzblueMean);
+%                         currentSubj(1).DSzpurpleSessionMeanA= cat(2, currentSubj(1).DSzpurpleSessionMeanA, currentSubj(session).periDS.DSzpurpleMean);
+%             end
+%             sesCountA= sesCountA+1;
+%             subjSessA= cat(2, subjSessA, currentSubj(session).trainDay); %day count for y axis
+%        end %end conditional A
+%        
+%        %now get data from sessions on stage 5
+%        if currentSubj(session).trainStage == 5
+%               if sesCountB ==1 %for the first session, get this sessions periDS blue z score response
+%                         currentSubj(1).DSzblueSessionMeanB= currentSubj(session).periDS.DSzblueMean; 
+%                         currentSubj(1).DSzpurpleSessionMeanB= currentSubj(session).periDS.DSzpurpleMean;
+%                         currentSubj(1).NSzblueSessionMeanB= currentSubj(session).periNS.NSzblueMean;
+%                         currentSubj(1).NSzpurpleSessionMeanB= currentSubj(session).periNS.NSzpurpleMean;
+%               else % add on periDS response for subsequent sessions
+%                         currentSubj(1).DSzblueSessionMeanB= cat(2, currentSubj(1).DSzblueSessionMeanB, currentSubj(session).periDS.DSzblueMean);
+%                         currentSubj(1).DSzpurpleSessionMeanB= cat(2, currentSubj(1).DSzpurpleSessionMeanB, currentSubj(session).periDS.DSzpurpleMean);
+%                         currentSubj(1).NSzblueSessionMeanB= cat(2, currentSubj(1).NSzblueSessionMeanB, currentSubj(session).periNS.NSzblueMean);
+%                         currentSubj(1).NSzpurpleSessionMeanB= cat(2, currentSubj(1).NSzpurpleSessionMeanB, currentSubj(session).periNS.NSzpurpleMean);
+%               end
+%               sesCountB= sesCountB+1;
+%               subjSessB= cat(2, subjSessB, currentSubj(session).trainDay); %day count for y axis
+% 
+%        end %end conditional B
+%        
+%        %now get data from sessions above stages 6-7 (where delay introduced)
+%        if currentSubj(session).trainStage==6 || currentSubj(session).trainStage==7
+%             if sesCountC ==1 %for the first session, get this sessions periDS blue z score response
+%                         currentSubj(1).DSzblueSessionMeanC= currentSubj(session).periDS.DSzblueMean; 
+%                         currentSubj(1).DSzpurpleSessionMeanC= currentSubj(session).periDS.DSzpurpleMean;
+%                         currentSubj(1).NSzblueSessionMeanC= currentSubj(session).periNS.NSzblueMean;
+%                         currentSubj(1).NSzpurpleSessionMeanC= currentSubj(session).periNS.NSzpurpleMean;
+%              else % add on periDS response for subsequent sessions
+%                         currentSubj(1).DSzblueSessionMeanC= cat(2, currentSubj(1).DSzblueSessionMeanC, currentSubj(session).periDS.DSzblueMean);
+%                         currentSubj(1).DSzpurpleSessionMeanC= cat(2, currentSubj(1).DSzpurpleSessionMeanC, currentSubj(session).periDS.DSzpurpleMean);
+%                         currentSubj(1).NSzblueSessionMeanC= cat(2, currentSubj(1).NSzblueSessionMeanC, currentSubj(session).periNS.NSzblueMean);
+%                         currentSubj(1).NSzpurpleSessionMeanC= cat(2, currentSubj(1).NSzpurpleSessionMeanC, currentSubj(session).periNS.NSzpurpleMean);
+%             end
+%             sesCountC= sesCountC+1;
+%             subjSessC= cat(2, subjSessC, currentSubj(session).trainDay); %day count for y axis
+% 
+%        end %end conditional C
+%        
+%        
+%        if currentSubj(session).trainStage == 8
+%            
+%            if sesCountD ==1 %for the first session, get this sessions periDS blue z score response
+%                         currentSubj(1).DSzblueSessionMeanD= currentSubj(session).periDS.DSzblueMean; 
+%                         currentSubj(1).DSzpurpleSessionMeanD= currentSubj(session).periDS.DSzpurpleMean;
+%                         currentSubj(1).NSzblueSessionMeanD= currentSubj(session).periNS.NSzblueMean;
+%                         currentSubj(1).NSzpurpleSessionMeanD= currentSubj(session).periNS.NSzpurpleMean;
+%              else % add on periDS response for subsequent sessions
+%                         currentSubj(1).DSzblueSessionMeanD= cat(2, currentSubj(1).DSzblueSessionMeanD, currentSubj(session).periDS.DSzblueMean);
+%                         currentSubj(1).DSzpurpleSessionMeanD= cat(2, currentSubj(1).DSzpurpleSessionMeanD, currentSubj(session).periDS.DSzpurpleMean);
+%                         currentSubj(1).NSzblueSessionMeanD= cat(2, currentSubj(1).NSzblueSessionMeanD, currentSubj(session).periNS.NSzblueMean);
+%                         currentSubj(1).NSzpurpleSessionMeanD= cat(2, currentSubj(1).NSzpurpleSessionMeanD, currentSubj(session).periNS.NSzpurpleMean);
+%             end
+%             sesCountD= sesCountD+1;
+%             subjSessD= cat(2, subjSessD, currentSubj(session).trainDay); %day count for y axis
+% 
+%        end %end conditional D
+%        
 %     end %end session loop
+%  
 %     
-%     %search NS dates for the appropriate index in allDates, then label it
-%     %similar to subjTrial
-%     for thisDate = 1:numel(dateNS) 
-%         subjTrialNS(thisDate)= find(allDates==dateNS(thisDate)); %returns the index in allDates that matches the date of this NS session
-%     end
-     %Color axes   
-     
-     %First, we'll want to establish boundaries for our colormaps based on
-     %the std of the z score response. We want to have equidistant
-     %color axis max and min so that 0 sits directly in the middle
-     
-     %TODO: should this be a pooled std calculation (pooled blue & purple)?
-    
-     %define DS color axes
-     %get the avg std in the blue and purple z score responses to all cues,
-     %get absolute value and then multiply this by some factor to define a color axis max and min
-     
-     stdFactor= 4; %multiplicative factor- how many stds away should we set our max & min color value? 
-     
-     %cond A
-     topDSzblueA= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurpleA= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-     bottomDSzblueA = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurpleA= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanA, 0, 2))));
-     
-     %cond b
-     topDSzblueB= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurpleB= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-     bottomDSzblueB = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurpleB= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanB, 0, 2))));
-     
-     %cond c
-     topDSzblueC= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurpleC= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-     bottomDSzblueC = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurpleC= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanC, 0, 2))));
-     
-     bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC];
-     tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC];
-     
-     %cond D
-     topDSzblueD= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurpleD= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-     bottomDSzblueD = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurpleD= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanD, 0, 2))));
-     
-     bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzblueD, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC, bottomDSzpurpleD];
-     tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzblueD, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC, topDSzpurpleD];
-     
-     %now choose the most extreme of these two (between blue and
-     %purple)to represent the color axis 
-     bottomAllDS= min(bottoms);
-     topAllDS= max(tops);
-     
-%     %same, but defining color axes for NS
-%     if ~isempty(currentSubj(1).NSzblueSessionMean) %only run this if there's NS data
-%         topNSzblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-%         topNSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%     %Transpose for readability
+%     currentSubj(1).DSzblueSessionMeanA= currentSubj(1).DSzblueSessionMeanA';
+%     currentSubj(1).DSzpurpleSessionMeanA= currentSubj(1).DSzpurpleSessionMeanA';
+%     
+%     currentSubj(1).DSzblueSessionMeanB= currentSubj(1).DSzblueSessionMeanB';
+%     currentSubj(1).DSzpurpleSessionMeanB= currentSubj(1).DSzpurpleSessionMeanB';
+%     currentSubj(1).NSzblueSessionMeanB= currentSubj(1).NSzblueSessionMeanB';
+%     currentSubj(1).NSzpurpleSessionMeanB= currentSubj(1).NSzpurpleSessionMeanB';
+%     
+%     currentSubj(1).DSzblueSessionMeanC= currentSubj(1).DSzblueSessionMeanC';
+%     currentSubj(1).DSzpurpleSessionMeanC= currentSubj(1).DSzpurpleSessionMeanC';
+%     currentSubj(1).NSzblueSessionMeanC= currentSubj(1).NSzblueSessionMeanC';
+%     currentSubj(1).NSzpurpleSessionMeanC= currentSubj(1).NSzpurpleSessionMeanC';
+%     
+%     
+%     currentSubj(1).DSzblueSessionMeanD= currentSubj(1).DSzblueSessionMeanD';
+%     currentSubj(1).DSzpurpleSessionMeanD= currentSubj(1).DSzpurpleSessionMeanD';
+%     currentSubj(1).NSzblueSessionMeanD= currentSubj(1).NSzblueSessionMeanD';
+%     currentSubj(1).NSzpurpleSessionMeanD= currentSubj(1).NSzpurpleSessionMeanD';
+%     
 % 
-%         bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));
-%         bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));
+% %     %get list of session days for heatplot y axis (transposed for readability)
+% %     subjTrial= cat(2, currentSubj.trainDay).'; %this is only training days for this subj
 % 
-%         bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
-%         topAllNS= max(topNSzblue, topNSzpurple);
-%     end
-%     %Establish a shared bottom and top for shared color axis of DS & NS
-%     if ~isempty(currentSubj(1).NSzblueSessionMean) %if there is an NS
-%         bottomMeanShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
-%         topMeanShared= max(topAllDS, topAllNS); %find the absolute min value
-%     else
-        bottomMeanShared= bottomAllDS;
-        topMeanShared= topAllDS;
-%     end
-    
-   
-
-    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+%   
+%     
+%     %get list of session days for heatplot y axis
+% %     subjTrialNS=[]; %keep track of sessions that have valid NS trials
+% %     dateNS= [];
+% %     for session = 1:numel(currentSubj) %for each training session this subject completed
+% %         if ~isempty(currentSubj(session).periNS.NSzblueMean) %if there's an NS trial in this session, add it to the array that will mark the y axis
+% % %              subjTrialNS= cat(2, subjTrialNS, currentSubj(session).trainDay); %old method based on trainDay
+% %                 dateNS= cat(2, dateNS, currentSubj(session).date);
+% %         end
+% %     end %end session loop
+% %     
+% %     %search NS dates for the appropriate index in allDates, then label it
+% %     %similar to subjTrial
+% %     for thisDate = 1:numel(dateNS) 
+% %         subjTrialNS(thisDate)= find(allDates==dateNS(thisDate)); %returns the index in allDates that matches the date of this NS session
+% %     end
+%      %Color axes   
+%      
+%      %First, we'll want to establish boundaries for our colormaps based on
+%      %the std of the z score response. We want to have equidistant
+%      %color axis max and min so that 0 sits directly in the middle
+%      
+%      %TODO: should this be a pooled std calculation (pooled blue & purple)?
+%     
+%      %define DS color axes
+%      %get the avg std in the blue and purple z score responses to all cues,
+%      %get absolute value and then multiply this by some factor to define a color axis max and min
+%      
+%      stdFactor= 4; %multiplicative factor- how many stds away should we set our max & min color value? 
+%      
+%      %cond A
+%      topDSzblueA= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      topDSzpurpleA= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 % 
-%         figure(figureCount);
-%         figureCount= figureCount+1;
+%      bottomDSzblueA = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      bottomDSzpurpleA= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanA, 0, 2))));
+%      
+%      %cond b
+%      topDSzblueB= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      topDSzpurpleB= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 % 
-%         sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, 'Avg response by session to DS across training stages')); %add big title above all subplots
+%      bottomDSzblueB = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      bottomDSzpurpleB= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanB, 0, 2))));
+%      
+%      %cond c
+%      topDSzblueC= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      topDSzpurpleC= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 % 
+%      bottomDSzblueC = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      bottomDSzpurpleC= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanC, 0, 2))));
+%      
+%      bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC];
+%      tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC];
+%      
+%      %cond D
+%      topDSzblueD= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      topDSzpurpleD= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 % 
-%         subplot(2,3,1) %plot of stage 1-4 blue (cond A blue)
-%         
-%             imagesc(timeLock,subjSessA,currentSubj(1).DSzblueSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-%             title(strcat('daily avg 465nm z score response surrounding DS- Stages 1-4')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('training day');
-%             set(gca, 'ytick', subjSessA); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+%      bottomDSzblueD = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      bottomDSzpurpleD= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanD, 0, 2))));
+%      
+%      bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzblueD, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC, bottomDSzpurpleD];
+%      tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzblueD, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC, topDSzpurpleD];
+%      
+%      %now choose the most extreme of these two (between blue and
+%      %purple)to represent the color axis 
+%      bottomAllDS= min(bottoms);
+%      topAllDS= max(tops);
+%      
+% %     %same, but defining color axes for NS
+% %     if ~isempty(currentSubj(1).NSzblueSessionMean) %only run this if there's NS data
+% %         topNSzblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% %         topNSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% % 
+% %         bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));
+% %         bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));
+% % 
+% %         bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
+% %         topAllNS= max(topNSzblue, topNSzpurple);
+% %     end
+% %     %Establish a shared bottom and top for shared color axis of DS & NS
+% %     if ~isempty(currentSubj(1).NSzblueSessionMean) %if there is an NS
+% %         bottomMeanShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
+% %         topMeanShared= max(topAllDS, topAllNS); %find the absolute min value
+% %     else
+%         bottomMeanShared= bottomAllDS;
+%         topMeanShared= topAllDS;
+% %     end
+%     
+%    
 % 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-%             
-%             
-%         subplot(2,3,2) %plot of stage 5 blue (cond B blue)
-%             
-%             imagesc(timeLock,subjSessB,currentSubj(1).DSzblueSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-%             title(strcat('daily avg 465nm z score response surrounding DS- Stage 5')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('training day');
-%             set(gca, 'ytick', subjSessB); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-%         
-%         subplot(2,3,3) %plot of stage 6-8 blue (cond C blue)
-%             imagesc(timeLock,subjSessC,currentSubj(1).DSzblueSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-%             title(strcat('daily avg 465nm z score response surrounding DS- Stages 6-8')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('training day');
-%             set(gca, 'ytick', subjSessC); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-% 
-%        subplot(2,3,4) %plot of stage 1-4 purple (cond A purple)
-%             imagesc(timeLock,subjSessA,currentSubj(1).DSzpurpleSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-%             title(strcat('daily avg 405nm z score response surrounding DS- Stages 1-4')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('training day');
-%             set(gca, 'ytick', subjSessA); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('DS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-%        subplot(2,3,5) %plot of stage 5 purple (cond B purple)
-%             imagesc(timeLock,subjSessB,currentSubj(1).DSzpurpleSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-%             title(strcat('daily avg 405nm z score response surrounding DS- Stage 5')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('training day');
-%             set(gca, 'ytick', subjSessB); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('DS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-%             
-%        subplot(2,3,6) %plot of stage 6-8 purple (cond C purple)
-%             imagesc(timeLock,subjSessC,currentSubj(1).DSzpurpleSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-%             title(strcat('daily avg 405nm z score response surrounding DS- Stages 6-8')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('training day');
-%             set(gca, 'ytick', subjSessC); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('DS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-%             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-%             
-%             
-%             
-%             %NS plots ~~~~~
-%             
-%             figure(figureCount);
-%             figureCount= figureCount+1;
-% 
-%             
-%         sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, 'Avg response by session to NS across training stages')); %add big title above all subplots
-% 
-% 
-%         subplot(2,3,1) %plot of stage 1-4 blue (cond A blue)
-%         
-% %             imagesc(timeLock,subjSessA,currentSubj(1).NSzblueSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-% %             title(strcat('daily avg 465nm z score response surrounding NS- Stages 1-4')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%     timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+% % 
+% %         figure(figureCount);
+% %         figureCount= figureCount+1;
+% % 
+% %         sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, 'Avg response by session to DS across training stages')); %add big title above all subplots
+% % 
+% % 
+% %         subplot(2,3,1) %plot of stage 1-4 blue (cond A blue)
+% %         
+% %             imagesc(timeLock,subjSessA,currentSubj(1).DSzblueSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('daily avg 465nm z score response surrounding DS- Stages 1-4')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
 % %             xlabel('seconds from cue onset');
 % %             ylabel('training day');
 % %             set(gca, 'ytick', subjSessA); %label trials appropriately
@@ -6257,14 +6498,239 @@ for subj= 1:numel(subjects) %for each subject
 % %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
 % % 
 % %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %             
+% %             
+% %         subplot(2,3,2) %plot of stage 5 blue (cond B blue)
+% %             
+% %             imagesc(timeLock,subjSessB,currentSubj(1).DSzblueSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('daily avg 465nm z score response surrounding DS- Stage 5')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('training day');
+% %             set(gca, 'ytick', subjSessB); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %         
+% %         subplot(2,3,3) %plot of stage 6-8 blue (cond C blue)
+% %             imagesc(timeLock,subjSessC,currentSubj(1).DSzblueSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('daily avg 465nm z score response surrounding DS- Stages 6-8')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('training day');
+% %             set(gca, 'ytick', subjSessC); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% % 
+% %        subplot(2,3,4) %plot of stage 1-4 purple (cond A purple)
+% %             imagesc(timeLock,subjSessA,currentSubj(1).DSzpurpleSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('daily avg 405nm z score response surrounding DS- Stages 1-4')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('training day');
+% %             set(gca, 'ytick', subjSessA); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %        subplot(2,3,5) %plot of stage 5 purple (cond B purple)
+% %             imagesc(timeLock,subjSessB,currentSubj(1).DSzpurpleSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('daily avg 405nm z score response surrounding DS- Stage 5')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('training day');
+% %             set(gca, 'ytick', subjSessB); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %             
+% %        subplot(2,3,6) %plot of stage 6-8 purple (cond C purple)
+% %             imagesc(timeLock,subjSessC,currentSubj(1).DSzpurpleSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('daily avg 405nm z score response surrounding DS- Stages 6-8')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('training day');
+% %             set(gca, 'ytick', subjSessC); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% %             
+% %             
+% %             
+% %             %NS plots ~~~~~
+% %             
+% %             figure(figureCount);
+% %             figureCount= figureCount+1;
+% % 
+% %             
+% %         sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, 'Avg response by session to NS across training stages')); %add big title above all subplots
+% % 
+% % 
+% %         subplot(2,3,1) %plot of stage 1-4 blue (cond A blue)
+% %         
+% % %             imagesc(timeLock,subjSessA,currentSubj(1).NSzblueSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% % %             title(strcat('daily avg 465nm z score response surrounding NS- Stages 1-4')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% % %             xlabel('seconds from cue onset');
+% % %             ylabel('training day');
+% % %             set(gca, 'ytick', subjSessA); %label trials appropriately
+% % %             caxis manual;
+% % %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % % 
+% % %             c= colorbar; %colorbar legend
+% % %             c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %             
+% %             
+% %         subplot(2,3,2) %plot of stage 5 blue (cond B blue)
+% %             
+% %             imagesc(timeLock,subjSessB,currentSubj(1).NSzblueSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% %             title(strcat('daily avg 465nm z score response surrounding NS- Stage 5')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('training day');
+% %             set(gca, 'ytick', subjSessB); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
 % %             c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %         
+% %         subplot(2,3,3) %plot of stage 6-8 blue (cond C blue)
+% %             imagesc(timeLock,subjSessC,currentSubj(1).NSzblueSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% %             title(strcat('daily avg 465nm z score response surrounding NS- Stages 6-8')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('training day');
+% %             set(gca, 'ytick', subjSessC); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% % 
+% %        subplot(2,3,4) %plot of stage 1-4 purple (cond A purple)
+% % %             imagesc(timeLock,subjSessA,currentSubj(1).NSzpurpleSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% % %             title(strcat('daily avg 405nm z score response surrounding NS- Stages 1-4')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% % %             xlabel('seconds from cue onset');
+% % %             ylabel('training day');
+% % %             set(gca, 'ytick', subjSessA); %label trials appropriately
+% % %             caxis manual;
+% % %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% % %             c= colorbar; %colorbar legend
+% % %             c.Label.String= strcat('NS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %        subplot(2,3,5) %plot of stage 5 purple (cond B purple)
+% %             imagesc(timeLock,subjSessB,currentSubj(1).NSzpurpleSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% %             title(strcat('daily avg 405nm z score response surrounding NS- Stage 5')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('training day');
+% %             set(gca, 'ytick', subjSessB); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('NS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %             
+% %        subplot(2,3,6) %plot of stage 6-8 purple (cond C purple)
+% %             imagesc(timeLock,subjSessC,currentSubj(1).NSzpurpleSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% %             title(strcat('daily avg 405nm z score response surrounding NS- Stages 6-8')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('training day');
+% %             set(gca, 'ytick', subjSessC); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('NS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% %             
+% %             
+%             
+%             
+%      % ~~~~~~~~~~ One figure with only Blue response to DS & NS ~~~~~~~
+%             
+%         figure(figureCount);
+%         figureCount= figureCount+1;
+% 
+%         sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, 'Avg response by session to DS or NS across training stages')); %add big title above all subplots
+% 
+% 
+%         subplot(2,4,1) %plot of stage 1-4 blue (cond A blue)
+%         
+%             imagesc(timeLock,subjSessA,currentSubj(1).DSzblueSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg DS response Stages 1-4 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', subjSessA); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
 %               
 %             
 %             
-%         subplot(2,3,2) %plot of stage 5 blue (cond B blue)
+%         subplot(2,4,2) %plot of stage 5 blue (cond B blue)
+%             
+%             imagesc(timeLock,subjSessB,currentSubj(1).DSzblueSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg DS response Stages 5 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', subjSessB); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%               
+%         
+%         subplot(2,4,3) %plot of stage 6-7 blue (cond C blue)
+%             imagesc(timeLock,subjSessC,currentSubj(1).DSzblueSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg DS response Stages 6-7 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', subjSessC); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%             
+%         subplot(2,4,4) %plot of stage 8 blue (cond D blue)
+%             imagesc(timeLock,subjSessD,currentSubj(1).DSzblueSessionMeanD) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg DS response Stage 8 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', subjSessD); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%             
+%             
+%               
+%                    
+%         subplot(2,4,6) %plot of stage 5 blue (cond B blue)
 %             
 %             imagesc(timeLock,subjSessB,currentSubj(1).NSzblueSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-%             title(strcat('daily avg 465nm z score response surrounding NS- Stage 5')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             title(strcat('daily avg NS response Stages 1-4 (465nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
 %             xlabel('seconds from cue onset');
 %             ylabel('training day');
 %             set(gca, 'ytick', subjSessB); %label trials appropriately
@@ -6275,9 +6741,9 @@ for subj= 1:numel(subjects) %for each subject
 %             c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
 %               
 %         
-%         subplot(2,3,3) %plot of stage 6-8 blue (cond C blue)
+%         subplot(2,4,7) %plot of stage 6-8 blue (cond C blue)
 %             imagesc(timeLock,subjSessC,currentSubj(1).NSzblueSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-%             title(strcat('daily avg 465nm z score response surrounding NS- Stages 6-8')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             title(strcat('daily avg NS response Stages 6-7 (465nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
 %             xlabel('seconds from cue onset');
 %             ylabel('training day');
 %             set(gca, 'ytick', subjSessC); %label trials appropriately
@@ -6286,36 +6752,12 @@ for subj= 1:numel(subjects) %for each subject
 % 
 %             c= colorbar; %colorbar legend
 %             c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-% 
-%        subplot(2,3,4) %plot of stage 1-4 purple (cond A purple)
-% %             imagesc(timeLock,subjSessA,currentSubj(1).NSzpurpleSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-% %             title(strcat('daily avg 405nm z score response surrounding NS- Stages 1-4')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-% %             xlabel('seconds from cue onset');
-% %             ylabel('training day');
-% %             set(gca, 'ytick', subjSessA); %label trials appropriately
-% %             caxis manual;
-% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-% %             c= colorbar; %colorbar legend
-% %             c.Label.String= strcat('NS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-%        subplot(2,3,5) %plot of stage 5 purple (cond B purple)
-%             imagesc(timeLock,subjSessB,currentSubj(1).NSzpurpleSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-%             title(strcat('daily avg 405nm z score response surrounding NS- Stage 5')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('training day');
-%             set(gca, 'ytick', subjSessB); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('NS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
 %             
-%        subplot(2,3,6) %plot of stage 6-8 purple (cond C purple)
-%             imagesc(timeLock,subjSessC,currentSubj(1).NSzpurpleSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-%             title(strcat('daily avg 405nm z score response surrounding NS- Stages 6-8')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+%             
+%             subplot(2,4,8) %plot of stage 6-8 blue (cond C blue)
+%             imagesc(timeLock,subjSessD,currentSubj(1).NSzblueSessionMeanD) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+%             title(strcat('daily avg NS response Stage 8 (465nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
 %             xlabel('seconds from cue onset');
 %             ylabel('training day');
 %             set(gca, 'ytick', subjSessC); %label trials appropriately
@@ -6323,977 +6765,1247 @@ for subj= 1:numel(subjects) %for each subject
 %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
 % 
 %             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('NS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
+%             c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%             
 %             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% 
 %             
-%             
-            
-            
-     % ~~~~~~~~~~ One figure with only Blue response to DS & NS ~~~~~~~
-            
-        figure(figureCount);
-        figureCount= figureCount+1;
-
-        sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, 'Avg response by session to DS or NS across training stages')); %add big title above all subplots
-
-
-        subplot(2,4,1) %plot of stage 1-4 blue (cond A blue)
-        
-            imagesc(timeLock,subjSessA,currentSubj(1).DSzblueSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg DS response Stages 1-4 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', subjSessA); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-            
-            
-        subplot(2,4,2) %plot of stage 5 blue (cond B blue)
-            
-            imagesc(timeLock,subjSessB,currentSubj(1).DSzblueSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg DS response Stages 5 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', subjSessB); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-        
-        subplot(2,4,3) %plot of stage 6-7 blue (cond C blue)
-            imagesc(timeLock,subjSessC,currentSubj(1).DSzblueSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg DS response Stages 6-7 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', subjSessC); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-            
-        subplot(2,4,4) %plot of stage 8 blue (cond D blue)
-            imagesc(timeLock,subjSessD,currentSubj(1).DSzblueSessionMeanD) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg DS response Stage 8 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', subjSessD); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-            
-            
-              
-                   
-        subplot(2,4,6) %plot of stage 5 blue (cond B blue)
-            
-            imagesc(timeLock,subjSessB,currentSubj(1).NSzblueSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-            title(strcat('daily avg NS response Stages 1-4 (465nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', subjSessB); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-        
-        subplot(2,4,7) %plot of stage 6-8 blue (cond C blue)
-            imagesc(timeLock,subjSessC,currentSubj(1).NSzblueSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-            title(strcat('daily avg NS response Stages 6-7 (465nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', subjSessC); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-            
-            set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-            
-            subplot(2,4,8) %plot of stage 6-8 blue (cond C blue)
-            imagesc(timeLock,subjSessD,currentSubj(1).NSzblueSessionMeanD) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-            title(strcat('daily avg NS response Stage 8 (465nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', subjSessC); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-            
-            set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-            
-end %end subject loop
+% end %end subject loop
 
 
 %% Between subjects session avg by stage
-
-%TODO: all photometry data is  more readable in (session, cue, subj)
-%format, consider switching rest of code to this format
-
-for subj= 1:numel(subjIncluded) %for each subject
-       currentSubj= subjDataAnalyzed.(subjIncluded{subj}); %use this for easy indexing into the current subject within the struct
-
-      %counter for sessions that meet each condition, reset between subjs
-      sesCountA= 1;
-      sesCountB= 1;
-      sesCountC= 1;
-      sesCountD= 1;
-
-       for session = 1:numel(currentSubj) %for each training session this subject completed
-            
-           %cond A
-           if currentSubj(session).trainStage <5 
-               %save photometry data 
-                allRats(1).DSzblueSessionMeanA(sesCountA,:,subj)= currentSubj(session).periDS.DSzblueMean; 
-               %save training day label for this data 
-                allRats(1).subjSessA(sesCountA,subj)=currentSubj(session).trainDay; 
-               %iterate the counter for sessions that meet this condition
-                sesCountA= sesCountA+1;
-           end %end conditional A
-
-             %cond B
-           if currentSubj(session).trainStage ==5 
-               %save photometry data 
-                allRats(1).DSzblueSessionMeanB(sesCountB,:,subj)= currentSubj(session).periDS.DSzblueMean; 
-%                 allRats(1).DSzpurpleSessionMeanB(:,sesCountB,subj)= currentSubj(session).periDS.DSzpurpleMean;
-                allRats(1).NSzblueSessionMeanB(sesCountB,:,subj)= currentSubj(session).periNS.NSzblueMean;
-               %save training day label for this data 
-                allRats(1).subjSessB(sesCountB,subj)=currentSubj(session).trainDay; 
-               %iterate the counter for sessions that meet this condition
-                sesCountB= sesCountB+1;
-           end %end conditional B
-           
-               %cond C
-           if currentSubj(session).trainStage== 6 || currentSubj(session).trainStage==7 
-               %save photometry data 
-                allRats(1).DSzblueSessionMeanC(sesCountC,:,subj)= currentSubj(session).periDS.DSzblueMean; 
-                allRats(1).NSzblueSessionMeanC(sesCountC,:,subj)= currentSubj(session).periNS.NSzblueMean;
-               %save training day label for this data 
-                allRats(1).subjSessC(sesCountC,subj)=currentSubj(session).trainDay; 
-               %iterate the counter for sessions that meet this condition
-                sesCountC= sesCountC+1;
-           end %end conditional C
-           
-                %cond D
-           if currentSubj(session).trainStage ==8
-               %save photometry data 
-                allRats(1).DSzblueSessionMeanD(sesCountD,:,subj)= currentSubj(session).periDS.DSzblueMean; 
-                allRats(1).NSzblueSessionMeanD(sesCountD,:,subj)= currentSubj(session).periNS.NSzblueMean;
-               %save training day label for this data 
-                allRats(1).subjSessD(sesCountD,subj)=currentSubj(session).trainDay; 
-               %iterate the counter for sessions that meet this condition
-                sesCountD= sesCountD+1;
-           end %end conditional D
-           
-
-        end %end session loop
-        
-        
-        %the above code filled in blank training dates with 0 (e.g. if 1 rat 
-        %ran 12 days but others ran 9 days, the 3 days in between were 
-        %filled with 0), let's make these = nan instead 
-            %condA
-        for ses = 1:size(allRats(1).subjSessA,1) %each row is a session
-           if allRats(1).subjSessA(ses,subj)==0 %if there's no data for this date
-              %make train day nan
-              allRats(1).subjSessA(ses,subj)=nan;
-              %make photometery data nan
-              allRats(1).DSzblueSessionMeanA(ses,:,subj)=nan; 
-           end
-        end
-            %condB
-         for ses = 1:size(allRats(1).subjSessB,1) %each row is a session
-           if allRats(1).subjSessB(ses,subj)==0 %if there's no data for this date
-              %make train day nan
-              allRats(1).subjSessB(ses,subj)=nan;
-              %make photometery data nan
-              allRats(1).DSzblueSessionMeanB(ses,:,subj)=nan; 
-              allRats(1).NSzblueSessionMeanB(ses,:,subj)=nan;
-           end
-         end
-           %condC
-         for ses = 1:size(allRats(1).subjSessC,1) %each row is a session
-           if allRats(1).subjSessC(ses,subj)==0 %if there's no data for this date
-              %make train day nan
-              allRats(1).subjSessC(ses,subj)=nan;
-              %make photometery data nan
-              allRats(1).DSzblueSessionMeanC(ses,:,subj)=nan; 
-              allRats(1).NSzblueSessionMeanC(ses,:,subj)=nan;
-           end
-         end
-           %condD
-         for ses = 1:size(allRats(1).subjSessD,1) %each row is a session
-           if allRats(1).subjSessD(ses,subj)==0 %if there's no data for this date
-              %make train day nan`
-              allRats(1).subjSessD(ses,subj)=nan;
-              %make photometery data nan
-              allRats(1).DSzblueSessionMeanD(ses,:,subj)=nan; 
-              allRats(1).NSzblueSessionMeanD(ses,:,subj)=nan;
-           end
-        end
-        
-end
-
-
-
- % now get mean of all rats per training day ( each column is a training day , each 3d page is a subject)
-
- %cond A
- allRats.grandMeanDSzblueA=nanmean(allRats.DSzblueSessionMeanA,3);
-
- %cond B
-  allRats.grandMeanDSzblueB=nanmean(allRats.DSzblueSessionMeanB,3);
-  allRats.grandMeanNSzblueB= nanmean(allRats.NSzblueSessionMeanB,3);
-
- %cond C
-  allRats.grandMeanDSzblueC=nanmean(allRats.DSzblueSessionMeanC,3);
-  allRats.grandMeanNSzblueC= nanmean(allRats.NSzblueSessionMeanC,3);
-  
- %cond D
-  allRats.grandMeanDSzblueD=nanmean(allRats.DSzblueSessionMeanD,3);
-  allRats.grandMeanNSzblueD= nanmean(allRats.NSzblueSessionMeanD,3);
-  
-  %let's get a simple day count for each condition to use as heatplot y axis
-    sessA= 1:size(allRats(1).subjSessA,1);
-    sessB= 1:size(allRats(1).subjSessB,1);
-    sessC= 1:size(allRats(1).subjSessC,1);
-    sessD= 1:size(allRats(1).subjSessD,1);
-
-    %     %get list of session days for heatplot y axis (transposed for readability)
-    %     subjTrial= cat(2, currentSubj.trainDay).'; %this is only training days for this subj
-
-
-
-        %get list of session days for heatplot y axis
-    %     subjTrialNS=[]; %keep track of sessions that have valid NS trials
-    %     dateNS= [];
-    %     for session = 1:numel(currentSubj) %for each training session this subject completed
-    %         if ~isempty(currentSubj(session).periNS.NSzblueMean) %if there's an NS trial in this session, add it to the array that will mark the y axis
-    % %              subjTrialNS= cat(2, subjTrialNS, currentSubj(session).trainDay); %old method based on trainDay
-    %                 dateNS= cat(2, dateNS, currentSubj(session).date);
-    %         end
-    %     end %end session loop
-    %     
-    %     %search NS dates for the appropriate index in allDates, then label it
-    %     %similar to subjTrial
-    %     for thisDate = 1:numel(dateNS) 
-    %         subjTrialNS(thisDate)= find(allDates==dateNS(thisDate)); %returns the index in allDates that matches the date of this NS session
-    %     end
-         %Color axes   
-
-         %First, we'll want to establish boundaries for our colormaps based on
-         %the std of the z score response. We want to have equidistant
-         %color axis max and min so that 0 sits directly in the middle
-
-         %TODO: should this be a pooled std calculation (pooled blue & purple)?
-
-         %define DS color axes
-         %get the avg std in the blue and purple z score responses to all cues,
-         %get absolute value and then multiply this by some factor to define a color axis max and min
-
-         stdFactor= 6; %multiplicative factor- how many stds away should we set our max & min color value? 
-
-             %cond A
-         topDSzblueA= stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-         bottomDSzblueA = -stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-            %cond b
-         topDSzblueB= stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-         bottomDSzblueB = -stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-            %cond c
-         topDSzblueC= stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-         bottomDSzblueC = -stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-            %cond D
-         topDSzblueD= stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-         bottomDSzblueD = -stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-         
-         bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzblueD];
-         tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzblueD];
-
-       
-         %now choose the most extreme values to represent the color axis
-         bottomAllDS= min(bottoms);
-         topAllDS= max(tops);
-
-    %     %same, but defining color axes for NS
-    %     if ~isempty(currentSubj(1).NSzblueSessionMean) %only run this if there's NS data
-    %         topNSzblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-    %         topNSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-    % 
-    %         bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));
-    %         bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));
-    % 
-    %         bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
-    %         topAllNS= max(topNSzblue, topNSzpurple);
-    %     end
-    %     %Establish a shared bottom and top for shared color axis of DS & NS
-    %     if ~isempty(currentSubj(1).NSzblueSessionMean) %if there is an NS
-    %         bottomMeanShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
-    %         topMeanShared= max(topAllDS, topAllNS); %find the absolute min value
-    %     else
-            bottomMeanShared= bottomAllDS;
-            topMeanShared= topAllDS;
-    %     end
-
-
-
-    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-    % 
-
-      % ~~~~~~~~~~ One figure with only Blue response to DS & NS ~~~~~~~
-            
-        figure(figureCount);
-        figureCount= figureCount+1;
-
-        sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' Avg response to DS or NS across 5 subjects')); %add big title above all subplots
-
-
-        subplot(2,4,1) %plot of stage 1-4 blue (cond A blue)
-        
-            imagesc(timeLock, sessA,allRats(1).grandMeanDSzblueA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg DS response Stages 1-4 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', sessA); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-            
-        subplot(2,4,2) %plot of stage 1-4 blue (cond B blue)
-        
-            imagesc(timeLock, sessB,allRats(1).grandMeanDSzblueB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg DS response Stage 5 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', sessB); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-        
-     subplot(2,4,3) %plot of stage 1-4 blue (cond C blue)
-        
-            imagesc(timeLock, sessC,allRats(1).grandMeanDSzblueC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg DS response Stages 6-7 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', sessC); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-       
-    subplot(2,4,4) %plot of stage 1-4 blue (cond D blue)
-        
-            imagesc(timeLock, sessD,allRats(1).grandMeanDSzblueD) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg DS response Stage 8 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', sessD); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-            
-          
-                   
-      subplot(2,4,6) %plot of NS stage 5 blue (cond B blue)
-        
-            imagesc(timeLock, sessB,allRats(1).grandMeanNSzblueB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg NS response Stage 5 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', sessB); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-        
-       subplot(2,4,7) %plot of NS stage 6-7 blue (cond C blue)
-        
-            imagesc(timeLock, sessC,allRats(1).grandMeanNSzblueC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg NS response Stages 6-7 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', sessC); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-            
-            
-        subplot(2,4,8) %plot of NS stage 8 blue (cond D blue)
-        
-            imagesc(timeLock, sessD,allRats(1).grandMeanNSzblueD) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('daily avg DS response Stage 8 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('training day');
-            set(gca, 'ytick', sessD); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-            
-            set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-    
-%% stage 1-4, 5, 6+ trial DS plots latency sorted
-
-
-%we'll pull from the subjDataAnalyzed struct to make our heatplots
-
-for subj= 1:numel(subjectsAnalyzed) %for each subject
-    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
-
-    %initialize/clear arrays between subjects
-    currentSubj(1).NSzblueAllTrials= [];
-    currentSubj(1).NSzpurpleAllTrials= [];
-    currentSubj(1).NSpeLatencyAllTrials= [];
-
-    sesCountA= 1;
-    sesCountB= 1;
-    sesCountC= 1;
-    sesCountD=1;
-
-    subjSessA= [];
-    subjSessB= [];
-    subjSessC= [];
-    subjSessD= [];
-    
-    trialAcount= 1;
-    trialBcount=1;
-    trialCcount=1;
-    trialDcount=1;
-    
-    trialBNScount=1;
-    trialCNScount=1;
-    trialDNScount=1;
-    
-    DSloxAllTrialsA = [];
-    DSloxAllTrialsB= [];
-    DSloxAllTrialsC= [];
-    DSloxAllTrialsD= [];
-    
-    NSloxAllTrialsA= [];
-    NSloxAllTrialsB= [];
-    NSloxAllTrialsC= [];
-    NSloxAllTrialsD= [];
-    
-    for session = 1:numel(currentSubj) %for each training session this subject completed
-       
-        clear NSselected
-        
-        %We can only include trials that have a PE latency, so we need to
-        %selectively extract these data first
-        
-            %get the DS cues
-        DSselected= currentSubj(session).periDS.DS;  % all the DS cues
-
-        %First, let's exclude trials where animal was already in port
-        %to do so, find indices of subjDataAnalyzed.behavior.inPortDS that
-        %have a non-nan value and use these to exclude DS trials from this
-        %analysis (we'll make them nan)
-            
-        %We have to throw in an extra conditional in case we've excluded
-        %cues in our peri cue analysis due to being too close to the
-        %beginning or end. Otherwise, we can get an out of range error
-        %because the inPortDS array doesn't exclude these cues.
-        for inPortTrial = find(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS))
-            if inPortTrial < numel(DSselected) 
-                DSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS)) = nan;
-            end
-        end
-        %Then, let's exclude trials where animal didn't make a PE during
-        %the cue epoch. To do so, get indices of empty cells in
-        %subjDataAnalyzed.behavior.poxDS (these are trials where no PE
-        %happened during the cue epoch) and then use these to set that DS =
-        %nan
-        
-        %same here, we need an extra conditional in case cues were excluded
-        for noPEtrial = find(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS))
-            if noPEtrial < numel(DSselected)
-                DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
-            end
-        end
-        
-        %this may create some zeros, so let's make those nan as well
-        DSselected(DSselected==0) = nan;
-        
-        %lets convert this to an index of trials with a valid value 
-        DSselected= find(~isnan(DSselected));
-        
-            %Repeat above for NS 
-        if ~isempty(currentSubj(session).periNS.NS)
-             NSselected= currentSubj(session).periNS.NS;  
-
-            %First, let's exclude trials where animal was already in port
-            %to do so, find indices of subjDataAnalyzed.behavior.inPortNS that
-            %have a non-nan value and use these to exclude NS trials from this
-            %analysis (we'll make them nan)
-
-            NSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS)) = nan;
-
-            %Then, let's exclude trials where animal didn't make a PE during
-            %the cue epoch. To do so, get indices of empty cells in
-            %subjDataAnalyzed.behavior.poxNS (these are trials where no PE
-            %happened during the cue epoch) and then use these to set that NS =
-            %nan
-            NSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS)) = nan;
-
-       
-            %lets convert this to an index of trials with a valid value 
-            NSselected= find(~isnan(NSselected));
-        end %end NS conditional       
-        
-        %Condition A
-            if currentSubj(session).trainStage <5
-                if sesCountA== 1 
-                    currentSubj(1).DSzblueAllTrialsA= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
-                    currentSubj(1).DSzpurpleAllTrialsA= squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected));
-                    currentSubj(1).DSpeLatencyAllTrialsA= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
-                    
-%                     currentSubj(1).DSloxAllTrialsA= currentSubj(session).behavior.loxDS{DSselected};
-                    if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
-                        currentSubj(1).NSzblueAllTrialsA= squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)); 
-                        currentSubj(1).NSzpurpleAllTrialsA= squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected));
-                        currentSubj(1).NSpeLatencyAllTrialsA= currentSubj(session).behavior.NSpeLatency(NSselected); 
-                        
-                     else
-%                        continue %continue if no NS data
-                     end
-                else %add subsequent sessions using cat()
-                    currentSubj(1).DSzblueAllTrialsA = cat(2, currentSubj.DSzblueAllTrialsA, (squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                    currentSubj(1).DSzpurpleAllTrialsA = cat(2, currentSubj.DSzpurpleAllTrialsA, (squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                    currentSubj(1).DSpeLatencyAllTrialsA = cat(2,currentSubj(1).DSpeLatencyAllTrialsA,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-
-%                     currentSubj(1).DSloxAllTrialsA= cat(2,currentSubj(1).DSloxAllTrialsA,currentSubj(session).behavior.loxDS{DSselected});
-
-                    if ~isempty(currentSubj(session).periNS.NS)
-                        currentSubj(1).NSzblueAllTrialsA = cat(2, currentSubj.NSzblueAllTrialsA, (squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)))); 
-                        currentSubj(1).NSzpurpleAllTrialsA = cat(2, currentSubj.NSzpurpleAllTrialsA, (squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected)))); 
-                        currentSubj(1).NSpeLatencyAllTrialsA = cat(2,currentSubj(1).NSpeLatencyAllTrialsA,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
-                    else
-%                         continue %continue if no NS data
-                    end
-                end %end sesCount conditional
-
-                    % licks
-                    currentSubj(1).DSloxAllTrialsA{sesCountA}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
-                
-                     %in order to sort licks according to trial by PE latency
-                     %later, we need to reshape the lox cell array from nested
-                     %{session}{cue} to just {cue}
-                      for cue = 1:numel(currentSubj(1).DSloxAllTrialsA{session})
-                          DSloxAllTrialsA{trialAcount} = currentSubj(1).DSloxAllTrialsA{session}{cue};
-                          trialAcount=trialAcount+1;
-                      end           
-
-%                       trialAcount=1; %reset counter
-%                       % NS licks
-%                     currentSubj(1).NSloxAllTrialsA{session}= currentSubj(session).behavior.loxNSrel(NSselected);
-%                     
-%                     for cue= 1:numel(currentSubj(1).NSloxAllTrialsA{session})
-%                         NSloxAllTrialsA{trialAcount}= currentSubj(1).NSloxAllTrialsA{session}{cue};
-%                         trialAcount=trialAcount+1;
-%                     end
-%                         
-                      
-                sesCountA= sesCountA+1;
-                subjSessA= cat(2, subjSessA, currentSubj(session).trainDay); %day count for y axis
-
-            end %end Cond A
-            
-            %Condition B
-                   if currentSubj(session).trainStage ==5
-                        if sesCountB== 1 
-                            currentSubj(1).DSzblueAllTrialsB= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
-                            currentSubj(1).DSzpurpleAllTrialsB= squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected));
-                            currentSubj(1).DSpeLatencyAllTrialsB= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
-                             if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
-                                currentSubj(1).NSzblueAllTrialsB= squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)); 
-                                currentSubj(1).NSzpurpleAllTrialsB= squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected));
-                                currentSubj(1).NSpeLatencyAllTrialsB= currentSubj(session).behavior.NSpeLatency(NSselected); 
-                             else
-%                                continue %continue if no NS data
-                             end
-                        else %add subsequent sessions using cat()
-                            currentSubj(1).DSzblueAllTrialsB = cat(2, currentSubj.DSzblueAllTrialsB, (squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                            currentSubj(1).DSzpurpleAllTrialsB = cat(2, currentSubj.DSzpurpleAllTrialsB, (squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                            currentSubj(1).DSpeLatencyAllTrialsB = cat(2,currentSubj(1).DSpeLatencyAllTrialsB,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-
-                            if ~isempty(currentSubj(session).periNS.NS)
-                                currentSubj(1).NSzblueAllTrialsB = cat(2, currentSubj.NSzblueAllTrialsB, (squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)))); 
-                                currentSubj(1).NSzpurpleAllTrialsB = cat(2, currentSubj.NSzpurpleAllTrialsB, (squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected)))); 
-                                currentSubj(1).NSpeLatencyAllTrialsB = cat(2,currentSubj(1).NSpeLatencyAllTrialsB,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
-                            else
-%                                 continue %continue if nos NS data
-                            end
-                        end %end sesCount conditional
-
-                        
-                         %licks
-                        currentSubj(1).DSloxAllTrialsB{sesCountB}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
-
-                        currentSubj(1).NSloxAllTrialsB{sesCountB}= currentSubj(session).behavior.loxNSrel(NSselected);
-
-                        
-                         %in order to sort licks according to trial by PE latency
-                         %later, we need to reshape the lox cell array from nested
-                         %{session}{cue} to just {cue}
-                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsB{sesCountB})
-                              DSloxAllTrialsB{trialBcount} = currentSubj(1).DSloxAllTrialsB{sesCountB}{cue};
-                              trialBcount=trialBcount+1;
-                          end           
-                                            
-                        for cue= 1:numel(currentSubj(1).NSloxAllTrialsB{sesCountB})
-                            NSloxAllTrialsB{trialBNScount}= currentSubj(1).NSloxAllTrialsB{sesCountB}{cue};
-                            trialBNScount=trialBNScount+1;
-                        end
-
-                        
-                        sesCountB= sesCountB+1;
-                        subjSessB= cat(2, subjSessB, currentSubj(session).trainDay); %day count for y axis
-
-                  end %end Cond B
-                  
-              %Condition C
-               if currentSubj(session).trainStage== 6 || currentSubj(session).trainStage ==7
-                   
-                    if sesCountC== 1 
-                        currentSubj(1).DSzblueAllTrialsC= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
-                        currentSubj(1).DSzpurpleAllTrialsC= squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected));
-                        currentSubj(1).DSpeLatencyAllTrialsC= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
-                         if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
-                            currentSubj(1).NSzblueAllTrialsC= squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)); 
-                            currentSubj(1).NSzpurpleAllTrialsC= squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected));
-                            currentSubj(1).NSpeLatencyAllTrialsC= currentSubj(session).behavior.NSpeLatency(NSselected); 
-                         else
-%                            continue %continue if no NS data
-                         end
-                    else %add subsequent sessions using cat()
-                        currentSubj(1).DSzblueAllTrialsC = cat(2, currentSubj.DSzblueAllTrialsC, (squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                        currentSubj(1).DSzpurpleAllTrialsC = cat(2, currentSubj.DSzpurpleAllTrialsC, (squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                        currentSubj(1).DSpeLatencyAllTrialsC = cat(2, currentSubj(1).DSpeLatencyAllTrialsC, currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-
-                        if ~isempty(currentSubj(session).periNS.NS)
-                            currentSubj(1).NSzblueAllTrialsC = cat(2, currentSubj.NSzblueAllTrialsC, (squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)))); 
-                            currentSubj(1).NSzpurpleAllTrialsC = cat(2, currentSubj.NSzpurpleAllTrialsC, (squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected)))); 
-                            currentSubj(1).NSpeLatencyAllTrialsC = cat(2,currentSubj(1).NSpeLatencyAllTrialsC,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
-                        else
-%                             continue %continue if nos NS data
-                        end
-                    end %end sesCount conditional
-
-                        %licks
-                        currentSubj(1).DSloxAllTrialsC{sesCountC}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
-
-                        currentSubj(1).NSloxAllTrialsC{sesCountC}= currentSubj(session).behavior.loxNSrel(NSselected);
-
-                        
-                         %in order to sort licks according to trial by PE latency
-                         %later, we need to reshape the lox cell array from nested
-                         %{session}{cue} to just {cue}
-                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsC{sesCountC})
-                              DSloxAllTrialsC{trialCcount} = currentSubj(1).DSloxAllTrialsC{sesCountC}{cue};
-                              trialCcount=trialCcount+1;
-                          end           
-                                            
-                        for cue= 1:numel(currentSubj(1).NSloxAllTrialsC{sesCountC})
-                            NSloxAllTrialsC{trialCNScount}= currentSubj(1).NSloxAllTrialsC{sesCountC}{cue};
-                            trialCNScount=trialCNScount+1;
-                        end
-
-                    sesCountC= sesCountC+1;
-                    subjSessC= cat(2, subjSessC, currentSubj(session).trainDay); %day count for y axis
-
-              end %end Cond C
-              
-                     
-              %Condition D
-               if currentSubj(session).trainStage==8
-                   
-                    if sesCountD== 1 
-                        currentSubj(1).DSzblueAllTrialsD= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
-                        currentSubj(1).DSzpurpleAllTrialsD= squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected));
-                        currentSubj(1).DSpeLatencyAllTrialsD= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
-                         if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
-                            currentSubj(1).NSzblueAllTrialsD= squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)); 
-                            currentSubj(1).NSzpurpleAllTrialsD= squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected));
-                            currentSubj(1).NSpeLatencyAllTrialsD= currentSubj(session).behavior.NSpeLatency(NSselected); 
-                         else
-%                            continue %continue if no NS data
-                         end
-                    else %add subsequent sessions using cat()
-                        currentSubj(1).DSzblueAllTrialsD = cat(2, currentSubj.DSzblueAllTrialsD, (squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                        currentSubj(1).DSzpurpleAllTrialsD = cat(2, currentSubj.DSzpurpleAllTrialsD, (squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
-                        currentSubj(1).DSpeLatencyAllTrialsD = cat(2, currentSubj(1).DSpeLatencyAllTrialsD, currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-
-                        if ~isempty(currentSubj(session).periNS.NS)
-                            currentSubj(1).NSzblueAllTrialsD = cat(2, currentSubj.NSzblueAllTrialsD, (squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)))); 
-                            currentSubj(1).NSzpurpleAllTrialsD = cat(2, currentSubj.NSzpurpleAllTrialsD, (squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected)))); 
-                            currentSubj(1).NSpeLatencyAllTrialsD = cat(2,currentSubj(1).NSpeLatencyAllTrialsD,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
-                        else
-%                             continue %continue if nos NS data
-                        end
-                    end %end sesCount conditional
-
-                        %licks
-                        currentSubj(1).DSloxAllTrialsD{sesCountD}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
-
-                        currentSubj(1).NSloxAllTrialsD{sesCountD}= currentSubj(session).behavior.loxNSrel(NSselected);
-
-                        
-                         %in order to sort licks according to trial by PE latency
-                         %later, we need to reshape the lox cell array from nested
-                         %{session}{cue} to just {cue}
-                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsD{sesCountD})
-                              DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsD{sesCountD}{cue};
-                              trialDcount=trialDcount+1;
-                          end           
-                                            
-                        for cue= 1:numel(currentSubj(1).NSloxAllTrialsD{sesCountD})
-                            NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsD{sesCountD}{cue};
-                            trialDNScount=trialDNScount+1;
-                        end
-
-                    sesCountD= sesCountD+1;
-                    subjSessD= cat(2, subjSessD, currentSubj(session).trainDay); %day count for y axis
-
-              end %end Cond D
-              
-              
-              
-    end %end session loop
-    
-    %Sort PE latencies and retrieve an index of the sorted order that
-    %we'll use to sort the photometry data and other behavioralevents(licks)
-    
-        %cond a
-    [DSpeLatencySortedA,DSsortIndA] = sort(currentSubj(1).DSpeLatencyAllTrialsA);       
-%     [NSpeLatencySortedA,NSsortIndA] =  %stages before 5 have no ns %sort(currentSubj(1).NSpeLatencyAllTrialsA);
-
-         %cond b
-    [DSpeLatencySortedB,DSsortIndB] = sort(currentSubj(1).DSpeLatencyAllTrialsB);       
-    [NSpeLatencySortedB,NSsortIndB] = sort(currentSubj(1).NSpeLatencyAllTrialsB);
-        %cond c
-    [DSpeLatencySortedC,DSsortIndC] = sort(currentSubj(1).DSpeLatencyAllTrialsC);       
-    [NSpeLatencySortedC,NSsortIndC] = sort(currentSubj(1).NSpeLatencyAllTrialsC);
-       %cond D
-    [DSpeLatencySortedD,DSsortIndD] = sort(currentSubj(1).DSpeLatencyAllTrialsD);       
-    [NSpeLatencySortedD,NSsortIndD] = sort(currentSubj(1).NSpeLatencyAllTrialsD);
-    
-    
-    %Sort all trials by PE latency
-        %cond a
-    currentSubj(1).DSzblueAllTrialsA= currentSubj(1).DSzblueAllTrialsA(:,DSsortIndA);
-    currentSubj(1).DSzpurpleAllTrialsA= currentSubj(1).DSzpurpleAllTrialsA(:,DSsortIndA);
-%     currentSubj(1).NSzblueAllTrialsA = currentSubj(1).NSzblueAllTrialsA(:,NSsortIndA);
-%     currentSubj(1).NSzpurpleAllTrialsA= currentSubj(1).NSzpurpleAllTrialsA(:,NSsortIndA);
-
-             % sort licks
-             currentSubj(1).DSloxAllTrialsA= DSloxAllTrialsA;
-             currentSubj(1).DSloxAllTrialsA= currentSubj(1).DSloxAllTrialsA(:,DSsortIndA);
-
-
-         %cond b
-    currentSubj(1).DSzblueAllTrialsB= currentSubj(1).DSzblueAllTrialsB(:,DSsortIndB);
-    currentSubj(1).DSzpurpleAllTrialsB= currentSubj(1).DSzpurpleAllTrialsB(:,DSsortIndB);
-    currentSubj(1).NSzblueAllTrialsB = currentSubj(1).NSzblueAllTrialsB(:,NSsortIndB);
-    currentSubj(1).NSzpurpleAllTrialsB= currentSubj(1).NSzpurpleAllTrialsB(:,NSsortIndB);
-    
-             % sort licks
-             currentSubj(1).DSloxAllTrialsB= DSloxAllTrialsB;
-             currentSubj(1).DSloxAllTrialsB= currentSubj(1).DSloxAllTrialsB(:,DSsortIndB);
-             
-             currentSubj(1).NSloxAllTrialsB= NSloxAllTrialsB;
-             currentSubj(1).NSloxAllTrialsB= currentSubj(1).NSloxAllTrialsB(:,NSsortIndB);
-
-          %cond C
-    currentSubj(1).DSzblueAllTrialsC= currentSubj(1).DSzblueAllTrialsC(:,DSsortIndC);
-    currentSubj(1).DSzpurpleAllTrialsC= currentSubj(1).DSzpurpleAllTrialsC(:,DSsortIndC);
-    currentSubj(1).NSzblueAllTrialsC = currentSubj(1).NSzblueAllTrialsC(:,NSsortIndC);
-    currentSubj(1).NSzpurpleAllTrialsC= currentSubj(1).NSzpurpleAllTrialsC(:,NSsortIndC);
-               % sort licks
-             currentSubj(1).DSloxAllTrialsC= DSloxAllTrialsC;
-             currentSubj(1).DSloxAllTrialsC= currentSubj(1).DSloxAllTrialsC(:,DSsortIndC);
-             
-             currentSubj(1).NSloxAllTrialsC= NSloxAllTrialsC;
-             currentSubj(1).NSloxAllTrialsC= currentSubj(1).NSloxAllTrialsC(:,NSsortIndC);
-             
-      %cond D
-    currentSubj(1).DSzblueAllTrialsD= currentSubj(1).DSzblueAllTrialsD(:,DSsortIndD);
-    currentSubj(1).DSzpurpleAllTrialsD= currentSubj(1).DSzpurpleAllTrialsD(:,DSsortIndD);
-    currentSubj(1).NSzblueAllTrialsD = currentSubj(1).NSzblueAllTrialsD(:,NSsortIndD);
-    currentSubj(1).NSzpurpleAllTrialsD= currentSubj(1).NSzpurpleAllTrialsD(:,NSsortIndD);
-               % sort licks
-             currentSubj(1).DSloxAllTrialsD= DSloxAllTrialsD;
-             currentSubj(1).DSloxAllTrialsD= currentSubj(1).DSloxAllTrialsD(:,DSsortIndD);
-             
-             currentSubj(1).NSloxAllTrialsD= NSloxAllTrialsD;
-             currentSubj(1).NSloxAllTrialsD= currentSubj(1).NSloxAllTrialsD(:,NSsortIndD);
-
-
-
-    %Transpose these data for readability
-        %cond a
-    currentSubj(1).DSzblueAllTrialsA= currentSubj(1).DSzblueAllTrialsA';
-    currentSubj(1).DSzpurpleAllTrialsA= currentSubj(1).DSzpurpleAllTrialsA';    
-%     currentSubj(1).NSzblueAllTrialsA= currentSubj(1).NSzblueAllTrialsA';
-%     currentSubj(1).NSzpurpleAllTrialsA= currentSubj(1).NSzpurpleAllTrialsA';
-        %cond b
-    currentSubj(1).DSzblueAllTrialsB= currentSubj(1).DSzblueAllTrialsB';
-    currentSubj(1).DSzpurpleAllTrialsB= currentSubj(1).DSzpurpleAllTrialsB';    
-    currentSubj(1).NSzblueAllTrialsB= currentSubj(1).NSzblueAllTrialsB';
-    currentSubj(1).NSzpurpleAllTrialsB= currentSubj(1).NSzpurpleAllTrialsB';
-        %cond c
-    currentSubj(1).DSzblueAllTrialsC= currentSubj(1).DSzblueAllTrialsC';
-    currentSubj(1).DSzpurpleAllTrialsC= currentSubj(1).DSzpurpleAllTrialsC';    
-    currentSubj(1).NSzblueAllTrialsC= currentSubj(1).NSzblueAllTrialsC';
-    currentSubj(1).NSzpurpleAllTrialsC= currentSubj(1).NSzpurpleAllTrialsC';
-        %cond D
-    currentSubj(1).DSzblueAllTrialsD= currentSubj(1).DSzblueAllTrialsD';
-    currentSubj(1).DSzpurpleAllTrialsD= currentSubj(1).DSzpurpleAllTrialsD';    
-    currentSubj(1).NSzblueAllTrialsD= currentSubj(1).NSzblueAllTrialsD';
-    currentSubj(1).NSzpurpleAllTrialsD= currentSubj(1).NSzpurpleAllTrialsD';
-    
-    
-       
-       %get trial count for y axis of heatplot
-   currentSubj(1).totalDScountA= 1:size(currentSubj(1).DSzblueAllTrialsA,1); 
-   currentSubj(1).totalDScountB= 1:size(currentSubj(1).DSzblueAllTrialsB,1); 
-   currentSubj(1).totalDScountC= 1:size(currentSubj(1).DSzblueAllTrialsC,1);
-   currentSubj(1).totalDScountD= 1:size(currentSubj(1).DSzblueAllTrialsD,1);
-
-   
-%    currentSubj(1).totalNScountA= 1:size(currentSubj(1).NSzblueAllTrialsA,1); 
-   currentSubj(1).totalNScountB= 1:size(currentSubj(1).NSzblueAllTrialsB,1); 
-   currentSubj(1).totalNScountC= 1:size(currentSubj(1).NSzblueAllTrialsC,1);
-   currentSubj(1).totalNScountD= 1:size(currentSubj(1).NSzblueAllTrialsD,1);
-
-
-
-
-    
-       %Color axes   
-     
-     %First, we'll want to establish boundaries for our colormaps based on
-     %the std of the z score response. We want to have equidistant
-     %color axis max and min so that 0 sits directly in the middle
-     
-     %TODO: should this be a pooled std calculation (pooled blue & purple)?
-    
-     %define DS color axes
-     %get the avg std in the blue and purple z score responses to all cues,
-     %get absolute value and then multiply this by some factor to define a color axis max and min
-     
-     stdFactor= 4; %multiplicative factor- how many stds away should we set our max & min color value? 
-     
-        %cond A
-     topDSzblueA= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurpleA= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-     bottomDSzblueA = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurpleA= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsA, 0, 2))));
-     
-        %cond B
-     topDSzblueB= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurpleB= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-     bottomDSzblueB = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurpleB= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsB, 0, 2))));
-        %cond c
-     topDSzblueC= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurpleC= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-     bottomDSzblueC = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurpleC= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsC, 0, 2))));
-     
-     bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC];
-     tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC];
-     
-       %cond D
-     topDSzblueD= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurpleD= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-
-     bottomDSzblueD = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurpleD= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsD, 0, 2))));
-     
-     bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzblueD, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC, bottomDSzpurpleD];
-     tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzblueD, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC, topDSzpurpleD];
-     
-     %now choose the most extreme of these two (between blue and
-     %purple)to represent the color axis 
-     bottomAllDS= min(bottoms);
-     topAllDS= max(tops);
-     
-%     %same, but defining color axes for NS
-%     if ~isempty(currentSubj(1).NSzblueSessionMean) %only run this if there's NS data
-%         topNSzblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-%         topNSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 % 
-%         bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));
-%         bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));
+% %TODO: all photometry data is  more readable in (session, cue, subj)
+% %format, consider switching rest of code to this format
 % 
-%         bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
-%         topAllNS= max(topNSzblue, topNSzpurple);
-%     end
-%     %Establish a shared bottom and top for shared color axis of DS & NS
-%     if ~isempty(currentSubj(1).NSzblueSessionMean) %if there is an NS
-%         bottomMeanShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
-%         topMeanShared= max(topAllDS, topAllNS); %find the absolute min value
-%     else
-        bottomMeanShared= bottomAllDS;
-        topMeanShared= topAllDS;
-%     end
-    
-   
-
-    timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-
-%     %Plots!
-%     
+% for subj= 1:numel(subjIncluded) %for each subject
+%        currentSubj= subjDataAnalyzed.(subjIncluded{subj}); %use this for easy indexing into the current subject within the struct
+% 
+%       %counter for sessions that meet each condition, reset between subjs
+%       sesCountA= 1;
+%       sesCountB= 1;
+%       sesCountC= 1;
+%       sesCountD= 1;
+% 
+%        for session = 1:numel(currentSubj) %for each training session this subject completed
+%             
+%            %cond A
+%            if currentSubj(session).trainStage <5 
+%                %save photometry data 
+%                 allRats(1).DSzblueSessionMeanA(sesCountA,:,subj)= currentSubj(session).periDS.DSzblueMean; 
+%                %save training day label for this data 
+%                 allRats(1).subjSessA(sesCountA,subj)=currentSubj(session).trainDay; 
+%                %iterate the counter for sessions that meet this condition
+%                 sesCountA= sesCountA+1;
+%            end %end conditional A
+% 
+%              %cond B
+%            if currentSubj(session).trainStage ==5 
+%                %save photometry data 
+%                 allRats(1).DSzblueSessionMeanB(sesCountB,:,subj)= currentSubj(session).periDS.DSzblueMean; 
+% %                 allRats(1).DSzpurpleSessionMeanB(:,sesCountB,subj)= currentSubj(session).periDS.DSzpurpleMean;
+%                 allRats(1).NSzblueSessionMeanB(sesCountB,:,subj)= currentSubj(session).periNS.NSzblueMean;
+%                %save training day label for this data 
+%                 allRats(1).subjSessB(sesCountB,subj)=currentSubj(session).trainDay; 
+%                %iterate the counter for sessions that meet this condition
+%                 sesCountB= sesCountB+1;
+%            end %end conditional B
+%            
+%                %cond C
+%            if currentSubj(session).trainStage== 6 || currentSubj(session).trainStage==7 
+%                %save photometry data 
+%                 allRats(1).DSzblueSessionMeanC(sesCountC,:,subj)= currentSubj(session).periDS.DSzblueMean; 
+%                 allRats(1).NSzblueSessionMeanC(sesCountC,:,subj)= currentSubj(session).periNS.NSzblueMean;
+%                %save training day label for this data 
+%                 allRats(1).subjSessC(sesCountC,subj)=currentSubj(session).trainDay; 
+%                %iterate the counter for sessions that meet this condition
+%                 sesCountC= sesCountC+1;
+%            end %end conditional C
+%            
+%                 %cond D
+%            if currentSubj(session).trainStage ==8
+%                %save photometry data 
+%                 allRats(1).DSzblueSessionMeanD(sesCountD,:,subj)= currentSubj(session).periDS.DSzblueMean; 
+%                 allRats(1).NSzblueSessionMeanD(sesCountD,:,subj)= currentSubj(session).periNS.NSzblueMean;
+%                %save training day label for this data 
+%                 allRats(1).subjSessD(sesCountD,subj)=currentSubj(session).trainDay; 
+%                %iterate the counter for sessions that meet this condition
+%                 sesCountD= sesCountD+1;
+%            end %end conditional D
+%            
+% 
+%         end %end session loop
+%         
+%         
+%         %the above code filled in blank training dates with 0 (e.g. if 1 rat 
+%         %ran 12 days but others ran 9 days, the 3 days in between were 
+%         %filled with 0), let's make these = nan instead 
+%             %condA
+%         for ses = 1:size(allRats(1).subjSessA,1) %each row is a session
+%            if allRats(1).subjSessA(ses,subj)==0 %if there's no data for this date
+%               %make train day nan
+%               allRats(1).subjSessA(ses,subj)=nan;
+%               %make photometery data nan
+%               allRats(1).DSzblueSessionMeanA(ses,:,subj)=nan; 
+%            end
+%         end
+%             %condB
+%          for ses = 1:size(allRats(1).subjSessB,1) %each row is a session
+%            if allRats(1).subjSessB(ses,subj)==0 %if there's no data for this date
+%               %make train day nan
+%               allRats(1).subjSessB(ses,subj)=nan;
+%               %make photometery data nan
+%               allRats(1).DSzblueSessionMeanB(ses,:,subj)=nan; 
+%               allRats(1).NSzblueSessionMeanB(ses,:,subj)=nan;
+%            end
+%          end
+%            %condC
+%          for ses = 1:size(allRats(1).subjSessC,1) %each row is a session
+%            if allRats(1).subjSessC(ses,subj)==0 %if there's no data for this date
+%               %make train day nan
+%               allRats(1).subjSessC(ses,subj)=nan;
+%               %make photometery data nan
+%               allRats(1).DSzblueSessionMeanC(ses,:,subj)=nan; 
+%               allRats(1).NSzblueSessionMeanC(ses,:,subj)=nan;
+%            end
+%          end
+%            %condD
+%          for ses = 1:size(allRats(1).subjSessD,1) %each row is a session
+%            if allRats(1).subjSessD(ses,subj)==0 %if there's no data for this date
+%               %make train day nan`
+%               allRats(1).subjSessD(ses,subj)=nan;
+%               %make photometery data nan
+%               allRats(1).DSzblueSessionMeanD(ses,:,subj)=nan; 
+%               allRats(1).NSzblueSessionMeanD(ses,:,subj)=nan;
+%            end
+%         end
+%         
+% end
+% 
+% 
+% 
+%  % now get mean of all rats per training day ( each column is a training day , each 3d page is a subject)
+% 
+%  %cond A
+%  allRats.grandMeanDSzblueA=nanmean(allRats.DSzblueSessionMeanA,3);
+% 
+%  %cond B
+%   allRats.grandMeanDSzblueB=nanmean(allRats.DSzblueSessionMeanB,3);
+%   allRats.grandMeanNSzblueB= nanmean(allRats.NSzblueSessionMeanB,3);
+% 
+%  %cond C
+%   allRats.grandMeanDSzblueC=nanmean(allRats.DSzblueSessionMeanC,3);
+%   allRats.grandMeanNSzblueC= nanmean(allRats.NSzblueSessionMeanC,3);
+%   
+%  %cond D
+%   allRats.grandMeanDSzblueD=nanmean(allRats.DSzblueSessionMeanD,3);
+%   allRats.grandMeanNSzblueD= nanmean(allRats.NSzblueSessionMeanD,3);
+%   
+%   %let's get a simple day count for each condition to use as heatplot y axis
+%     sessA= 1:size(allRats(1).subjSessA,1);
+%     sessB= 1:size(allRats(1).subjSessB,1);
+%     sessC= 1:size(allRats(1).subjSessC,1);
+%     sessD= 1:size(allRats(1).subjSessD,1);
+% 
+%     %     %get list of session days for heatplot y axis (transposed for readability)
+%     %     subjTrial= cat(2, currentSubj.trainDay).'; %this is only training days for this subj
+% 
+% 
+% 
+%         %get list of session days for heatplot y axis
+%     %     subjTrialNS=[]; %keep track of sessions that have valid NS trials
+%     %     dateNS= [];
+%     %     for session = 1:numel(currentSubj) %for each training session this subject completed
+%     %         if ~isempty(currentSubj(session).periNS.NSzblueMean) %if there's an NS trial in this session, add it to the array that will mark the y axis
+%     % %              subjTrialNS= cat(2, subjTrialNS, currentSubj(session).trainDay); %old method based on trainDay
+%     %                 dateNS= cat(2, dateNS, currentSubj(session).date);
+%     %         end
+%     %     end %end session loop
+%     %     
+%     %     %search NS dates for the appropriate index in allDates, then label it
+%     %     %similar to subjTrial
+%     %     for thisDate = 1:numel(dateNS) 
+%     %         subjTrialNS(thisDate)= find(allDates==dateNS(thisDate)); %returns the index in allDates that matches the date of this NS session
+%     %     end
+%          %Color axes   
+% 
+%          %First, we'll want to establish boundaries for our colormaps based on
+%          %the std of the z score response. We want to have equidistant
+%          %color axis max and min so that 0 sits directly in the middle
+% 
+%          %TODO: should this be a pooled std calculation (pooled blue & purple)?
+% 
+%          %define DS color axes
+%          %get the avg std in the blue and purple z score responses to all cues,
+%          %get absolute value and then multiply this by some factor to define a color axis max and min
+% 
+%          stdFactor= 6; %multiplicative factor- how many stds away should we set our max & min color value? 
+% 
+%              %cond A
+%          topDSzblueA= stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%          bottomDSzblueA = -stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%             %cond b
+%          topDSzblueB= stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%          bottomDSzblueB = -stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%             %cond c
+%          topDSzblueC= stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%          bottomDSzblueC = -stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%             %cond D
+%          topDSzblueD= stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%          bottomDSzblueD = -stdFactor*abs(nanmean((std(allRats(1).grandMeanDSzblueD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%          
+%          bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzblueD];
+%          tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzblueD];
+% 
+%        
+%          %now choose the most extreme values to represent the color axis
+%          bottomAllDS= min(bottoms);
+%          topAllDS= max(tops);
+% 
+%     %     %same, but defining color axes for NS
+%     %     if ~isempty(currentSubj(1).NSzblueSessionMean) %only run this if there's NS data
+%     %         topNSzblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%     %         topNSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%     % 
+%     %         bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));
+%     %         bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));
+%     % 
+%     %         bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
+%     %         topAllNS= max(topNSzblue, topNSzpurple);
+%     %     end
+%     %     %Establish a shared bottom and top for shared color axis of DS & NS
+%     %     if ~isempty(currentSubj(1).NSzblueSessionMean) %if there is an NS
+%     %         bottomMeanShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
+%     %         topMeanShared= max(topAllDS, topAllNS); %find the absolute min value
+%     %     else
+%             bottomMeanShared= bottomAllDS;
+%             topMeanShared= topAllDS;
+%     %     end
+% 
+% 
+% 
+%     timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+%     % 
+% 
+%       % ~~~~~~~~~~ One figure with only Blue response to DS & NS ~~~~~~~
+%             
 %         figure(figureCount);
 %         figureCount= figureCount+1;
 % 
-%            sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, ' response to DS across training stages- trials sorted by PE latency')); %add big title above all subplots
+%         sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' Avg response to DS or NS across 5 subjects')); %add big title above all subplots
 % 
 % 
-%         subplot(2,3,1) %plot of stage 1-4 blue (cond A blue)
+%         subplot(2,4,1) %plot of stage 1-4 blue (cond A blue)
+%         
+%             imagesc(timeLock, sessA,allRats(1).grandMeanDSzblueA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg DS response Stages 1-4 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', sessA); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%               
+%             
+%         subplot(2,4,2) %plot of stage 1-4 blue (cond B blue)
+%         
+%             imagesc(timeLock, sessB,allRats(1).grandMeanDSzblueB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg DS response Stage 5 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', sessB); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%         
+%      subplot(2,4,3) %plot of stage 1-4 blue (cond C blue)
+%         
+%             imagesc(timeLock, sessC,allRats(1).grandMeanDSzblueC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg DS response Stages 6-7 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', sessC); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%        
+%     subplot(2,4,4) %plot of stage 1-4 blue (cond D blue)
+%         
+%             imagesc(timeLock, sessD,allRats(1).grandMeanDSzblueD) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg DS response Stage 8 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', sessD); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%             
+%           
+%                    
+%       subplot(2,4,6) %plot of NS stage 5 blue (cond B blue)
+%         
+%             imagesc(timeLock, sessB,allRats(1).grandMeanNSzblueB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg NS response Stage 5 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', sessB); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%               
+%         
+%        subplot(2,4,7) %plot of NS stage 6-7 blue (cond C blue)
+%         
+%             imagesc(timeLock, sessC,allRats(1).grandMeanNSzblueC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg NS response Stages 6-7 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', sessC); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%             
+%             
+%         subplot(2,4,8) %plot of NS stage 8 blue (cond D blue)
+%         
+%             imagesc(timeLock, sessD,allRats(1).grandMeanNSzblueD) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('daily avg DS response Stage 8 (465nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             xlabel('seconds from cue onset');
+%             ylabel('training day');
+%             set(gca, 'ytick', sessD); %label trials appropriately
+%             caxis manual;
+%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% 
+%             c= colorbar; %colorbar legend
+%             c.Label.String= strcat('NS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%             
+%             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+    
+%% stage 1-4, 5, 6+ trial DS plots latency sorted
+% 
+% 
+% %we'll pull from the subjDataAnalyzed struct to make our heatplots
+% 
+% for subj= 1:numel(subjectsAnalyzed) %for each subject
+%     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+% 
+%     %initialize/clear arrays between subjects
+%     currentSubj(1).NSzblueAllTrials= [];
+%     currentSubj(1).NSzpurpleAllTrials= [];
+%     currentSubj(1).NSpeLatencyAllTrials= [];
+% 
+%     sesCountA= 1;
+%     sesCountB= 1;
+%     sesCountC= 1;
+%     sesCountD=1;
+% 
+%     subjSessA= [];
+%     subjSessB= [];
+%     subjSessC= [];
+%     subjSessD= [];
+%     
+%     trialAcount= 1;
+%     trialBcount=1;
+%     trialCcount=1;
+%     trialDcount=1;
+%     
+%     trialBNScount=1;
+%     trialCNScount=1;
+%     trialDNScount=1;
+%     
+%     DSloxAllTrialsA = [];
+%     DSloxAllTrialsB= [];
+%     DSloxAllTrialsC= [];
+%     DSloxAllTrialsD= [];
+%     
+%     NSloxAllTrialsA= [];
+%     NSloxAllTrialsB= [];
+%     NSloxAllTrialsC= [];
+%     NSloxAllTrialsD= [];
+%     
+%     for session = 1:numel(currentSubj) %for each training session this subject completed
+%        
+%         clear NSselected
+%         
+%         %We can only include trials that have a PE latency, so we need to
+%         %selectively extract these data first
+%         
+%             %get the DS cues
+%         DSselected= currentSubj(session).periDS.DS;  % all the DS cues
+% 
+%         %First, let's exclude trials where animal was already in port
+%         %to do so, find indices of subjDataAnalyzed.behavior.inPortDS that
+%         %have a non-nan value and use these to exclude DS trials from this
+%         %analysis (we'll make them nan)
+%             
+%         %We have to throw in an extra conditional in case we've excluded
+%         %cues in our peri cue analysis due to being too close to the
+%         %beginning or end. Otherwise, we can get an out of range error
+%         %because the inPortDS array doesn't exclude these cues.
+%         for inPortTrial = find(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS))
+%             if inPortTrial < numel(DSselected) 
+%                 DSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS)) = nan;
+%             end
+%         end
+%         %Then, let's exclude trials where animal didn't make a PE during
+%         %the cue epoch. To do so, get indices of empty cells in
+%         %subjDataAnalyzed.behavior.poxDS (these are trials where no PE
+%         %happened during the cue epoch) and then use these to set that DS =
+%         %nan
+%         
+%         %same here, we need an extra conditional in case cues were excluded
+%         for noPEtrial = find(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS))
+%             if noPEtrial < numel(DSselected)
+%                 DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
+%             end
+%         end
+%         
+%         %this may create some zeros, so let's make those nan as well
+%         DSselected(DSselected==0) = nan;
+%         
+%         %lets convert this to an index of trials with a valid value 
+%         DSselected= find(~isnan(DSselected));
+%         
+%             %Repeat above for NS 
+%         if ~isempty(currentSubj(session).periNS.NS)
+%              NSselected= currentSubj(session).periNS.NS;  
+% 
+%             %First, let's exclude trials where animal was already in port
+%             %to do so, find indices of subjDataAnalyzed.behavior.inPortNS that
+%             %have a non-nan value and use these to exclude NS trials from this
+%             %analysis (we'll make them nan)
+% 
+%             NSselected(~isnan(subjDataAnalyzed.(subjects{subj})(session).behavior.inPortNS)) = nan;
+% 
+%             %Then, let's exclude trials where animal didn't make a PE during
+%             %the cue epoch. To do so, get indices of empty cells in
+%             %subjDataAnalyzed.behavior.poxNS (these are trials where no PE
+%             %happened during the cue epoch) and then use these to set that NS =
+%             %nan
+%             NSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxNS)) = nan;
+% 
+%        
+%             %lets convert this to an index of trials with a valid value 
+%             NSselected= find(~isnan(NSselected));
+%         end %end NS conditional       
+%         
+%         %Condition A
+%             if currentSubj(session).trainStage <5
+%                 if sesCountA== 1 
+%                     currentSubj(1).DSzblueAllTrialsA= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
+%                     currentSubj(1).DSzpurpleAllTrialsA= squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected));
+%                     currentSubj(1).DSpeLatencyAllTrialsA= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
+%                     
+% %                     currentSubj(1).DSloxAllTrialsA= currentSubj(session).behavior.loxDS{DSselected};
+%                     if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
+%                         currentSubj(1).NSzblueAllTrialsA= squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)); 
+%                         currentSubj(1).NSzpurpleAllTrialsA= squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected));
+%                         currentSubj(1).NSpeLatencyAllTrialsA= currentSubj(session).behavior.NSpeLatency(NSselected); 
+%                         
+%                      else
+% %                        continue %continue if no NS data
+%                      end
+%                 else %add subsequent sessions using cat()
+%                     currentSubj(1).DSzblueAllTrialsA = cat(2, currentSubj.DSzblueAllTrialsA, (squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                     currentSubj(1).DSzpurpleAllTrialsA = cat(2, currentSubj.DSzpurpleAllTrialsA, (squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                     currentSubj(1).DSpeLatencyAllTrialsA = cat(2,currentSubj(1).DSpeLatencyAllTrialsA,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
+% 
+% %                     currentSubj(1).DSloxAllTrialsA= cat(2,currentSubj(1).DSloxAllTrialsA,currentSubj(session).behavior.loxDS{DSselected});
+% 
+%                     if ~isempty(currentSubj(session).periNS.NS)
+%                         currentSubj(1).NSzblueAllTrialsA = cat(2, currentSubj.NSzblueAllTrialsA, (squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)))); 
+%                         currentSubj(1).NSzpurpleAllTrialsA = cat(2, currentSubj.NSzpurpleAllTrialsA, (squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected)))); 
+%                         currentSubj(1).NSpeLatencyAllTrialsA = cat(2,currentSubj(1).NSpeLatencyAllTrialsA,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+%                     else
+% %                         continue %continue if no NS data
+%                     end
+%                 end %end sesCount conditional
+% 
+%                     % licks
+%                     currentSubj(1).DSloxAllTrialsA{sesCountA}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
+%                 
+%                      %in order to sort licks according to trial by PE latency
+%                      %later, we need to reshape the lox cell array from nested
+%                      %{session}{cue} to just {cue}
+%                       for cue = 1:numel(currentSubj(1).DSloxAllTrialsA{session})
+%                           DSloxAllTrialsA{trialAcount} = currentSubj(1).DSloxAllTrialsA{session}{cue};
+%                           trialAcount=trialAcount+1;
+%                       end           
+% 
+% %                       trialAcount=1; %reset counter
+% %                       % NS licks
+% %                     currentSubj(1).NSloxAllTrialsA{session}= currentSubj(session).behavior.loxNSrel(NSselected);
+% %                     
+% %                     for cue= 1:numel(currentSubj(1).NSloxAllTrialsA{session})
+% %                         NSloxAllTrialsA{trialAcount}= currentSubj(1).NSloxAllTrialsA{session}{cue};
+% %                         trialAcount=trialAcount+1;
+% %                     end
+% %                         
+%                       
+%                 sesCountA= sesCountA+1;
+%                 subjSessA= cat(2, subjSessA, currentSubj(session).trainDay); %day count for y axis
+% 
+%             end %end Cond A
+%             
+%             %Condition B
+%                    if currentSubj(session).trainStage ==5
+%                         if sesCountB== 1 
+%                             currentSubj(1).DSzblueAllTrialsB= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
+%                             currentSubj(1).DSzpurpleAllTrialsB= squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected));
+%                             currentSubj(1).DSpeLatencyAllTrialsB= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
+%                              if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
+%                                 currentSubj(1).NSzblueAllTrialsB= squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)); 
+%                                 currentSubj(1).NSzpurpleAllTrialsB= squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected));
+%                                 currentSubj(1).NSpeLatencyAllTrialsB= currentSubj(session).behavior.NSpeLatency(NSselected); 
+%                              else
+% %                                continue %continue if no NS data
+%                              end
+%                         else %add subsequent sessions using cat()
+%                             currentSubj(1).DSzblueAllTrialsB = cat(2, currentSubj.DSzblueAllTrialsB, (squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                             currentSubj(1).DSzpurpleAllTrialsB = cat(2, currentSubj.DSzpurpleAllTrialsB, (squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                             currentSubj(1).DSpeLatencyAllTrialsB = cat(2,currentSubj(1).DSpeLatencyAllTrialsB,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
+% 
+%                             if ~isempty(currentSubj(session).periNS.NS)
+%                                 currentSubj(1).NSzblueAllTrialsB = cat(2, currentSubj.NSzblueAllTrialsB, (squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)))); 
+%                                 currentSubj(1).NSzpurpleAllTrialsB = cat(2, currentSubj.NSzpurpleAllTrialsB, (squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected)))); 
+%                                 currentSubj(1).NSpeLatencyAllTrialsB = cat(2,currentSubj(1).NSpeLatencyAllTrialsB,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+%                             else
+% %                                 continue %continue if nos NS data
+%                             end
+%                         end %end sesCount conditional
+% 
+%                         
+%                          %licks
+%                         currentSubj(1).DSloxAllTrialsB{sesCountB}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
+% 
+%                         currentSubj(1).NSloxAllTrialsB{sesCountB}= currentSubj(session).behavior.loxNSrel(NSselected);
+% 
+%                         
+%                          %in order to sort licks according to trial by PE latency
+%                          %later, we need to reshape the lox cell array from nested
+%                          %{session}{cue} to just {cue}
+%                           for cue = 1:numel(currentSubj(1).DSloxAllTrialsB{sesCountB})
+%                               DSloxAllTrialsB{trialBcount} = currentSubj(1).DSloxAllTrialsB{sesCountB}{cue};
+%                               trialBcount=trialBcount+1;
+%                           end           
+%                                             
+%                         for cue= 1:numel(currentSubj(1).NSloxAllTrialsB{sesCountB})
+%                             NSloxAllTrialsB{trialBNScount}= currentSubj(1).NSloxAllTrialsB{sesCountB}{cue};
+%                             trialBNScount=trialBNScount+1;
+%                         end
+% 
+%                         
+%                         sesCountB= sesCountB+1;
+%                         subjSessB= cat(2, subjSessB, currentSubj(session).trainDay); %day count for y axis
+% 
+%                   end %end Cond B
+%                   
+%               %Condition C
+%                if currentSubj(session).trainStage== 6 || currentSubj(session).trainStage ==7
+%                    
+%                     if sesCountC== 1 
+%                         currentSubj(1).DSzblueAllTrialsC= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
+%                         currentSubj(1).DSzpurpleAllTrialsC= squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected));
+%                         currentSubj(1).DSpeLatencyAllTrialsC= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
+%                          if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
+%                             currentSubj(1).NSzblueAllTrialsC= squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)); 
+%                             currentSubj(1).NSzpurpleAllTrialsC= squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected));
+%                             currentSubj(1).NSpeLatencyAllTrialsC= currentSubj(session).behavior.NSpeLatency(NSselected); 
+%                          else
+% %                            continue %continue if no NS data
+%                          end
+%                     else %add subsequent sessions using cat()
+%                         currentSubj(1).DSzblueAllTrialsC = cat(2, currentSubj.DSzblueAllTrialsC, (squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                         currentSubj(1).DSzpurpleAllTrialsC = cat(2, currentSubj.DSzpurpleAllTrialsC, (squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                         currentSubj(1).DSpeLatencyAllTrialsC = cat(2, currentSubj(1).DSpeLatencyAllTrialsC, currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
+% 
+%                         if ~isempty(currentSubj(session).periNS.NS)
+%                             currentSubj(1).NSzblueAllTrialsC = cat(2, currentSubj.NSzblueAllTrialsC, (squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)))); 
+%                             currentSubj(1).NSzpurpleAllTrialsC = cat(2, currentSubj.NSzpurpleAllTrialsC, (squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected)))); 
+%                             currentSubj(1).NSpeLatencyAllTrialsC = cat(2,currentSubj(1).NSpeLatencyAllTrialsC,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+%                         else
+% %                             continue %continue if nos NS data
+%                         end
+%                     end %end sesCount conditional
+% 
+%                         %licks
+%                         currentSubj(1).DSloxAllTrialsC{sesCountC}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
+% 
+%                         currentSubj(1).NSloxAllTrialsC{sesCountC}= currentSubj(session).behavior.loxNSrel(NSselected);
+% 
+%                         
+%                          %in order to sort licks according to trial by PE latency
+%                          %later, we need to reshape the lox cell array from nested
+%                          %{session}{cue} to just {cue}
+%                           for cue = 1:numel(currentSubj(1).DSloxAllTrialsC{sesCountC})
+%                               DSloxAllTrialsC{trialCcount} = currentSubj(1).DSloxAllTrialsC{sesCountC}{cue};
+%                               trialCcount=trialCcount+1;
+%                           end           
+%                                             
+%                         for cue= 1:numel(currentSubj(1).NSloxAllTrialsC{sesCountC})
+%                             NSloxAllTrialsC{trialCNScount}= currentSubj(1).NSloxAllTrialsC{sesCountC}{cue};
+%                             trialCNScount=trialCNScount+1;
+%                         end
+% 
+%                     sesCountC= sesCountC+1;
+%                     subjSessC= cat(2, subjSessC, currentSubj(session).trainDay); %day count for y axis
+% 
+%               end %end Cond C
+%               
+%                      
+%               %Condition D
+%                if currentSubj(session).trainStage==8
+%                    
+%                     if sesCountD== 1 
+%                         currentSubj(1).DSzblueAllTrialsD= squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected));
+%                         currentSubj(1).DSzpurpleAllTrialsD= squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected));
+%                         currentSubj(1).DSpeLatencyAllTrialsD= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
+%                          if ~isempty(currentSubj(session).periNS.NS) %if there's valid NS data
+%                             currentSubj(1).NSzblueAllTrialsD= squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)); 
+%                             currentSubj(1).NSzpurpleAllTrialsD= squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected));
+%                             currentSubj(1).NSpeLatencyAllTrialsD= currentSubj(session).behavior.NSpeLatency(NSselected); 
+%                          else
+% %                            continue %continue if no NS data
+%                          end
+%                     else %add subsequent sessions using cat()
+%                         currentSubj(1).DSzblueAllTrialsD = cat(2, currentSubj.DSzblueAllTrialsD, (squeeze(currentSubj(session).periDS.DSzblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                         currentSubj(1).DSzpurpleAllTrialsD = cat(2, currentSubj.DSzpurpleAllTrialsD, (squeeze(currentSubj(session).periDS.DSzpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
+%                         currentSubj(1).DSpeLatencyAllTrialsD = cat(2, currentSubj(1).DSpeLatencyAllTrialsD, currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
+% 
+%                         if ~isempty(currentSubj(session).periNS.NS)
+%                             currentSubj(1).NSzblueAllTrialsD = cat(2, currentSubj.NSzblueAllTrialsD, (squeeze(currentSubj(session).periNS.NSzblue(:,:,NSselected)))); 
+%                             currentSubj(1).NSzpurpleAllTrialsD = cat(2, currentSubj.NSzpurpleAllTrialsD, (squeeze(currentSubj(session).periNS.NSzpurple(:,:,NSselected)))); 
+%                             currentSubj(1).NSpeLatencyAllTrialsD = cat(2,currentSubj(1).NSpeLatencyAllTrialsD,currentSubj(session).behavior.NSpeLatency(NSselected)); %collect all of the NSpeLatencies for sorting between sessions
+%                         else
+% %                             continue %continue if nos NS data
+%                         end
+%                     end %end sesCount conditional
+% 
+%                         %licks
+%                         currentSubj(1).DSloxAllTrialsD{sesCountD}= currentSubj(session).behavior.loxDSrel(DSselected); %note these timestamps are relative to cue onset
+% 
+%                         currentSubj(1).NSloxAllTrialsD{sesCountD}= currentSubj(session).behavior.loxNSrel(NSselected);
+% 
+%                         
+%                          %in order to sort licks according to trial by PE latency
+%                          %later, we need to reshape the lox cell array from nested
+%                          %{session}{cue} to just {cue}
+%                           for cue = 1:numel(currentSubj(1).DSloxAllTrialsD{sesCountD})
+%                               DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsD{sesCountD}{cue};
+%                               trialDcount=trialDcount+1;
+%                           end           
+%                                             
+%                         for cue= 1:numel(currentSubj(1).NSloxAllTrialsD{sesCountD})
+%                             NSloxAllTrialsD{trialDNScount}= currentSubj(1).NSloxAllTrialsD{sesCountD}{cue};
+%                             trialDNScount=trialDNScount+1;
+%                         end
+% 
+%                     sesCountD= sesCountD+1;
+%                     subjSessD= cat(2, subjSessD, currentSubj(session).trainDay); %day count for y axis
+% 
+%               end %end Cond D
+%               
+%               
+%               
+%     end %end session loop
+%     
+%     %Sort PE latencies and retrieve an index of the sorted order that
+%     %we'll use to sort the photometry data and other behavioralevents(licks)
+%     
+%         %cond a
+%     [DSpeLatencySortedA,DSsortIndA] = sort(currentSubj(1).DSpeLatencyAllTrialsA);       
+% %     [NSpeLatencySortedA,NSsortIndA] =  %stages before 5 have no ns %sort(currentSubj(1).NSpeLatencyAllTrialsA);
+% 
+%          %cond b
+%     [DSpeLatencySortedB,DSsortIndB] = sort(currentSubj(1).DSpeLatencyAllTrialsB);       
+%     [NSpeLatencySortedB,NSsortIndB] = sort(currentSubj(1).NSpeLatencyAllTrialsB);
+%         %cond c
+%     [DSpeLatencySortedC,DSsortIndC] = sort(currentSubj(1).DSpeLatencyAllTrialsC);       
+%     [NSpeLatencySortedC,NSsortIndC] = sort(currentSubj(1).NSpeLatencyAllTrialsC);
+%        %cond D
+%     [DSpeLatencySortedD,DSsortIndD] = sort(currentSubj(1).DSpeLatencyAllTrialsD);       
+%     [NSpeLatencySortedD,NSsortIndD] = sort(currentSubj(1).NSpeLatencyAllTrialsD);
+%     
+%     
+%     %Sort all trials by PE latency
+%         %cond a
+%     currentSubj(1).DSzblueAllTrialsA= currentSubj(1).DSzblueAllTrialsA(:,DSsortIndA);
+%     currentSubj(1).DSzpurpleAllTrialsA= currentSubj(1).DSzpurpleAllTrialsA(:,DSsortIndA);
+% %     currentSubj(1).NSzblueAllTrialsA = currentSubj(1).NSzblueAllTrialsA(:,NSsortIndA);
+% %     currentSubj(1).NSzpurpleAllTrialsA= currentSubj(1).NSzpurpleAllTrialsA(:,NSsortIndA);
+% 
+%              % sort licks
+%              currentSubj(1).DSloxAllTrialsA= DSloxAllTrialsA;
+%              currentSubj(1).DSloxAllTrialsA= currentSubj(1).DSloxAllTrialsA(:,DSsortIndA);
+% 
+% 
+%          %cond b
+%     currentSubj(1).DSzblueAllTrialsB= currentSubj(1).DSzblueAllTrialsB(:,DSsortIndB);
+%     currentSubj(1).DSzpurpleAllTrialsB= currentSubj(1).DSzpurpleAllTrialsB(:,DSsortIndB);
+%     currentSubj(1).NSzblueAllTrialsB = currentSubj(1).NSzblueAllTrialsB(:,NSsortIndB);
+%     currentSubj(1).NSzpurpleAllTrialsB= currentSubj(1).NSzpurpleAllTrialsB(:,NSsortIndB);
+%     
+%              % sort licks
+%              currentSubj(1).DSloxAllTrialsB= DSloxAllTrialsB;
+%              currentSubj(1).DSloxAllTrialsB= currentSubj(1).DSloxAllTrialsB(:,DSsortIndB);
+%              
+%              currentSubj(1).NSloxAllTrialsB= NSloxAllTrialsB;
+%              currentSubj(1).NSloxAllTrialsB= currentSubj(1).NSloxAllTrialsB(:,NSsortIndB);
+% 
+%           %cond C
+%     currentSubj(1).DSzblueAllTrialsC= currentSubj(1).DSzblueAllTrialsC(:,DSsortIndC);
+%     currentSubj(1).DSzpurpleAllTrialsC= currentSubj(1).DSzpurpleAllTrialsC(:,DSsortIndC);
+%     currentSubj(1).NSzblueAllTrialsC = currentSubj(1).NSzblueAllTrialsC(:,NSsortIndC);
+%     currentSubj(1).NSzpurpleAllTrialsC= currentSubj(1).NSzpurpleAllTrialsC(:,NSsortIndC);
+%                % sort licks
+%              currentSubj(1).DSloxAllTrialsC= DSloxAllTrialsC;
+%              currentSubj(1).DSloxAllTrialsC= currentSubj(1).DSloxAllTrialsC(:,DSsortIndC);
+%              
+%              currentSubj(1).NSloxAllTrialsC= NSloxAllTrialsC;
+%              currentSubj(1).NSloxAllTrialsC= currentSubj(1).NSloxAllTrialsC(:,NSsortIndC);
+%              
+%       %cond D
+%     currentSubj(1).DSzblueAllTrialsD= currentSubj(1).DSzblueAllTrialsD(:,DSsortIndD);
+%     currentSubj(1).DSzpurpleAllTrialsD= currentSubj(1).DSzpurpleAllTrialsD(:,DSsortIndD);
+%     currentSubj(1).NSzblueAllTrialsD = currentSubj(1).NSzblueAllTrialsD(:,NSsortIndD);
+%     currentSubj(1).NSzpurpleAllTrialsD= currentSubj(1).NSzpurpleAllTrialsD(:,NSsortIndD);
+%                % sort licks
+%              currentSubj(1).DSloxAllTrialsD= DSloxAllTrialsD;
+%              currentSubj(1).DSloxAllTrialsD= currentSubj(1).DSloxAllTrialsD(:,DSsortIndD);
+%              
+%              currentSubj(1).NSloxAllTrialsD= NSloxAllTrialsD;
+%              currentSubj(1).NSloxAllTrialsD= currentSubj(1).NSloxAllTrialsD(:,NSsortIndD);
+% 
+% 
+% 
+%     %Transpose these data for readability
+%         %cond a
+%     currentSubj(1).DSzblueAllTrialsA= currentSubj(1).DSzblueAllTrialsA';
+%     currentSubj(1).DSzpurpleAllTrialsA= currentSubj(1).DSzpurpleAllTrialsA';    
+% %     currentSubj(1).NSzblueAllTrialsA= currentSubj(1).NSzblueAllTrialsA';
+% %     currentSubj(1).NSzpurpleAllTrialsA= currentSubj(1).NSzpurpleAllTrialsA';
+%         %cond b
+%     currentSubj(1).DSzblueAllTrialsB= currentSubj(1).DSzblueAllTrialsB';
+%     currentSubj(1).DSzpurpleAllTrialsB= currentSubj(1).DSzpurpleAllTrialsB';    
+%     currentSubj(1).NSzblueAllTrialsB= currentSubj(1).NSzblueAllTrialsB';
+%     currentSubj(1).NSzpurpleAllTrialsB= currentSubj(1).NSzpurpleAllTrialsB';
+%         %cond c
+%     currentSubj(1).DSzblueAllTrialsC= currentSubj(1).DSzblueAllTrialsC';
+%     currentSubj(1).DSzpurpleAllTrialsC= currentSubj(1).DSzpurpleAllTrialsC';    
+%     currentSubj(1).NSzblueAllTrialsC= currentSubj(1).NSzblueAllTrialsC';
+%     currentSubj(1).NSzpurpleAllTrialsC= currentSubj(1).NSzpurpleAllTrialsC';
+%         %cond D
+%     currentSubj(1).DSzblueAllTrialsD= currentSubj(1).DSzblueAllTrialsD';
+%     currentSubj(1).DSzpurpleAllTrialsD= currentSubj(1).DSzpurpleAllTrialsD';    
+%     currentSubj(1).NSzblueAllTrialsD= currentSubj(1).NSzblueAllTrialsD';
+%     currentSubj(1).NSzpurpleAllTrialsD= currentSubj(1).NSzpurpleAllTrialsD';
+%     
+%     
+%        
+%        %get trial count for y axis of heatplot
+%    currentSubj(1).totalDScountA= 1:size(currentSubj(1).DSzblueAllTrialsA,1); 
+%    currentSubj(1).totalDScountB= 1:size(currentSubj(1).DSzblueAllTrialsB,1); 
+%    currentSubj(1).totalDScountC= 1:size(currentSubj(1).DSzblueAllTrialsC,1);
+%    currentSubj(1).totalDScountD= 1:size(currentSubj(1).DSzblueAllTrialsD,1);
+% 
+%    
+% %    currentSubj(1).totalNScountA= 1:size(currentSubj(1).NSzblueAllTrialsA,1); 
+%    currentSubj(1).totalNScountB= 1:size(currentSubj(1).NSzblueAllTrialsB,1); 
+%    currentSubj(1).totalNScountC= 1:size(currentSubj(1).NSzblueAllTrialsC,1);
+%    currentSubj(1).totalNScountD= 1:size(currentSubj(1).NSzblueAllTrialsD,1);
+% 
+% 
+% 
+% 
+%     
+%        %Color axes   
+%      
+%      %First, we'll want to establish boundaries for our colormaps based on
+%      %the std of the z score response. We want to have equidistant
+%      %color axis max and min so that 0 sits directly in the middle
+%      
+%      %TODO: should this be a pooled std calculation (pooled blue & purple)?
+%     
+%      %define DS color axes
+%      %get the avg std in the blue and purple z score responses to all cues,
+%      %get absolute value and then multiply this by some factor to define a color axis max and min
+%      
+%      stdFactor= 4; %multiplicative factor- how many stds away should we set our max & min color value? 
+%      
+%         %cond A
+%      topDSzblueA= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      topDSzpurpleA= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%      bottomDSzblueA = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      bottomDSzpurpleA= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsA, 0, 2))));
+%      
+%         %cond B
+%      topDSzblueB= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      topDSzpurpleB= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%      bottomDSzblueB = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      bottomDSzpurpleB= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsB, 0, 2))));
+%         %cond c
+%      topDSzblueC= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      topDSzpurpleC= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%      bottomDSzblueC = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      bottomDSzpurpleC= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsC, 0, 2))));
+%      
+%      bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC];
+%      tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC];
+%      
+%        %cond D
+%      topDSzblueD= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      topDSzpurpleD= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% 
+%      bottomDSzblueD = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueAllTrialsD, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%      bottomDSzpurpleD= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrialsD, 0, 2))));
+%      
+%      bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzblueD, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC, bottomDSzpurpleD];
+%      tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzblueD, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC, topDSzpurpleD];
+%      
+%      %now choose the most extreme of these two (between blue and
+%      %purple)to represent the color axis 
+%      bottomAllDS= min(bottoms);
+%      topAllDS= max(tops);
+%      
+% %     %same, but defining color axes for NS
+% %     if ~isempty(currentSubj(1).NSzblueSessionMean) %only run this if there's NS data
+% %         topNSzblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% %         topNSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+% % 
+% %         bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzblueSessionMean, 0, 2))));
+% %         bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleSessionMean, 0, 2))));
+% % 
+% %         bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
+% %         topAllNS= max(topNSzblue, topNSzpurple);
+% %     end
+% %     %Establish a shared bottom and top for shared color axis of DS & NS
+% %     if ~isempty(currentSubj(1).NSzblueSessionMean) %if there is an NS
+% %         bottomMeanShared= min(bottomAllDS, bottomAllNS); %find the absolute min value
+% %         topMeanShared= max(topAllDS, topAllNS); %find the absolute min value
+% %     else
+%         bottomMeanShared= bottomAllDS;
+%         topMeanShared= topAllDS;
+% %     end
+%     
+%    
+% 
+%     timeLock = [-preCueFrames:postCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+% 
+% %     %Plots!
+% %     
+% %         figure(figureCount);
+% %         figureCount= figureCount+1;
+% % 
+% %            sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, ' response to DS across training stages- trials sorted by PE latency')); %add big title above all subplots
+% % 
+% % 
+% %         subplot(2,3,1) %plot of stage 1-4 blue (cond A blue)
+% %         
+% %             imagesc(timeLock,currentSubj(1).totalDScountA,currentSubj(1).DSzblueAllTrialsA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('Stage 1-4 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalDScountA); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %             
+% %             
+% %         subplot(2,3,2) %plot of stage 5 blue (cond B blue)
+% %             
+% %             imagesc(timeLock,currentSubj(1).totalDScountB,currentSubj(1).DSzblueAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('Stage 5 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalDScountB); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %         
+% %         subplot(2,3,3) %plot of stage 6-8 blue (cond C blue)
+% %             imagesc(timeLock,currentSubj(1).totalDScountC,currentSubj(1).DSzblueAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('Stage 6-8 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalDScountC); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% % 
+% %       subplot(2,3,4) %plot of stage 1-4 purple (cond A purple)
+% %         
+% %             imagesc(timeLock,currentSubj(1).totalDScountA,currentSubj(1).DSzpurpleAllTrialsA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+% %             title(strcat('Stage 1-4 DS response (405nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalDScountA); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %             
+% %             
+% %         subplot(2,3,5) %plot of stage 5 purple (cond B purple)
+% %             
+% %             imagesc(timeLock,currentSubj(1).totalDScountB,currentSubj(1).DSzpurpleAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).DSzpurpleSessionMean));
+% %             title(strcat('Stage 5 DS response (405nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalDScountB); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %         
+% %         subplot(2,3,6) %plot of stage 6-8 purple (cond C purple)
+% %             imagesc(timeLock,currentSubj(1).totalDScountC,currentSubj(1).DSzpurpleAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).DSzpurpleSessionMean));
+% %             title(strcat(' Stage 6-8 DS response (405nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalDScountC); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% % 
+% %   %Overlay scatter of PE latency
+% %    subplot(2,3,1) %condA DS blue 
+% %    hold on
+% %    scatter(DSpeLatencySortedA,currentSubj(1).totalDScountA', 'm.');
+% %    
+% %    subplot(2,3,2) %condB DS blue 
+% %    hold on
+% %    scatter(DSpeLatencySortedB,currentSubj(1).totalDScountB', 'm.');
+% %       
+% %    subplot(2,3,3) %condC DS blue 
+% %    hold on
+% %    scatter(DSpeLatencySortedC,currentSubj(1).totalDScountC', 'm.');
+% %    
+% %    subplot(2,3,4) %cond A DS purple
+% %    hold on
+% %    scatter(DSpeLatencySortedA,currentSubj(1).totalDScountA', 'm.');
+% %    
+% %    subplot(2,3,5) %cond B DS purple
+% %    hold on
+% %    scatter(DSpeLatencySortedB,currentSubj(1).totalDScountB', 'm.');
+% %    
+% %    subplot(2,3,6) %cond C DS purple
+% %    hold on
+% %    scatter(DSpeLatencySortedC,currentSubj(1).totalDScountC', 'm.');
+% %    
+% %    
+% %     %overlay scatter of Licks- 
+% %        licksToPlot= 3;
+% %        lickAlpha= 0.15;
+% %     
+% %        subplot(2,3,1) %condA DS blue 
+% %        hold on
+% %        for trial= (currentSubj(1).totalDScountA)
+% %            %scatter all licks
+% % %                s= scatter(currentSubj(1).DSloxAllTrialsA{trial},ones(numel(currentSubj(1).DSloxAllTrialsA{trial}),1)*currentSubj(1).totalDScountA(trial), 'k.');
+% %            %scatter # of licksToPlot
+% %            if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %            end
+% %        end
+% %     
+% %        subplot(2,3,2) %condB DS blue 
+% %        hold on
+% %        for trial= (currentSubj(1).totalDScountB)
+% %                %scatter # of licksToPlot
+% %            if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %            end
+% %        end
+% %        
+% %        subplot(2,3,3) %condC DS blue 
+% %        hold on
+% %        for trial= (currentSubj(1).totalDScountC)
+% %                 %scatter # of licksToPlot
+% %            if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %            end
+% %        end
+% %     
+% %        subplot(2,3,4) %condA DS purple 
+% %        hold on
+% %        for trial= (currentSubj(1).totalDScountA)
+% %                %scatter # of licksToPlot
+% %            if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= 0.3; %make transparent
+% %            end
+% %        end
+% %        
+% %        subplot(2,3,5) %condB DS purple 
+% %        hold on
+% %        for trial= (currentSubj(1).totalDScountB)
+% %                %scatter # of licksToPlot
+% %            if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %            end
+% %        end
+% %        
+% %        subplot(2,3,6) %condC DS purple 
+% %        hold on
+% %        for trial= (currentSubj(1).totalDScountC)
+% %               %scatter # of licksToPlot
+% %            if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %            end
+% %        end
+% %        
+% %        
+% %             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% % 
+% %     
+% %     
+% %     %NS plots!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+% % 
+% %        figure(figureCount);
+% %        figureCount= figureCount+1;
+% % 
+% %        sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, ' response to NS across training stages- trials sorted by PE latency')); %add big title above all subplots
+% % 
+% % 
+% %         subplot(2,3,1) %plot of stage 1-4 blue (cond A blue)
+% %         
+% % %             imagesc(timeLock,currentSubj(1).totalNScountA,currentSubj(1).NSzblueAllTrialsA) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% % %             title(strcat('Stage 1-4 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% % %             xlabel('seconds from cue onset');
+% % %             ylabel('trial (latency sorted)');
+% % % %             set(gca, 'ytick', currentSubj(1).totalNScountA); %label trials appropriately
+% % %             caxis manual;
+% % %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % % 
+% % %             c= colorbar; %colorbar legend
+% % %             c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %             
+% %             
+% %         subplot(2,3,2) %plot of stage 5 blue (cond B blue)
+% %             
+% %             imagesc(timeLock,currentSubj(1).totalNScountB,currentSubj(1).NSzblueAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% %             title(strcat('Stage 5 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalNScountB); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %         
+% %         subplot(2,3,3) %plot of stage 6-8 blue (cond C blue)
+% %             imagesc(timeLock,currentSubj(1).totalNScountC,currentSubj(1).NSzblueAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% %             title(strcat('Stage 6-8 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalNScountC); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% % 
+% %       subplot(2,3,4) %plot of stage 1-4 purple (cond A purple)
+% % %         
+% % %             imagesc(timeLock,currentSubj(1).totalNScountA,currentSubj(1).NSzpurpleAllTrialsA) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+% % %             title(strcat('Stage 1-4 NS response (405nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% % %             xlabel('seconds from cue onset');
+% % %             ylabel('trial (latency sorted)');
+% % % %             set(gca, 'ytick', currentSubj(1).totalNScountA); %label trials appropriately
+% % %             caxis manual;
+% % %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % % 
+% % %             c= colorbar; %colorbar legend
+% % %             c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% % %               
+% %             
+% %             
+% %         subplot(2,3,5) %plot of stage 5 purple (cond B purple)
+% %             
+% %             imagesc(timeLock,currentSubj(1).totalNScountB,currentSubj(1).NSzpurpleAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).NSzpurpleSessionMean));
+% %             title(strcat('Stage 5 NS response (405nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalNScountB); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% %               
+% %         
+% %         subplot(2,3,6) %plot of stage 6-8 purple (cond C purple)
+% %             imagesc(timeLock,currentSubj(1).totalNScountC,currentSubj(1).NSzpurpleAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).NSzpurpleSessionMean));
+% %             title(strcat(' Stage 6-8 NS response (405nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+% %             xlabel('seconds from cue onset');
+% %             ylabel('trial (latency sorted)');
+% % %             set(gca, 'ytick', currentSubj(1).totalNScountC); %label trials appropriately
+% %             caxis manual;
+% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
+% % 
+% %             c= colorbar; %colorbar legend
+% %             c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% % 
+% %             
+% %             
+% %             %Overlay scatter of PE latency
+% %    subplot(2,3,1) %condA NS blue 
+% %    hold on
+% % %    scatter(NSpeLatencySortedA,currentSubj(1).totalNScountA', 'm.');
+% %    
+% %    subplot(2,3,2) %condB NS blue 
+% %    hold on
+% %    scatter(NSpeLatencySortedB,currentSubj(1).totalNScountB', 'm.');
+% %       
+% %    subplot(2,3,3) %condC NS blue 
+% %    hold on
+% %    scatter(NSpeLatencySortedC,currentSubj(1).totalNScountC', 'm.');
+% %    
+% %    subplot(2,3,4) %cond A NS purple
+% %    hold on
+% % %    scatter(NSpeLatencySortedA,currentSubj(1).totalNScountA', 'm.');
+% %    
+% %    subplot(2,3,5) %cond B NS purple
+% %    hold on
+% %    scatter(NSpeLatencySortedB,currentSubj(1).totalNScountB', 'm.');
+% %    
+% %    subplot(2,3,6) %cond C NS purple
+% %    hold on
+% %    scatter(NSpeLatencySortedC,currentSubj(1).totalNScountC', 'm.');
+% %    
+% %             
+% %      %overlay scatter of Licks- 
+% %        licksToPlot= 3;
+% %       lickAlpha= 0.35;
+% % 
+% %     
+% %        subplot(2,3,1) %condA NS blue 
+% % %        hold on
+% % %        for trial= (currentSubj(1).totalNScountA)
+% %            %scatter all licks
+% % %                s= scatter(currentSubj(1).NSloxAllTrialsA{trial},ones(numel(currentSubj(1).NSloxAllTrialsA{trial}),1)*currentSubj(1).totalNScountA(trial), 'k.');
+% %            %scatter # of licksToPlot
+% % %            if numel(currentSubj(1).NSloxAllTrialsA{trial}) >= licksToPlot
+% % %                 s= scatter(currentSubj(1).NSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountA(trial), 'k.');
+% % %                 s.MarkerEdgeAlpha= 0.3; %make transparent
+% % %            end
+% % %        end
+% %     
+% %        subplot(2,3,2) %condB NS blue 
+% %        hold on
+% %        for trial= (currentSubj(1).totalNScountB)
+% %                %scatter # of licksToPlot
+% %            if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %            end
+% %        end
+% %        
+% %        subplot(2,3,3) %condC NS blue 
+% %        hold on
+% %        for trial= (currentSubj(1).totalNScountC)
+% %                 %scatter # of licksToPlot
+% %            if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %            end
+% %        end
+% %     
+% %        subplot(2,3,4) %condA NS purple 
+% % %        hold on
+% % %        for trial= (currentSubj(1).totalNScountA)
+% % %                %scatter # of licksToPlot
+% % %            if numel(currentSubj(1).NSloxAllTrialsA{trial}) >= licksToPlot
+% % %                 s= scatter(currentSubj(1).NSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountA(trial), 'k.');
+% % %                 s.MarkerEdgeAlpha= 0.3; %make transparent
+% % %            end
+% %        
+% %        subplot(2,3,5) %condB NS purple 
+% %        hold on
+% %        for trial= (currentSubj(1).totalNScountB)
+% %                %scatter # of licksToPlot
+% %            if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %            end
+% %        end
+% %        
+% %        subplot(2,3,6) %condC NS purple 
+% %        hold on
+% %        for trial= (currentSubj(1).totalNScountC)
+% %               %scatter # of licksToPlot
+% %            if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
+% %                 s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
+% %                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% %            end
+% %        end
+% %             
+% %             
+% %             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% % 
+% %             
+%             
+%     % ~~~~ One figure with only Blue response to both DS & NS ~~~~~~~~~~~~~~~~~~~~
+%             
+%               figure(figureCount);
+%         figureCount= figureCount+1;
+% 
+%            sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, ' response to DS or NS across training stages- trials sorted by PE latency')); %add big title above all subplots
+% 
+% 
+%         subplot(2,4,1) %plot of stage 1-4 blue (cond A blue)
 %         
 %             imagesc(timeLock,currentSubj(1).totalDScountA,currentSubj(1).DSzblueAllTrialsA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
 %             title(strcat('Stage 1-4 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
@@ -7308,7 +8020,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
 %               
 %             
 %             
-%         subplot(2,3,2) %plot of stage 5 blue (cond B blue)
+%         subplot(2,4,2) %plot of stage 5 blue (cond B blue)
 %             
 %             imagesc(timeLock,currentSubj(1).totalDScountB,currentSubj(1).DSzblueAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
 %             title(strcat('Stage 5 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
@@ -7322,9 +8034,9 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
 %             c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
 %               
 %         
-%         subplot(2,3,3) %plot of stage 6-8 blue (cond C blue)
+%         subplot(2,4,3) %plot of stage 6-7 blue (cond C blue)
 %             imagesc(timeLock,currentSubj(1).totalDScountC,currentSubj(1).DSzblueAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-%             title(strcat('Stage 6-8 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             title(strcat('Stage 6-7 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
 %             xlabel('seconds from cue onset');
 %             ylabel('trial (latency sorted)');
 % %             set(gca, 'ytick', currentSubj(1).totalDScountC); %label trials appropriately
@@ -7334,39 +8046,9 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
 %             c= colorbar; %colorbar legend
 %             c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
 %               
-% 
-%       subplot(2,3,4) %plot of stage 1-4 purple (cond A purple)
-%         
-%             imagesc(timeLock,currentSubj(1).totalDScountA,currentSubj(1).DSzpurpleAllTrialsA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-%             title(strcat('Stage 1-4 DS response (405nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('trial (latency sorted)');
-% %             set(gca, 'ytick', currentSubj(1).totalDScountA); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-%             
-%             
-%         subplot(2,3,5) %plot of stage 5 purple (cond B purple)
-%             
-%             imagesc(timeLock,currentSubj(1).totalDScountB,currentSubj(1).DSzpurpleAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).DSzpurpleSessionMean));
-%             title(strcat('Stage 5 DS response (405nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('trial (latency sorted)');
-% %             set(gca, 'ytick', currentSubj(1).totalDScountB); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-%         
-%         subplot(2,3,6) %plot of stage 6-8 purple (cond C purple)
-%             imagesc(timeLock,currentSubj(1).totalDScountC,currentSubj(1).DSzpurpleAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).DSzpurpleSessionMean));
-%             title(strcat(' Stage 6-8 DS response (405nm)')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%          subplot(2,4,4) %plot of stage 8 blue (cond D blue)
+%             imagesc(timeLock,currentSubj(1).totalDScountD,currentSubj(1).DSzblueAllTrialsD) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
+%             title(strcat('Stage 8 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
 %             xlabel('seconds from cue onset');
 %             ylabel('trial (latency sorted)');
 % %             set(gca, 'ytick', currentSubj(1).totalDScountC); %label trials appropriately
@@ -7374,130 +8056,10 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
 %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
 % 
 %             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-% 
-%   %Overlay scatter of PE latency
-%    subplot(2,3,1) %condA DS blue 
-%    hold on
-%    scatter(DSpeLatencySortedA,currentSubj(1).totalDScountA', 'm.');
-%    
-%    subplot(2,3,2) %condB DS blue 
-%    hold on
-%    scatter(DSpeLatencySortedB,currentSubj(1).totalDScountB', 'm.');
-%       
-%    subplot(2,3,3) %condC DS blue 
-%    hold on
-%    scatter(DSpeLatencySortedC,currentSubj(1).totalDScountC', 'm.');
-%    
-%    subplot(2,3,4) %cond A DS purple
-%    hold on
-%    scatter(DSpeLatencySortedA,currentSubj(1).totalDScountA', 'm.');
-%    
-%    subplot(2,3,5) %cond B DS purple
-%    hold on
-%    scatter(DSpeLatencySortedB,currentSubj(1).totalDScountB', 'm.');
-%    
-%    subplot(2,3,6) %cond C DS purple
-%    hold on
-%    scatter(DSpeLatencySortedC,currentSubj(1).totalDScountC', 'm.');
-%    
-%    
-%     %overlay scatter of Licks- 
-%        licksToPlot= 3;
-%        lickAlpha= 0.15;
-%     
-%        subplot(2,3,1) %condA DS blue 
-%        hold on
-%        for trial= (currentSubj(1).totalDScountA)
-%            %scatter all licks
-% %                s= scatter(currentSubj(1).DSloxAllTrialsA{trial},ones(numel(currentSubj(1).DSloxAllTrialsA{trial}),1)*currentSubj(1).totalDScountA(trial), 'k.');
-%            %scatter # of licksToPlot
-%            if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
-%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%            end
-%        end
-%     
-%        subplot(2,3,2) %condB DS blue 
-%        hold on
-%        for trial= (currentSubj(1).totalDScountB)
-%                %scatter # of licksToPlot
-%            if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
-%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%            end
-%        end
-%        
-%        subplot(2,3,3) %condC DS blue 
-%        hold on
-%        for trial= (currentSubj(1).totalDScountC)
-%                 %scatter # of licksToPlot
-%            if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
-%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%            end
-%        end
-%     
-%        subplot(2,3,4) %condA DS purple 
-%        hold on
-%        for trial= (currentSubj(1).totalDScountA)
-%                %scatter # of licksToPlot
-%            if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
-%                 s.MarkerEdgeAlpha= 0.3; %make transparent
-%            end
-%        end
-%        
-%        subplot(2,3,5) %condB DS purple 
-%        hold on
-%        for trial= (currentSubj(1).totalDScountB)
-%                %scatter # of licksToPlot
-%            if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
-%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%            end
-%        end
-%        
-%        subplot(2,3,6) %condC DS purple 
-%        hold on
-%        for trial= (currentSubj(1).totalDScountC)
-%               %scatter # of licksToPlot
-%            if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
-%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%            end
-%        end
-%        
-%        
-%             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-% 
-%     
-%     
-%     %NS plots!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% 
-%        figure(figureCount);
-%        figureCount= figureCount+1;
-% 
-%        sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, ' response to NS across training stages- trials sorted by PE latency')); %add big title above all subplots
-% 
-% 
-%         subplot(2,3,1) %plot of stage 1-4 blue (cond A blue)
-%         
-% %             imagesc(timeLock,currentSubj(1).totalNScountA,currentSubj(1).NSzblueAllTrialsA) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-% %             title(strcat('Stage 1-4 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-% %             xlabel('seconds from cue onset');
-% %             ylabel('trial (latency sorted)');
-% % %             set(gca, 'ytick', currentSubj(1).totalNScountA); %label trials appropriately
-% %             caxis manual;
-% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% % 
-% %             c= colorbar; %colorbar legend
-% %             c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%             c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
 %               
 %             
-%             
-%         subplot(2,3,2) %plot of stage 5 blue (cond B blue)
+%         subplot(2,4,6) %plot of stage 5 blue (cond B blue)
 %             
 %             imagesc(timeLock,currentSubj(1).totalNScountB,currentSubj(1).NSzblueAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
 %             title(strcat('Stage 5 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
@@ -7511,9 +8073,9 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
 %             c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
 %               
 %         
-%         subplot(2,3,3) %plot of stage 6-8 blue (cond C blue)
+%         subplot(2,4,7) %plot of stage 6-7 blue (cond C blue)
 %             imagesc(timeLock,currentSubj(1).totalNScountC,currentSubj(1).NSzblueAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-%             title(strcat('Stage 6-8 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%             title(strcat('Stage 6-7 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
 %             xlabel('seconds from cue onset');
 %             ylabel('trial (latency sorted)');
 % %             set(gca, 'ytick', currentSubj(1).totalNScountC); %label trials appropriately
@@ -7522,40 +8084,11 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
 % 
 %             c= colorbar; %colorbar legend
 %             c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-% 
-%       subplot(2,3,4) %plot of stage 1-4 purple (cond A purple)
-% %         
-% %             imagesc(timeLock,currentSubj(1).totalNScountA,currentSubj(1).NSzpurpleAllTrialsA) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-% %             title(strcat('Stage 1-4 NS response (405nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-% %             xlabel('seconds from cue onset');
-% %             ylabel('trial (latency sorted)');
-% % %             set(gca, 'ytick', currentSubj(1).totalNScountA); %label trials appropriately
-% %             caxis manual;
-% %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% % 
-% %             c= colorbar; %colorbar legend
-% %             c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-% %               
 %             
 %             
-%         subplot(2,3,5) %plot of stage 5 purple (cond B purple)
-%             
-%             imagesc(timeLock,currentSubj(1).totalNScountB,currentSubj(1).NSzpurpleAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).NSzpurpleSessionMean));
-%             title(strcat('Stage 5 NS response (405nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-%             xlabel('seconds from cue onset');
-%             ylabel('trial (latency sorted)');
-% %             set(gca, 'ytick', currentSubj(1).totalNScountB); %label trials appropriately
-%             caxis manual;
-%             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-% 
-%             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-%               
-%         
-%         subplot(2,3,6) %plot of stage 6-8 purple (cond C purple)
-%             imagesc(timeLock,currentSubj(1).totalNScountC,currentSubj(1).NSzpurpleAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).NSzpurpleSessionMean));
-%             title(strcat(' Stage 6-8 NS response (405nm)')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%         subplot(2,4,8) %plot of stage 8 blue (cond D blue)
+%             imagesc(timeLock,currentSubj(1).totalNScountD,currentSubj(1).NSzblueAllTrialsD) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
+%             title(strcat('Stage 8 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
 %             xlabel('seconds from cue onset');
 %             ylabel('trial (latency sorted)');
 % %             set(gca, 'ytick', currentSubj(1).totalNScountC); %label trials appropriately
@@ -7563,348 +8096,148 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
 %             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
 % 
 %             c= colorbar; %colorbar legend
-%             c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%             c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+%             
 % 
-%             
-%             
-%             %Overlay scatter of PE latency
-%    subplot(2,3,1) %condA NS blue 
-%    hold on
-% %    scatter(NSpeLatencySortedA,currentSubj(1).totalNScountA', 'm.');
-%    
-%    subplot(2,3,2) %condB NS blue 
-%    hold on
-%    scatter(NSpeLatencySortedB,currentSubj(1).totalNScountB', 'm.');
-%       
-%    subplot(2,3,3) %condC NS blue 
-%    hold on
-%    scatter(NSpeLatencySortedC,currentSubj(1).totalNScountC', 'm.');
-%    
-%    subplot(2,3,4) %cond A NS purple
-%    hold on
-% %    scatter(NSpeLatencySortedA,currentSubj(1).totalNScountA', 'm.');
-%    
-%    subplot(2,3,5) %cond B NS purple
-%    hold on
-%    scatter(NSpeLatencySortedB,currentSubj(1).totalNScountB', 'm.');
-%    
-%    subplot(2,3,6) %cond C NS purple
-%    hold on
-%    scatter(NSpeLatencySortedC,currentSubj(1).totalNScountC', 'm.');
-%    
-%             
-%      %overlay scatter of Licks- 
-%        licksToPlot= 3;
-%       lickAlpha= 0.35;
-% 
-%     
-%        subplot(2,3,1) %condA NS blue 
-% %        hold on
-% %        for trial= (currentSubj(1).totalNScountA)
-%            %scatter all licks
-% %                s= scatter(currentSubj(1).NSloxAllTrialsA{trial},ones(numel(currentSubj(1).NSloxAllTrialsA{trial}),1)*currentSubj(1).totalNScountA(trial), 'k.');
-%            %scatter # of licksToPlot
-% %            if numel(currentSubj(1).NSloxAllTrialsA{trial}) >= licksToPlot
-% %                 s= scatter(currentSubj(1).NSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountA(trial), 'k.');
-% %                 s.MarkerEdgeAlpha= 0.3; %make transparent
-% %            end
-% %        end
-%     
-%        subplot(2,3,2) %condB NS blue 
-%        hold on
-%        for trial= (currentSubj(1).totalNScountB)
-%                %scatter # of licksToPlot
-%            if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
-%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%            end
-%        end
-%        
-%        subplot(2,3,3) %condC NS blue 
-%        hold on
-%        for trial= (currentSubj(1).totalNScountC)
-%                 %scatter # of licksToPlot
-%            if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
-%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%            end
-%        end
-%     
-%        subplot(2,3,4) %condA NS purple 
-% %        hold on
-% %        for trial= (currentSubj(1).totalNScountA)
-% %                %scatter # of licksToPlot
-% %            if numel(currentSubj(1).NSloxAllTrialsA{trial}) >= licksToPlot
-% %                 s= scatter(currentSubj(1).NSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountA(trial), 'k.');
-% %                 s.MarkerEdgeAlpha= 0.3; %make transparent
-% %            end
-%        
-%        subplot(2,3,5) %condB NS purple 
-%        hold on
-%        for trial= (currentSubj(1).totalNScountB)
-%                %scatter # of licksToPlot
-%            if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
-%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%            end
-%        end
-%        
-%        subplot(2,3,6) %condC NS purple 
-%        hold on
-%        for trial= (currentSubj(1).totalNScountC)
-%               %scatter # of licksToPlot
-%            if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
-%                 s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
-%                 s.MarkerEdgeAlpha= lickAlpha; %make transparent
-%            end
-%        end
-%             
-%             
-%             set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-% 
-%             
-            
-    % ~~~~ One figure with only Blue response to both DS & NS ~~~~~~~~~~~~~~~~~~~~
-            
-              figure(figureCount);
-        figureCount= figureCount+1;
-
-           sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, ' response to DS or NS across training stages- trials sorted by PE latency')); %add big title above all subplots
-
-
-        subplot(2,4,1) %plot of stage 1-4 blue (cond A blue)
-        
-            imagesc(timeLock,currentSubj(1).totalDScountA,currentSubj(1).DSzblueAllTrialsA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('Stage 1-4 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('trial (latency sorted)');
-%             set(gca, 'ytick', currentSubj(1).totalDScountA); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-            
-            
-        subplot(2,4,2) %plot of stage 5 blue (cond B blue)
-            
-            imagesc(timeLock,currentSubj(1).totalDScountB,currentSubj(1).DSzblueAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('Stage 5 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('trial (latency sorted)');
-%             set(gca, 'ytick', currentSubj(1).totalDScountB); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-        
-        subplot(2,4,3) %plot of stage 6-7 blue (cond C blue)
-            imagesc(timeLock,currentSubj(1).totalDScountC,currentSubj(1).DSzblueAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('Stage 6-7 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('trial (latency sorted)');
-%             set(gca, 'ytick', currentSubj(1).totalDScountC); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-         subplot(2,4,4) %plot of stage 8 blue (cond D blue)
-            imagesc(timeLock,currentSubj(1).totalDScountD,currentSubj(1).DSzblueAllTrialsD) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
-            title(strcat('Stage 8 DS response (465nm) ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('trial (latency sorted)');
-%             set(gca, 'ytick', currentSubj(1).totalDScountC); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-            
-        subplot(2,4,6) %plot of stage 5 blue (cond B blue)
-            
-            imagesc(timeLock,currentSubj(1).totalNScountB,currentSubj(1).NSzblueAllTrialsB) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-            title(strcat('Stage 5 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('trial (latency sorted)');
-%             set(gca, 'ytick', currentSubj(1).totalNScountB); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
-        
-        subplot(2,4,7) %plot of stage 6-7 blue (cond C blue)
-            imagesc(timeLock,currentSubj(1).totalNScountC,currentSubj(1).NSzblueAllTrialsC) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-            title(strcat('Stage 6-7 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('trial (latency sorted)');
-%             set(gca, 'ytick', currentSubj(1).totalNScountC); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-            
-            
-        subplot(2,4,8) %plot of stage 8 blue (cond D blue)
-            imagesc(timeLock,currentSubj(1).totalNScountD,currentSubj(1).NSzblueAllTrialsD) %, 'AlphaData', ~isnan(currentSubj(1).NSzblueSessionMean));
-            title(strcat('Stage 8 NS response (465nm) ')); %'(n= ', num2str(unique(trialNSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-            xlabel('seconds from cue onset');
-            ylabel('trial (latency sorted)');
-%             set(gca, 'ytick', currentSubj(1).totalNScountC); %label trials appropriately
-            caxis manual;
-            caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
-
-            c= colorbar; %colorbar legend
-            c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-            
-
-      %Overlay scatter of PE latency
-           subplot(2,4,1) %condA DS blue 
-           hold on
-           scatter(DSpeLatencySortedA,currentSubj(1).totalDScountA', 'm.');
-
-           subplot(2,4,2) %condB DS blue 
-           hold on
-           scatter(DSpeLatencySortedB,currentSubj(1).totalDScountB', 'm.');
-
-           subplot(2,4,3) %condC DS blue 
-           hold on
-           scatter(DSpeLatencySortedC,currentSubj(1).totalDScountC', 'm.');
-                 
-           subplot(2,4,4) %condD DS blue 
-           hold on
-           scatter(DSpeLatencySortedD,currentSubj(1).totalDScountD', 'm.');
-           
-           subplot(2,4,6) %condB NS blue 
-           hold on
-           scatter(NSpeLatencySortedB,currentSubj(1).totalNScountB', 'm.');
-
-           subplot(2,4,7) %condC NS blue 
-           hold on
-           scatter(NSpeLatencySortedC,currentSubj(1).totalNScountC', 'm.');
-           
-           subplot(2,4,8) %condC NS blue 
-           hold on
-           scatter(NSpeLatencySortedD,currentSubj(1).totalNScountD', 'm.');
-%             
-%     %overlay scatter of Licks- 
-%            licksToPlot= 3;
-%            lickAlpha= 0.15;
-% 
+%       %Overlay scatter of PE latency
 %            subplot(2,4,1) %condA DS blue 
 %            hold on
-%            for trial= (currentSubj(1).totalDScountA)
-%                %scatter all licks
-%                    s= scatter(currentSubj(1).DSloxAllTrialsA{trial},ones(numel(currentSubj(1).DSloxAllTrialsA{trial}),1)*currentSubj(1).totalDScountA(trial), 'k.');
-%                %scatter # of licksToPlot
-% %                if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
-% %                     s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
-%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
-% %                end
-%            end
+%            scatter(DSpeLatencySortedA,currentSubj(1).totalDScountA', 'm.');
 % 
 %            subplot(2,4,2) %condB DS blue 
 %            hold on
-%            for trial= (currentSubj(1).totalDScountB)
-%                %scatter all licks
-%                s= scatter(currentSubj(1).DSloxAllTrialsB{trial},ones(numel(currentSubj(1).DSloxAllTrialsB{trial}),1)*currentSubj(1).totalDScountB(trial), 'k.');
-% 
-%                    %scatter # of licksToPlot
-% %                if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
-% %                     s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
-%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
-% %                end
-%            end
+%            scatter(DSpeLatencySortedB,currentSubj(1).totalDScountB', 'm.');
 % 
 %            subplot(2,4,3) %condC DS blue 
 %            hold on
-%            for trial= (currentSubj(1).totalDScountC)
-%                %scatter all licks
-%                s= scatter(currentSubj(1).DSloxAllTrialsC{trial},ones(numel(currentSubj(1).DSloxAllTrialsC{trial}),1)*currentSubj(1).totalDScountC(trial), 'k.');
-% 
-%                     %scatter # of licksToPlot
-% %                if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
-% %                     s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
-%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
-% %                end
-%            end
-% 
-%           subplot(2,4,4) %condD DS blue 
+%            scatter(DSpeLatencySortedC,currentSubj(1).totalDScountC', 'm.');
+%                  
+%            subplot(2,4,4) %condD DS blue 
 %            hold on
-%            for trial= (currentSubj(1).totalDScountD)
-%                %scatter all licks
-%                s= scatter(currentSubj(1).DSloxAllTrialsD{trial},ones(numel(currentSubj(1).DSloxAllTrialsD{trial}),1)*currentSubj(1).totalDScountD(trial), 'k.');
-% 
-%                     %scatter # of licksToPlot
-% %                if numel(currentSubj(1).DSloxAllTrialsD{trial}) >= licksToPlot
-% %                     s= scatter(currentSubj(1).DSloxAllTrialsD{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountD(trial), 'k.');
-%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
-% %                end
-%            end
-% 
-%            
+%            scatter(DSpeLatencySortedD,currentSubj(1).totalDScountD', 'm.');
 %            
 %            subplot(2,4,6) %condB NS blue 
 %            hold on
-%            for trial= (currentSubj(1).totalNScountB)
-%               
-%                %scatter all licks
-%                s= scatter(currentSubj(1).NSloxAllTrialsB{trial},ones(numel(currentSubj(1).NSloxAllTrialsB{trial}),1)*currentSubj(1).totalNScountB(trial), 'k.');
-% 
-%                
-%                    %scatter # of licksToPlot
-% %                if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
-% %                     s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
-%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
-% %                end
-%            end
+%            scatter(NSpeLatencySortedB,currentSubj(1).totalNScountB', 'm.');
 % 
 %            subplot(2,4,7) %condC NS blue 
 %            hold on
-%            for trial= (currentSubj(1).totalNScountC)
-%                 %scatter all licks
-%                s= scatter(currentSubj(1).NSloxAllTrialsC{trial},ones(numel(currentSubj(1).NSloxAllTrialsC{trial}),1)*currentSubj(1).totalNScountC(trial), 'k.');
-% 
-%                
-%                     %scatter # of licksToPlot
-% %                if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
-% %                     s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
-%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
-% %                end
-%            end
+%            scatter(NSpeLatencySortedC,currentSubj(1).totalNScountC', 'm.');
 %            
-%            subplot(2,4,8) %condD NS blue 
+%            subplot(2,4,8) %condC NS blue 
 %            hold on
-%            for trial= (currentSubj(1).totalNScountD)
-%                
-%                    %scatter all licks
-%                s= scatter(currentSubj(1).NSloxAllTrialsD{trial},ones(numel(currentSubj(1).NSloxAllTrialsD{trial}),1)*currentSubj(1).totalNScountD(trial), 'k.');
+%            scatter(NSpeLatencySortedD,currentSubj(1).totalNScountD', 'm.');
+% %             
+% %     %overlay scatter of Licks- 
+% %            licksToPlot= 3;
+% %            lickAlpha= 0.15;
+% % 
+% %            subplot(2,4,1) %condA DS blue 
+% %            hold on
+% %            for trial= (currentSubj(1).totalDScountA)
+% %                %scatter all licks
+% %                    s= scatter(currentSubj(1).DSloxAllTrialsA{trial},ones(numel(currentSubj(1).DSloxAllTrialsA{trial}),1)*currentSubj(1).totalDScountA(trial), 'k.');
+% %                %scatter # of licksToPlot
+% % %                if numel(currentSubj(1).DSloxAllTrialsA{trial}) >= licksToPlot
+% % %                     s= scatter(currentSubj(1).DSloxAllTrialsA{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountA(trial), 'k.');
+% %                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% % %                end
+% %            end
+% % 
+% %            subplot(2,4,2) %condB DS blue 
+% %            hold on
+% %            for trial= (currentSubj(1).totalDScountB)
+% %                %scatter all licks
+% %                s= scatter(currentSubj(1).DSloxAllTrialsB{trial},ones(numel(currentSubj(1).DSloxAllTrialsB{trial}),1)*currentSubj(1).totalDScountB(trial), 'k.');
+% % 
+% %                    %scatter # of licksToPlot
+% % %                if numel(currentSubj(1).DSloxAllTrialsB{trial}) >= licksToPlot
+% % %                     s= scatter(currentSubj(1).DSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountB(trial), 'k.');
+% %                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% % %                end
+% %            end
+% % 
+% %            subplot(2,4,3) %condC DS blue 
+% %            hold on
+% %            for trial= (currentSubj(1).totalDScountC)
+% %                %scatter all licks
+% %                s= scatter(currentSubj(1).DSloxAllTrialsC{trial},ones(numel(currentSubj(1).DSloxAllTrialsC{trial}),1)*currentSubj(1).totalDScountC(trial), 'k.');
+% % 
+% %                     %scatter # of licksToPlot
+% % %                if numel(currentSubj(1).DSloxAllTrialsC{trial}) >= licksToPlot
+% % %                     s= scatter(currentSubj(1).DSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountC(trial), 'k.');
+% %                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% % %                end
+% %            end
+% % 
+% %           subplot(2,4,4) %condD DS blue 
+% %            hold on
+% %            for trial= (currentSubj(1).totalDScountD)
+% %                %scatter all licks
+% %                s= scatter(currentSubj(1).DSloxAllTrialsD{trial},ones(numel(currentSubj(1).DSloxAllTrialsD{trial}),1)*currentSubj(1).totalDScountD(trial), 'k.');
+% % 
+% %                     %scatter # of licksToPlot
+% % %                if numel(currentSubj(1).DSloxAllTrialsD{trial}) >= licksToPlot
+% % %                     s= scatter(currentSubj(1).DSloxAllTrialsD{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalDScountD(trial), 'k.');
+% %                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% % %                end
+% %            end
+% % 
+% %            
+% %            
+% %            subplot(2,4,6) %condB NS blue 
+% %            hold on
+% %            for trial= (currentSubj(1).totalNScountB)
+% %               
+% %                %scatter all licks
+% %                s= scatter(currentSubj(1).NSloxAllTrialsB{trial},ones(numel(currentSubj(1).NSloxAllTrialsB{trial}),1)*currentSubj(1).totalNScountB(trial), 'k.');
+% % 
+% %                
+% %                    %scatter # of licksToPlot
+% % %                if numel(currentSubj(1).NSloxAllTrialsB{trial}) >= licksToPlot
+% % %                     s= scatter(currentSubj(1).NSloxAllTrialsB{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountB(trial), 'k.');
+% %                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% % %                end
+% %            end
+% % 
+% %            subplot(2,4,7) %condC NS blue 
+% %            hold on
+% %            for trial= (currentSubj(1).totalNScountC)
+% %                 %scatter all licks
+% %                s= scatter(currentSubj(1).NSloxAllTrialsC{trial},ones(numel(currentSubj(1).NSloxAllTrialsC{trial}),1)*currentSubj(1).totalNScountC(trial), 'k.');
+% % 
+% %                
+% %                     %scatter # of licksToPlot
+% % %                if numel(currentSubj(1).NSloxAllTrialsC{trial}) >= licksToPlot
+% % %                     s= scatter(currentSubj(1).NSloxAllTrialsC{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountC(trial), 'k.');
+% %                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% % %                end
+% %            end
+% %            
+% %            subplot(2,4,8) %condD NS blue 
+% %            hold on
+% %            for trial= (currentSubj(1).totalNScountD)
+% %                
+% %                    %scatter all licks
+% %                s= scatter(currentSubj(1).NSloxAllTrialsD{trial},ones(numel(currentSubj(1).NSloxAllTrialsD{trial}),1)*currentSubj(1).totalNScountD(trial), 'k.');
+% % 
+% %                     %scatter # of licksToPlot
+% % %                if numel(currentSubj(1).NSloxAllTrialsD{trial}) >= licksToPlot
+% % %                     s= scatter(currentSubj(1).NSloxAllTrialsD{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountD(trial), 'k.');
+% %                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
+% % %                end
+% %            end
+% %            
+%            set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 % 
-%                     %scatter # of licksToPlot
-% %                if numel(currentSubj(1).NSloxAllTrialsD{trial}) >= licksToPlot
-% %                     s= scatter(currentSubj(1).NSloxAllTrialsD{trial}(1:licksToPlot), ones(licksToPlot,1)*currentSubj(1).totalNScountD(trial), 'k.');
-%                     s.MarkerEdgeAlpha= lickAlpha; %make transparent
-% %                end
-%            end
 %            
-           set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-           
-end%end subj loop
+% end%end subj loop
 
 %% ~~~ End~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 %% Save the analyzed data 
 %save the subjDataAnalyzed struct for later analysis
-
+ 
 %saving as v7.3 takes longer, but necessary if >2gb
 save(strcat(experimentName,'-', date, 'subjDataAnalyzed.mat'), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 .mat for files >2gb
 
