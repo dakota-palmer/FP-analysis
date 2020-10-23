@@ -31,6 +31,122 @@ subjects= fieldnames(subjData); %get an updated list of included subjs
 
 subjIncluded= subjects;
 
+%% ~~~Fix DS TTL pulses from variable reward identity stages  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    %for stages with variable reward identity (3 pumps, 3 rewards)
+    %indicated by 1, 2, or 3 DS TTL pulses in rapid succession (because
+    %hardware limits the # of TTL types we can record)
+    
+    ttlWindow= 2; %time window within which to look for DS TTL pulse bursts ... %2s should be enough
+    
+    %TODO: consider moving this to fpextractdata.m
+    
+ for subj= 1:numel(subjects) %for each subject
+       for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
+           currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+                      
+           if ~isnan(currentSubj(session).pump2) %make sure this is a valid stage with multiple rewards %could also define this by trainStage
+               
+                %first lets save reward identity for each pump
+               subjDataAnalyzed.(subjects{subj})(session).reward.pump1= currentSubj(session).pump1;
+               subjDataAnalyzed.(subjects{subj})(session).reward.pump2= currentSubj(session).pump2;
+               subjDataAnalyzed.(subjects{subj})(session).reward.pump3= currentSubj(session).pump3;
+               
+               %now we've got to classify DS trials as either pump1,2,or 3
+               %based on ttl pulses in short succession
+                              
+               DScount = 1; %keep track of the actual ds trial count (because we'll have a bunch of extra TTL pulses simply denoting reward identity)
+               
+               ttlCount= 1; %use this to skip over TTL pulses in the same trial (because 1 trial can have 1,2, or 3 pulses)
+              
+               for cue= 1:numel(currentSubj(session).DS) %for each DS TTL pulse
+                   
+                   if ttlCount < numel(currentSubj(session).DS) %since we are adding to ttlCount this just prevents us from going beyond the max index
+                   
+                       ttlWindowStartTime= currentSubj(session).DS(ttlCount)-ttlWindow;
+                       ttlWindowEndTime= currentSubj(session).DS(ttlCount)+ttlWindow;
+
+                       ttlPump= currentSubj(session).DS(currentSubj(session).DS > ttlWindowStartTime & currentSubj(session).DS < ttlWindowEndTime);
+
+                       %save the DS onset as the first TTL pulse in this window (the minimum timestamp)
+                       subjDataAnalyzed.(subjects{subj})(session).reward.DS(DScount,1)= min(ttlPump); 
+                       
+                       %get this shifted timestamp too (because its used in timelocking)
+                       subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted(DScount,1)= subjData.(subjects{subj})(session).DSshifted(ttlCount);
+
+
+                       %save the pump identity based on the # of TTL pulses in this window (numel)
+
+                        if numel(ttlPump) == 1
+                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 1;                                                       
+                            DScount= DScount+1;
+                            ttlCount= ttlCount+1;
+                        elseif numel(ttlPump) ==2
+                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 2;
+                            DScount= DScount+1;
+                            ttlCount = ttlCount+2; %skip over the next cue ttl pulse because it is in the same trial
+                        elseif numel(ttlPump) ==3
+                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 3;
+                            DScount= DScount+1;
+                            ttlCount = ttlCount+3; %skip over the next two cue ttl pulses because these are in the same trial 
+                        end
+                                               
+                   end %end ttlCount conditional
+               end %end cue loop
+          
+                  
+               %for simplicity let's overwrite the original DS trial record with
+               %the updated one
+               subjData.(subjects{subj})(session).DS= subjDataAnalyzed.(subjects{subj})(session).reward.DS;
+               subjData.(subjects{subj})(session).DSreward= subjDataAnalyzed.(subjects{subj})(session).reward.DSreward;
+               subjData.(subjects{subj})(session).DSshifted= subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted;
+               
+            else %if there's no variable reward in this session, make empty
+                       
+                subjDataAnalyzed.(subjects{subj})(session).reward= [];              
+               
+            end %end if pump 2 isnan conditional (alternative to stage conditional)
+            
+       end %end session loop      
+end %end subject loop
+
+    %% Fix errors associated with DS TTL pulses (added 10/22/2020)
+        %Stage 8 DS code used sequential IF statements that introduced compounding delays before 1) pump on and 2) DS TTL
+        %DS TTL is easy to adjust, simply subtract the delay from the
+        %recorded TTL pulse (though we have to know the pump identity on
+        %that trial to get the correct delay so it has to be done on a
+        %trial-by-trial basis)
+        
+    for subj= 1:numel(subjects)
+        currentSubj= subjData.(subjects{subj});
+        currentSubjAnalyzed= subjDataAnalyzed.(subjects{subj});
+        
+        for session= 1:numel(currentSubj)
+            
+            if currentSubj(session).trainStage>=8 %error was on on stage 8 code (I'm using >= 8 here temporarily because I am using some numbers greater than 8 as excel metadata labels for some stage 8 sessions) 
+                for cue = 1:numel(currentSubj(session).DS)
+                    if currentSubjAnalyzed(session).reward.DSreward(cue)==1 %if pump1 trial, DS ttl delay was 10 miliseconds
+                        currentSubj(session).DS(cue)=currentSubj(session).DS(cue)-0.010; 
+                    end
+                    
+                    if currentSubjAnalyzed(session).reward.DSreward(cue)==2 %if pump2 trial, DS ttl delay was 20 miliseconds
+                        currentSubj(session).DS(cue)=currentSubj(session).DS(cue)-0.020; 
+                    end
+                        
+                    if currentSubjAnalyzed(session).reward.DSreward(cue)==3 %if pump2 trial, DS ttl delay was 20 miliseconds
+                        currentSubj(session).DS(cue)=currentSubj(session).DS(cue)-0.030; 
+                    end
+                end
+            end
+            
+        end%end session loop
+        
+    end % end subj loop
+        %However, we don't have a TTL for pump on. I think the most simple
+        %way to address this is to create a new event type in Matlab for
+        %Pump on and calculate it on a trial by trial basis in this script.
+        %Then, we can go to the stage 8 data specifically and subtract
+        %the artificial delays
+
 %% ~~~Photometry plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Within-subjects raw photometry plots - all in 1 figure
 % In this section, we'll plot the "raw" (it's been preprocessed and
@@ -396,89 +512,6 @@ end %end subj loop
    end %end session loop
 end %end subject loop
 
-%% ~~~Reward identification ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    %fpr stages with variable reward identity (3 pumps, 3 rewards)
-    %indicated by 1, 2, or 3 DS TTL pulses in rapid succession
-    
-    ttlWindow= 2; %time window within which to look for DS TTL pulse bursts ... %2s should be enough
-    
-    %TODO: consider moving this to fpextractdata.m
-    
- for subj= 1:numel(subjects) %for each subject
-       for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
-           currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-                      
-           if ~isnan(currentSubj(session).pump2) %make sure this is a valid stage with multiple rewards
-               
-                %first lets save reward identity for each pump
-               subjDataAnalyzed.(subjects{subj})(session).reward.pump1= currentSubj(session).pump1;
-               subjDataAnalyzed.(subjects{subj})(session).reward.pump2= currentSubj(session).pump2;
-               subjDataAnalyzed.(subjects{subj})(session).reward.pump3= currentSubj(session).pump3;
-               
-               %now we've got to classify DS trials as either pump1,2,or 3
-               %based on ttl pulses
-               
-%                DSttl= currentSubj(session).DS;
-               
-               DScount = 1; %keep track of the actual ds trial count (because we'll have a bunch of extra TTL pulses simply denoting reward identity)
-               
-               ttlCount= 1; %use this to skip over TTL pulses in the same trial
-              
-               for cue= 1:numel(currentSubj(session).DS) %for each DS TTL pulse
-                   
-                   if ttlCount < numel(currentSubj(session).DS) %since we are adding to ttlCount this just prevents us from going beyond the max index
-                   
-                       ttlWindowStartTime= currentSubj(session).DS(ttlCount)-ttlWindow;
-                       ttlWindowEndTime= currentSubj(session).DS(ttlCount)+ttlWindow;
-
-                       ttlPump= currentSubj(session).DS(currentSubj(session).DS > ttlWindowStartTime & currentSubj(session).DS < ttlWindowEndTime);
-
-                       %save the DS onset as the first TTL pulse in this window (the minimum timestamp)
-                       subjDataAnalyzed.(subjects{subj})(session).reward.DS(DScount,1)= min(ttlPump); 
-                       
-                       %get this shifted timestamp too (because its used in timelocking)
-                       subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted(DScount,1)= subjData.(subjects{subj})(session).DSshifted(ttlCount);
-
-
-                       %save the pump identity based on the # of TTL pulses in this window (numel)
-
-                        if numel(ttlPump) == 1
-                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 1;                                                       
-                            DScount= DScount+1;
-                            ttlCount= ttlCount+1;
-                        elseif numel(ttlPump) ==2
-                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 2;
-                            DScount= DScount+1;
-                            ttlCount = ttlCount+2; %skip over the next cue ttl pulse because it is in the same trial
-                        elseif numel(ttlPump) ==3
-                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 3;
-                            DScount= DScount+1;
-                            ttlCount = ttlCount+3; %skip over the next two cue ttl pulses because these are in the same trial 
-                        end
-                                               
-                   end %end ttlCount conditional
-               end %end cue loop
-          
-                  
-               %for simplicity let's overwrite the original DS trial record with
-               %the updated one %TODO: think about other ways to address this
-               subjData.(subjects{subj})(session).DS= subjDataAnalyzed.(subjects{subj})(session).reward.DS;
-               subjData.(subjects{subj})(session).DSreward= subjDataAnalyzed.(subjects{subj})(session).reward.DSreward;
-               subjData.(subjects{subj})(session).DSshifted= subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted;
-
-         
-               
-            else %if there's no variable reward in this session, make empty
-                       
-                subjDataAnalyzed.(subjects{subj})(session).reward= [];              
-               
-            end %end if pump 2 isnan conditional (alternative to stage conditional)
-
-       
-       end %end session loop
-
-       
-end %end subject loop
 
 
 
@@ -857,7 +890,7 @@ end %end subject loop
 %timestamp. We'll find the port entry and port exit that is closest (minimum difference) to the
 %cue onset, then we'll compare these two. We will only look in one
 %direction (after the cue onset time) by turning any negative differences
-%into large positive differences. If the closest out pulse is closer to the cue onset
+%into large positive differences. If the closest Out pulse is closer to the cue onset
 %than the closest port entry pulse, then the animal was already in the port
 %on that trial
 
@@ -891,11 +924,11 @@ for subj= 1:numel(subjects) %for each subject
             %if the closest TTL pulse to cue onset was an out, the animal was in the port already
             if min(outDiffDS)<min(poxDiffDS)
                 
-                currentSubj(session).inPortDS(1,cue)= cue;
+                currentSubj(session).inPortDS(1,cue)= cue; %animal was in port on this trial
 %                 disp(strcat(subjects{subj}, 'session', num2str(session), '_DS_', num2str(cue), ' inPortDS '));
 
             else
-                currentSubj(session).inPortDS(1,cue)= NaN;
+                currentSubj(session).inPortDS(1,cue)= NaN; %animal was not in port on this trial
             end
             
        end %end DS loop
@@ -4253,6 +4286,9 @@ end %end subject loop
 %             end
 %         end%end session loop
 %     
+%         for includedSession= includedSessions %loop through only sessions that match this stage
+%             %extract data you want from specific sessions here using currentSubj(includedSession) as index
+%         end
 %         
 %         figure(figureCount); hold on; sgtitle('plot by stages example');
 %         subplot(2, allStages(end), thisStage); title(strcat('DS stage-',num2str(thisStage)));
@@ -4815,22 +4851,213 @@ effectWindow= effectStart*fs:effectEnd*fs; %Indices of the time window for the e
 
 %% ~~ Data vis- photometry & behavior ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-%% Scatter of cue-elicited response vs. port entry probability (does cue elicited response predict PE?)
+%% Scatter of cue-elicited response vs. port entry outcome (does cue elicited response predict PE?)
+
+%goal here will be to create scatter of mean response to cue with 3 different outcomes: no PE, PE, or already in port (denoted by color of plot) 
 
 %first set parameters
-cueResponseFrames=1*fs; %time after cue over which to take avg activity 
-cueOnsetFrame= (periCueFrames-postCueFrames)+1;
-
+cueResponseLastFrame=.8*fs; %time after cue over which to take avg activity (t in seconds * fs)
+cueResponseFirstFrame= (periCueFrames-postCueFrames)+ (.5*fs); %first frame after cue onset = (periCueFrames-postCueFrames)+1
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
-    for session= 1:numel(currentSubj)
+    allStages= unique([currentSubj.trainStage]);
+   
+    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+        includedSessions= []; %excluded sessions will reset between unique stages
+        
+        inPortDSblue= []; inPortDSpurple= []; noPEDSblue= []; noPEDSpurple= []; PEDSblue= []; PEDSpurple= []; %reset between sessions
+        inPortNSblue= []; inPortNSpurple= []; noPENSblue= []; noPENSpurple= []; PENSblue= []; PENSpurple= []; %reset between sessions
+        
+        %loop through all sessions and record index of sessions that correspond only to this stage
+        for session= 1:numel(currentSubj)
+            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+            end
+        end%end session loop
+    
+         for includedSession= includedSessions %loop through only sessions that match this stage
+            inPortTrialsDS= []; noPEtrialsDS= []; PEtrialsDS= []; %reset between sessions
+            inPortTrialsNS= []; noPEtrialsNS= []; PEtrialsNS= [];
+             %Extracting cue response
+             %to do so, will use
+             %cueOnsetFrame:cueOnsetFrame+cueResponseFrames as indices to
+             %pull out relevant photometry data and will take the mean()
 
-        for cue = 1:numel(currentSubj(session).behavior.poxDS)
-%             cueResponse(:,cue)= [];
+              %Identify trials where animal was in port at trial start,
+              %trials with no PE, and trials with a valid PE. For each
+              %trial type, loop through trials and get mean
+              %cue-elicited response 
+
+                %First, let's get trials where animal was already in port
+                inPortTrialsDS= find(~isnan(currentSubj(includedSession).behavior.inPortDS));
+
+                %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
+                noPEtrialsDS = find(cellfun('isempty', currentSubj(includedSession).behavior.poxDS));
+                 %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+                 for inPortTrial= inPortTrialsDS
+                    noPEtrialsDS(noPEtrialsDS==inPortTrial)=[]; %eliminate trials where animal was in port
+                 end
+                 
+             %lastly, get trials with valid PE
+             PEtrialsDS= find(~cellfun('isempty', currentSubj(includedSession).behavior.poxDS));
+              %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+             for inPortTrial= inPortTrialsDS
+                 PEtrialsDS(PEtrialsDS==inPortTrial)=[]; %eliminate trials where animal was in port
+             end
+             
+                %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
+             if ~isempty(intersect(inPortTrialsDS,noPEtrialsDS)) || ~isempty(intersect(inPortTrialsDS, PEtrialsDS)) || ~isempty(intersect(noPEtrialsDS, PEtrialsDS))
+                disp('~~~~~~~~error: trial types not mutually exclusive');
+             end
+             
+             %Repeat for NS trials
+             %First, let's get trials where animal was already in port
+                inPortTrialsNS= find(~isnan(currentSubj(includedSession).behavior.inPortNS));
+
+                %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
+                noPEtrialsNS = find(cellfun('isempty', currentSubj(includedSession).behavior.poxNS))'; %transpose ' due to shape
+                 %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+                 for inPortTrial= inPortTrialsNS
+                    noPEtrialsNS(noPEtrialsNS==inPortTrial)=[]; %eliminate trials where animal was in port
+                 end
+                 
+             %lastly, get trials with valid PE
+             PEtrialsNS= find(~cellfun('isempty', currentSubj(includedSession).behavior.poxNS))'; %transpose ' due to shape
+              %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+             for inPortTrial= inPortTrialsNS
+                 PEtrialsNS(PEtrialsNS==inPortTrial)=[]; %eliminate trials where animal was in port
+             end
+             
+                %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
+             if ~isempty(intersect(inPortTrialsNS,noPEtrialsNS)) || ~isempty(intersect(inPortTrialsNS, PEtrialsNS)) || ~isempty(intersect(noPEtrialsNS, PEtrialsNS))
+                disp('~~~~~~~~error: trial types not mutually exclusive');
+             end
+             
+             
+         %Now, loop through each trial type and get mean cue response for each trial
+            for inPortTrial = inPortTrialsDS %loop through trials and cat mean response into one array
+                inPortDSblue= [inPortDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,inPortTrial))];
+            end    
+
+            for noPEtrial= noPEtrialsDS
+                noPEDSblue= [noPEDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,noPEtrial))];
+            end
+
+            for PEtrial= PEtrialsDS
+                PEDSblue= [PEDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,PEtrial))];
+            end   
+
+            if thisStage >= 5
+                for inPortTrial = inPortTrialsNS %loop through trials and cat mean response into one array
+                    inPortNSblue= [inPortNSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,inPortTrial))];
+                end    
+
+                for noPEtrial= noPEtrialsNS
+                    noPENSblue= [noPENSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,noPEtrial))];
+                end
+
+                for PEtrial= PEtrialsNS
+                    PENSblue= [PENSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,PEtrial))];
+                end
+            end
+          
+         end %end includedSession loop
+        
+               %TODO: would be much more efficient to loop through trial
+               %types (inPort, PE, noPE) instead of having discrete
+               %variables for each
+         %calculate within-subjects & within-stage SEM 
+         SEMinPortDSblue= nanstd(inPortDSblue)/sqrt(numel(inPortDSblue)); %calculate SEM for each stage (n= # trials with this PE outcome)
+         SEMnoPEDSblue= nanstd(noPEDSblue)/sqrt(numel(noPEDSblue));
+         SEMPEDSblue= nanstd(PEDSblue)/sqrt(numel(noPEDSblue));
+         
+         SEMinPortNSblue= nanstd(inPortNSblue)/sqrt(numel(inPortNSblue)); %calculate SEM for each stage (n= # trials with this PE outcome)
+         SEMnoPENSblue= nanstd(noPENSblue)/sqrt(numel(noPENSblue));
+         SEMPENSblue= nanstd(PENSblue)/sqrt(numel(noPENSblue));
+         
+        
+        figure(figureCount); hold on; sgtitle(strcat(subjectsAnalyzed{subj},'-PE outcome vs. mean cue response (',num2str(cueResponseFirstFrame/fs-preCueFrames/fs) ,': ' ,num2str(cueResponseLastFrame/fs),' s)'));
+        subplot(2, allStages(end), thisStage); title(strcat('DS stage-',num2str(thisStage))); hold on;
+%         histogram(inPortDSblue); %hist
+%         histogram(noPEDSblue);
+%         histogram(PEDSblue);
+%         xlabel('mean 465nm DS response');
+%         ylabel('trial count');
+        scatter(ones(1,numel(inPortDSblue)), inPortDSblue); %scatter
+        scatter(2*ones(1,numel(noPEDSblue)), noPEDSblue);
+        scatter(3*ones(1,numel(PEDSblue)), PEDSblue);
+        
+            %overlay mean & SEM
+        plot([1-.2, 1+.2], [nanmean(inPortDSblue), nanmean(inPortDSblue)], 'k');
+        plot([1-.2,1+.2] , [nanmean(inPortDSblue)+SEMinPortDSblue, nanmean(inPortDSblue)+SEMinPortDSblue], 'k--');%overlay + sem of each subject
+        plot([1-.2,1+.2] , [nanmean(inPortDSblue)-SEMinPortDSblue, nanmean(inPortDSblue)-SEMinPortDSblue], 'k--');%overlay - sem of each subject
+        plot([1, 1], [nanmean(inPortDSblue),nanmean(inPortDSblue)-SEMinPortDSblue], 'k--'); %connect -SEM to mean
+        plot([1, 1], [nanmean(inPortDSblue),nanmean(inPortDSblue)+SEMinPortDSblue], 'k--'); %connect -SEM to mean
+        
+        plot([2-.2, 2+.2], [nanmean(noPEDSblue), nanmean(noPEDSblue)], 'k');
+        plot([2-.2,2+.2] , [nanmean(noPEDSblue)+SEMnoPEDSblue, nanmean(noPEDSblue)+SEMnoPEDSblue], 'k--');%overlay + sem of each subject
+        plot([2-.2,2+.2] , [nanmean(noPEDSblue)-SEMnoPEDSblue, nanmean(noPEDSblue)-SEMnoPEDSblue], 'k--');%overlay - sem of each subject
+        plot([2, 2], [nanmean(noPEDSblue),nanmean(noPEDSblue)-SEMnoPEDSblue], 'k--'); %connect -SEM to mean
+        plot([2, 2], [nanmean(noPEDSblue),nanmean(noPEDSblue)+SEMnoPEDSblue], 'k--'); %connect -SEM to mean
+        
+        plot([3-.2, 3+.2], [nanmean(PEDSblue), nanmean(PEDSblue)], 'k');
+        plot([3-.2,3+.2] , [nanmean(PEDSblue)+SEMPEDSblue, nanmean(PEDSblue)+SEMPEDSblue], 'k--');%overlay + sem of each subject
+        plot([3-.2,3+.2] , [nanmean(PEDSblue)-SEMPEDSblue, nanmean(PEDSblue)-SEMPEDSblue], 'k--');%overlay - sem of each subject
+        plot([3, 3], [nanmean(PEDSblue),nanmean(PEDSblue)-SEMPEDSblue], 'k--'); %connect -SEM to mean
+        plot([3, 3], [nanmean(PEDSblue),nanmean(PEDSblue)+SEMPEDSblue], 'k--'); %connect -SEM to mean
+        
+        xlim([0,4]);
+        
+        xlabel('PE outcome');
+        ylabel('mean 465nm z score response');
+        if thisStage==allStages(1)
+           legend('in port at cue onset', 'no port entry (unrewarded)', 'port entry during cue epoch (rewarded)'); 
         end
         
-    end %end session loop
+            %NS plot
+        subplot(2,allStages(end), allStages(end)+thisStage); title(strcat('NS stage-', num2str(thisStage))); hold on;
+        scatter(ones(1,numel(inPortNSblue)), inPortNSblue); %scatter
+        scatter(2*ones(1,numel(noPENSblue)), noPENSblue);
+        scatter(3*ones(1,numel(PENSblue)), PENSblue);
+        
+                    %overlay mean & SEM
+        plot([1-.2, 1+.2], [nanmean(inPortNSblue), nanmean(inPortNSblue)], 'k');
+        plot([1-.2,1+.2] , [nanmean(inPortNSblue)+SEMinPortNSblue, nanmean(inPortNSblue)+SEMinPortNSblue], 'k--');%overlay + sem of each subject
+        plot([1-.2,1+.2] , [nanmean(inPortNSblue)-SEMinPortNSblue, nanmean(inPortNSblue)-SEMinPortNSblue], 'k--');%overlay - sem of each subject
+        plot([1, 1], [nanmean(inPortNSblue),nanmean(inPortNSblue)-SEMinPortNSblue], 'k--'); %connect -SEM to mean
+        plot([1, 1], [nanmean(inPortNSblue),nanmean(inPortNSblue)+SEMinPortNSblue], 'k--'); %connect -SEM to mean
+        
+        plot([2-.2, 2+.2], [nanmean(noPENSblue), nanmean(noPENSblue)], 'k');
+        plot([2-.2,2+.2] , [nanmean(noPENSblue)+SEMnoPENSblue, nanmean(noPENSblue)+SEMnoPENSblue], 'k--');%overlay + sem of each subject
+        plot([2-.2,2+.2] , [nanmean(noPENSblue)-SEMnoPENSblue, nanmean(noPENSblue)-SEMnoPENSblue], 'k--');%overlay - sem of each subject
+        plot([2, 2], [nanmean(noPENSblue),nanmean(noPENSblue)-SEMnoPENSblue], 'k--'); %connect -SEM to mean
+        plot([2, 2], [nanmean(noPENSblue),nanmean(noPENSblue)+SEMnoPENSblue], 'k--'); %connect -SEM to mean
+        
+        plot([3-.2, 3+.2], [nanmean(PENSblue), nanmean(PENSblue)], 'k');
+        plot([3-.2,3+.2] , [nanmean(PENSblue)+SEMPENSblue, nanmean(PENSblue)+SEMPENSblue], 'k--');%overlay + sem of each subject
+        plot([3-.2,3+.2] , [nanmean(PENSblue)-SEMPENSblue, nanmean(PENSblue)-SEMPENSblue], 'k--');%overlay - sem of each subject
+        plot([3, 3], [nanmean(PENSblue),nanmean(PENSblue)-SEMPENSblue], 'k--'); %connect -SEM to mean
+        plot([3, 3], [nanmean(PENSblue),nanmean(PENSblue)+SEMPENSblue], 'k--'); %connect -SEM to mean
+        
+        xlim([0,4]);
+        
+        xlabel('PE outcome');
+        ylabel('mean 465nm z score response');
+        if thisStage==allStages(1)
+           legend('in port at cue onset', 'no port entry (unrewarded)', 'port entry during cue epoch (unrewarded)'); 
+        end
+        
+    end %end Stage loop 
+       set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+%        linkaxes();
+
+      figureCount= figureCount+1;
 end %end subj loop
+
     
 %% Scatter of cue-elicited response vs. port entry latency
 %This only includes trials that had a valid PE
