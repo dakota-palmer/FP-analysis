@@ -116,6 +116,9 @@ end %end subject loop
         %that trial to get the correct delay so it has to be done on a
         %trial-by-trial basis)
         
+           %TODO: ADD DATE CONDITIONAL HERE AFTER STAGE 8 CODE FIX
+
+        
     for subj= 1:numel(subjects)
         currentSubj= subjData.(subjects{subj});
         currentSubjAnalyzed= subjDataAnalyzed.(subjects{subj});
@@ -141,11 +144,6 @@ end %end subject loop
         end%end session loop
         
     end % end subj loop
-        %However, we don't have a TTL for pump on. I think the most simple
-        %way to address this is to create a new event type in Matlab for
-        %Pump on and calculate it on a trial by trial basis in this script.
-        %Then, we can go to the stage 8 data specifically and subtract
-        %the artificial delays
 
 %% ~~~Photometry plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Within-subjects raw photometry plots - all in 1 figure
@@ -974,6 +972,213 @@ for subj= 1:numel(subjects) %for each subject
        
    end %end session loop
 end %end subject loop
+
+%% Classify trials by PE outcome
+% There are 3 potential outcomes of a trial during the cue epoch we are interested in: 1) rat
+% makes a PE 2) rat does not make a PE 3) rat was already in the port
+
+% An animal who was in the port at cue onset can still make PEs afterward,
+% so it would be best to classify each trial based on the outcome ahead of
+% time and then use this to to index trials based on their PE outcome
+% instead of checking each time we want to do it
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    
+    for session= 1:numel(currentSubj)
+        DSinPort= []; DSnoPE= []; DSPE= []; %reset between sessions
+        NSinPort= []; NSnoPE= []; NSPE= [];
+
+              %Identify trials where animal was in port at trial start,
+              %trials with no PE, and trials with a valid PE. For each
+              %trial type, loop through trials and get mean
+              %cue-elicited response 
+
+                %First, let's get trials where animal was already in port
+                DSinPort= find(~isnan(currentSubj(session).behavior.inPortDS));
+
+                %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
+                DSnoPE = find(cellfun('isempty', currentSubj(session).behavior.poxDS));
+                 %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+                 for inPortTrial= DSinPort
+                    DSnoPE(DSnoPE==inPortTrial)=[]; %eliminate trials where animal was in port
+                 end
+                 
+             %lastly, get trials with valid PE
+             DSPE= find(~cellfun('isempty', currentSubj(session).behavior.poxDS));
+              %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+             for inPortTrial= DSinPort
+                 DSPE(DSPE==inPortTrial)=[]; %eliminate trials where animal was in port
+             end
+             
+                %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
+             if ~isempty(intersect(DSinPort,DSnoPE)) || ~isempty(intersect(DSinPort, DSPE)) || ~isempty(intersect(DSnoPE, DSPE))
+                disp('~~~~~~~~error: trial types not mutually exclusive');
+             end
+             
+             %Repeat for NS trials
+             %First, let's get trials where animal was already in port
+                NSinPort= find(~isnan(currentSubj(session).behavior.inPortNS));
+
+                %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
+                NSnoPE = find(cellfun('isempty', currentSubj(session).behavior.poxNS))'; %transpose ' due to shape
+                 %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+                 for inPortTrial= NSinPort
+                    NSnoPE(NSnoPE==inPortTrial)=[]; %eliminate trials where animal was in port
+                 end
+                 
+             %lastly, get trials with valid PE
+             NSPE= find(~cellfun('isempty', currentSubj(session).behavior.poxNS))'; %transpose ' due to shape
+              %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+             for inPortTrial= NSinPort
+                 NSPE(NSPE==inPortTrial)=[]; %eliminate trials where animal was in port
+             end
+             
+                %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
+             if ~isempty(intersect(NSinPort,NSnoPE)) || ~isempty(intersect(NSinPort, NSPE)) || ~isempty(intersect(NSnoPE, NSPE))
+                disp('~~~~~~~~error: trial types not mutually exclusive');
+             end
+             
+             
+             %now save these into the subjDataAnalzyed struct so we can use them later
+             %Outcome code: 1= PE during cue epoch, 2= no PE during cue
+             %epoch, 3= in port at cue onset
+             subjDataAnalyzed.(subjects{subj})(session).trialOutcome.DSoutcome= nan(size(subjData.(subjects{subj})(session).DS));
+             
+             subjDataAnalyzed.(subjects{subj})(session).trialOutcome.DSoutcome(DSPE)=1;
+             subjDataAnalyzed.(subjects{subj})(session).trialOutcome.DSoutcome(DSnoPE)=2;
+             subjDataAnalyzed.(subjects{subj})(session).trialOutcome.DSoutcome(DSinPort)= 3;
+             
+             subjDataAnalyzed.(subjects{subj})(session).trialOutcome.NSoutcome= nan(size(subjData.(subjects{subj})(session).NS));
+             
+             subjDataAnalyzed.(subjects{subj})(session).trialOutcome.NSoutcome(NSPE)=1;
+             subjDataAnalyzed.(subjects{subj})(session).trialOutcome.NSoutcome(NSnoPE)=2;
+             subjDataAnalyzed.(subjects{subj})(session).trialOutcome.NSoutcome(NSinPort)= 3;
+% 
+%              subjDataAnalyzed.(subjects{subj})(session).trialOutcome.DSinPort= DSinPort';
+%              subjDataAnalyzed.(subjects{subj})(session).trialOutcome.DSnoPE= DSnoPE';
+%              subjDataAnalyzed.(subjects{subj})(session).trialOutcome.DSPE= DSPE';
+%              
+%              subjDataAnalyzed.(subjects{subj})(session).trialOutcome.NSinPort= NSinPort';
+%              subjDataAnalyzed.(subjects{subj})(session).trialOutcome.NSnoPE= NSnoPE';
+%              subjDataAnalyzed.(subjects{subj})(session).trialOutcome.NSPE= NSPE';
+
+             
+    end %end session loop
+end% end subj loop
+
+%% Calculate pump onset times (reward delivery)
+% While we don't have TTL pulses for pump on, we know when the animal
+% enters the port and we know the delay between PE and pump oon, so we can
+% calculate pump onset
+
+%This section relies on coding of subjDataAnalyzed.trialOutcome
+%1= PE , 2= no PE, 3= in port at cue onset
+
+%   However, we don't have a TTL for pump on. I think the most simple
+    %way to address this is to create a new event type in Matlab for
+    %Pump on and calculate it on a trial by trial basis in this script.
+    %Then, we can go to the stage 8 data specifically and subtract
+    %the artificial delays
+    
+    
+    for subj = 1:numel(subjects)
+        currentSubj= subjData.(subjects{subj});
+        currentSubjAnalyzed= subjDataAnalyzed.(subjects{subj});
+        
+        for session= 1:numel(currentSubj)
+
+            peTrial= []; noPEtrial= []; inPortTrial= []; %clear between sessions
+            currentSubjAnalyzed(session).reward.pumpOnTime= nan(size(currentSubj(session).DS));
+            
+           if currentSubj(session).trainStage<=5 %for stages 1:5, no delay between first PE and pump o     
+                PEtrial=find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==1); %if this is a PE trial, reward delivered @ first PE
+                for thisTrial= 1:numel(PEtrial) %have to loop through this because subjDataAnalyzed.behavior.poxDS is cell array and there doesn't seem to be an easier way to get the 1st value from each cell vectorized
+                    currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1); %pump onset = first port entry during DS
+                end
+                
+                noPEtrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==2);%if there was no PE, make nan
+                currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial)= nan; 
+                
+                inPortTrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==3); %if rat was in port, pump on = cue onset
+                currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial)= currentSubj(session).DS(inPortTrial);           
+           end %end stage 1:5 
+           
+             if currentSubj(session).trainStage==6 %for stage 6, 500ms delay between first PE and pump on     
+                PEtrial=find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==1); %if this is a PE trial, reward delivered @ first PE
+                for thisTrial= 1:numel(PEtrial) %have to loop through this because subjDataAnalyzed.behavior.poxDS is cell array and there doesn't seem to be an easier way to get the 1st value from each cell vectorized
+                    currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+0.5; %pump onset = first port entry during DS + 500ms
+                end
+                
+                noPEtrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==2);%if there was no PE, make nan
+                currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial)= nan; 
+                
+                inPortTrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==3); %if rat was in port, pump on = cue onset
+                currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial)= currentSubj(session).DS(inPortTrial)+0.5;           
+           end %end stage 6
+           
+            if currentSubj(session).trainStage==7 %for stage 7, 1s delay between first PE and pump on     
+                PEtrial=find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==1); %if this is a PE trial, reward delivered @ first PE
+                for thisTrial= 1:numel(PEtrial) %have to loop through this because subjDataAnalyzed.behavior.poxDS is cell array and there doesn't seem to be an easier way to get the 1st value from each cell vectorized
+                    currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1; %pump onset = first port entry during DS + 1s
+                end
+                
+                noPEtrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==2);%if there was no PE, make nan
+                currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial)= nan; 
+                
+                inPortTrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==3); %if rat was in port, pump on = cue onset + 1s
+                currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial)= currentSubj(session).DS(inPortTrial)+1;           
+           end %end stage 7
+           
+           %TODO: ADD DATE CONDITIONAL HERE AFTER STAGE 8 CODE FIX
+           %For stage 8 sessions with compounding delays due to sequential
+           %IF statements, delay between PE and pump on varies by pump
+            if currentSubj(session).trainStage>=8 %for stage 8+,     
+
+                PEtrial=find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==1); %if this is a PE trial, reward delivered @ first PE
+                for thisTrial= 1:numel(PEtrial) %have to loop through this because subjDataAnalyzed.behavior.poxDS is cell array and there doesn't seem to be an easier way to get the 1st value from each cell vectorized
+                    if currentSubjAnalyzed(session).reward.DSreward(PEtrial(thisTrial))==1 %if pump 1 stage 8 w errors, delay was 1s + 100ms
+                    currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1+0.1; %pump onset = first port entry during DS + delay
+                    
+                    elseif currentSubjAnalyzed(session).reward.DSreward(PEtrial(thisTrial))==2 %if pump 2 stage 8 w errors, delay was 1s + 200ms
+                    currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1+0.2; %pump onset = first port entry during DS + delay
+                    
+                    
+                    elseif currentSubjAnalyzed(session).reward.DSreward(PEtrial(thisTrial))==3 %if pump 1 stage 8 w errors, delay was 1s + 300ms
+                    currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1+0.3; %pump onset = first port entry during DS + delay
+                    end
+                   
+                end
+                
+                
+                noPEtrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==2);%if there was no PE, make nan
+                currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial)= nan; 
+                    
+                    %Again, stage 8 with errors here pump on will be cue
+                    %onset+delay depending on pump
+                    
+               inPortTrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==3); %if rat was in port, pump on = cue onset + delay
+               for thisTrial= 1:numel(inPortTrial) %have to loop through this because subjDataAnalyzed.behavior.poxDS is cell array and there doesn't seem to be an easier way to get the 1st value from each cell vectorized
+                    if currentSubjAnalyzed(session).reward.DSreward(inPortTrial(thisTrial))==1 %if pump 1 stage 8 w errors, delay was 1s + 100ms
+                    currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial(thisTrial))= currentSubj(session).DS(inPortTrial(thisTrial))+1+0.1; %pump onset = first port entry during DS + delay
+                    
+                    elseif currentSubjAnalyzed(session).reward.DSreward(inPortTrial(thisTrial))==2 %if pump 2 stage 8 w errors, delay was 1s + 200ms
+                    currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial(thisTrial))= currentSubj(session).DS(inPortTrial(thisTrial))+1+0.2; %pump onset = first port entry during DS + delay
+                    
+                    
+                    elseif currentSubjAnalyzed(session).reward.DSreward(inPortTrial(thisTrial))==3 %if pump 1 stage 8 w errors, delay was 1s + 300ms
+                    currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial(thisTrial))= currentSubj(session).DS(inPortTrial(thisTrial))+1+0.3; %pump onset = first port entry during DS + delay
+                    end
+                   
+               end                
+           end %end stage 8+
+       end
+    end
+    
+%FIX pump onset times
 
 %% Calculate DS PE latency
 %relies on previous behavioral analyses sections
@@ -4876,8 +5081,8 @@ for subj= 1:numel(subjects)
         end%end session loop
     
          for includedSession= includedSessions %loop through only sessions that match this stage
-            inPortTrialsDS= []; noPEtrialsDS= []; PEtrialsDS= []; %reset between sessions
-            inPortTrialsNS= []; noPEtrialsNS= []; PEtrialsNS= [];
+            DSinPort= []; DSnoPE= []; DSPE= []; %reset between sessions
+            NSinPort= []; NSnoPE= []; NSPE= [];
              %Extracting cue response
              %to do so, will use
              %cueOnsetFrame:cueOnsetFrame+cueResponseFrames as indices to
@@ -4889,78 +5094,78 @@ for subj= 1:numel(subjects)
               %cue-elicited response 
 
                 %First, let's get trials where animal was already in port
-                inPortTrialsDS= find(~isnan(currentSubj(includedSession).behavior.inPortDS));
+                DSinPort= find(~isnan(currentSubj(includedSession).behavior.inPortDS));
 
                 %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
-                noPEtrialsDS = find(cellfun('isempty', currentSubj(includedSession).behavior.poxDS));
+                DSnoPE = find(cellfun('isempty', currentSubj(includedSession).behavior.poxDS));
                  %additional check here to make sure animal was not in the
                 %port at trial start even if a valid PE exists
-                 for inPortTrial= inPortTrialsDS
-                    noPEtrialsDS(noPEtrialsDS==inPortTrial)=[]; %eliminate trials where animal was in port
+                 for inPortTrial= DSinPort
+                    DSnoPE(DSnoPE==inPortTrial)=[]; %eliminate trials where animal was in port
                  end
                  
              %lastly, get trials with valid PE
-             PEtrialsDS= find(~cellfun('isempty', currentSubj(includedSession).behavior.poxDS));
+             DSPE= find(~cellfun('isempty', currentSubj(includedSession).behavior.poxDS));
               %additional check here to make sure animal was not in the
                 %port at trial start even if a valid PE exists
-             for inPortTrial= inPortTrialsDS
-                 PEtrialsDS(PEtrialsDS==inPortTrial)=[]; %eliminate trials where animal was in port
+             for inPortTrial= DSinPort
+                 DSPE(DSPE==inPortTrial)=[]; %eliminate trials where animal was in port
              end
              
                 %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
-             if ~isempty(intersect(inPortTrialsDS,noPEtrialsDS)) || ~isempty(intersect(inPortTrialsDS, PEtrialsDS)) || ~isempty(intersect(noPEtrialsDS, PEtrialsDS))
+             if ~isempty(intersect(DSinPort,DSnoPE)) || ~isempty(intersect(DSinPort, DSPE)) || ~isempty(intersect(DSnoPE, DSPE))
                 disp('~~~~~~~~error: trial types not mutually exclusive');
              end
              
              %Repeat for NS trials
              %First, let's get trials where animal was already in port
-                inPortTrialsNS= find(~isnan(currentSubj(includedSession).behavior.inPortNS));
+                NSinPort= find(~isnan(currentSubj(includedSession).behavior.inPortNS));
 
                 %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
-                noPEtrialsNS = find(cellfun('isempty', currentSubj(includedSession).behavior.poxNS))'; %transpose ' due to shape
+                NSnoPE = find(cellfun('isempty', currentSubj(includedSession).behavior.poxNS))'; %transpose ' due to shape
                  %additional check here to make sure animal was not in the
                 %port at trial start even if a valid PE exists
-                 for inPortTrial= inPortTrialsNS
-                    noPEtrialsNS(noPEtrialsNS==inPortTrial)=[]; %eliminate trials where animal was in port
+                 for inPortTrial= NSinPort
+                    NSnoPE(NSnoPE==inPortTrial)=[]; %eliminate trials where animal was in port
                  end
                  
              %lastly, get trials with valid PE
-             PEtrialsNS= find(~cellfun('isempty', currentSubj(includedSession).behavior.poxNS))'; %transpose ' due to shape
+             NSPE= find(~cellfun('isempty', currentSubj(includedSession).behavior.poxNS))'; %transpose ' due to shape
               %additional check here to make sure animal was not in the
                 %port at trial start even if a valid PE exists
-             for inPortTrial= inPortTrialsNS
-                 PEtrialsNS(PEtrialsNS==inPortTrial)=[]; %eliminate trials where animal was in port
+             for inPortTrial= NSinPort
+                 NSPE(NSPE==inPortTrial)=[]; %eliminate trials where animal was in port
              end
              
                 %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
-             if ~isempty(intersect(inPortTrialsNS,noPEtrialsNS)) || ~isempty(intersect(inPortTrialsNS, PEtrialsNS)) || ~isempty(intersect(noPEtrialsNS, PEtrialsNS))
+             if ~isempty(intersect(NSinPort,NSnoPE)) || ~isempty(intersect(NSinPort, NSPE)) || ~isempty(intersect(NSnoPE, NSPE))
                 disp('~~~~~~~~error: trial types not mutually exclusive');
              end
              
              
          %Now, loop through each trial type and get mean cue response for each trial
-            for inPortTrial = inPortTrialsDS %loop through trials and cat mean response into one array
+            for inPortTrial = DSinPort %loop through trials and cat mean response into one array
                 inPortDSblue= [inPortDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,inPortTrial))];
             end    
 
-            for noPEtrial= noPEtrialsDS
+            for noPEtrial= DSnoPE
                 noPEDSblue= [noPEDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,noPEtrial))];
             end
 
-            for PEtrial= PEtrialsDS
+            for PEtrial= DSPE
                 PEDSblue= [PEDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,PEtrial))];
             end   
 
             if thisStage >= 5
-                for inPortTrial = inPortTrialsNS %loop through trials and cat mean response into one array
+                for inPortTrial = NSinPort %loop through trials and cat mean response into one array
                     inPortNSblue= [inPortNSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,inPortTrial))];
                 end    
 
-                for noPEtrial= noPEtrialsNS
+                for noPEtrial= NSnoPE
                     noPENSblue= [noPENSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,noPEtrial))];
                 end
 
-                for PEtrial= PEtrialsNS
+                for PEtrial= NSPE
                     PENSblue= [PENSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,PEtrial))];
                 end
             end
