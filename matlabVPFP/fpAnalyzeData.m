@@ -1101,7 +1101,7 @@ end% end subj loop
                 end
                 
                 noPEtrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==2);%if there was no PE, make nan
-                currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial)= nan; 
+                currentSubjAnalyzed(session).reward.pumpOnTime(noPEtrial)= nan; 
                 
                 inPortTrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==3); %if rat was in port, pump on = cue onset
                 currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial)= currentSubj(session).DS(inPortTrial);           
@@ -1114,11 +1114,11 @@ end% end subj loop
                 end
                 
                 noPEtrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==2);%if there was no PE, make nan
-                currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial)= nan; 
+                currentSubjAnalyzed(session).reward.pumpOnTime(noPEtrial)= nan; 
                 
                 inPortTrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==3); %if rat was in port, pump on = cue onset
                 currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial)= currentSubj(session).DS(inPortTrial)+0.5;           
-           end %end stage 6
+            end %end stage 6
            
             if currentSubj(session).trainStage==7 %for stage 7, 1s delay between first PE and pump on     
                 PEtrial=find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==1); %if this is a PE trial, reward delivered @ first PE
@@ -1127,7 +1127,7 @@ end% end subj loop
                 end
                 
                 noPEtrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==2);%if there was no PE, make nan
-                currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial)= nan; 
+                currentSubjAnalyzed(session).reward.pumpOnTime(noPEtrial)= nan; 
                 
                 inPortTrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==3); %if rat was in port, pump on = cue onset + 1s
                 currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial)= currentSubj(session).DS(inPortTrial)+1;           
@@ -1175,11 +1175,18 @@ end% end subj loop
                    
                end                
            end %end stage 8+
-       end
-    end
+           %Now, let's calculate pump onset relative to cue onset for each trial (so we can easily plot it later)
+           for cue= 1:numel(currentSubj(session).DS)
+               currentSubjAnalyzed(session).reward.pumpOnDSrel(cue,1)= currentSubjAnalyzed(session).reward.pumpOnTime(cue)-currentSubj(session).DS(cue);
+           end %end DS loop
+           
+           %now save these calculations into subjDataAnalyzed struct
+           subjDataAnalyzed.(subjects{subj})(session).reward.pumpOnTime= currentSubjAnalyzed(session).reward.pumpOnTime;
+           subjDataAnalyzed.(subjects{subj})(session).reward.pumpOnDSrel= currentSubjAnalyzed(session).reward.pumpOnDSrel;
+           
+        end %end session loop
+    end %end subj loop
     
-%FIX pump onset times
-
 %% Calculate DS PE latency
 %relies on previous behavioral analyses sections
 %here, we will calculate latency to enter port on every DS trial
