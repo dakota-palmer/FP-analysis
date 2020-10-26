@@ -3735,7 +3735,7 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
 
     for session = 1:numel(currentSubj) %for each training session this subject completed
                 
-        if ~isempty(currentSubj(session).reward) %make sure this is a valid stage with multiple rewards
+        if currentSubj(session).trainStage>=8 %make sure this is a valid stage with multiple rewards
             
             rewardSessionCount= rewardSessionCount+1; %counter for sessions with valid variable reward data 
 
@@ -3941,7 +3941,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         indPump3= [];
         
                 
-        if ~isempty(currentSubj(session).reward) %make sure this is a valid stage with multiple rewards
+        if ~currentSubj(session).trainStage>=8 %make sure this is a valid stage with multiple rewards
             
             rewardSessionCount= rewardSessionCount+1; %counter for sessions with valid variable reward data 
 
@@ -4198,7 +4198,7 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
 
 %     %was trying to programmatically assign reward values %first get all unique stages with variable reward
 %     for session = 1:numel(currentSubj) %for each training session this subject completed
-%         if ~isempty(currentSubj(session).reward) 
+%         if currentSubj(session).trainStage>=8 
 %             rewardSessionCount= rewardSessionCount+1;
 %                   
 %             
@@ -4223,7 +4223,7 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
             indPump3= [];
 
 
-            if ~isempty(currentSubj(session).reward) %make sure this is a valid stage with multiple rewards
+            if currentSubj(session).trainStage>=8 %make sure this is a valid stage with multiple rewards
 
                 rewardSessionCount= rewardSessionCount+1; %counter for sessions with valid variable reward data 
 
