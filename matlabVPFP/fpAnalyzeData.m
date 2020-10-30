@@ -1018,28 +1018,32 @@ for subj= 1:numel(subjects)
              end
              
              %Repeat for NS trials
-             %First, let's get trials where animal was already in port
-                NSinPort= find(~isnan(currentSubj(session).behavior.inPortNS));
-
-                %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
-                NSnoPE = find(cellfun('isempty', currentSubj(session).behavior.poxNS))'; %transpose ' due to shape
-                 %additional check here to make sure animal was not in the
-                %port at trial start even if a valid PE exists
-                 for inPortTrial= NSinPort
-                    NSnoPE(NSnoPE==inPortTrial)=[]; %eliminate trials where animal was in port
-                 end
-                 
-             %lastly, get trials with valid PE
-             NSPE= find(~cellfun('isempty', currentSubj(session).behavior.poxNS))'; %transpose ' due to shape
-              %additional check here to make sure animal was not in the
-                %port at trial start even if a valid PE exists
-             for inPortTrial= NSinPort
-                 NSPE(NSPE==inPortTrial)=[]; %eliminate trials where animal was in port
-             end
              
-                %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
-             if ~isempty(intersect(NSinPort,NSnoPE)) || ~isempty(intersect(NSinPort, NSPE)) || ~isempty(intersect(NSnoPE, NSPE))
-                disp('~~~~~~~~error: trial types not mutually exclusive');
+             %only run for stages with NS
+             if currentSubj(session).trainStage >=5
+                 %First, let's get trials where animal was already in port
+                    NSinPort= find(~isnan(currentSubj(session).behavior.inPortNS));
+
+                    %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
+                    NSnoPE = find(cellfun('isempty', currentSubj(session).behavior.poxNS))'; %transpose ' due to shape
+                     %additional check here to make sure animal was not in the
+                    %port at trial start even if a valid PE exists
+                     for inPortTrial= NSinPort
+                        NSnoPE(NSnoPE==inPortTrial)=[]; %eliminate trials where animal was in port
+                     end
+
+                 %lastly, get trials with valid PE
+                 NSPE= find(~cellfun('isempty', currentSubj(session).behavior.poxNS))'; %transpose ' due to shape
+                  %additional check here to make sure animal was not in the
+                    %port at trial start even if a valid PE exists
+                 for inPortTrial= NSinPort
+                     NSPE(NSPE==inPortTrial)=[]; %eliminate trials where animal was in port
+                 end
+
+                    %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
+                 if ~isempty(intersect(NSinPort,NSnoPE)) || ~isempty(intersect(NSinPort, NSPE)) || ~isempty(intersect(NSnoPE, NSPE))
+                    disp('~~~~~~~~error: trial types not mutually exclusive');
+                 end
              end
              
              
@@ -3941,7 +3945,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         indPump3= [];
         
                 
-        if ~currentSubj(session).trainStage>=8 %make sure this is a valid stage with multiple rewards
+        if currentSubj(session).trainStage>=8 %make sure this is a valid stage with multiple rewards
             
             rewardSessionCount= rewardSessionCount+1; %counter for sessions with valid variable reward data 
 
@@ -5063,6 +5067,116 @@ effectWindow= effectStart*fs:effectEnd*fs; %Indices of the time window for the e
 
 %% ~~ Data vis- photometry & behavior ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+%% Peri-cue activity by PE outcome (PE, noPE, or inPort)
+% goal here is to plot peri-DS response for each stage based on trial outcome (either rat
+% was in port at cue onset, made a PE during cue epoch, or
+% did not make a PE)
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    allStages= unique([currentSubj.trainStage]);
+   
+    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+        includedSessions= []; %excluded sessions will reset between unique stages
+        inPortDSblue= []; inPortDSpurple= []; noPEDSblue= []; noPEDSpurple= []; PEDSblue= []; PEDSpurple= []; %reset between sessions
+        inPortNSblue= []; inPortNSpurple= []; noPENSblue= []; noPENSpurple= []; PENSblue= []; PENSpurple= []; %reset between sessions
+        
+        %loop through all sessions and record index of sessions that correspond only to this stage
+        for session= 1:numel(currentSubj)
+            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+            end
+        end%end session loop
+    
+         for includedSession= includedSessions %loop through only sessions that match this stage
+            DSinPort= []; DSnoPE= []; DSPE= []; %reset between sessions
+            NSinPort= []; NSnoPE= []; NSPE= [];
+             %Extract data based on trial outcome
+             
+         %loop through each trial type (1= PE, 2= noPE, 3= inPort) and get
+         %peri-DS response
+                           
+         %Here we will collect mean() peri-DS response within sessions,
+         %that we can see if there's a particularly bad session that would
+         %otherwise be hidden in a between-session mean
+            for PEtrial= currentSubj(includedSession).trialOutcome.DSoutcome==1 %loop through trials and cat responses into one array
+                PEDSblue= [PEDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(:,:,PEtrial),3)];
+                PEDSpurple= [PEDSpurple, nanmean(currentSubj(includedSession).periDS.DSzpurple(:,:,PEtrial),3)];
+            end
+            
+            for noPEtrial= currentSubj(includedSession).trialOutcome.DSoutcome==2 %loop through trials and cat responses into one array
+                noPEDSblue= [noPEDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(:,:,noPEtrial),3)];
+                noPEDSpurple= [noPEDSpurple, nanmean(currentSubj(includedSession).periDS.DSzpurple(:,:,noPEtrial),3)];
+            end
+            
+            for inPortTrial = currentSubj(includedSession).trialOutcome.DSoutcome==3 %loop through trials and cat responses into one array
+                inPortDSblue= [inPortDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(:,:,inPortTrial),3)];
+                inPortDSpurple= [inPortDSpurple, nanmean(currentSubj(includedSession).periDS.DSzpurple(:,:,inPortTrial),3)];
+            end  
+            
+            %repeat for NS
+            PEtrial= []; noPEtrial= []; inPortTrial=[];
+            for PEtrial= currentSubj(includedSession).trialOutcome.NSoutcome==1 %loop through trials and cat responses into one array
+                PENSblue= [PENSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(:,:,PEtrial),3)];
+                PENSpurple= [PENSpurple, nanmean(currentSubj(includedSession).periNS.NSzpurple(:,:,PEtrial),3)];
+            end
+            
+            for noPEtrial= currentSubj(includedSession).trialOutcome.NSoutcome==2 %loop through trials and cat responses into one array
+                noPENSblue= [noPENSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(:,:,noPEtrial),3)];
+                noPENSpurple= [noPENSpurple, nanmean(currentSubj(includedSession).periNS.NSzpurple(:,:,noPEtrial),3)];
+            end
+            
+            for inPortTrial = currentSubj(includedSession).trialOutcome.NSoutcome==3 %loop through trials and cat responses into one array
+                inPortNSblue= [inPortNSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(:,:,inPortTrial),3)];
+                inPortNSpurple= [inPortNSpurple, nanmean(currentSubj(includedSession).periNS.NSzpurple(:,:,inPortTrial),3)];
+            end  
+          
+          
+         end %end includedSession loop         
+        
+        figure(figureCount); hold on; sgtitle(strcat(subjectsAnalyzed{subj},'peri-DS response session means by PE outcome'));
+        
+        subplot(3, allStages(end), thisStage); hold on; title(strcat('No PE DS stage-',num2str(thisStage)));
+        plot(timeLock, noPEDSblue, 'b');
+        plot(timeLock, noPEDSpurple,'m');
+        subplot(3,allStages(end), allStages(end)+thisStage); hold on; title(strcat('PE DS stage-',num2str(thisStage)));
+        plot(timeLock, PEDSblue, 'b');
+        plot(timeLock, PEDSpurple, 'm');
+        subplot(3, allStages(end),  allStages(end)+allStages(end)+thisStage); hold on; title(strcat('inPort DS stage-',num2str(thisStage)));
+        plot(timeLock, inPortDSblue, 'b');
+        plot(timeLock, inPortDSpurple, 'm');
+
+        linkaxes();
+
+            %todo : overlay mean & SEM
+        
+        xlabel('time from DS onset');
+        ylabel(' 465nm z score response');
+
+        %repeat for NS
+        if thisStage>= 5%only run for stages with NS
+            figure(figureCount+1); hold on; sgtitle(strcat(subjectsAnalyzed{subj},'peri-NS response session means by PE outcome'));
+
+            subplot(3, allStages(end), thisStage); hold on; title(strcat('No PE NS stage-',num2str(thisStage)));
+            plot(timeLock, noPENSblue, 'b');
+            plot(timeLock, noPENSpurple,'m');
+            subplot(3,allStages(end), allStages(end)+thisStage); hold on; title(strcat('PE NS stage-',num2str(thisStage)));
+            plot(timeLock, PENSblue, 'b');
+            plot(timeLock, PENSpurple, 'm');
+            subplot(3, allStages(end),  allStages(end)+allStages(end)+thisStage); hold on; title(strcat('inPort NS stage-',num2str(thisStage)));
+            plot(timeLock, inPortNSblue, 'b');
+            plot(timeLock, inPortNSpurple, 'm');
+        end %end NS stage conditional
+        
+    end %end Stage loop 
+       set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+       set(figure(figureCount), 'Position', get(0, 'Screensize'));
+%        linkaxes();
+
+      figureCount= figureCount+2; %+2 because alternating plot on separate DS & NS figures
+end %end subj loop
+
+
 %% Scatter of cue-elicited response vs. port entry outcome (does cue elicited response predict PE?)
 
 %goal here will be to create scatter of mean response to cue with 3 different outcomes: no PE, PE, or already in port (denoted by color of plot) 
@@ -6063,8 +6177,6 @@ end %end subject loop
  %just for fun, what n would we need for .80 power given this effect size?
  nCuePresentationsNeeded = sampsizepwr('t',[grandMeanEffectDSzblueAllSubjects, pooledStdAllSubjects], grandMeanEffectNSzblueAllSubjects, .80,[])
   
- %VPFP-quantneuro: that's a lot of trials... 1398/30 per day ~ 47 days of training
-
  
  %lets save this too
 for subj= 1:numel(subjectsAnalyzed) %for each subject
