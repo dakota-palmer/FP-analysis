@@ -1145,21 +1145,21 @@ end% end subj loop
                 PEtrial=find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==1); %if this is a PE trial, reward delivered @ first PE
                 for thisTrial= 1:numel(PEtrial) %have to loop through this because subjDataAnalyzed.behavior.poxDS is cell array and there doesn't seem to be an easier way to get the 1st value from each cell vectorized
                     if currentSubjAnalyzed(session).reward.DSreward(PEtrial(thisTrial))==1 %if pump 1 stage 8 w errors, delay was 1s + 100ms
-                    currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1+0.1; %pump onset = first port entry during DS + delay
-                    
+                       currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1+0.1; %pump onset = first port entry during DS + delay
+                       
                     elseif currentSubjAnalyzed(session).reward.DSreward(PEtrial(thisTrial))==2 %if pump 2 stage 8 w errors, delay was 1s + 200ms
-                    currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1+0.2; %pump onset = first port entry during DS + delay
+                           currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1+0.2; %pump onset = first port entry during DS + delay
                     
                     
                     elseif currentSubjAnalyzed(session).reward.DSreward(PEtrial(thisTrial))==3 %if pump 1 stage 8 w errors, delay was 1s + 300ms
-                    currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1+0.3; %pump onset = first port entry during DS + delay
+                           currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial(thisTrial))= currentSubjAnalyzed(session).behavior.poxDS{PEtrial(thisTrial)}(1)+1+0.3; %pump onset = first port entry during DS + delay
                     end
                    
                 end
                 
                 
                 noPEtrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==2);%if there was no PE, make nan
-                currentSubjAnalyzed(session).reward.pumpOnTime(PEtrial)= nan; 
+                currentSubjAnalyzed(session).reward.pumpOnTime(noPEtrial)= nan; 
                     
                     %Again, stage 8 with errors here pump on will be cue
                     %onset+delay depending on pump
@@ -1167,26 +1167,32 @@ end% end subj loop
                inPortTrial= find(currentSubjAnalyzed(session).trialOutcome.DSoutcome==3); %if rat was in port, pump on = cue onset + delay
                for thisTrial= 1:numel(inPortTrial) %have to loop through this because subjDataAnalyzed.behavior.poxDS is cell array and there doesn't seem to be an easier way to get the 1st value from each cell vectorized
                     if currentSubjAnalyzed(session).reward.DSreward(inPortTrial(thisTrial))==1 %if pump 1 stage 8 w errors, delay was 1s + 100ms
-                    currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial(thisTrial))= currentSubj(session).DS(inPortTrial(thisTrial))+1+0.1; %pump onset = first port entry during DS + delay
+                       currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial(thisTrial))= currentSubj(session).DS(inPortTrial(thisTrial))+1+0.1; %pump onset = first port entry during DS + delay
                     
                     elseif currentSubjAnalyzed(session).reward.DSreward(inPortTrial(thisTrial))==2 %if pump 2 stage 8 w errors, delay was 1s + 200ms
-                    currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial(thisTrial))= currentSubj(session).DS(inPortTrial(thisTrial))+1+0.2; %pump onset = first port entry during DS + delay
+                           currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial(thisTrial))= currentSubj(session).DS(inPortTrial(thisTrial))+1+0.2; %pump onset = first port entry during DS + delay
                     
                     
                     elseif currentSubjAnalyzed(session).reward.DSreward(inPortTrial(thisTrial))==3 %if pump 1 stage 8 w errors, delay was 1s + 300ms
-                    currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial(thisTrial))= currentSubj(session).DS(inPortTrial(thisTrial))+1+0.3; %pump onset = first port entry during DS + delay
+                           currentSubjAnalyzed(session).reward.pumpOnTime(inPortTrial(thisTrial))= currentSubj(session).DS(inPortTrial(thisTrial))+1+0.3; %pump onset = first port entry during DS + delay
                     end
                    
                end                
            end %end stage 8+
-           %Now, let's calculate pump onset relative to cue onset for each trial (so we can easily plot it later)
+           %Now, let's calculate pump onset relative to cue onset and first PE for each trial (so we can easily plot it later)
            for cue= 1:numel(currentSubj(session).DS)
                currentSubjAnalyzed(session).reward.pumpOnDSrel(cue,1)= currentSubjAnalyzed(session).reward.pumpOnTime(cue)-currentSubj(session).DS(cue);
+               if ~isempty(currentSubjAnalyzed(session).behavior.poxDS{cue})
+                  currentSubjAnalyzed(session).reward.pumpOnFirstPErel(cue,1)= currentSubjAnalyzed(session).reward.pumpOnTime(cue)-currentSubjAnalyzed(session).behavior.poxDS{cue}(1);
+               else 
+                   currentSubjAnalyzed(session).reward.pumpOnFirstPErel(cue,1)= nan;
+               end
            end %end DS loop
            
            %now save these calculations into subjDataAnalyzed struct
            subjDataAnalyzed.(subjects{subj})(session).reward.pumpOnTime= currentSubjAnalyzed(session).reward.pumpOnTime;
            subjDataAnalyzed.(subjects{subj})(session).reward.pumpOnDSrel= currentSubjAnalyzed(session).reward.pumpOnDSrel;
+           subjDataAnalyzed.(subjects{subj})(session).reward.pumpOnFirstPErel= currentSubjAnalyzed(session).reward.pumpOnFirstPErel;
            
         end %end session loop
     end %end subj loop
@@ -4481,6 +4487,108 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
     end %end variable reward conditional
 end %end subject loop
 
+%% Plot post-PE response based on reward identity
+%dp 10/30/2020 goal of this section is to create plot of post-PE activity
+%for each unique reward identity (should be than plotting by pump)
+
+%~~~~Logic here assumes that reward identity changes = coded as different
+%stage in metadata excel sheet
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    
+  %First get all of the relevant data from each peTrial within each
+  %variable reward session
+    rewardIDs= []; PEDSblue= []; PEDSpurple= []; pumpIDs= []; rewardsThisStage=[]; pumpOnTimeRel=[]; %reset between subjects
+    
+%     for session= 1:numel(currentSubj)
+        peTrial= []; %reset between sessions
+%         if currentSubj(session).trainStage >= 8 %only run for sessions with variable reward
+            
+          allStages= unique([currentSubj.trainStage]); 
+              allRewardStages= allStages(allStages>=8);
+          for thisStage= allRewardStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+            includedSessions= []; %excluded sessions will reset between unique stages
+
+            %loop through all sessions and record index of sessions that correspond only to this stage
+            for session= 1:numel(currentSubj)
+                if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+                   includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+                end
+            end%end session loop
+            
+            for includedSession= includedSessions
+                for peTrial=find(currentSubj(includedSession).trialOutcome.DSoutcome==1)
+                    pumpIDs= [pumpIDs; currentSubj(includedSession).reward.DSreward(peTrial)]; %list of pump identity for every peTrial                   
+        
+                    pumpOnTimeRel= [pumpOnTimeRel; currentSubj(includedSession).reward.pumpOnFirstPErel(peTrial)];
+                    
+                    PEDSblue= [PEDSblue, squeeze(currentSubj(includedSession).periDSpox.DSzpoxblue(:,:,peTrial))]; %list of peri- first PE response for every peTrial
+                    PEDSpurple= [PEDSpurple, squeeze(currentSubj(includedSession).periDSpox.DSzpoxpurple(:,:,peTrial))]; %list of peri- first PE response for every peTrial
+                end %end loop through PEtrials
+
+                %make list of reward IDs given known pumpIDs for each trial
+                rewardIDs= cell(size(pumpIDs)); %start with empty cell array (bc dealing with strings) and fill based on pumpID
+                rewardIDs(find(pumpIDs==1))= {currentSubj(includedSession).reward.pump1};
+                rewardIDs(find(pumpIDs==2))= {currentSubj(includedSession).reward.pump2};
+                rewardIDs(find(pumpIDs==3))= {currentSubj(includedSession).reward.pump3};
+            end %end includedSession loop
+          
+            %Now that we have the trial data and reward identity, let's make plots
+            %based on each pump
+            %Assuming that identity in each pump is constant for each
+            %stage! Also assuming 3 pumps always being used!
+            rewardsThisStage{1}= unique(rewardIDs(find(pumpIDs==1)));
+            rewardsThisStage{2}= unique(rewardIDs(find(pumpIDs==2)));
+            rewardsThisStage{3}= unique(rewardIDs(find(pumpIDs==3)));
+
+        %There will be one subplot per rewardStage
+            %with traces for each rewardID
+            
+            rewardColors= ['g','r','y']; %color plots based on reward identity
+            
+            figure(figureCount); sgtitle(strcat(subjects{subj},'-peri first PE DSz by reward identity (mean of all trials by stage)'));
+%             subplot(1, numel(allRewardStages), find(allRewardStages==thisStage)); hold on;
+            
+             subplot(3, numel(allRewardStages),find(allRewardStages==thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'-pump1-reward=',rewardsThisStage{1}));
+%              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{1}))), rewardColors(1)); %plot all trials
+             plot(timeLock,nanmean(PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{1}))),2), 'b'); %plot mean across all trials (for this stage)
+             plot(timeLock,nanmean(PEDSpurple(:,find(strcmp(rewardIDs,rewardsThisStage{1}))),2), 'm'); %plot mean across all trials (for this stage)
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==1))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
+             
+             subplot(3, numel(allRewardStages), numel(allRewardStages)+find(allRewardStages==thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'-pump2-reward=',rewardsThisStage{2}));
+%              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{2}))), rewardColors(2)); %plot all trials
+             plot(timeLock,nanmean(PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{2}))),2), 'b'); %plot mean across all trials (for this stage)
+             plot(timeLock,nanmean(PEDSpurple(:,find(strcmp(rewardIDs,rewardsThisStage{2}))),2), 'm'); %plot mean across all trials (for this stage)
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==2))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
+
+             subplot(3, numel(allRewardStages), numel(allRewardStages)+numel(allRewardStages)+find(allRewardStages==thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'-pump3-reward=',rewardsThisStage{3}));
+%              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{3}))), rewardColors(3)); %plot all trials
+             plot(timeLock,nanmean(PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{3}))),2), 'b'); %plot mean across all trials (for this stage)
+             plot(timeLock,nanmean(PEDSpurple(:,find(strcmp(rewardIDs,rewardsThisStage{3}))),2), 'm'); %plot mean across all trials (for this stage)
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==3))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
+             
+             xlabel('time from PE (s)');
+             ylabel('z score relative to pre-cue baseline)');
+
+         end %end stage loop
+        linkaxes();
+        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving      
+
+        legend('465nm z score','405nm z score', 'pump on', 'first PE during DS');
+                        
+        figureCount= figureCount+1;
+                
+%             uniqueRewards= [uniqueRewards,unique(rewardIDs)];
+%         end %end variable reward session conditional
+%     end
+    
+   
+end %end subj loop
+
 
 %% Extract data from specific sessions- EXAMPLE
 %dp 9/20/2020 more efficient way to get data from specific stages
@@ -5167,6 +5275,7 @@ for subj= 1:numel(subjects)
             plot(timeLock, inPortNSblue, 'b');
             plot(timeLock, inPortNSpurple, 'm');
         end %end NS stage conditional
+        linkaxes();
         
     end %end Stage loop 
        set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
