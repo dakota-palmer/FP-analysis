@@ -17,7 +17,7 @@ fs= 40; %make sure the sampling frequency is correct!
 savePath= strcat(pwd,'\data_to_input\');
 
 %Exclude subjects here if necessary
-excludedSubjs= {'rat12','rat13'}; %cell array with strings of excluded subj fieldnames
+excludedSubjs= {}'%{'rat12','rat13'}; %cell array with strings of excluded subj fieldnames
 % 
 subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
 subjectsAnalyzed= fieldnames(subjDataAnalyzed);
@@ -27,7 +27,7 @@ for subj= 1:numel(subjectsAnalyzed)
     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj});
     excludedSessions= [];
     for session= 1:numel(currentSubj)
-        if currentSubj(session).trainStage ~= 8%7 %only include stage 7 days
+        if currentSubj(session).trainStage ~= 7%7 %only include stage 7 days
            excludedSessions= cat(2,excludedSessions,session);
         end
     end%end session loop
@@ -107,22 +107,26 @@ for subj= 1:numel(subjectsAnalyzed)
 
        %        output.poxDS= currentSubj(session).behavior.poxDS; %note this would be ALL PEs during cue (not just first)
 
-       %to get only first lox & pox during cue, using cellfun
+       %first initialize output.firstPox and output.firstLox with a nan value
+       %for every trial (so this way if we loop over trials later we won't
+       %get an error)
+       output.firstPoxDS= nan(size(currentSubj(session).periDS.DS));
+       output.firstLoxDS= nan(size(currentSubj(session).periDS.DS));
+       output.firstPoxNS= nan(size(currentSubj(session).periNS.NS));
+       output.firstLoxNS= nan(size(currentSubj(session).periNS.NS));
+       
+       %to get only first lox & pox during cue, using cellfun (since poxDS and loxDS are saved in a cell array and we only want the first value       
        index= ~cellfun('isempty',currentSubj(session).behavior.poxDS); %using this index accounts for empty cells
        output.firstPoxDS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.poxDS(index));
-       output.firstPoxDS(output.firstPoxDS==0)=nan; %replace 0s with nan
        
        index= ~cellfun('isempty',currentSubj(session).behavior.loxDS); %using this index accounts for empty cells
        output.firstLoxDS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.loxDS(index));
-       output.firstLoxDS(output.firstLoxDS==0)=nan; %replace 0s with nan
 
        index= ~cellfun('isempty',currentSubj(session).behavior.poxNS); %using this index accounts for empty cells
        output.firstPoxNS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.poxNS(index));
-       output.firstPoxNS(output.firstPoxNS==0)=nan; %replace 0s with nan
        
        index= ~cellfun('isempty',currentSubj(session).behavior.loxNS); %using this index accounts for empty cells
        output.firstLoxNS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.loxNS(index));
-       output.firstLoxNS(output.firstLoxNS==0)=nan; %replace 0s with nan
        
        
 %        output.pox= currentSubj(session).raw.pox;

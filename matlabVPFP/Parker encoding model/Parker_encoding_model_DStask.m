@@ -22,7 +22,7 @@ load(uigetfile('*.mat')); %choose the subjDataAnalyzed.mat file to open for your
   
 
 condition = 'data_to_input' %/example';
-subjects =  [1:3]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
+subjects =  [1:numel(files)]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
 
 
 for subject=1:numel(subjects)
@@ -748,7 +748,7 @@ for subject=1:numel(subjects)
         legend(cons);
         
         %separate plot of stim vs action events
-        figure; hold on;
+        figure; hold on; 
         title(strcat(char(files(subject)),'-kernels (time shift)'));
         subplot(2,1,1); hold on; title('stimulus events');
         timeLock= (0:shift_back+shift_forward)/g_output.samp_rate; %x axis starts at 0
@@ -849,7 +849,7 @@ for subject=1:numel(subjects)
 
     %Let's do one big figure with mean of each kernel and sum separately
     %subplotted
-    figure; hold on; sgtitle('DS trials- mean event kernels and mean modeled GCaMP');
+    figure; hold on; sgtitle(strcat(files{subject},'-DS trials- mean event kernels and mean modeled GCaMP'));
     for con= 1:numel(cons) %loop through event types (cons)
         subplot(numel(cons)+1, 1, con); hold on; title(cons{con}); %subplot of this event's kernel
         plot(timeLock, nanmean(kernels_DStrials(:,:,con),2), conColors{con});
@@ -858,6 +858,8 @@ for subject=1:numel(subjects)
     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
     plot(timeLock,currentSubj(session).periDS.DSzblueMean, 'b');
     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
+    
+    saveas(gcf, strcat(pwd,'\outputFigs\', files{subject},'_modeled465','.fig'))
 
 end%end subject loop
 
