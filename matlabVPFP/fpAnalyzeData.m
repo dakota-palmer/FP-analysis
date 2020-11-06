@@ -4802,7 +4802,7 @@ for subj= 1:numel(subjects)
         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
         
         if thisStage==1
-           legend('465 individual subj mean','465 all subj mean', '405 individual subj mean', '405 all subj mean');
+           legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
         end
     end
 end
@@ -4839,6 +4839,14 @@ for subj= 1:numel(subjects)
             NSpurple= [NSpurple, squeeze(currentSubj(includedSession).periNSpox.NSzpoxpurple)];
         end
         
+        %collect data from all subjects for a between-subjects mean plot
+        allSubjDSblue(:,thisStage,subj)= nanmean(DSblue,2);
+        allSubjDSpurple(:,thisStage, subj)= nanmean(DSpurple,2);
+    
+        if ~isempty(NSblue)
+           allSubjNSblue(:,thisStage,subj)= nanmean(NSblue,2);
+           allSubjNSpurple(:,thisStage,subj)= nanmean(NSpurple,2);
+        end
     
         
      %generate plots
@@ -4894,6 +4902,47 @@ for subj= 1:numel(subjects)
 
 end %end subj loop
 
+%replace columns that have all zeros with nans (this could happen if an animal
+%didn't run a particular stage)
+for subj= 1:numel(subjects)
+    allSubjDSblue(:,find(all(allSubjDSblue(:,:,subj)==0)),subj)= nan;
+    allSubjDSpurple(:,find(all(allSubjDSpurple(:,:,subj)==0)), subj)= nan;
+    allSubjNSblue(:,find(all(allSubjNSblue(:,:,subj)==0)), subj)= nan;
+    allSubjNSpurple(:,find(all(allSubjNSpurple(:,:,subj)==0)), subj)= nan;
+end
+
+% Now make a between-subj plot of mean across all animals
+figure;
+figureCount=figureCount+1; sgtitle('peri-first PE response: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjDSblue,2) 
+        thisStageDSblue= nanmean(allSubjDSblue(:,thisStage,:),3);
+        thisStageDSpurple= nanmean(allSubjDSpurple(:,thisStage,:),3);
+        thisStageNSblue= nanmean(allSubjNSblue(:,thisStage,:), 3);
+        thisStageNSpurple= nanmean(allSubjNSpurple(:,thisStage,:),3);
+
+                %DS
+        subplot(subplot(2, size(allSubjDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first PE DS')) 
+        plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+            %NS
+        subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first PE NS')) 
+        plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        
+        if thisStage==1
+           legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
+        end
+    end
+end
+
+linkaxes(); %link axes for scale comparison
+
+
 %% Peri-DSlox 2d plots by stage
 
 for subj= 1:numel(subjects)
@@ -4924,7 +4973,14 @@ for subj= 1:numel(subjects)
             NSpurple= [NSpurple, squeeze(currentSubj(includedSession).periNSlox.NSzloxpurple)];
         end
         
+     %collect data from all subjects for a between-subjects mean plot
+        allSubjDSblue(:,thisStage,subj)= nanmean(DSblue,2);
+        allSubjDSpurple(:,thisStage, subj)= nanmean(DSpurple,2);
     
+        if ~isempty(NSblue)
+           allSubjNSblue(:,thisStage,subj)= nanmean(NSblue,2);
+           allSubjNSpurple(:,thisStage,subj)= nanmean(NSpurple,2);
+        end
         
      %generate plots
         figure(figureCount); hold on; sgtitle(strcat(subjects{subj},'-peri first LICK in DS epoch by stages'));
@@ -4978,6 +5034,47 @@ for subj= 1:numel(subjects)
     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
 end %end subj loop
+
+
+%replace columns that have all zeros with nans (this could happen if an animal
+%didn't run a particular stage)
+for subj= 1:numel(subjects)
+    allSubjDSblue(:,find(all(allSubjDSblue(:,:,subj)==0)),subj)= nan;
+    allSubjDSpurple(:,find(all(allSubjDSpurple(:,:,subj)==0)), subj)= nan;
+    allSubjNSblue(:,find(all(allSubjNSblue(:,:,subj)==0)), subj)= nan;
+    allSubjNSpurple(:,find(all(allSubjNSpurple(:,:,subj)==0)), subj)= nan;
+end
+
+% Now make a between-subj plot of mean across all animals
+figure;
+figureCount=figureCount+1; sgtitle('peri-first LICK response: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjDSblue,2) 
+        thisStageDSblue= nanmean(allSubjDSblue(:,thisStage,:),3);
+        thisStageDSpurple= nanmean(allSubjDSpurple(:,thisStage,:),3);
+        thisStageNSblue= nanmean(allSubjNSblue(:,thisStage,:), 3);
+        thisStageNSpurple= nanmean(allSubjNSpurple(:,thisStage,:),3);
+
+                %DS
+        subplot(subplot(2, size(allSubjDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first lick DS')) 
+        plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+            %NS
+        subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first lick NS')) 
+        plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        
+        if thisStage==1
+           legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
+        end
+    end
+end
+
+linkaxes(); %link axes for scale comparison
 
 
 %% ~~ Between subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
