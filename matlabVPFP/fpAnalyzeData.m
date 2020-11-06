@@ -4681,7 +4681,7 @@ end %end subj loop
 
 %% peri-DS heatplots by stage
 
-allSubjDSblue= [];
+allSubjDSblue= []; %initialize 
 allSubjDSpurple= [];
 allSubjNSblue= [];
 allSubjNSpurple= [];
@@ -4810,6 +4810,11 @@ end
 linkaxes(); %link axes for scale comparison
 
 %% Peri-DSpox 2d plots by stage
+
+allSubjDSblue= []; %initialize 
+allSubjDSpurple= [];
+allSubjNSblue= [];
+allSubjNSpurple= [];
 
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
@@ -4944,6 +4949,11 @@ linkaxes(); %link axes for scale comparison
 
 
 %% Peri-DSlox 2d plots by stage
+
+allSubjDSblue= []; %initialize 
+allSubjDSpurple= [];
+allSubjNSblue= [];
+allSubjNSpurple= [];
 
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
@@ -5332,6 +5342,11 @@ effectWindow= effectStart*fs:effectEnd*fs; %Indices of the time window for the e
 % was in port at cue onset, made a PE during cue epoch, or
 % did not make a PE)
 
+%initialize some variables
+allSubjPEDSblue= []; allSubjPEDSpurple= []; allSubjPENSblue= []; allSubjPENSpurple=[];
+allSubjNoPEDSblue= []; allSubjNoPEDSpurple= []; allSubjNoPENSblue= []; allSubjNoPENSpurple= [];
+allSubjInPortDSblue= []; allSubjInPortDSpurple= []; allSubjInPortNSblue= []; allSubjInPortNSpurple= [];
+
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
     allStages= unique([currentSubj.trainStage]);
@@ -5389,11 +5404,33 @@ for subj= 1:numel(subjects)
             for inPortTrial = currentSubj(includedSession).trialOutcome.NSoutcome==3 %loop through trials and cat responses into one array
                 inPortNSblue= [inPortNSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(:,:,inPortTrial),3)];
                 inPortNSpurple= [inPortNSpurple, nanmean(currentSubj(includedSession).periNS.NSzpurple(:,:,inPortTrial),3)];
-            end  
-          
-          
+            end    
+            
          end %end includedSession loop         
         
+          %collect data from all subjects for a between-subjects mean plot
+        allSubjPEDSblue(:,thisStage,subj)= nanmean(PEDSblue,2);
+        allSubjPEDSpurple(:,thisStage, subj)= nanmean(PEDSpurple,2);
+        
+        allSubjNoPEDSblue(:, thisStage, subj)= nanmean(noPEDSblue, 2);
+        allSubjNoPEDSpurple(:, thisStage, subj)= nanmean(noPEDSpurple, 2);
+        
+        allSubjInPortDSblue(:,thisStage, subj)= nanmean(inPortDSblue, 2);
+        allSubjInPortDSpurple(:,thisStage, subj)= nanmean(inPortDSpurple,2);
+
+    
+        if ~isempty(PENSblue)
+           allSubjPENSblue(:,thisStage,subj)= nanmean(PENSblue,2);
+           allSubjPENSpurple(:,thisStage,subj)= nanmean(PENSpurple,2);
+           
+           allSubjNoPENSblue(:,thisStage,subj)= nanmean(noPENSblue,2);
+           allSubjNoPENSpurple(:,thisStage,subj)= nanmean(noPENSpurple,2);
+           
+              
+           allSubjInPortNSblue(:,thisStage,subj)= nanmean(inPortNSblue,2);
+           allSubjInPortNSpurple(:,thisStage,subj)= nanmean(inPortNSpurple,2);
+        end
+         
         figure(figureCount); hold on; sgtitle(strcat(subjectsAnalyzed{subj},'peri-DS response session means by PE outcome'));
         
         subplot(3, allStages(end), thisStage); hold on; title(strcat('No PE DS stage-',num2str(thisStage)));
@@ -5437,6 +5474,112 @@ for subj= 1:numel(subjects)
       figureCount= figureCount+2; %+2 because alternating plot on separate DS & NS figures
 end %end subj loop
 
+%replace columns that have all zeros with nans (this could happen if an animal
+%didn't run a particular stage)
+for subj= 1:numel(subjects)
+    allSubjPEDSblue(:,find(all(allSubjPEDSblue(:,:,subj)==0)),subj)= nan;
+    allSubjPEDSpurple(:,find(all(allSubjPEDSpurple(:,:,subj)==0)), subj)= nan;
+    
+    allSubjNoPEDSblue(:,find(all(allSubjNoPEDSblue(:,:,subj)==0)), subj)= nan;
+    allSubjNoPEDSpurple(:,find(all(allSubjNoPEDSpurple(:,:,subj)==0)), subj)= nan;
+    
+    allSubjInPortDSblue(:,find(all(allSubjInPortDSblue(:,:,subj)==0)), subj)= nan;
+    allSubjInPortDSpurple(:,find(all(allSubjInPortDSpurple(:,:,subj)==0)), subj)= nan;
+    
+    allSubjPENSblue(:,find(all(allSubjPENSblue(:,:,subj)==0)),subj)= nan;
+    allSubjPENSpurple(:,find(all(allSubjPENSpurple(:,:,subj)==0)), subj)= nan;
+    
+    allSubjNoPENSblue(:,find(all(allSubjNoPENSblue(:,:,subj)==0)), subj)= nan;
+    allSubjNoPENSpurple(:,find(all(allSubjNoPENSpurple(:,:,subj)==0)), subj)= nan;
+    
+    allSubjInPortNSblue(:,find(all(allSubjInPortNSblue(:,:,subj)==0)), subj)= nan;
+    allSubjInPortNSpurple(:,find(all(allSubjInPortNSpurple(:,:,subj)==0)), subj)= nan;
+
+
+end
+
+% Now make a between-subj plot of mean across all animals
+    %DS
+figure;
+figureCount=figureCount+1; sgtitle('peri-DS response by PE outcome: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjDSblue,2) 
+        thisStagePEDSblue= nanmean(allSubjPEDSblue(:,thisStage,:),3);
+        thisStagePEDSpurple= nanmean(allSubjPEDSpurple(:,thisStage,:),3);
+        
+        thisStageNoPEDSDSblue= nanmean(allSubjNoPEDSblue(:,thisStage,:),3);
+        thisStageNoPEDSpurple= nanmean(allSubjNoPEDSpurple(:,thisStage,:),3);
+
+        thisStageInPortDSblue= nanmean(allSubjInPortDSblue(:,thisStage,:),3);
+        thisStageInPortDSpurple= nanmean(allSubjInPortDSpurple(:,thisStage,:),3);
+
+                %DS
+        subplot(subplot(3, size(allSubjPEDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'DS with port entry')) 
+        plot(timeLock, (allSubjPEDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStagePEDSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStagePEDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+      
+        subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'DS with no port entry')) 
+        plot(timeLock, (allSubjNoPEDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjNoPEDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageNoPEDSDSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageNoPEDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        
+        subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'in Port at DS onset')) 
+        plot(timeLock, (allSubjInPortDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjInPortDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageInPortDSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageInPortDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        
+        if thisStage==1
+           legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
+        end
+    end
+end
+
+linkaxes(); %link axes for scale comparison
+
+
+%NS
+figure;
+figureCount=figureCount+1; sgtitle('peri-NS response by PE outcome: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjNSblue,2) 
+        thisStagePENSblue= nanmean(allSubjPENSblue(:,thisStage,:),3);
+        thisStagePENSpurple= nanmean(allSubjPENSpurple(:,thisStage,:),3);
+        
+        thisStageNoPENSNSblue= nanmean(allSubjNoPENSblue(:,thisStage,:),3);
+        thisStageNoPENSpurple= nanmean(allSubjNoPENSpurple(:,thisStage,:),3);
+
+        thisStageInPortNSblue= nanmean(allSubjInPortNSblue(:,thisStage,:),3);
+        thisStageInPortNSpurple= nanmean(allSubjInPortNSpurple(:,thisStage,:),3);
+
+                %NS
+        subplot(subplot(3, size(allSubjPENSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'NS with port entry')) 
+        plot(timeLock, (allSubjPENSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStagePENSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStagePENSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+      
+        subplot(subplot(3, size(allSubjPENSblue,2), size(allSubjPENSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'NS with no port entry')) 
+        plot(timeLock, (allSubjNoPENSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjNoPENSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageNoPENSNSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageNoPENSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        
+        subplot(subplot(3, size(allSubjPENSblue,2), size(allSubjPENSblue,2)+size(allSubjPENSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'in Port at NS onset')) 
+        plot(timeLock, (allSubjInPortNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjInPortNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageInPortNSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageInPortNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        
+        if thisStage==1
+           legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
+        end
+    end
+end
+linkaxes();
 
 %% Scatter of cue-elicited response vs. port entry outcome (does cue elicited response predict PE?)
 
