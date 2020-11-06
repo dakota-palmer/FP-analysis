@@ -1319,7 +1319,7 @@ for subj= 1:numel(subjects) %for each subject
         %nan
         DSselected(cellfun('isempty', subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS)) = nan;
         
-        currentSubj(session).DSpeRatio= numel(DSselected(~isnan(DSselected)))/numel(currentSubj(session).DS);
+        currentSubj(session).DSpeRatio= numel(DSselected(~isnan(DSselected)))/numel(currentSubj(session).DS);       
         
         
        subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeRatio= currentSubj(session).DSpeRatio;
@@ -4680,6 +4680,12 @@ for subj= 1:numel(subjects)
 end %end subj loop
 
 %% peri-DS heatplots by stage
+
+allSubjDSblue= [];
+allSubjDSpurple= [];
+allSubjNSblue= [];
+allSubjNSpurple= [];
+
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
     allStages= unique([currentSubj.trainStage]);
@@ -4705,8 +4711,18 @@ for subj= 1:numel(subjects)
             DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple)];
             NSblue= [NSblue, squeeze(currentSubj(includedSession).periNS.NSzblue)];
             NSpurple= [NSpurple, squeeze(currentSubj(includedSession).periNS.NSzpurple)];
+            
         end
         
+        %collect data from all subjects for a between-subjects mean plot
+        allSubjDSblue(:,thisStage,subj)= nanmean(DSblue,2);
+        allSubjDSpurple(:,thisStage, subj)= nanmean(DSpurple,2);
+    
+        if ~isempty(NSblue)
+           allSubjNSblue(:,thisStage,subj)= nanmean(NSblue,2);
+           allSubjNSpurple(:,thisStage,subj)= nanmean(NSpurple,2);
+        end
+    
      %get a shared color axis for all subplots
      stdFactor= 4; %multiplicative factor- how many stds away should we set our max & min color value? 
      
@@ -4739,7 +4755,6 @@ for subj= 1:numel(subjects)
         set(gca,'YDir','reverse'); %for some reason y axis is flipped using imagesc()
         ylim([1,size(DSpurple,2)]); %this eliminates any extra white space
         caxis([bottomAllDS,topAllDS]);
-
             
     end %end Stage loop 
     
@@ -4753,6 +4768,46 @@ for subj= 1:numel(subjects)
     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
 end %end subj loop
+
+%replace columns that have all zeros with nans (this could happen if an animal
+%didn't run a particular stage)
+for subj= 1:numel(subjects)
+    allSubjDSblue(:,find(all(allSubjDSblue(:,:,subj)==0)),subj)= nan;
+    allSubjDSpurple(:,find(all(allSubjDSpurple(:,:,subj)==0)), subj)= nan;
+    allSubjNSblue(:,find(all(allSubjNSblue(:,:,subj)==0)), subj)= nan;
+    allSubjNSpurple(:,find(all(allSubjNSpurple(:,:,subj)==0)), subj)= nan;
+end
+
+% Now make a between-subj plot of mean across all animals
+figure;
+figureCount=figureCount+1; sgtitle('peri-cue response: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjDSblue,2) 
+        thisStageDSblue= nanmean(allSubjDSblue(:,thisStage,:),3);
+        thisStageDSpurple= nanmean(allSubjDSpurple(:,thisStage,:),3);
+        thisStageNSblue= nanmean(allSubjNSblue(:,thisStage,:), 3);
+        thisStageNSpurple= nanmean(allSubjNSpurple(:,thisStage,:),3);
+
+                %DS
+        subplot(subplot(2, size(allSubjDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-DS')) 
+        plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+            %NS
+        subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-NS')) 
+        plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+        plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        
+        if thisStage==1
+           legend('465 individual subj mean','465 all subj mean', '405 individual subj mean', '405 all subj mean');
+        end
+    end
+end
+
+linkaxes(); %link axes for scale comparison
 
 %% Peri-DSpox 2d plots by stage
 
@@ -5138,7 +5193,7 @@ allRats.subjTrialNS=[];
 
     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
- %% Between subjects response to cue on key transition sessions
+%  %% Between subjects response to cue on key transition sessions
 % %avg response timelocked to ALL CUES on key transition sessions
 % %(e.g. first day of training, first day with NS, last day of stage 5
 % btwnSubjAllCues();
@@ -6040,6 +6095,73 @@ legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outsi
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'pe_ratio_by_session','.fig'));
 %         close; %close 
+
+%% PLOT FIRST 10s DS & NS PE RATIO ACROSS DAYS
+
+% %In this section, we'll loop through our subjData struct, extracting a port entry
+% %count for each session. Then we'll plot # of port entries as training
+% %progresses.
+% 
+% disp('plotting port entry ratios')
+% 
+% figure(figureCount) %one figure with poxCount across sessions for all subjects
+% 
+% figureCount= figureCount+1; %iterate the figure count
+% for subj= 1:numel(subjects) %for each subject
+%     
+%     %initialize
+%     days = []; 
+%     DSpeRatio= [];
+%     NSpeRatio= [];
+%    
+%    for session = 1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj})) %for each training session this subject completed
+%        
+%        currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+%       
+%        %Plot number of port entries across all sessions
+%        
+%         days(session)= currentSubj(session).trainDay; %keep track of days to associate with PE ratios
+%        
+%         DSpeRatio(session)= currentSubj(session).behavior.tensecDSpeRatio; %get the DSpeRatio
+%        
+%         NSpeRatio(session)= currentSubj(session).behavior.tensecNSpeRatio; %get NSpeRatio
+%    end
+%    subplot(2,1,1)
+%    hold on;
+%    h= plot(days, DSpeRatio); %save a handle so we can get the color of this plot and use it for NS
+%    
+%    %get this plot's color and x axis so we can use the same color for the NS plot
+%    c= get(h,'Color');
+%    x= xlim;
+%    y=[0,1];
+%    ylim(y);
+%    
+%    subplot(2,1,2)
+%    hold on;
+%    plot(days, NSpeRatio, 'Color', c, 'LineStyle','--');
+%    xlim(x);
+%    ylim(y);
+%    
+% end
+% 
+% subplot(2,1,1); hold on;
+% title(strcat(currentSubj(session).experiment,' DS PE Ratio across days'));
+% plot(days, mean(DSpeRatio), 'k');
+% xlabel('training day');
+% ylabel('port entry ratio (# of trials with PE / total # of trials)');
+% legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outside of plot
+% 
+% subplot(2,1,2); hold on;
+% title(strcat(currentSubj(session).experiment,' NS PE Ratio across days'));
+% xlabel('training day');
+% ylabel('port entry ratio (# of trials with PE / total # of trials)');
+% legend(subjects, 'Location', 'eastoutside'); %add rats to legend, location outside of plot
+% 
+% 
+% %make figure full screen, save, and close this figure
+% set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'pe_ratio_by_session','.fig'));
+% %         close; %close 
 
 %% PLOT AVG DS & NS PE LATENCY BY DAY
 
