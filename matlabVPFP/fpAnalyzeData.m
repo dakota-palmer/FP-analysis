@@ -4829,11 +4829,11 @@ for subj= 1:numel(subjects)
 
         
                 %DS
-        subplot(subplot(2, size(allSubjDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first lick DS')) 
+        subplot(subplot(2, size(allSubjDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-DS')) 
 %         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
-        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+%         plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                         %overlay SEM blue
         semLinePosAllSubj= thisStageDSblue+nanmean(semDSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSblue-nanmean(semDSblue(:,thisStage,:),3);
@@ -4841,13 +4841,13 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageDSpurple+nanmean(semDSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSpurple-nanmean(semDSpurple(:,thisStage,:),3);
-        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
             %NS
-        subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first lick NS')) 
+        subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-NS')) 
 %         plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
-        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+%         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                            %overlay SEM blue
         semLinePosAllSubj= thisStageNSblue+nanmean(semNSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSblue-nanmean(semNSblue(:,thisStage,:),3);
@@ -4855,7 +4855,7 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
-        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         
         
         if thisStage==1
@@ -5002,7 +5002,7 @@ for subj= 1:numel(subjects)
 %         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
-        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+%         plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                         %overlay SEM blue
         semLinePosAllSubj= thisStageDSblue+nanmean(semDSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSblue-nanmean(semDSblue(:,thisStage,:),3);
@@ -5010,13 +5010,13 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageDSpurple+nanmean(semDSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSpurple-nanmean(semDSpurple(:,thisStage,:),3);
-        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
             %NS
         subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first PE NS')) 
 %         plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
-        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+%         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                            %overlay SEM blue
         semLinePosAllSubj= thisStageNSblue+nanmean(semNSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSblue-nanmean(semNSblue(:,thisStage,:),3);
@@ -5024,7 +5024,7 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
-        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         
         if thisStage==1
 %            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
@@ -5220,7 +5220,7 @@ for subj= 1:numel(subjects)
 %         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
-        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+%         plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                         %overlay SEM blue
         semLinePosAllSubj= thisStageDSblue+nanmean(semDSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSblue-nanmean(semDSblue(:,thisStage,:),3);
@@ -5228,13 +5228,13 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageDSpurple+nanmean(semDSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSpurple-nanmean(semDSpurple(:,thisStage,:),3);
-        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
             %NS
         subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first lick NS')) 
 %         plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
-        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+%         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                            %overlay SEM blue
         semLinePosAllSubj= thisStageNSblue+nanmean(semNSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSblue-nanmean(semNSblue(:,thisStage,:),3);
@@ -5242,7 +5242,7 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
-        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         
         if thisStage==1
            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
@@ -5689,30 +5689,65 @@ for subj= 1:numel(subjects)
         thisStagePEDSblue= nanmean(allSubjPEDSblue(:,thisStage,:),3);
         thisStagePEDSpurple= nanmean(allSubjPEDSpurple(:,thisStage,:),3);
         
-        thisStageNoPEDSDSblue= nanmean(allSubjNoPEDSblue(:,thisStage,:),3);
+        thisStageNoPEDSblue= nanmean(allSubjNoPEDSblue(:,thisStage,:),3);
         thisStageNoPEDSpurple= nanmean(allSubjNoPEDSpurple(:,thisStage,:),3);
 
         thisStageInPortDSblue= nanmean(allSubjInPortDSblue(:,thisStage,:),3);
         thisStageInPortDSpurple= nanmean(allSubjInPortDSpurple(:,thisStage,:),3);
+        
+              %calculate SEM between subjects
+        semPEDSblueAllSubj= []; semPEDSpurpleAllSubj=[]; semPENSblueAllSubj= []; semPENSpurpleAllSubj=[]; %reset btwn stages
+        semNoPEDSblueAllSubj= []; semNoPEDSpurpleAllSubj= []; semNoPENSblueAllSubj= []; semNoPENSpurpleAllSubj= [];
+        semInPortDSblueAllSubj= []; semInPortDSpurpleAllSubj= []; semInPortNSblueALlSubj= []; semInPortNSpurpleAllSubj=[];
+        
+        semPEDSblueAllSubj= nanstd(allSubjPEDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semPEDSpurpleAllSubj= nanstd(allSubjPEDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPEDSblueAllSubj= nanstd(allSubjNoPEDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPEDSpurpleAllSubj= nanstd(allSubjNoPEDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortDSblueAllSubj= nanstd(allSubjInPortDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortDSpurpleAllSubj= nanstd(allSubjInPortDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
 
                 %DS
         subplot(subplot(3, size(allSubjPEDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'DS PE')) 
-        plot(timeLock, (allSubjPEDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
-        plot(timeLock, (allSubjPEDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+%         plot(timeLock, (allSubjPEDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjPEDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStagePEDSblue,'k','LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStagePEDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+            %sem overlay
+        semLinePosAllSubj= thisStagePEDSblue+semPEDSblueAllSubj;
+        semLineNegAllSubj= thisStagePEDSblue-semPEDSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
+        
+        semLinePosAllSubj= thisStagePEDSpurple+semPEDSpurpleAllSubj;
+        semLineNegAllSubj= thisStagePEDSpurple-semPEDSpurpleAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
       
         subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'DS noPE')) 
-        plot(timeLock, (allSubjNoPEDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
-        plot(timeLock, (allSubjNoPEDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
-        plot(timeLock, thisStageNoPEDSDSblue,'k','LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, (allSubjNoPEDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjNoPEDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageNoPEDSblue,'k','LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStageNoPEDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                    %sem overlay
+        semLinePosAllSubj= thisStageNoPEDSblue+semNoPEDSblueAllSubj;
+        semLineNegAllSubj= thisStageNoPEDSblue-semNoPEDSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
         
+        semLinePosAllSubj= thisStageNoPEDSpurple+semNoPEDSpurpleAllSubj;
+        semLineNegAllSubj= thisStageNoPEDSpurple-semNoPEDSpurpleAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'DS inPort')) 
-        plot(timeLock, (allSubjInPortDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
-        plot(timeLock, (allSubjInPortDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+%         plot(timeLock, (allSubjInPortDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjInPortDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageInPortDSblue,'k','LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStageInPortDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                    %sem overlay
+        semLinePosAllSubj= thisStageInPortDSblue+semInPortDSblueAllSubj;
+        semLineNegAllSubj= thisStageInPortDSblue-semInPortDSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
+        
+        semLinePosAllSubj= thisStageInPortDSpurple+semInPortDSpurpleAllSubj;
+        semLineNegAllSubj= thisStageInPortDSpurple-semInPortDSpurpleAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         
         if thisStage==1
            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
@@ -5731,30 +5766,65 @@ for subj= 1:numel(subjects)
         thisStagePENSblue= nanmean(allSubjPENSblue(:,thisStage,:),3);
         thisStagePENSpurple= nanmean(allSubjPENSpurple(:,thisStage,:),3);
         
-        thisStageNoPENSNSblue= nanmean(allSubjNoPENSblue(:,thisStage,:),3);
+        thisStageNoPENSblue= nanmean(allSubjNoPENSblue(:,thisStage,:),3);
         thisStageNoPENSpurple= nanmean(allSubjNoPENSpurple(:,thisStage,:),3);
 
         thisStageInPortNSblue= nanmean(allSubjInPortNSblue(:,thisStage,:),3);
         thisStageInPortNSpurple= nanmean(allSubjInPortNSpurple(:,thisStage,:),3);
+        
+              %calculate SEM between subjects
+        semPENSblueAllSubj= []; semPENSpurpleAllSubj=[]; semPENSblueAllSubj= []; semPENSpurpleAllSubj=[]; %reset btwn stages
+        semNoPENSblueAllSubj= []; semNoPENSpurpleAllSubj= []; semNoPENSblueAllSubj= []; semNoPENSpurpleAllSubj= [];
+        semInPortNSblueAllSubj= []; semInPortNSpurpleAllSubj= []; semInPortNSblueALlSubj= []; semInPortNSpurpleAllSubj=[];
+        
+        semPENSblueAllSubj= nanstd(allSubjPENSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semPENSpurpleAllSubj= nanstd(allSubjPENSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPENSblueAllSubj= nanstd(allSubjNoPENSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPENSpurpleAllSubj= nanstd(allSubjNoPENSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortNSblueAllSubj= nanstd(allSubjInPortNSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortNSpurpleAllSubj= nanstd(allSubjInPortNSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
 
                 %NS
         subplot(subplot(3, size(allSubjPENSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'NS PE')) 
-        plot(timeLock, (allSubjPENSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
-        plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+%         plot(timeLock, (allSubjPENSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjPENSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStagePENSblue,'k','LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStagePENSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+            %sem overlay
+        semLinePosAllSubj= thisStagePENSblue+semPENSblueAllSubj;
+        semLineNegAllSubj= thisStagePENSblue-semPENSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
+        
+        semLinePosAllSubj= thisStagePENSpurple+semPENSpurpleAllSubj;
+        semLineNegAllSubj= thisStagePENSpurple-semPENSpurpleAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
       
         subplot(subplot(3, size(allSubjPENSblue,2), size(allSubjPENSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'NS noPE')) 
-        plot(timeLock, (allSubjNoPENSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
-        plot(timeLock, (allSubjNoPENSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
-        plot(timeLock, thisStageNoPENSNSblue,'k','LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, (allSubjNoPENSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjNoPENSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageNoPENSblue,'k','LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStageNoPENSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                    %sem overlay
+        semLinePosAllSubj= thisStageNoPENSblue+semNoPENSblueAllSubj;
+        semLineNegAllSubj= thisStageNoPENSblue-semNoPENSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
         
+        semLinePosAllSubj= thisStageNoPENSpurple+semNoPENSpurpleAllSubj;
+        semLineNegAllSubj= thisStageNoPENSpurple-semNoPENSpurpleAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         subplot(subplot(3, size(allSubjPENSblue,2), size(allSubjPENSblue,2)+size(allSubjPENSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'NS inPort')) 
-        plot(timeLock, (allSubjInPortNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
-        plot(timeLock, (allSubjInPortNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+%         plot(timeLock, (allSubjInPortNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjInPortNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageInPortNSblue,'k','LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStageInPortNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                    %sem overlay
+        semLinePosAllSubj= thisStageInPortNSblue+semInPortNSblueAllSubj;
+        semLineNegAllSubj= thisStageInPortNSblue-semInPortNSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
+        
+        semLinePosAllSubj= thisStageInPortNSpurple+semInPortNSpurpleAllSubj;
+        semLineNegAllSubj= thisStageInPortNSpurple-semInPortNSpurpleAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         
         if thisStage==1
            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
@@ -5763,6 +5833,96 @@ for subj= 1:numel(subjects)
 end
 linkaxes();
 
+
+%Now let's do a between subj with DS and NS 465 overlaid
+
+figure;
+figureCount=figureCount+1; sgtitle('peri-cue response by PE outcome: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjDSblue,2) 
+        thisStagePEDSblue= nanmean(allSubjPEDSblue(:,thisStage,:),3);
+        thisStagePEDSpurple= nanmean(allSubjPEDSpurple(:,thisStage,:),3);
+        
+        thisStageNoPEDSblue= nanmean(allSubjNoPEDSblue(:,thisStage,:),3);
+        thisStageNoPEDSpurple= nanmean(allSubjNoPEDSpurple(:,thisStage,:),3);
+
+        thisStageInPortDSblue= nanmean(allSubjInPortDSblue(:,thisStage,:),3);
+        thisStageInPortDSpurple= nanmean(allSubjInPortDSpurple(:,thisStage,:),3);
+        
+        thisStagePENSblue= nanmean(allSubjPENSblue(:,thisStage,:),3);
+        thisStagePENSpurple= nanmean(allSubjPENSpurple(:,thisStage,:),3);
+        
+        thisStageNoPENSblue= nanmean(allSubjNoPENSblue(:,thisStage,:),3);
+        thisStageNoPENSpurple= nanmean(allSubjNoPENSpurple(:,thisStage,:),3);
+
+        thisStageInPortNSblue= nanmean(allSubjInPortNSblue(:,thisStage,:),3);
+        thisStageInPortNSpurple= nanmean(allSubjInPortNSpurple(:,thisStage,:),3);
+        
+        
+              %calculate SEM between subjects
+        semPEDSblueAllSubj= []; semPEDSpurpleAllSubj=[]; semPENSblueAllSubj= []; semPENSpurpleAllSubj=[]; %reset btwn stages
+        semNoPEDSblueAllSubj= []; semNoPEDSpurpleAllSubj= []; semNoPENSblueAllSubj= []; semNoPENSpurpleAllSubj= [];
+        semInPortDSblueAllSubj= []; semInPortDSpurpleAllSubj= []; semInPortNSblueALlSubj= []; semInPortNSpurpleAllSubj=[];
+        
+        semPEDSblueAllSubj= nanstd(allSubjPEDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semPEDSpurpleAllSubj= nanstd(allSubjPEDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPEDSblueAllSubj= nanstd(allSubjNoPEDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPEDSpurpleAllSubj= nanstd(allSubjNoPEDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortDSblueAllSubj= nanstd(allSubjInPortDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortDSpurpleAllSubj= nanstd(allSubjInPortDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semPENSblueAllSubj= nanstd(allSubjPENSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semPENSpurpleAllSubj= nanstd(allSubjPENSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPENSblueAllSubj= nanstd(allSubjNoPENSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPENSpurpleAllSubj= nanstd(allSubjNoPENSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortNSblueAllSubj= nanstd(allSubjInPortNSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortNSpurpleAllSubj= nanstd(allSubjInPortNSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+
+
+                %DS
+        subplot(subplot(3, size(allSubjPEDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'PEtrial')) 
+        plot(timeLock, thisStagePEDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStagePENSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
+            %sem overlay
+        semLinePosAllSubj= thisStagePEDSblue+semPEDSblueAllSubj;
+        semLineNegAllSubj= thisStagePEDSblue-semPEDSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.15);
+        
+        semLinePosAllSubj= thisStagePENSblue+semPENSblueAllSubj;
+        semLineNegAllSubj= thisStagePENSblue-semPENSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
+      
+        subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'noPE trial')) 
+        plot(timeLock, thisStageNoPEDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageNoPENSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
+            %sem overlay
+        semLinePosAllSubj= thisStageNoPEDSblue+semNoPEDSblueAllSubj;
+        semLineNegAllSubj= thisStageNoPEDSblue-semNoPEDSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.15);
+        
+        semLinePosAllSubj= thisStageNoPENSblue+semNoPENSblueAllSubj;
+        semLineNegAllSubj= thisStageNoPENSblue-semNoPENSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
+           
+
+        subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'DS inPort')) 
+        plot(timeLock, thisStageInPortDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageInPortNSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
+            %sem overlay
+        semLinePosAllSubj= thisStageInPortDSblue+semInPortDSblueAllSubj;
+        semLineNegAllSubj= thisStageInPortDSblue-semInPortDSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.15);
+        
+        semLinePosAllSubj= thisStageInPortNSblue+semInPortNSblueAllSubj;
+        semLineNegAllSubj= thisStageInPortNSblue-semInPortNSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
+      
+        if thisStage==1
+           legend('DS 465','NS 465');
+        end
+    end
+end
+
+linkaxes(); %link axes for scale comparison
 %% Scatter of cue-elicited response vs. port entry outcome (does cue elicited response predict PE?)
 
 %goal here will be to create scatter of mean response to cue with 3 different outcomes: no PE, PE, or already in port (denoted by color of plot) 
