@@ -23,7 +23,7 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 
 %% Remove excluded subjects
 
-excludedSubjs= {'rat20', 'rat16','rat10'}; %cell array with strings of excluded subj fieldnames
+excludedSubjs= {'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
 
 subjData= rmfield(subjData,excludedSubjs);
 
@@ -4612,6 +4612,8 @@ for subj= 1:numel(subjects)
 end %end subj loop
 
 
+%% ~~~Plots by Stage ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 %% Extract data from specific sessions- EXAMPLE
 %dp 9/20/2020 more efficient way to get data from specific stages
 %rather than using a bunch of conditionals and repeated loops, get the
@@ -4833,29 +4835,29 @@ for subj= 1:numel(subjects)
 %         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
-%         plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                         %overlay SEM blue
-        semLinePosAllSubj= thisStageDSblue+nanmean(semDSblue(:,thisStage,:),3);
-        semLineNegAllSubj= thisStageDSblue-nanmean(semDSblue(:,thisStage,:),3);
+        semLinePosAllSubj= thisStageDSblue+semDSblueAllSubj;
+        semLineNegAllSubj= thisStageDSblue-semDSblueAllSubj;
         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
                 %overlay SEM purple
-        semLinePosAllSubj= thisStageDSpurple+nanmean(semDSpurple(:,thisStage,:),3);
-        semLineNegAllSubj= thisStageDSpurple-nanmean(semDSpurple(:,thisStage,:),3);
-%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        semLinePosAllSubj= thisStageDSpurple+semDSpurpleAllSubj;
+        semLineNegAllSubj= thisStageDSpurple-semDSpurpleAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
             %NS
         subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-NS')) 
 %         plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
-%         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                            %overlay SEM blue
-        semLinePosAllSubj= thisStageNSblue+nanmean(semNSblue(:,thisStage,:),3);
-        semLineNegAllSubj= thisStageNSblue-nanmean(semNSblue(:,thisStage,:),3);
+        semLinePosAllSubj= thisStageNSblue+semNSblueAllSubj;
+        semLineNegAllSubj= thisStageNSblue-semNSblueAllSubj;
         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
                 %overlay SEM purple
-        semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
-        semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
-%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        semLinePosAllSubj= thisStageNSpurple+semNSpurpleAllSubj;
+        semLineNegAllSubj= thisStageNSpurple-semNSpurpleAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         
         
         if thisStage==1
@@ -4865,6 +4867,62 @@ for subj= 1:numel(subjects)
 end
 
 linkaxes(); %link axes for scale comparison
+
+colors= [136/255,86/255,167/255;127/255,191/255,123/255]; %https://colorbrewer2.org/#type=sequential&scheme=BuPu&n=3
+
+
+
+% Now make a between-subj plot of mean across all animals- DS & NS overlay
+figure;
+figureCount=figureCount+1; sgtitle('peri-cue response: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjDSblue,2) 
+            %calculate between subj mean data for this stage
+        thisStageDSblue= nanmean(allSubjDSblue(:,thisStage,:),3);
+        thisStageDSpurple= nanmean(allSubjDSpurple(:,thisStage,:),3);
+        thisStageNSblue= nanmean(allSubjNSblue(:,thisStage,:), 3);
+        thisStageNSpurple= nanmean(allSubjNSpurple(:,thisStage,:),3);
+
+            %calculate SEM between subjects
+        semDSblueAllSubj= []; semDSpurpleAllSubj=[]; semNSblueAllSubj= []; semNSpurpleAllSubj=[]; %reset btwn subj
+        semDSblueAllSubj= nanstd(allSubjDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semDSpurpleAllSubj= nanstd(allSubjDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNSblueAllSubj= nanstd(allSubjNSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNSpurpleAllSubj= nanstd(allSubjNSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+
+        
+                %DS
+        subplot(subplot(1, size(allSubjDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-cue')) 
+%         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                        %overlay SEM blue
+        semLinePosAllSubj= thisStageDSblue+semDSblueAllSubj;%nanmean(semDSblue(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageDSblue-semDSblueAllSubj;%nanmean(semDSblue(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.2);
+            %NS         
+
+        plot(timeLock, thisStageNSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                           %overlay SEM blue
+        semLinePosAllSubj= thisStageNSblue+semNSblueAllSubj;%nanmean(semNSblue(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageNSblue-semNSblueAllSubj;%nanmean(semNSblue(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.2);
+%                 %overlay SEM purple
+%         semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
+%         semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        
+        if thisStage==1
+%            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
+             legend('DS 465nm', 'SEM', 'NS 465nm','SEM');
+        end
+    end
+end
+
+linkaxes(); %link axes for scale comparison
+
 
 %% Peri-DSpox 2d plots by stage
 
@@ -5002,7 +5060,7 @@ for subj= 1:numel(subjects)
 %         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
-%         plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                         %overlay SEM blue
         semLinePosAllSubj= thisStageDSblue+nanmean(semDSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSblue-nanmean(semDSblue(:,thisStage,:),3);
@@ -5010,13 +5068,13 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageDSpurple+nanmean(semDSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSpurple-nanmean(semDSpurple(:,thisStage,:),3);
-%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
             %NS
         subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first PE NS')) 
 %         plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
-%         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                            %overlay SEM blue
         semLinePosAllSubj= thisStageNSblue+nanmean(semNSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSblue-nanmean(semNSblue(:,thisStage,:),3);
@@ -5024,7 +5082,7 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
-%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         
         if thisStage==1
 %            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
@@ -5252,241 +5310,290 @@ end
 
 linkaxes(); %link axes for scale comparison
 
+% Now make a between-subj plot of mean across all animals- DS & NS overlay
+figure;
+figureCount=figureCount+1; sgtitle('peri-first lick response: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjDSblue,2) 
+            %calculate between subj mean data for this stage
+        thisStageDSblue= nanmean(allSubjDSblue(:,thisStage,:),3);
+        thisStageDSpurple= nanmean(allSubjDSpurple(:,thisStage,:),3);
+        thisStageNSblue= nanmean(allSubjNSblue(:,thisStage,:), 3);
+        thisStageNSpurple= nanmean(allSubjNSpurple(:,thisStage,:),3);
 
-%% ~~ Between subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-%% Between subjects- Heatplot of Avg response to cue (by date)
- 
- %gathering all mean data from time window around cue 
- 
- 
- for subj= 1:numel(subjectsAnalyzed) %for each subject
-     
-     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
- 
-     %we'll want to organize these by common date instead of relative
-     %training day as well
-     
-     %First find out which dates this subj has data for
-    %get all dates for this subj
-    for session= 1:numel(currentSubj)
-        subjDates(session)= currentSubj(session).date;
-    end %end session loop
-    
-    %now find out which dates from allDates this subj has data for 
-    for thisDate = 1:numel(allDates) %loop through all dates
-        if isempty(subjDates(subjDates==allDates(thisDate))) %if this subj doesn't have valid data on this date
-%                 emptyDates= cat(1, emptyDates,thisDate); %save this empty date to an array (add onto array by using cat())
-                currentSubj(end+1).date= allDates(thisDate); %use end+1 to add a new empty session
-                
-                %fill relevant fields with NaN for later 
-                currentSubj(end).periDS.DSzblueMean= NaN(size(timeLock'));
-                currentSubj(end).periDS.DSzpurpleMean= NaN(size(timeLock'));
-                currentSubj(end).periNS.NSzblueMean= NaN(size(timeLock'));
-                currentSubj(end).periNS.NSzpurpleMean= NaN(size(timeLock'));
-                
-                currentSubj(end).periNS.NS= nan;
+            %calculate SEM between subjects
+        semDSblueAllSubj= []; semDSpurpleAllSubj=[]; semNSblueAllSubj= []; semNSpurpleAllSubj=[]; %reset btwn subj
+        semDSblueAllSubj= nanstd(allSubjDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semDSpurpleAllSubj= nanstd(allSubjDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNSblueAllSubj= nanstd(allSubjNSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNSpurpleAllSubj= nanstd(allSubjNSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
 
+        
+                %DS
+        subplot(subplot(1, size(allSubjDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first Lick')) 
+%         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                        %overlay SEM blue
+        semLinePosAllSubj= thisStageDSblue+nanmean(semDSblue(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageDSblue-nanmean(semDSblue(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.2);
+            %NS
+        plot(timeLock, thisStageNSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                           %overlay SEM blue
+        semLinePosAllSubj= thisStageNSblue+nanmean(semNSblue(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageNSblue-nanmean(semNSblue(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.2);
+%                 %overlay SEM purple
+%         semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
+%         semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        
+        if thisStage==1
+%            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
+             legend('DS 465nm', 'SEM', 'NS 465nm','SEM');
         end
     end
-    
-    %now let's resort the struct with empty sessions by date
-     subjTable = struct2table(currentSubj); % convert the struct array to a table
-     subjTableSorted = sortrows(subjTable, 'date'); % sort the table by 'date'
-     currentSubj = table2struct(subjTableSorted); %convert back to struct
-
-     
-     
-     NStrialCount= 1; %counter for ns sessions
-     
-     %now get the actual photometry data
-     
-     for session = 1:numel(currentSubj) %for each session this subject completed
-
-         allRats.meanDSzblue(:,session,subj)= currentSubj(session).periDS.DSzblueMean;
-         allRats.meanDSzpurple(:,session,subj)= currentSubj(session).periDS.DSzpurpleMean;
-
-         if isempty(currentSubj(session).periNS.NS) %if there's no NS data, fill with NaNs
-            currentSubj(session).periNS.NSzblueMean= NaN(size(timeLock'));
-            currentSubj(session).periNS.NSzpurpleMean=  NaN(size(timeLock'));
-         end
-         
-         allRats.meanNSzblue(:,session,subj)= currentSubj(session).periNS.NSzblueMean;
-         allRats.meanNSzpurple(:,session,subj)= currentSubj(session).periNS.NSzpurpleMean;
-         
-%          if ~isempty(currentSubj(session).periNS.NS) %only run if NS data present
-%             allRats.meanNSzblue(:,NStrialCount,subj)= currentSubj(session).periNS.NSzblueMean;
-%             allRats.meanNSzpurple(:,NStrialCount,subj)= currentSubj(session).periNS.NSzpurpleMean;
-%              
-% %             allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
-%             
-%             NStrialCount= NStrialCount+1;
-%             % zeros are appearing in sessions where there's no data! (e.g.
-%             % rats are on different training days, so one can be on day 14
-%             % ahead of others that are on day 13)
-%                        %skipping from 6->10
-%          else %if there's no NS data present, fill with nan (otherwise will fill with zeros)
-%             allRats.meanNSzblue(:,session, subj)= nan(size(currentSubj(session).periDS.DSzblueMean));
-%             allRats.meanNSzpurple(:,session,subj)= nan(size(currentSubj(session).periDS.DSzblueMean));        
-%          end %end NS conditional
-     end %end session loop
-          
- end %end subj loop
-
- % mean of all rats per training day ( each column is a training day , each 3d page is a subject)
-allRats.grandDSzblue=nanmean(allRats.meanDSzblue(:,:,:),3)'; %(:,:,1:4),3)' % doing 1:4 in 3rd dmension because rat8 is a GFP animal but need to find more robust way to do this
-allRats.grandDSzpurple=nanmean(allRats.meanDSzpurple(:,:, :),3)'; %1:4),3)'
-allRats.grandNSzblue=nanmean(allRats.meanNSzblue(:,:,:),3)';%'; %1:4),3)'
-allRats.grandNSzpurple=nanmean(allRats.meanNSzpurple(:,:,:),3)'; %,1:4),3)'
-
- %get bottom and top for color axis of DS heatplot
- allRats.bottomMeanallDS = min(min(min(allRats.grandDSzblue)), min(min(allRats.grandDSzpurple))); %find the lowest value 
- allRats.topMeanallDS = max(max(max(allRats.grandDSzblue)), max(max(allRats.grandDSzpurple))); %find the highest value
-
- %get bottom and top for color axis of NS heatplot
- allRats.bottomMeanallNS = min(min(min(allRats.grandNSzblue)), min(min(allRats.grandNSzpurple)));
- allRats.topMeanallNS = max(max(max(allRats.grandNSzblue)), max(max(allRats.grandNSzpurple)));
+end
+linkaxes();
 
 
-%Establish a shared bottom and top for shared color axis of DS & NS means
-    if ~isnan(allRats.bottomMeanallNS) %if there is an NS
-        allRats.bottomMeanallShared= min(allRats.bottomMeanallDS, allRats.bottomMeanallNS); %find the absolute min value
-        allRats.topMeanallShared= max(allRats.topMeanallDS, allRats.topMeanallNS); %find the absolute min value
-    else
-        allRats.bottomMeanallShared= allRats.bottomMeanallDS;
-        allRats.topMeanallShared= allRats.topMeanallDS;
-    end
-    
- %get list of session days for heatplot y axis
-%  for day= 1:size(allRats.grandDSzblue,1)   
-%     allRats.subjTrialDS(day,1)= day;
-%  end
-
-    subjTrial= 1:numel(allDates); %let's just number each training day starting at 1
-
- 
-%get list of NS session days for heatplot y axis
-% need to loop through all subjects and sessions, find unique trials with NS data
-allRats.subjTrialNS=[];
- for subj = 1:numel(subjectsAnalyzed)
-
-    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing
-    for session = 1:numel(currentSubj) %for each training session this subject completed
-        if ~isempty(currentSubj(session).periNS.NS) %if there's an NS trial in this session, add it to the array that will mark the y axis
-%              allRats.subjTrialNS= cat(2, allRats.subjTrialNS, currentSubj(session).trainDay);
-%              disp(currentSubj(session).trainDay);
-        end
-    end %end session loop
-     
-     
- end %end subj loop
-   
-%get only unique elements of subjTrialNS
-% allRats.subjTrialNS= unique(allRats.subjTrialNS);
-
-% HEATPLOT
-
- %DS z plot
-    figure(figureCount);
-    figureCount=figureCount+1;
-    hold on;
-    subplot(2,2,1); %subplot for shared colorbar
-
-    %plot blue DS
-
-    timeLock = [-preCueFrames:postCueFrames]/fs;% [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-
-    heatDSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzblue);
-    title(' All rats avg blue z score response to DS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-    xlabel('seconds from cue onset');
-    ylabel('training day');
-    set(gca, 'ytick', subjTrial); %label trials appropriately
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
-
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-
-
-    %   plot purple DS (subplotted for shared colorbar)
-    subplot(2,2,3);
-    heatDSzpurpleMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzpurple); 
-
-    title(' All rats avg purple z score response to DS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
-    xlabel('seconds from cue onset');
-    ylabel('training day');
-
-    set(gca, 'ytick', subjTrial); 
-
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
-    
-%     %% TODO: try linspace with caxis
-
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-
-    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-
-
-
-    %     %NS z plot
-    %         figure(figureCount-1); %subplotting on the same figure as the DS heatplots
-    hold on;
-    subplot(2,2,2); %subplot for shared colorbar
-
-    timeLock = [-preCueFrames:postCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
-
-    heatNSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandNSzblue, 'AlphaData', ~isnan(allRats.grandNSzpurple));
-    title(' All rats avg blue z score response to NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
-    xlabel('seconds from cue onset');
-    ylabel('training day');
-    set(gca, 'ytick', subjTrial); %label trials appropriately
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
-
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-
-
-    %   plot purple NS (subplotted for shared colorbar)
-    subplot(2,2,4);
-    heatNSzpurpleMean= imagesc(timeLock,subjTrial,allRats.grandNSzpurple, 'AlphaData', ~isnan(allRats.grandNSzpurple)); 
-
-    title(' All rats avg purple z score response to NS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
-    xlabel('seconds from cue onset');
-    ylabel('training day');
-
-    set(gca, 'ytick', subjTrial); 
-    caxis manual;
-    caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
-
-    c= colorbar; %colorbar legend
-    c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-
-    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-%  %% Between subjects response to cue on key transition sessions
-% %avg response timelocked to ALL CUES on key transition sessions
-% %(e.g. first day of training, first day with NS, last day of stage 5
-% btwnSubjAllCues();
+% %% ~~ Between subjects peri-event plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+% %% Between subjects- Heatplot of Avg response to cue (by date)
+%  
+%  %gathering all mean data from time window around cue 
+%  
+%  
+%  for subj= 1:numel(subjectsAnalyzed) %for each subject
+%      
+%      currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy indexing into the current subject within the struct
+%  
+%      %we'll want to organize these by common date instead of relative
+%      %training day as well
+%      
+%      %First find out which dates this subj has data for
+%     %get all dates for this subj
+%     for session= 1:numel(currentSubj)
+%         subjDates(session)= currentSubj(session).date;
+%     end %end session loop
+%     
+%     %now find out which dates from allDates this subj has data for 
+%     for thisDate = 1:numel(allDates) %loop through all dates
+%         if isempty(subjDates(subjDates==allDates(thisDate))) %if this subj doesn't have valid data on this date
+% %                 emptyDates= cat(1, emptyDates,thisDate); %save this empty date to an array (add onto array by using cat())
+%                 currentSubj(end+1).date= allDates(thisDate); %use end+1 to add a new empty session
+%                 
+%                 %fill relevant fields with NaN for later 
+%                 currentSubj(end).periDS.DSzblueMean= NaN(size(timeLock'));
+%                 currentSubj(end).periDS.DSzpurpleMean= NaN(size(timeLock'));
+%                 currentSubj(end).periNS.NSzblueMean= NaN(size(timeLock'));
+%                 currentSubj(end).periNS.NSzpurpleMean= NaN(size(timeLock'));
+%                 
+%                 currentSubj(end).periNS.NS= nan;
 % 
-% %% Between subjects response to FIRST PE after cue on key transition sessions
-% %avg response timelocked to FIRST PE on key transition sessions
-% %(e.g. first day of training, first day with NS, last day of stage 5
+%         end
+%     end
+%     
+%     %now let's resort the struct with empty sessions by date
+%      subjTable = struct2table(currentSubj); % convert the struct array to a table
+%      subjTableSorted = sortrows(subjTable, 'date'); % sort the table by 'date'
+%      currentSubj = table2struct(subjTableSorted); %convert back to struct
 % 
-% btwnSubjFirstPox();
+%      
+%      
+%      NStrialCount= 1; %counter for ns sessions
+%      
+%      %now get the actual photometry data
+%      
+%      for session = 1:numel(currentSubj) %for each session this subject completed
 % 
-% %% Between subj response to cue- TRIALS NO PE 
+%          allRats.meanDSzblue(:,session,subj)= currentSubj(session).periDS.DSzblueMean;
+%          allRats.meanDSzpurple(:,session,subj)= currentSubj(session).periDS.DSzpurpleMean;
 % 
-% btwnSubjNoPE();
+%          if isempty(currentSubj(session).periNS.NS) %if there's no NS data, fill with NaNs
+%             currentSubj(session).periNS.NSzblueMean= NaN(size(timeLock'));
+%             currentSubj(session).periNS.NSzpurpleMean=  NaN(size(timeLock'));
+%          end
+%          
+%          allRats.meanNSzblue(:,session,subj)= currentSubj(session).periNS.NSzblueMean;
+%          allRats.meanNSzpurple(:,session,subj)= currentSubj(session).periNS.NSzpurpleMean;
+%          
+% %          if ~isempty(currentSubj(session).periNS.NS) %only run if NS data present
+% %             allRats.meanNSzblue(:,NStrialCount,subj)= currentSubj(session).periNS.NSzblueMean;
+% %             allRats.meanNSzpurple(:,NStrialCount,subj)= currentSubj(session).periNS.NSzpurpleMean;
+% %              
+% % %             allRats.subjTrialNS(NStrialCount,subj)= currentSubj(session).trainDay;
+% %             
+% %             NStrialCount= NStrialCount+1;
+% %             % zeros are appearing in sessions where there's no data! (e.g.
+% %             % rats are on different training days, so one can be on day 14
+% %             % ahead of others that are on day 13)
+% %                        %skipping from 6->10
+% %          else %if there's no NS data present, fill with nan (otherwise will fill with zeros)
+% %             allRats.meanNSzblue(:,session, subj)= nan(size(currentSubj(session).periDS.DSzblueMean));
+% %             allRats.meanNSzpurple(:,session,subj)= nan(size(currentSubj(session).periDS.DSzblueMean));        
+% %          end %end NS conditional
+%      end %end session loop
+%           
+%  end %end subj loop
 % 
-% %% Between subj response to cue- TRIALS WITH PE
+%  % mean of all rats per training day ( each column is a training day , each 3d page is a subject)
+% allRats.grandDSzblue=nanmean(allRats.meanDSzblue(:,:,:),3)'; %(:,:,1:4),3)' % doing 1:4 in 3rd dmension because rat8 is a GFP animal but need to find more robust way to do this
+% allRats.grandDSzpurple=nanmean(allRats.meanDSzpurple(:,:, :),3)'; %1:4),3)'
+% allRats.grandNSzblue=nanmean(allRats.meanNSzblue(:,:,:),3)';%'; %1:4),3)'
+% allRats.grandNSzpurple=nanmean(allRats.meanNSzpurple(:,:,:),3)'; %,1:4),3)'
 % 
-% btwnSubjonlyPE();
+%  %get bottom and top for color axis of DS heatplot
+%  allRats.bottomMeanallDS = min(min(min(allRats.grandDSzblue)), min(min(allRats.grandDSzpurple))); %find the lowest value 
+%  allRats.topMeanallDS = max(max(max(allRats.grandDSzblue)), max(max(allRats.grandDSzpurple))); %find the highest value
 % 
-% %% Between subj response to cue- TRIALS WHEN ALREADY IN PORT
-% btwnSubjonlyInPort();
+%  %get bottom and top for color axis of NS heatplot
+%  allRats.bottomMeanallNS = min(min(min(allRats.grandNSzblue)), min(min(allRats.grandNSzpurple)));
+%  allRats.topMeanallNS = max(max(max(allRats.grandNSzblue)), max(max(allRats.grandNSzpurple)));
+% 
+% 
+% %Establish a shared bottom and top for shared color axis of DS & NS means
+%     if ~isnan(allRats.bottomMeanallNS) %if there is an NS
+%         allRats.bottomMeanallShared= min(allRats.bottomMeanallDS, allRats.bottomMeanallNS); %find the absolute min value
+%         allRats.topMeanallShared= max(allRats.topMeanallDS, allRats.topMeanallNS); %find the absolute min value
+%     else
+%         allRats.bottomMeanallShared= allRats.bottomMeanallDS;
+%         allRats.topMeanallShared= allRats.topMeanallDS;
+%     end
+%     
+%  %get list of session days for heatplot y axis
+% %  for day= 1:size(allRats.grandDSzblue,1)   
+% %     allRats.subjTrialDS(day,1)= day;
+% %  end
+% 
+%     subjTrial= 1:numel(allDates); %let's just number each training day starting at 1
+% 
+%  
+% %get list of NS session days for heatplot y axis
+% % need to loop through all subjects and sessions, find unique trials with NS data
+% allRats.subjTrialNS=[];
+%  for subj = 1:numel(subjectsAnalyzed)
+% 
+%     currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing
+%     for session = 1:numel(currentSubj) %for each training session this subject completed
+%         if ~isempty(currentSubj(session).periNS.NS) %if there's an NS trial in this session, add it to the array that will mark the y axis
+% %              allRats.subjTrialNS= cat(2, allRats.subjTrialNS, currentSubj(session).trainDay);
+% %              disp(currentSubj(session).trainDay);
+%         end
+%     end %end session loop
+%      
+%      
+%  end %end subj loop
+%    
+% %get only unique elements of subjTrialNS
+% % allRats.subjTrialNS= unique(allRats.subjTrialNS);
+% 
+% % HEATPLOT
+% 
+%  %DS z plot
+%     figure(figureCount);
+%     figureCount=figureCount+1;
+%     hold on;
+%     subplot(2,2,1); %subplot for shared colorbar
+% 
+%     %plot blue DS
+% 
+%     timeLock = [-preCueFrames:postCueFrames]/fs;% [-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+% 
+%     heatDSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzblue);
+%     title(' All rats avg blue z score response to DS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%     xlabel('seconds from cue onset');
+%     ylabel('training day');
+%     set(gca, 'ytick', subjTrial); %label trials appropriately
+%     caxis manual;
+%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+% 
+%     c= colorbar; %colorbar legend
+%     c.Label.String= strcat('DS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% 
+% 
+%     %   plot purple DS (subplotted for shared colorbar)
+%     subplot(2,2,3);
+%     heatDSzpurpleMeanall= imagesc(timeLock,subjTrial,allRats.grandDSzpurple); 
+% 
+%     title(' All rats avg purple z score response to DS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
+%     xlabel('seconds from cue onset');
+%     ylabel('training day');
+% 
+%     set(gca, 'ytick', subjTrial); 
+% 
+%     caxis manual;
+%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+%     
+% %     %% TODO: try linspace with caxis
+% 
+%     c= colorbar; %colorbar legend
+%     c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% 
+%     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% 
+% 
+% 
+% 
+%     %     %NS z plot
+%     %         figure(figureCount-1); %subplotting on the same figure as the DS heatplots
+%     hold on;
+%     subplot(2,2,2); %subplot for shared colorbar
+% 
+%     timeLock = [-preCueFrames:postCueFrames]/fs;%[-periDSFrames:periDSFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+% 
+%     heatNSzblueMeanall= imagesc(timeLock,subjTrial,allRats.grandNSzblue, 'AlphaData', ~isnan(allRats.grandNSzpurple));
+%     title(' All rats avg blue z score response to NS '); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
+%     xlabel('seconds from cue onset');
+%     ylabel('training day');
+%     set(gca, 'ytick', subjTrial); %label trials appropriately
+%     caxis manual;
+%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+% 
+%     c= colorbar; %colorbar legend
+%     c.Label.String= strcat('NS blue z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% 
+% 
+%     %   plot purple NS (subplotted for shared colorbar)
+%     subplot(2,2,4);
+%     heatNSzpurpleMean= imagesc(timeLock,subjTrial,allRats.grandNSzpurple, 'AlphaData', ~isnan(allRats.grandNSzpurple)); 
+% 
+%     title(' All rats avg purple z score response to NS ') %'(n= ', num2str(unique(trialDSnum)),')')); 
+%     xlabel('seconds from cue onset');
+%     ylabel('training day');
+% 
+%     set(gca, 'ytick', subjTrial); 
+%     caxis manual;
+%     caxis([allRats.bottomMeanallShared allRats.topMeanallShared]); %use a shared color axis to encompass all values
+% 
+%     c= colorbar; %colorbar legend
+%     c.Label.String= strcat('NS purple z-score calculated from', num2str(slideTime/fs), 's preceding cue');
+% 
+%     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% 
+% %  %% Between subjects response to cue on key transition sessions
+% % %avg response timelocked to ALL CUES on key transition sessions
+% % %(e.g. first day of training, first day with NS, last day of stage 5
+% % btwnSubjAllCues();
+% % 
+% % %% Between subjects response to FIRST PE after cue on key transition sessions
+% % %avg response timelocked to FIRST PE on key transition sessions
+% % %(e.g. first day of training, first day with NS, last day of stage 5
+% % 
+% % btwnSubjFirstPox();
+% % 
+% % %% Between subj response to cue- TRIALS NO PE 
+% % 
+% % btwnSubjNoPE();
+% % 
+% % %% Between subj response to cue- TRIALS WITH PE
+% % 
+% % btwnSubjonlyPE();
+% % 
+% % %% Between subj response to cue- TRIALS WHEN ALREADY IN PORT
+% % btwnSubjonlyInPort();
 
 %% Trying some stat with visualization
 
