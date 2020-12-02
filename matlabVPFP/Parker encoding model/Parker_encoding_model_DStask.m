@@ -22,7 +22,7 @@ load(uigetfile('*.mat')); %choose the subjDataAnalyzed.mat file to open for your
   
 
 condition = 'data_to_input' %/example';
-subjects =  [1:numel(files)]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
+subjects =  1%[1:numel(files)]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
 
 
 for subject=1:numel(subjects)
@@ -195,7 +195,7 @@ for subject=1:numel(subjects)
     % ~~~~~ Visualize raw vs normalized peri-cue traces ~~~~~~~~~~~~~
     
     % parameters for time locking
-    preCueTime= 5; %t in seconds to examine before cue
+    preCueTime= 2; %t in seconds to examine before cue
     postCueTime= 10; %t in seconds to examine after cue
     
     fs= g_output.samp_rate;

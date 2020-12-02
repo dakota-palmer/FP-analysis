@@ -344,24 +344,24 @@ end %end subject loop
 
 %% CROSS CORRELATION OF PHOTOMETRY SIGNALS
 
-%For a given session, let's get a correlation coefficient of Blue & Purple
-%signal over time
-for subj= 1:numel(subjects) %for each subject
-   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-   
+% %For a given session, let's get a correlation coefficient of Blue & Purple
+% %signal over time
+% for subj= 1:numel(subjects) %for each subject
+%    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+%    
 %    figure(figureCount); %1 fig per subject
 %    figureCount= figureCount+1;
-   
-   for session = 1:numel(currentSubj) %for each training session this subject completed
-
+%    
+%    for session = 1:numel(currentSubj) %for each training session this subject completed
+% 
 %        currentSubj(session).signalCorrelation= xcorr(currentSubj(session).reblue,currentSubj(session).repurple,0,'coeff');
-        
-        cutTime = currentSubj(session).cutTime;
-        r= [];
-        p= [];
-
-        
-        %Try sliding corrcoef calc
+%         
+%         cutTime = currentSubj(session).cutTime;
+%         r= [];
+%         p= [];
+% 
+%         
+% %         Try sliding corrcoef calc
 %         slideFrames= 10*fs;
 %         for ts = 1:numel(cutTime) %for each timestamp
 %             
@@ -377,24 +377,24 @@ for subj= 1:numel(subjects) %for each subject
 %         
 %         plot(r);
 % figure;
-
+% 
 %         currentSubj(session).signalCorrelation= corrcoef(currentSubj(session).reblue,currentSubj(session).repurple);
 %         [r, lags]= xcorr(currentSubj(session).reblue, currentSubj(session).repurple, 'unbiased');
 %         hold on;
 %         
 %         [r, lags]= xcorr(currentSubj(session).reblue, currentSubj(session).repurple, 'coeff');
-
-
-        %xcorr on the raw signals returns a triangle shaped plot with a
-        %peak at 0, possibly due to DC offset component in signals... Will
-        %try to remove this by subtracting mean
-
-        
+% 
+% 
+% %         xcorr on the raw signals returns a triangle shaped plot with a
+% %         peak at 0, possibly due to DC offset component in signals... Will
+% %         try to remove this by subtracting mean
+% 
+%         
 %         [r, lags]= xcorr(currentSubj(session).reblue-nanmean(currentSubj(session).reblue), currentSubj(session).repurple-nanmean(currentSubj(session).repurple), 'coeff');
 %         stem(lags, r);
-
-        %still getting a weird shape, let's try this on a rolling z score?
-               
+% 
+% %         still getting a weird shape, let's try this on a rolling z score?
+%                
 % %trying movcorr function
 % r2= [];
 % p2=[];
@@ -420,22 +420,22 @@ for subj= 1:numel(subjects) %for each subject
 %     figure;
 %     plot(r2);
 %        scatter(currentSubj(session).trainDay,currentSubj(session).signalCorrelation(2));
-   end %end session loop
-end %end subject loop
+%    end %end session loop
+% end %end subject loop
 
 
 %% Trying correlation with dff calculated in previous section
-for subj= 1:numel(subjects)
-    for session= 1:numel(subjDataAnalyzed.(subjects{subj}))
-        
-        cutTime= subjData.(subjects{subj})(session).cutTime;
-        currentSubj= subjDataAnalyzed.(subjects{subj}); %easy indexing into subject
-              %going to try on dff calculated by previous section
+% for subj= 1:numel(subjects)
+%     for session= 1:numel(subjDataAnalyzed.(subjects{subj}))
+%         
+%         cutTime= subjData.(subjects{subj})(session).cutTime;
+%         currentSubj= subjDataAnalyzed.(subjects{subj}); %easy indexing into subject
+% %               going to try on dff calculated by previous section
 %         [r, lags]= xcorr(currentSubj(session).photometry.bluedff,currentSubj(session).photometry.purpledff, 'coeff');
 %         stem(lags, r);
-        
-       
-        
+%         
+%        
+%         
 %         %trying movcorr function
 %     [r, p, n]=movcorr(currentSubj(session).photometry.bluedff, currentSubj(session).photometry.purpledff, 400); %sliding 10s pearson
 % 
@@ -466,9 +466,9 @@ for subj= 1:numel(subjects)
 %     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving/closing
 %     waitforbuttonpress;
 %     close;
-
-    end %end session loop
-end %end subj loop
+% 
+%     end %end session loop
+% end %end subj loop
 
 
 %% Create subjDataAnalyzed struct to hold analyzed data
@@ -1510,14 +1510,25 @@ for subj= 1:numel(subjects) %for each subject
 %       disp(strcat('running NS-triggered analysis subject ', num2str(subj), '/', num2str(numel(subjects)), ' session ', num2str(session), '/', num2str(numel(currentSubj))));
 
       if isnan(currentSubj(session).NS)  %If there's no NS present, save data as empty arrays
-          
+%           
         subjDataAnalyzed.(subjects{subj})(session).periNS.NS = [];
         subjDataAnalyzed.(subjects{subj})(session).periNS.periNSwindow= [];
         subjDataAnalyzed.(subjects{subj})(session).periNS.NSblue=[]; 
         subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurple=[]; 
 
-        subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue= [];
-        subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple=[]; 
+%         subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue= [];
+%         subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple=[]; 
+        
+            %fill with nan
+                %logic throughout code uses ~isempty to check for NS data
+                %so this will throw errors
+%         subjDataAnalyzed.(subjects{subj})(session).periNS.NS(1:periCueFrames+1,1,cue) = nan;
+%         subjDataAnalyzed.(subjects{subj})(session).periNS.periNSwindow(1:periCueFrames+1,1,cue)= nan;
+%         subjDataAnalyzed.(subjects{subj})(session).periNS.NSblue(1:periCueFrames+1,1,cue)=nan; 
+%         subjDataAnalyzed.(subjects{subj})(session).periNS.NSpurple(1:periCueFrames+1,1,cue)=nan; 
+        subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue(1:periCueFrames+1,1,cue)= nan;
+        subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple(1:periCueFrames+1,1,cue)= nan;
+        
 
         %get the mean response to the DS for this session
         subjDataAnalyzed.(subjects{subj})(session).periNS.NSblueMean=[]; 
@@ -2859,7 +2870,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     
     %2d plot to see magnitude
     
-    figure;
+    figure; sgtitle(strcat(subjectsAnalyzed(subj),'-periCue all trials')); 
     figureCount= figureCount+1;
     subplot(2,1,1);
     title('DS');
@@ -2873,6 +2884,8 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         plot(timeLock,currentSubj(1).NSzblueAllTrials, 'b');
         plot(timeLock,currentSubj(1).NSzpurpleAllTrials, 'm');
     end
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
 end %end subject loop
 
 
@@ -4646,62 +4659,6 @@ end %end subj loop
 %       figureCount= figureCount+1;
 % end %end subj loop
 
-%% Peri-DS 2d plots by stage
-
-for subj= 1:numel(subjects)
-    currentSubj= subjDataAnalyzed.(subjects{subj});
-    allStages= unique([currentSubj.trainStage]);
-    
-    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
-        includedSessions= []; %excluded sessions will reset between unique stages
-        
-        %loop through all sessions and record index of sessions that correspond only to this stage
-        for session= 1:numel(currentSubj)
-            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
-               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
-            end
-        end%end session loop
-    
-        %create empty arrays that we'll use to extract data from each included session
-        DSblue= [];
-        DSpurple= [];
-        NSblue= [];
-        NSpurple= [];
-        
-        for includedSession= includedSessions %loop through only sessions that match this stage
-            %Extracting periDS (timelocked to DS) photometry signals
-            DSblue= [DSblue,squeeze(currentSubj(includedSession).periDS.DSzblue)]; %squeeze to make 2d and concatenate
-            DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple)];
-            NSblue= [NSblue, squeeze(currentSubj(includedSession).periNS.NSzblue)];
-            NSpurple= [NSpurple, squeeze(currentSubj(includedSession).periNS.NSzpurple)];
-        end
-        
-    
-        
-     %generate heatplots
-        figure(figureCount); hold on; sgtitle(strcat(subjects{subj},'-peri-DSz by stages'));
-        subplot(2, allStages(end), thisStage); title(strcat('465nm Stage-',num2str(thisStage))); hold on;
-        
-%         plot(timeLock, DSblue, 'k--'); %plot all individual trials
-        plot(timeLock, nanmean(DSblue, 2), 'b'); %plot mean
-        xlabel('time to cue (s)'); ylabel('mean z-score 465nm');
-       
-        
-        subplot(2, allStages(end), allStages(end)+thisStage); title(strcat('405nm Stage-', num2str(thisStage))); hold on;
-
-%         plot(timeLock, DSpurple, 'k--'); %plot all individual trials
-        plot(timeLock, nanmean(DSpurple, 2), 'm'); %plot mean
-        xlabel('time to cue (s)'); ylabel('mean z-score 405nm');
-
-            
-    end %end Stage loop 
-       
-    linkaxes; %make axes of subplots equal for nicer look & sense of scale
-    
-    figureCount= figureCount+1;
-    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-end %end subj loop
 
 %% peri-DS heatplots by stage
 
@@ -4922,6 +4879,230 @@ for subj= 1:numel(subjects)
 end
 
 linkaxes(); %link axes for scale comparison
+
+%% Peri-cue 2d plots by stage
+
+allSubjDSblue= []; %initialize 
+allSubjDSpurple= [];
+allSubjNSblue= [];
+allSubjNSpurple= [];
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    allStages= unique([currentSubj.trainStage]);
+    
+    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+        includedSessions= []; %excluded sessions will reset between unique stages
+        
+        %loop through all sessions and record index of sessions that correspond only to this stage
+        for session= 1:numel(currentSubj)
+            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+            end
+        end%end session loop
+    
+        %create empty arrays that we'll use to extract data from each included session
+        DSblue= [];
+        DSpurple= [];
+        NSblue= [];
+        NSpurple= [];
+        
+        for includedSession= includedSessions %loop through only sessions that match this stage
+            %Extracting periDS (timelocked to DS) photometry signals
+            DSblue= [DSblue,squeeze(currentSubj(includedSession).periDS.DSzblue)]; %squeeze to make 2d and concatenate
+            DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple)];
+            NSblue= [NSblue, squeeze(currentSubj(includedSession).periNS.NSzblue)];
+            NSpurple= [NSpurple, squeeze(currentSubj(includedSession).periNS.NSzpurple)];
+        end
+        
+        %collect data from all subjects for a between-subjects mean plot
+        allSubjDSblue(:,thisStage,subj)= nanmean(DSblue,2);
+        allSubjDSpurple(:,thisStage, subj)= nanmean(DSpurple,2);
+    
+        if ~isempty(NSblue)
+           allSubjNSblue(:,thisStage,subj)= nanmean(NSblue,2);
+           allSubjNSpurple(:,thisStage,subj)= nanmean(NSpurple,2);
+        end
+    
+        
+     %generate plots
+        figure(figureCount); hold on; sgtitle(strcat(subjects{subj},'-peri DS by stages'));
+        subplot(2, allStages(end), thisStage); title(strcat('465nm Stage-',num2str(thisStage))); hold on;
+        
+%         plot(timeLock, DSblue, 'k--'); %plot all individual trials
+        plot(timeLock, nanmean(DSblue, 2), 'b'); %plot mean
+        xlabel('time to DS onset (s)'); ylabel('mean z-score 465nm');
+        
+%             %calculate SEM for this subject (will be used to overlay this SEM or even between subjects SEM later)
+        semDSblue(:,thisStage,subj)= (nanstd(DSblue,0,2))/sqrt(size(DSblue,2));
+        semDSblue(:,(find(all(semDSblue(:,:,subj)==0))),subj)= nan; %replace 0s with nan;
+        semLinePos= nanmean(DSblue,2)+semDSblue(:,thisStage,subj); %save mean + sem and mean - s for easier patch() overlay
+        semLineNeg= nanmean(DSblue,2)-semDSblue(:,thisStage,subj);
+
+        patch([timeLock,timeLock(end:-1:1)],[semLinePos',semLineNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.5);
+
+        %add only one legend for the first subplot (seems to be easiest solution)
+        if thisStage== allStages(1)
+            legend('mean', 'within-subject SEM (n=# trials)');
+        end
+        
+        subplot(2, allStages(end), allStages(end)+thisStage); title(strcat('405nm Stage-', num2str(thisStage))); hold on;
+
+%         plot(timeLock, DSpurple, 'k--'); %plot all individual trials
+        plot(timeLock, nanmean(DSpurple, 2), 'm'); %plot mean
+        xlabel('time to DS onset (s)'); ylabel('mean z-score 405nm');
+
+        %             %calculate SEM for this subject (will be used to overlay this SEM or even between subjects SEM later)
+        semDSpurple(:,thisStage,subj)= (nanstd(DSpurple,0,2))/sqrt(size(DSpurple,2));
+        semDSpurple(:,(find(all(semDSpurple(:,:,subj)==0))),subj)= nan; %replace 0s with nan;
+        semLinePos= nanmean(DSpurple,2)+semDSpurple(:,thisStage,subj); %save mean + sem and mean - s for easier patch() overlay
+        semLineNeg= nanmean(DSpurple,2)-semDSpurple(:,thisStage,subj);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePos',semLineNeg(end:-1:1)'],'m','EdgeColor','None');alpha(0.5);
+
+        %add only one legend for the first subplot (seems to be easiest solution)
+        if thisStage== allStages(1)
+            legend('mean', 'within-subject SEM (n=# trials)');
+        end
+            
+        semNSblue(:,thisStage,subj)= (nanstd(NSblue,0,2))/sqrt(size(NSblue,2));
+        semNSblue(:,(find(all(semNSblue(:,:,subj)==0))),subj)= nan; %replace 0s with nan;
+        semLinePos= nanmean(NSblue,2)+semNSblue(:,thisStage,subj); %save mean + sem and mean - s for easier patch() overlay
+        semLineNeg= nanmean(NSblue,2)-semNSblue(:,thisStage,subj);
+
+        semNSpurple(:,thisStage,subj)= (nanstd(NSpurple,0,2))/sqrt(size(NSpurple,2));
+        semNSpurple(:,(find(all(semNSpurple(:,:,subj)==0))),subj)= nan; %replace 0s with nan;
+        semLinePos= nanmean(NSpurple,2)+semDSblue(:,thisStage,subj); %save mean + sem and mean - s for easier patch() overlay
+        semLineNeg= nanmean(NSpurple,2)-semDSblue(:,thisStage,subj);
+
+    end %end Stage loop 
+       
+    linkaxes; %make axes of subplots equal for nicer look & sense of scale
+    
+    figureCount= figureCount+1;
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+
+end %end subj loop
+
+%replace columns that have all zeros with nans (this could happen if an animal
+%didn't run a particular stage)
+for subj= 1:numel(subjects)
+    allSubjDSblue(:,find(all(allSubjDSblue(:,:,subj)==0)),subj)= nan;
+    allSubjDSpurple(:,find(all(allSubjDSpurple(:,:,subj)==0)), subj)= nan;
+    allSubjNSblue(:,find(all(allSubjNSblue(:,:,subj)==0)), subj)= nan;
+    allSubjNSpurple(:,find(all(allSubjNSpurple(:,:,subj)==0)), subj)= nan;
+end
+
+% Now make a between-subj plot of mean across all animals
+figure;
+figureCount=figureCount+1; sgtitle('peri-cue response: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjDSblue,2) 
+            %calculate between subj mean data for this stage
+        thisStageDSblue= nanmean(allSubjDSblue(:,thisStage,:),3);
+        thisStageDSpurple= nanmean(allSubjDSpurple(:,thisStage,:),3);
+        thisStageNSblue= nanmean(allSubjNSblue(:,thisStage,:), 3);
+        thisStageNSpurple= nanmean(allSubjNSpurple(:,thisStage,:),3);
+
+            %calculate SEM between subjects
+        semDSblueAllSubj= []; semDSpurpleAllSubj=[]; semNSblueAllSubj= []; semNSpurpleAllSubj=[]; %reset btwn subj
+        semDSblueAllSubj= nanstd(allSubjDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semDSpurpleAllSubj= nanstd(allSubjDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNSblueAllSubj= nanstd(allSubjNSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNSpurpleAllSubj= nanstd(allSubjNSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+
+        
+                %DS
+        subplot(subplot(2, size(allSubjDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri- DS')) 
+%         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                        %overlay SEM blue
+        semLinePosAllSubj= thisStageDSblue+nanmean(semDSblue(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageDSblue-nanmean(semDSblue(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
+                %overlay SEM purple
+        semLinePosAllSubj= thisStageDSpurple+nanmean(semDSpurple(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageDSpurple-nanmean(semDSpurple(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+            %NS
+        subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri- NS')) 
+%         plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                           %overlay SEM blue
+        semLinePosAllSubj= thisStageNSblue+nanmean(semNSblue(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageNSblue-nanmean(semNSblue(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'b','EdgeColor','None');alpha(0.3);
+                %overlay SEM purple
+        semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        
+        if thisStage==1
+%            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
+        end
+    end
+end
+
+linkaxes(); %link axes for scale comparison
+
+
+colors= [136/255,86/255,167/255;127/255,191/255,123/255]; %https://colorbrewer2.org/#type=sequential&scheme=BuPu&n=3
+
+
+
+% Now make a between-subj plot of mean across all animals- DS & NS overlay
+figure;
+figureCount=figureCount+1; sgtitle('peri-cue response: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= 1:size(allSubjDSblue,2) 
+            %calculate between subj mean data for this stage
+        thisStageDSblue= nanmean(allSubjDSblue(:,thisStage,:),3);
+        thisStageDSpurple= nanmean(allSubjDSpurple(:,thisStage,:),3);
+        thisStageNSblue= nanmean(allSubjNSblue(:,thisStage,:), 3);
+        thisStageNSpurple= nanmean(allSubjNSpurple(:,thisStage,:),3);
+
+            %calculate SEM between subjects
+        semDSblueAllSubj= []; semDSpurpleAllSubj=[]; semNSblueAllSubj= []; semNSpurpleAllSubj=[]; %reset btwn subj
+        semDSblueAllSubj= nanstd(allSubjDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semDSpurpleAllSubj= nanstd(allSubjDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNSblueAllSubj= nanstd(allSubjNSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNSpurpleAllSubj= nanstd(allSubjNSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+
+        
+                %DS
+        subplot(subplot(1, size(allSubjDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-cue')) 
+%         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
+%         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
+        plot(timeLock, thisStageDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                        %overlay SEM blue
+        semLinePosAllSubj= thisStageDSblue+nanmean(semDSblue(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageDSblue-nanmean(semDSblue(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.2);
+            %NS
+        plot(timeLock, thisStageNSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+                           %overlay SEM blue
+        semLinePosAllSubj= thisStageNSblue+nanmean(semNSblue(:,thisStage,:),3);
+        semLineNegAllSubj= thisStageNSblue-nanmean(semNSblue(:,thisStage,:),3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.2);
+%                 %overlay SEM purple
+%         semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
+%         semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        
+        if thisStage==1
+%            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
+             legend('DS 465nm', 'SEM', 'NS 465nm','SEM');
+        end
+    end
+end
+
+linkaxes(); %link axes for scale comparison
+
 
 
 %% Peri-DSpox 2d plots by stage
