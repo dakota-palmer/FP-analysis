@@ -17,9 +17,9 @@ profile on; %For optimization/trackin g performance of the code- this starts the
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-metaDataAddress = 'Z:\Ally\GAD-VPFP DS Training\nexFilesVPFP\DS Training All\GADVPFPall_metadata_VP_final.xlsx'; % excel file location 
+metaDataAddress = 'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
 
-nexAddress =  'Z:\Ally\GAD-VPFP DS Training\nexFilesVPFP\DS Training All'; % nex file location 
+nexAddress =  'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 %note: assembly of this nex file list is case-sensitive (I had a minor issue
 %where files with subjects in caps were being loaded before uncapitalized
@@ -27,7 +27,7 @@ nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 % figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-experimentName= 'GADVPFPall'; %change experiment name for automatic naming of figures
+experimentName= 'vp-vta-fp'; %change experiment name for automatic naming of figures
 
 %% Loop through each nex file, extracting data
 
@@ -47,6 +47,11 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
      
     [~,~,excelData] = xlsread(metaDataAddress); %import metadata from excel spreadsheet
     fileIndex= find(strcmp(excelData(:,1),fName)); %search the spreadsheet data for the matching fileName to get index for matching metadata
+    
+  %skip over atypical DS training files (stage=0)... (e.g. magazine training session where stage =0)
+    if excelData{fileIndex,5}== 0
+       continue; 
+    end
     
     sesData(file).date= excelData{fileIndex,2}();
     
@@ -154,6 +159,13 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
        outBindex= contains(data.events{i,1}.name, 'Out2');
 
 
+       %For sessions where accidentally ran mag training experiment file in
+       %Synapse instead of DS training, the TTL for DS was still saved but
+       %saved under reward delivery TTL ('Rox')... so let's get that data
+       if DSindex==0 %if there's no valid DS TTLs, check this file for Rox
+          DSindex= contains(data.events{i,1}.name, 'Rox1');
+       end
+       
        if(DSindex ==1)  %e.g. if DSindex returns true (1), then define DS as the timestamps within this data.events series
            DS = data.events{i,1}.timestamps;
     %        disp(strcat('DS event index= ', num2str(i))); %keep for debugs

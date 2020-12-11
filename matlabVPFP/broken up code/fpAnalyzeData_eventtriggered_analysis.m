@@ -328,12 +328,14 @@ for subj= 1:numel(subjects) %for each subject
             if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
                 disp(strcat('****firstPoxdS ', num2str(cue), ' too close to beginning, continueing out'));
                 DSskipped= DSskipped+1;
+                DSselected(cue)= nan; %remove this trial from the selected list (otherwise later code may try to index it)
                 continue
             end
 
             if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
                 disp(strcat('****firstPoxDS cue ', num2str(cue), ' too close to end, continueing out'));
                 DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
+                DSselected(cue)= nan; %remove this trial from the selected list (otherwise later code may try to index it)
                 continue %continue out of the loop and move onto the next DS cue
             end
 
@@ -349,8 +351,6 @@ for subj= 1:numel(subjects) %for each subject
             baselineStdpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdpurple(1,cue); %baseline stdDev purple 10s prior to DS onset for boxA
 
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
-
-            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected= DSselected;
            
 %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
@@ -360,21 +360,16 @@ for subj= 1:numel(subjects) %for each subject
                 %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
-
             
-            
-            
-                %get the mean response to the DS for this session
-            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
-
-            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple, 3); 
-
-            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue, 3);
-
-            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple, 3);
+           elseif isnan(DSselected(cue)) %if there are no valid pe this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected(cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(1:periCueFrames+1,1,cue)= nan;
            end
            
-           %save DSlox data
+           %save DSpox data
                 if ~isnan(DSselected(cue))
                 subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(cue,1)= firstPox;
                 subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(cue,1)= firstPoxind;%index in cut time
@@ -383,7 +378,22 @@ for subj= 1:numel(subjects) %for each subject
                 subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(cue,1)= nan;    
                 end
        
+                  
+
        end %end DSselected loop
+                   
+       %save selected trials for later
+       subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected= DSselected;
+
+            %get the mean response to the DS for this session
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
+
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple, 3); 
+
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue, 3);
+
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple, 3);
+           
        
    end %end session loop
 end %end subject loop
@@ -598,12 +608,14 @@ for subj= 1:numel(subjects) %for each subject
             if preEventTime< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
                 disp(strcat('****firstLoxdS ', num2str(cue), ' too close to beginning, continueing out'));
                 DSskipped= DSskipped+1;
+                DSselected(cue)= nan; %remove this trial from the selected list (otherwise later code may try to index it)
                 continue
             end
 
             if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
                 disp(strcat('****firstLoxDS cue ', num2str(cue), ' too close to end, continueing out'));
                 DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
+                DSselected(cue)= nan; %remove this trial from the selected list (otherwise later code may try to index it)
                 continue %continue out of the loop and move onto the next DS cue
             end
 
@@ -619,8 +631,6 @@ for subj= 1:numel(subjects) %for each subject
             baselineStdpurple= subjDataAnalyzed.(subjects{subj})(session).periDS.baselineStdpurple(1,cue); %baseline stdDev purple 10s prior to DS onset for boxA
 
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
-
-            subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSselected= DSselected;
 
 %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
@@ -652,6 +662,9 @@ for subj= 1:numel(subjects) %for each subject
             
         end %end DSselected loop
 
+        %save selected trials for later access
+        subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSselected= DSselected;
+        
             %get the mean response to the DS for this session
         subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
 

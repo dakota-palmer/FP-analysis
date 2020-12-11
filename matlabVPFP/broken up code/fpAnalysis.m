@@ -1,6 +1,6 @@
 %% Run Analysis on Extracted Data
 
-cd ('\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\');
+cd ('C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
 fpAnalyzeData_create_struct_with_animal_data();
 fpAnalyzeData_behavioral_analysis();
 fpAnalyzeData_eventtriggered_analysis();

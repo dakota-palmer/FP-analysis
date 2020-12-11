@@ -719,6 +719,10 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         %lets convert this to an index of trials with a valid value 
         DSselected= find(~isnan(DSselected));
         
+        %if there are no valid trials (DSselected is all nan, skip this session)
+        if sum(~isnan(DSselected))==0
+           continue;
+        end
             
         %Repeat above for NS 
         if ~isempty(currentSubj(session).periNSlox.NSselected)
@@ -1025,6 +1029,10 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         %lets convert this to an index of trials with a valid value 
         DSselected= find(~isnan(DSselected));
         
+        %if there's no valid trials in this session, skip the session
+        if sum(~isnan(DSselected))==0
+           continue; 
+        end
             
         %Repeat above for NS 
         if ~isempty(currentSubj(session).periNSlox.NSselected)

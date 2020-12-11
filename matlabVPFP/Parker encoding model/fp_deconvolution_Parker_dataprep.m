@@ -23,25 +23,28 @@ subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
 subjectsAnalyzed= fieldnames(subjDataAnalyzed);
 
 %% Exclude sessions
+
+includedStage= 7; %what stage do you want to isolate?
+
 for subj= 1:numel(subjectsAnalyzed)
     currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj});
     excludedSessions= [];
     for session= 1:numel(currentSubj)
-        if currentSubj(session).trainStage ~= 7%7 %only include stage 7 days
+        if currentSubj(session).trainStage ~= includedStage%7 %only include sessions of this stage
            excludedSessions= cat(2,excludedSessions,session);
         end
     end%end session loop
    subjDataAnalyzed.(subjectsAnalyzed{subj})(excludedSessions)= []; 
    
    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj});
-   excludedSessions= [];
-   for session= 1:numel(currentSubj) %loop through again and get rid of all except final stage 7 day
-       if session<numel(currentSubj)
-           excludedSessions= cat(2,excludedSessions,session);
-       end
-   end%end session loop 2
-   
-   subjDataAnalyzed.(subjectsAnalyzed{subj})(excludedSessions)= []; 
+%    excludedSessions= [];
+%    for session= 1:numel(currentSubj) %loop through again and get rid of all except final day
+%        if session<numel(currentSubj)
+%            excludedSessions= cat(2,excludedSessions,session);
+%        end
+%    end%end session loop 2
+%    
+%    subjDataAnalyzed.(subjectsAnalyzed{subj})(excludedSessions)= []; 
    
 end %end subj loop
 
@@ -86,47 +89,46 @@ end %end subj loop
 for subj= 1:numel(subjectsAnalyzed)
    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %save for easy indexing
    
-   
-   for session= 1:numel(currentSubj)
-   
-       %Clear structs between sessions
-       output= [];
+    %Clear structs between subjects 
+       output.DS= []; output.NS= [];
+       metadata.subject= []; metadata.date=[];
        g_output= [];
-       metadata= [];
+       output= [];
+
        
-       
+   for session= 1:numel(currentSubj)       
        experimentName= currentSubj(session).experiment;
        
        %save metadata field for easy recovery of other analyzed data from this subj & session
-       metadata.subject= subjectsAnalyzed(subj);
-       metadata.date= currentSubj(session).date;
+       metadata.subject{1,session}= subjectsAnalyzed(subj); %{} because this is a string
+       metadata.date(:,session)= currentSubj(session).date;
 
        %fill output struct with task event timestamps
-       output.DS= currentSubj(session).periDS.DS;
-       output.NS= currentSubj(session).periNS.NS;
+       output.DS(:,session)=currentSubj(session).periDS.DS;
+       output.NS(:,session)= currentSubj(session).periNS.NS;
 
        %        output.poxDS= currentSubj(session).behavior.poxDS; %note this would be ALL PEs during cue (not just first)
 
        %first initialize output.firstPox and output.firstLox with a nan value
        %for every trial (so this way if we loop over trials later we won't
        %get an error)
-       output.firstPoxDS= nan(size(currentSubj(session).periDS.DS));
-       output.firstLoxDS= nan(size(currentSubj(session).periDS.DS));
-       output.firstPoxNS= nan(size(currentSubj(session).periNS.NS));
-       output.firstLoxNS= nan(size(currentSubj(session).periNS.NS));
+       output.firstPoxDS(:,session)= nan(size(currentSubj(session).periDS.DS,2),1);
+       output.firstLoxDS(:,session)= nan(size(currentSubj(session).periDS.DS,2),1);
+       output.firstPoxNS(:,session)= nan(size(currentSubj(session).periNS.NS));
+       output.firstLoxNS(:,session)= nan(size(currentSubj(session).periNS.NS));
        
        %to get only first lox & pox during cue, using cellfun (since poxDS and loxDS are saved in a cell array and we only want the first value       
        index= ~cellfun('isempty',currentSubj(session).behavior.poxDS); %using this index accounts for empty cells
-       output.firstPoxDS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.poxDS(index));
+       output.firstPoxDS(index,session)= cellfun(@(v)v(1),currentSubj(session).behavior.poxDS(index));
        
        index= ~cellfun('isempty',currentSubj(session).behavior.loxDS); %using this index accounts for empty cells
-       output.firstLoxDS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.loxDS(index));
+       output.firstLoxDS(index,session)= cellfun(@(v)v(1),currentSubj(session).behavior.loxDS(index));
 
        index= ~cellfun('isempty',currentSubj(session).behavior.poxNS); %using this index accounts for empty cells
-       output.firstPoxNS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.poxNS(index));
+       output.firstPoxNS(index,session)= cellfun(@(v)v(1),currentSubj(session).behavior.poxNS(index));
        
        index= ~cellfun('isempty',currentSubj(session).behavior.loxNS); %using this index accounts for empty cells
-       output.firstLoxNS(index)= cellfun(@(v)v(1),currentSubj(session).behavior.loxNS(index));
+       output.firstLoxNS(index,session)= cellfun(@(v)v(1),currentSubj(session).behavior.loxNS(index));
        
        
 %        output.pox= currentSubj(session).raw.pox;
@@ -134,11 +136,14 @@ for subj= 1:numel(subjectsAnalyzed)
 %        output.out= currentSubj(session).raw.out;
        
        %fill g_output struct with photometry signal
-       g_output.reblue= currentSubj(session).raw.reblue;
-       g_output.samp_rate= fs; 
+       g_output.reblue{1,session}= currentSubj(session).raw.reblue;
+       g_output.samp_rate(1,session)= fs; 
        
-       save(strcat(savePath,experimentName,'-',subjectsAnalyzed{subj},'-ses-',num2str(currentSubj(session).date),'.mat'), 'g_output', 'output', 'metadata'); %the second argument here is the variable being saved, the first is the filename 
+       %save one file per session
+%        save(strcat(savePath,experimentName,'-',subjectsAnalyzed{subj},'-ses-',num2str(currentSubj(session).date),'.mat'), 'g_output', 'output', 'metadata'); %the second argument here is the variable being saved, the first is the filename 
        
    end %end session loop
-    
+            %save one file per subj containing all sessions of interest
+          save(strcat(savePath,experimentName,'-',subjectsAnalyzed{subj},'-stage-',num2str(includedStage),'.mat'), 'g_output', 'output', 'metadata'); %the second argument here is the variable being saved, the first is the filename 
+
 end%end subj loop

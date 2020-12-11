@@ -1750,7 +1750,7 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
  
-           elseif isnan(DSselected(cue)) %if there are no valid licks this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
+           elseif isnan(DSselected(cue)) %if there are no valid pe this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected(cue)= nan;
                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(1:periCueFrames+1,1,cue)= nan;
                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple(1:periCueFrames+1,1,cue)= nan;
@@ -1973,8 +1973,6 @@ for subj= 1:numel(subjects) %for each subject
 
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
-            subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSselected= DSselected;
-
 %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
 
             subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxblue(:,:,cue)= currentSubj(session).reblue(preEventTime:postEventTime);
@@ -1995,6 +1993,8 @@ for subj= 1:numel(subjects) %for each subject
            end
             
         end %end DSselected loop
+
+        subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSselected= DSselected;
 
             %get the mean response to the DS for this session
         subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSlox.DSloxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
@@ -5459,7 +5459,7 @@ for subj= 1:numel(subjects)
 %         plot(timeLock, (allSubjDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageDSblue,'k','LineWidth',2); %plot between-subjects mean blue
-%         plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        plot(timeLock, thisStageDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                         %overlay SEM blue
         semLinePosAllSubj= thisStageDSblue+nanmean(semDSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSblue-nanmean(semDSblue(:,thisStage,:),3);
@@ -5467,13 +5467,13 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageDSpurple+nanmean(semDSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageDSpurple-nanmean(semDSpurple(:,thisStage,:),3);
-%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
             %NS
         subplot(subplot(2, size(allSubjDSblue,2), size(allSubjDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'peri-first lick NS')) 
 %         plot(timeLock, (allSubjNSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjNSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageNSblue,'k','LineWidth',2); %plot between-subjects mean blue
-%         plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+        plot(timeLock, thisStageNSpurple,'r','LineWidth',2); %plot between-subjects mean purple
                            %overlay SEM blue
         semLinePosAllSubj= thisStageNSblue+nanmean(semNSblue(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSblue-nanmean(semNSblue(:,thisStage,:),3);
@@ -5481,7 +5481,7 @@ for subj= 1:numel(subjects)
                 %overlay SEM purple
         semLinePosAllSubj= thisStageNSpurple+nanmean(semNSpurple(:,thisStage,:),3);
         semLineNegAllSubj= thisStageNSpurple-nanmean(semNSpurple(:,thisStage,:),3);
-%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
         
         if thisStage==1
            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');

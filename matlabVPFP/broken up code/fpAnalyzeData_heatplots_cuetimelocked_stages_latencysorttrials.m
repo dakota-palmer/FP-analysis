@@ -342,7 +342,7 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject
                          %in order to sort licks according to trial by PE latency
                          %later, we need to reshape the lox cell array from nested
                          %{session}{cue} to just {cue}
-                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsC{sesCountD})
+                          for cue = 1:numel(currentSubj(1).DSloxAllTrialsD{sesCountD})
                               DSloxAllTrialsD{trialDcount} = currentSubj(1).DSloxAllTrialsD{sesCountD}{cue};
                               trialDcount=trialDcount+1;
                           end           
