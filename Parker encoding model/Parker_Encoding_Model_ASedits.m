@@ -8,17 +8,18 @@ clc
 
 cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
 
+
 %determine if folder exists and if so purge it, if not create it
 curr_dir = pwd;
 save_folder = 'output/criteria';
-if exist(save_folder)==0
-    mkdir(save_folder)
-else
-    cd(save_folder)
-    delete('*')
-    cd ../..
-end
-    
+% if exist(save_folder)==0
+%     mkdir(save_folder)
+% else
+%     cd(save_folder)
+%     delete('*')
+%     cd ../..
+% end
+%     
 figsave_folder='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\output';
 condition = 'data to input';
 subjects = 1:7%[1 2 3 4 5 ];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
@@ -26,11 +27,11 @@ subjects = 1:7%[1 2 3 4 5 ];%:278; %only one example file was included- I think 
 
 for subj=1:numel(subjects)
     
-    clearvars -except curr_dir save_folder figsave_folder condition subjects subj
+    clearvars -except curr_dir save_folder figsave_folder condition subjects subj subjDataPEM kernel_Shifted_all
     
     tic
     %how much time should you shift back (in seconds)
-    time_back_orig=2;
+    time_back_orig=5;
     time_forward_orig=10;
     
     type1='time_shift';  %'spline','time_shift'
@@ -38,6 +39,9 @@ for subj=1:numel(subjects)
     shift_con=0;   %Should we shift the stimulus events so they start at 0?
     
     %---- Data Extraction-----
+    cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
+
+    
     %opens folder to be tested
     file_root=pwd;
     cd(condition)
@@ -65,36 +69,41 @@ for subj=1:numel(subjects)
     %Convert seconds to hertz + isolates conditions %~~~~~~~~~~Note that
     %'output' & 'g_output' are actually loaded at the beginning of this
     %script -- dp
-    % converting into hertz for every event occuring during recording
+    % Just using indicies, no longer converting into hertz for every event occuring during recording
     DSonsetindex=data_to_input_GADVPFP.output(1).DSonsetindex_criteria;
+    
+    DSPEindex=data_to_input_GADVPFP.output(1).DSpoxind_criteria;
+    
+    DSLickindex=data_to_input_GADVPFP.output(1).DSloxind_criteria;
     
      % cutTime
     
     cutTime=data_to_input_GADVPFP.g_output(1).cutTime_criteria; 
     
-    DSTimes=cutTime(DSonsetindex).*data_to_input_GADVPFP.g_output(1).samp_rate;
+    %TimeStamps
+    DSTimes=cutTime(DSonsetindex);
     
-    DSPETimes=data_to_input_GADVPFP.output(1).DSpox.*data_to_input_GADVPFP.g_output(1).samp_rate;
+%     DSPETimes=cutTime(DSPEindex);
+%     
+%     DSLickTimes=cutTime(DSLickindex);
     
-    DSLickTimes=data_to_input_GADVPFP.output(1).DSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
+    DSPElatency= data_to_input_GADVPFP.output(1).DSPElatency_criteria;
     
-    DSPElatency= data_to_input_GADVPFP.output(1).DSPElatencey;
+    inPortDS= data_to_input_GADVPFP.output(1).inPortDS_criteria;
     
-    inPortDS= data_to_input_GADVPFP.output(1).inPortDS;
+    poxDS=data_to_input_GADVPFP.output(1).poxDS_criteria;
     
-    poxDS=data_to_input_GADVPFP.output(1).poxDS;
-    
-    NSTimes=data_to_input_GADVPFP.output(1).NSTimes.* data_to_input_GADVPFP.g_output(1).samp_rate;
-    
-    NSPETimes=data_to_input_GADVPFP.output(1).NSpox.*data_to_input_GADVPFP.g_output(1).samp_rate;
-    
-    NSLickTimes=data_to_input_GADVPFP.output(1).NSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
-    
-    NSPElatency= data_to_input_GADVPFP.output(1).NSPElatencey.*data_to_input_GADVPFP.g_output(1).samp_rate;
-    
-    inPortNS= data_to_input_GADVPFP.output(1).inPortNS;
-    
-    poxNS=data_to_input_GADVPFP.output(1).poxNS;
+%     NSTimes=data_to_input_GADVPFP.output(1).NSTimes.* data_to_input_GADVPFP.g_output(1).samp_rate;
+%     
+%     NSPETimes=data_to_input_GADVPFP.output(1).NSpox.*data_to_input_GADVPFP.g_output(1).samp_rate;
+%     
+%     NSLickTimes=data_to_input_GADVPFP.output(1).NSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
+%     
+%     NSPElatency= data_to_input_GADVPFP.output(1).NSPElatencey.*data_to_input_GADVPFP.g_output(1).samp_rate;
+%     
+%     inPortNS= data_to_input_GADVPFP.output(1).inPortNS;
+%     
+%     poxNS=data_to_input_GADVPFP.output(1).poxNS;
     
     % frequencey sampling rate (in hZ)
     fs=data_to_input_GADVPFP.g_output(1).samp_rate;
@@ -103,8 +112,7 @@ for subj=1:numel(subjects)
     gcamp_y_blue=data_to_input_GADVPFP.g_output(1).gcamp_raw.blue;
     gcamp_y_purple=data_to_input_GADVPFP.g_output(1).gcamp_raw.purple;
     
-    
-
+   
        %% Moving Z-score
 % Here we are calculating the z-score 10 seconds before the DS for each DS   
 % 
@@ -114,7 +122,7 @@ for subj=1:numel(subjects)
     for DS=1:size(DSTimes,2)
             DSonset=DSonsetindex(DS);
             %DSonset=max(DSonset);
-            if DS<30
+            if DS<length(DSonsetindex)
             DSonset_b=DSonsetindex(DS+1);
             %DSonset_b=max(DSonset_b);
            %DSonset_y=gcamp_y_blue(DSonset);
@@ -196,6 +204,8 @@ for subj=1:numel(subjects)
 % 
 % %      z_blue= (gcamp_y_blue-mean(gcamp_y_blue))./std(gcamp_y_blue); fprintf('Z-scored \n')
 
+
+
     
 %% Plot z-scores
         
@@ -221,6 +231,12 @@ for subj=1:numel(subjects)
         postCueFrames= postCueTime*fs;
 
         periCueFrames= preCueFrames+postCueFrames;
+        
+        periDSstarts= []; %start times for all peri-DS windows %cleared between sessions
+        periDSends= []; %end times for all peri-DS windows %cleared between sessions
+        
+        currentSubj(1).DSzblueMean= [];
+        currentSubj(1).DSzpurpleMean= [];
 
         slideTime = fs*10; %define time window before cue onset to get baseline mean/stdDev for calculating sliding z scores- 400 for 10s (remember 400/40hz ~10s)
 
@@ -242,7 +258,7 @@ for subj=1:numel(subjects)
 
         DSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
 
-        for cue=1:length(DSTimes) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
+        for cue=1:length(DSonsetindex) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
 
             %each entry in DS is a timestamp of the DS onset 
             DSonset = DSonsetindex(1,cue);
@@ -251,6 +267,7 @@ for subj=1:numel(subjects)
             preEventTimeDS = DSonset-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
             postEventTimeDS = DSonset+postCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
 
+            
             if preEventTimeDS< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
                 disp(strcat('****DS cue ', num2str(cue), ' too close to beginning, continuing'));
                 DSskipped= DSskipped+1;
@@ -292,6 +309,16 @@ for subj=1:numel(subjects)
             subjDataAnalyzed.(subj_name).periDSRichard.timeLock= [-preCueFrames:postCueFrames]/fs;
             subjDataAnalyzed.(subj_name).periDSParker.timeLock= [-preCueFrames:postCueFrames]/fs;
        
+        
+            %for visualizing cue periods, save pre & postEventTimeDS
+            %(should help ID if sudden changes are being introduced)
+            %not that these are indices of cutTime that correspond to start
+            %& end of peri-cue window
+            periDSstarts= [periDSstarts, preEventTimeDS]; %cat start into this array
+            periDSends= [periDSends, postEventTimeDS]; %cat end into this array
+            
+        
+        
         end %end DS cue loop
 
     %collect all z score responses to every single DS across all sessions
@@ -299,10 +326,21 @@ for subj=1:numel(subjects)
     currentSubj(1).DSzblueAllTrials= squeeze(subjDataPEM.(subj_name).periDSParker.DSzblue); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
     currentSubj(1).DSzpurpleAllTrials= squeeze(subjDataPEM.(subj_name).periDSParker.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
 
+
     
     %Transpose these data for readability
     currentSubj(1).DSzblueAllTrials= currentSubj(1).DSzblueAllTrials';
-    currentSubj(1).DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials';    
+    currentSubj(1).DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials';
+    
+    subjDataPEM.(subj_name).periDSParker.DSzblueAllTrials= currentSubj(1).DSzblueAllTrials;
+    subjDataPEM.(subj_name).periDSParker.DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials;
+    
+            % Means 
+            currentSubj(1).DSzblueMean= nanmean(currentSubj(1).DSzblueAllTrials,1); 
+            currentSubj(1).DSzpurpleMean= nanmean( currentSubj(1).DSzpurpleAllTrials,1); 
+
+            subjDataPEM.(subj_name).periDSParker.DSzblueMean= currentSubj(1).DSzblueMean;
+            subjDataPEM.(subj_name).periDSParker.DSzpurpleMean= currentSubj(1).DSzpurpleMean;
 
     %get a trial count to use for the heatplot ytick
     currentSubj(1).totalDScount= 1:size(currentSubj(1).DSzblueAllTrials,1); 
@@ -383,7 +421,7 @@ for subj=1:numel(subjects)
 
      
         figsave_name=strcat('ZTrials_Parker',subj_name,'.fig');
-        cd(figsave_folder);
+        cd(strcat(figsave_folder,'\Unsorted_heatplots\'));
         saveas(gcf,figsave_name);
 
 
@@ -395,22 +433,22 @@ for subj=1:numel(subjects)
 %     z_blue= z_blue(blue_nan); 
 %     z_purple= z_purple(purple_nan); 
     
-   % Full traces
-    figure();
-    plot(cutTime,z_gcamp_y_blue);
-    title('blue Z-score');
-    
-         
-        figsave_name=strcat('ZFullTrace_Parker',subj_name,'.fig');
-        cd(figsave_folder);
-        saveas(gcf,figsave_name);
- 
-
-% Full traces
-    figure();
-    plot(cutTime,gcamp_y_blue);
-    title('blue raw');        
-        
+%    % Full traces
+%     figure();
+%     plot(cutTime,z_gcamp_y_blue);
+%     title('blue Z-score');
+%     
+%          
+% %         figsave_name=strcat('ZFullTrace_Parker',subj_name,'.fig');
+% %         cd(figsave_folder);
+% %         saveas(gcf,figsave_name);
+%  
+% 
+% % Full traces
+%     figure();
+%     plot(cutTime,gcamp_y_blue);
+%     title('blue raw');        
+%         
         
 
 %% LATENCY SORTED HEAT PLOT OF RESPONSE TO EVERY INDIVIDUAL CUE PRESENTATION
@@ -421,6 +459,8 @@ for subj=1:numel(subjects)
         %initialize arrays for convenience
         currentSubj(1).DSzblueAllTrials= [];
         currentSubj(1).DSzpurpleAllTrials= [];
+        currentSubj(1).DSzblueMean= [];
+        currentSubj(1).DSzpurpleMean= [];
         currentSubj(1).DSpeLatencyAllTrials= [];
         
         currentSubj(1).NSzblueAllTrials= [];
@@ -499,8 +539,7 @@ for subj=1:numel(subjects)
         
             currentSubj(1).DSzblueAllTrials= squeeze(subjDataPEM.(subj_name).periDSParker.DSzblue); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
             currentSubj(1).DSzpurpleAllTrials= squeeze(subjDataPEM.(subj_name).periDSParker.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
-
-
+       
     
     %Sort PE latencies and retrieve an index of the sorted order that
     %we'll use to sort the photometry data
@@ -515,6 +554,11 @@ for subj=1:numel(subjects)
     %Transpose these data for readability
     currentSubj(1).DSzblueAllTrials= currentSubj(1).DSzblueAllTrials';
     currentSubj(1).DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials';    
+
+    
+     % Means 
+            currentSubj(1).DSzblueMean= nanmean(currentSubj(1).DSzblueAllTrials,1); 
+            currentSubj(1).DSzpurpleMean= nanmean( currentSubj(1).DSzpurpleAllTrials,1); 
 
     %get a trial count to use for the heatplot ytick
     currentSubj(1).totalDScount= 1:size(currentSubj(1).DSzblueAllTrials,1); 
@@ -606,18 +650,68 @@ for subj=1:numel(subjects)
     
         
     figsave_name=strcat('ZTrials_latencysorted_Parker',subj_name,'.fig');
-        cd(figsave_folder);
+        cd(strcat(figsave_folder,'\Latencysorted_heatplots\'));
         saveas(gcf,figsave_name);
    
 
 
 
- cd(curr_dir);
+  cd(curr_dir);
+  
+  %% %Exclude all intervening data between trials (only include peri-cue
+    %data in regression)... the idea here is that we already know some
+    %cue/reward related activity is happening, but we want an estimate of
+    %how much each event type contributes to overall observed fluorescence.
+    %If we include intervening data, noise & other things may be driving changes in 
+    %fluorescence (and those unknowns aren't included in the encoding model)
+    
+    %clear events between sessions???????
+    DS= [];% %output.DS;% [];
+    NS= []; %output.NS;% [];
+    poxDS= []; %output.firstPoxDS;%[]; 
+    loxDS= []; %output.firstLoxDS;%[];
+    
+    gcamp_y= nan(size(z_gcamp_y_blue));
+        %loop through trials and exclude events that occur outside of the
+        %periDS window for each trial
+    for cue=1:length(DSTimes) % for each DS Trial 
+        if DSTimes(cue)> cutTime(periDSstarts(cue)) &&  DSTimes(cue) < cutTime(periDSends(cue)) %if this cue onset occurs between periDS window start and end, keep this DS
+             DS= [DS, DSonsetindex(cue)];
+             
+        else
+            DS= [DS, nan];
+            
+        end
+        
+  %exclude photometry data outside of trials (easier to just make nan because elimnating timestamps will require remapping of event times?)
+%  gcamp_y= [gcamp_y,gcamp_normalized(periDSstarts(cue):periDSends(cue))]; 
+
+        gcamp_y(periDSstarts(cue):periDSends(cue))= z_gcamp_y_blue(periDSstarts(cue):periDSends(cue));
+    end
+    
+    poxDS= DSPEindex; %output.firstPoxDS;%[]; 
+    loxDS= DSLickindex; %output.firstLoxDS;%[];
+    
+            
+
+
+   
+           
+    %linearize gcamp_y
+    gcamp_y= gcamp_y(:);
+    
+    
+%% now visualize the correctly calculated time bins
+    figure(); hold on; title('plot by time BIN- correctly shifted');
+    plot(gcamp_y);
+    plot(DS, ones(size(DS)*1), 'k.')
+    plot(poxDS, ones(size(poxDS))*3, 'c.')
+    plot(loxDS, ones(size(loxDS))*4, 'r.')
  
     %% %Event modulation for initial submission
-    cons={'DSTimes','DSPETimes'};%,'DSLickTimes'}; %...
+    cons={'DS','poxDS','loxDS'}; %...
 %         'NSTimes','NSPETimes','NSLickTimes'};
-    con_shift=[1 0]; %0];% 0 1 1]; %stimulus events time window is 0:8s, action events it is -2:6s, this defines when to time-lock
+    con_shift=[0 0 0];% 0 1 1]; %stimulus events time window is 0:8s, action events it is -2:6s, this defines when to time-lock
     
     %---- Regression data prep ----
     
@@ -625,7 +719,7 @@ for subj=1:numel(subjects)
     con_iden=[];
     x_basic=[];    %No interaction terms, simply event times
     event_times_mat=[];
-    num_bins=numel(z_gcamp_y_blue);
+    num_bins=numel(gcamp_y);
     
  
     % for each event ( aka con) 
@@ -639,20 +733,20 @@ for subj=1:numel(subjects)
             time_forward=time_forward_orig;
         end
         
-        %gets matrix of event times (in hertz)
+        %gets matrix of event times 
         con_times=eval(cons{con});
         
         %Gets rid of abandonded trials
         con_times(find(isnan(con_times)))=[];
         
         %Creates vector with binary indication of events
-        con_binned=zeros(1,num_bins);
+        con_binned=zeros(1,num_bins);%length of gcampsignal
         con_binned(int32(con_times))=1;%align event time (represented by 1) with the g_camp signal
         
         if strcmp(type1,'spline')==1
-            con_binned=circshift(con_binned,[0,-time_back*g_output.samp_rate]);% shift con binned zero positions in the first dimension and -timeback*fs in the second dimension ( shifting signal to to align event times to window specified)
+            con_binned=circshift(con_binned,[0,-time_back*fs]);% shift con binned zero positions in the first dimension and -timeback*fs in the second dimension ( shifting signal to to align event times to window specified)
             event_times_mat=vertcat(event_times_mat,con_binned);
-            gcamp_temp=z_gcamp_y_blue;
+            gcamp_temp=gcamp_y;
             
             %preloads basis set
             load('ben_81x25.mat')
@@ -675,10 +769,10 @@ for subj=1:numel(subjects)
             %NORMAL REGRESSION
         elseif strcmp(type1,'time_shift')==1
             x_con=[];
-            shift_back=data_to_input_GADVPFP.g_output(1).samp_rate*time_back;   %how many points to shift forward and backwards in Hz
-            shift_forward=data_to_input_GADVPFP.g_output(1).samp_rate*time_forward;
+            shift_back=fs*time_back;   %how many points to shift forward and backwards in Hz
+            shift_forward=fs*time_forward;
             %             gcamp_temp=gcamp_y(shift_forward+1:end-shift_back);
-            gcamp_temp=z_gcamp_y_blue;
+            gcamp_temp=gcamp_y;
             
             %             for shifts = 1:shift_back+shift_forward+1
             %                 x_con=horzcat(x_con,con_binned(shift_back+shift_forward+2-shifts:end-shifts+1)')
@@ -707,8 +801,8 @@ for subj=1:numel(subjects)
     %Save file
     long_name=strcat('lasso','_',char(files(subjects(subj))));
     dot_stop=find(long_name=='.');
-    save_name=long_name;
-    samp_rate=data_to_input_GADVPFP.g_output(1).samp_rate;
+    save_name=long_name(1:dot_stop-1);
+
     
     cd(save_folder)
     save(save_name,'b');
@@ -717,10 +811,8 @@ for subj=1:numel(subjects)
 
 %% Visualize
         
-    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Kernel calculation & vis~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    %dp trying to implement equation 4 from 2019 preprint
-    %above code calculates b, so we should be able to calculate event
-    %kernels using this equation
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Kernel calculation & vis~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    %above code calculates b, which we can use to calculate event kernels
     
     %if in spline mode, use eq 4 from 2019 preprint
     %if in time shift mode, simply use regression coefficients as kernel (I think that's what they did in 2016 paper)
@@ -753,7 +845,8 @@ for subj=1:numel(subjects)
         end
         
         %visualize
-        timeLock= linspace(0,size(kernel,1)/g_output.samp_rate, size(kernel,1)); %x axis in s
+%         timeLock= linspace(0,size(kernel,1)/g_output.samp_rate, size(kernel,1)); %x axis in s
+        timeLock= linspace(-time_back, time_forward, size(kernel,1));
 
         figure; hold on;
         title('kernels (spline)');
@@ -761,6 +854,21 @@ for subj=1:numel(subjects)
         ylabel('regression coefficient b?');
         xlabel('time (s)');
         legend(cons);
+        
+         %separate plot of stim vs action events
+        figure; hold on;
+        title(strcat(char(files(subject)),'-kernels (spline)'));
+        subplot(2,1,1); hold on; title('stimulus events');
+        timeLock= linspace(0, time_back+time_forward, size(kernel,1)); %x axis starts at 0
+        plot(timeLock, kernel(:,con_shift==1));
+        ylabel('regression coefficient b');
+        xlabel('time(s)');
+        legend(cons(con_shift==1));
+        
+        subplot(2,1,2); hold on; title('action events');
+        timeLock= linspace(-time_back, time_forward, size(kernel,1)); %x axis starts at -time_back
+        plot(timeLock, kernel(:,con_shift==0));
+        legend(cons(con_shift==0));
 
     elseif strcmp(type1, 'time_shift')==1
             %if in timeshift mode, references to 'ts' below are timestamps
@@ -780,46 +888,244 @@ for subj=1:numel(subjects)
            end
         end
         
-        %0:8 sec
         %visualize
-        timeLock= linspace(0,size(kernel,1)/data_to_input_GADVPFP.g_output(1).samp_rate, size(kernel,1)); %x axis in s
+%         timeLock= linspace(0,size(kernel,1)/g_output.samp_rate, size(kernel,1)); %x axis in s
+        timeLock= (-shift_back:shift_forward)/fs; %x axis in s
+        conColors= {'k','g','c','r'};
+%         figure; hold on;
+%         title('kernels (time shift)');
+%         ylabel('regression coefficient b');
+%         xlabel('time (s)');
+%         plot(timeLock,kernel);
+%         legend(cons);
+        
+        %maybe this is the appropriate way to visualize?
+%         timeLock= (-shift_back:shift_forward)/g_output.samp_rate;
 
+        %each point really represents regression coefficient of a shifted
+        %version of event timestamps with the same GCaMP signal. For example,
+        %a high regression coefficient at +4s means that if you shift all
+        %of this event's timestamps forward by +4s the correlation with
+        %GCaMP is high. This might suggest an event-induced change in GCaMP activity
+        %observed 4s after event onset
+        
         figure; hold on;
-        title('kernels (time shift)');
+        title(strcat(char(files(subj)),'-kernels (time shift)'));
         ylabel('regression coefficient b');
-        xlabel('time (s)');
-        plot(timeLock,kernel(:,1));
-        legend(cons(1));
+        xlabel('time shift of events relative to actual event onsets (s)');
+        plot(timeLock,kernel);
+        legend(cons);
+        
+%         gcf;
+%         [filepath,name,ext] = fileparts(file_name);
+%         figsave_name=strcat('DSonset_PoxDS_regression coefficients',name);
+%         cd(figsave_folder);
+%         savefig(figsave_name);
+        
+        
+        
+        %separate plot of stim vs action events
+        figure; hold on;
+        title(strcat(char(files(subj)),'-kernels (time shift)'));
+        subplot(2,1,1); hold on; title('stimulus events');
+        timeLock= (0:shift_back+shift_forward)/fs; %x axis starts at 0
+        if ~isempty(kernel(:,con_shift==1))
+            plot(timeLock, kernel(:,con_shift==1));
+            ylabel('regression coefficient b');
+            xlabel('time shift of events relative to actual event onsets (s)');
+            legend(cons(con_shift==1));
+        end
+        
+        subplot(2,1,2); hold on; title('action events');
+        timeLock= (-shift_back:shift_forward)/fs; %x axis starts at -shift_back
+        plot(timeLock, kernel(:,con_shift==0));
+        legend(cons(con_shift==0));
+
+    end
+    
+    
+    %Now, lets make a figure of peri-event plots to compare with kernels
+    figure();
+    periCueTime= linspace(-preCueFrames/fs,postCueFrames/fs, numel(currentSubj(1).DSzblueMean)); %Time axis for graph
+    hold on;title('peri-DS');
+    plot(periCueTime,squeeze(currentSubj(1).DSzblueAllTrials), 'b');
+    plot(periCueTime,currentSubj(1).DSzblueMean, 'k', 'LineWidth', 2);
+    scatter(DSPElatency, ones(length(DSPElatency),1)*5, 'g.'); %overlay all PE latencies
+    scatter(nanmean(DSPElatency), 5, 20, 'g*'); %overlay mean DS pe latency
+    
+    
+    %loop through ds trials and get licks (have to do this bc cell array)
+    for DStrial= 1:numel(DSonsetindex)
+        
+    end
+    
+%     subplot(3,1,2); hold on; title('peri-first port entry in DS epoch');
+%     plot(periCueTime,squeeze(currentSubj(1).periDSpox.DSzpoxblue), 'b');
+%     plot(periCueTime,currentSubj(1).periDSpox.DSzpoxblueMean, 'k', 'LineWidth', 2);
+%     
+%     subplot(3,1,3); hold on; title('peri-first lick in DS epoch');
+%     plot(periCueTime,squeeze(currentSubj(1).periDSlox.DSzloxblue), 'b');
+%     plot(periCueTime,currentSubj(1).periDSlox.DSzloxblueMean, 'k', 'LineWidth', 2);
+
+    %% ~~~~~~~~~~~~USE KERNELS TO MODEL PHOTOMETRY SIGNAL ~~~~~~~~~~~~~~~~~~~
+    %Now that we have estimated kernels for each type of event, we can
+    %model/estimate the photometry signals given event timings. To do so, we
+    %will go trial by trial and shift each event kernel by the corresponding 
+    %event timestamps. Then, we'll simply sum the kernels to get an estimated
+    %photometry trace for that trial
+
+    %start off with just nan. goal here will be to have a column for each event
+    %type containing kernels shifted to the event timings...then later we can
+    %sum across columns easily
+    kernel_Shifted = nan(length(gcamp_y), numel(cons));
+    kernels_DStrials=nan(length(timeLock), numel(DSonsetindex), numel(cons));
+    
+    %clear variables between sessions
+    kernelStart= []; kernelEnd= []; con_times= []; this_con_times= []; gcamp_model_sum=[];
+
+    %First loop through and shift kernels to event timings
+    for DStrial= 1:numel(DSonsetindex)
+        for con= 1:numel(cons)
+            con_times(:,con)=eval(cons{con}); %Retrieve event timings for this event type (con) by evaluating the variable (with the same name as cons{con}) that was created above in this script
+            this_con_times(DStrial)= con_times(DStrial,con);
+
+            if ~isnan(this_con_times(DStrial)) %only run if is an event here, keep nan? or exclude trial?
+
+                %kernel onset should depend on # of shifts forward and back??
+                kernelStart(DStrial)= this_con_times(DStrial)-shift_back;
+                kernelEnd(DStrial)= this_con_times(DStrial)+shift_forward;
+
+                kernel_Shifted(kernelStart(DStrial):kernelEnd(DStrial),con)= kernel(:, con);% populate kernel shifted matrix with beta coefficients within trials, in the distinct spot of the gcamp
+                
+            
+            end        
+        end %end event type (con) loop
+    end
+
+    kernel_Shifted_all.kernels.(subj_name)=kernel_Shifted(:);
+    
+    %then I guess get the gcamp_model for each event type in the peri-cue
+    %window, then sum?
+
+    for DStrial= 1:numel(DSonsetindex)  
+        %sum values across all event types in the peri-DS windows for each trial 
+        gcamp_model_sum(:,DStrial)= nansum(kernel_Shifted(periDSstarts(DStrial):periDSends(DStrial),:),2);% sum two event kernels for this trial in the 2 dimension
+        
+        %save values for each con so that we can examine them later & easily take mean across trials
+        for con= 1:numel(cons)
+            kernels_DStrials(:,DStrial,con)= kernel_Shifted(periDSstarts(DStrial):periDSends(DStrial),con);
+        end
+        figure; hold on; title(strcat('shifted kernels for trial-', num2str(DStrial)));
+        for con= 1:numel(cons)
+            %visualize kernel data within the peri-event windows
+            plot(timeLock,kernel_Shifted(periDSstarts(DStrial):periDSends(DStrial), con))
+        end
+        figure; hold on; sgtitle(strcat('DS trial', num2str(DStrial),'kernels and modeled gcamp trace vs. actual peri-DS trace'));
+        for con= 1:numel(cons) %loop through event types (cons)
+            subplot(numel(cons)+1, 1, con); hold on; title(cons{con}); %subplot of this event's kernel
+            plot(timeLock, kernels_DStrials(:,DStrial,con), conColors{con});
+        end %end con loop
+        subplot(numel(cons)+1, 1, con+1); hold on;
+        plot(timeLock,gcamp_model_sum(:,DStrial), 'k');
+        plot(timeLock,currentSubj(1).DSzblueAllTrials(DStrial,:), 'b');
+        legend('modeled trace (sum kernels)', 'actual trace (z scored based on pre-cue baseline)');
+
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        trial=num2str(DStrial);
+        figsave_name=strcat('DSonset_PoxDS_Model',name,'Trial_',trial);
+        cd(strcat(figsave_folder,'\Trials_Model\'));
+        savefig(figsave_name);
+        
+        
+    end
+ kernel_Shifted_all.kernels_DSTrials.(subj_name)=kernels_DStrials;
+ kernel_Shifted_all.gcamp_model_sum.(subj_name)=gcamp_model_sum;
+ kernel_Shifted_all.DSzblueAllTrials.(subj_name)=currentSubj(1).DSzblueAllTrials;
+
+    %same as above but model mean across trials instead of trial-by-trial
+%     figure; hold on; title(strcat('Mean across all DS trials- modeled gcamp trace vs. actual peri-DS trace'));
+%     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
+%     plot(timeLock,currentSubj(session).periDS.DSzblueMean, 'b');
+%     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
+    
+    %Let's do one big figure with mean of each kernel and sum separately
+    %subplotted
+    figure; hold on; sgtitle('DS trials- mean event kernels and mean modeled GCaMP');
+    for con= 1:numel(cons) %loop through event types (cons)
+        subplot(numel(cons)+1, 1, con); hold on; title(cons{con}); %subplot of this event's kernel
+        plot(timeLock, nanmean(kernels_DStrials(:,:,con),2), conColors{con});
+    end %end con loop
+    subplot(numel(cons)+1, 1, con+1); hold on; title('modeled vs. actual GCaMP');
+    plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
+    plot(timeLock,currentSubj(1).DSzblueMean, 'b');
+    legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
+
+        gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('DSonset_PoxDS_ModelMean',name);
+        cd(strcat(figsave_folder,'\Mean_Model\'));;
+        savefig(figsave_name);
+        
+         toc
+end %end first subj loop
+%% Create graph of all subjects ( SEM area)
+%reorganise z-score data for all animals
+
+DSkernel_Shifted_all=[];
+PEkernel_Shifted_all=[];
+Lickkernel_Shifted_all=[]; 
+modelsum_Shifted_all=[];
+DSzblueAllTrials_Shifted_all=[];
+
+for subject= 1:length(subjects);
+% create matrix with all DS onset DSkernels for all animals (1st sheet in
+% 3D matrix)
+fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
+
+DSkernel_Shifted_all= cat(2,DSkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,1));
+% create matrix with all PE DSkernels for all animals(2nd sheet in
+% 3D matrix)
+PEkernel_Shifted_all= cat(2,PEkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,2));
+
+% create matrix with all lick DSkernels for all animals(3rd sheet in
+% 3D matrix)
+
+Lickkernel_Shifted_all= cat(2,Lickkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,3));
+
+
+% modelsum matrix
+modelsum_Shifted_all= cat(2,modelsum_Shifted_all,kernel_Shifted_all.gcamp_model_sum.(fns{subject})(:,:));
+
+%DSzalltrials matrix
+DSzblueAllTrials_Shifted_all= cat(2,DSzblueAllTrials_Shifted_all,kernel_Shifted_all.DSzblueAllTrials.(fns{subject})(:,:)');
+end
+
+%% matlab plots
+figure();
+  plot(timeLock,nanmean(DSkernel_Shifted_all,2), 'k');hold on;
+  plot(timeLock,nanmean(PEkernel_Shifted_all,2), 'b');hold on;
+  plot(timeLock,nanmean(Lickkernel_Shifted_all,2),'m');hold off;
+  legend('average DS trace (sum kernels- across animals)', 'average PE trace (sum kernels- across animals)','average Lick trace (sum kernels- across animals)');
+    
+        gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('DSonset_Pox_Lick_regressiontraces',name);
+        cd(strcat(figsave_folder,'\across animals\'));;
+        savefig(figsave_name);
+figure();
+  plot(timeLock,nanmean(modelsum_Shifted_all,2), 'k');hold on;
+  plot(timeLock,nanmean(DSzblueAllTrials_Shifted_all,2), 'b');hold off;
+  legend('average model trace (sum kernels- across animals)', 'average z-score (across animals)');
         
         gcf;
         [filepath,name,ext] = fileparts(file_name);
-        figsave_name=strcat('DSonset_',name);
-        cd(figsave_folder);
+        figsave_name=strcat('sumregressiontrace_zscoretrace',name);
+        cd(strcat(figsave_folder,'\across animals\'));;
         savefig(figsave_name);
-%         
-         %-2:6 sec
-        
-            %visualize
-        timeLock= linspace(-2,size(kernel,1)/data_to_input_GADVPFP.g_output(1).samp_rate, size(kernel,1)); %x axis in s
 
-        figure; hold on;
-        title('kernels (time shift)');
-        ylabel('regression coefficient b');
-        xlabel('time (s)');
-        plot(timeLock,kernel(:,2));
-        legend(cons(2));
-        
-        gcf;
-        [filepath,name,ext] = fileparts(file_name);
-        figsave_name=strcat('onlyDSPE_',name);
-        cd(figsave_folder);
-        savefig(figsave_name);
-        cd(curr_dir);
-        
+ cd(curr_dir)
+ 
+ disp('all done');
 
-     
-        
-    end
 
- toc
-    end
