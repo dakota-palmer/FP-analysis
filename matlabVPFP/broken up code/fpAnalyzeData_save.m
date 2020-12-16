@@ -1,10 +1,11 @@
 %% Save the analyzed data 
 %save the subjDataAnalyzed struct for later analysis
-structpath='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\'
-save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
+structpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code'
+save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 for files >2gb
+
 
 %% save data from each stage from each animal for ERT analysis
-ERTpath='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\PhotometryEventDetection\ERTsimulation-master\ERTsimulation-master\'
+ERTpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\ERT'
 ERTData=struct();
 subj=[];
 session=[];
@@ -20,16 +21,19 @@ for subj=1:numel(subjects);
        ERTData.(strcat('DSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue(:,:,trial)';
        ERTData.(strcat('DSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple(:,:,trial)';
        
-       if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5;
-       ERTData.(strcat('NSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue(:,:,trial)';
-       ERTData.(strcat('NSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple(:,:,trial)';
-       end
     
        if Stage==8
        ERTData.DSzStage8pump(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(trial,:);
        ERTData.NSzStage8pump(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(trial,:);  
        end
    end %end trial loop
+   
+   for trial = 1:size(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue,3) %repeat for NS
+       if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5;
+           ERTData.(strcat('NSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue(:,:,trial)';
+           ERTData.(strcat('NSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple(:,:,trial)';
+       end
+   end %end ns trial loop
    
    %organize all data from last day of each stage into one matrix which is
    %how photometry event detection reads data
@@ -45,11 +49,11 @@ for subj=1:numel(subjects);
        ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
        end
      elseif Stage>5 
-       if subj==3
+       if subj==1
        ERTData.(strcat('DSzblueallStage',Stagestring))= ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj);
        ERTData.(strcat('DSzpurpleallStage',Stagestring))= ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj);
        if Stage==8
-       ERTData.DSzStage8pumpall= ERTData.DSzStage8pump(:,:,subj)
+       ERTData.DSzStage8pumpall= ERTData.DSzStage8pump(:,:,subj);
        end
        else   
        ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
@@ -65,7 +69,7 @@ for subj=1:numel(subjects);
 %        ERTData.(strcat('NSzpurpleallStage',Stage))=[];
        
        %for NSz trials
-      if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5;
+      if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5
       
        if Stage<=5 
        if subj==1
@@ -76,7 +80,7 @@ for subj=1:numel(subjects);
        ERTData.(strcat('NSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('NSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
        end
      elseif Stage>5 
-       if subj==3
+       if subj==1
        ERTData.(strcat('NSzblueallStage',Stagestring))=[];
        ERTData.(strcat('NSzpurpleallStage',Stagestring))= [];    
        ERTData.(strcat('NSzblueallStage',Stagestring))= ERTData.(strcat('NSzblueStage',Stagestring))(:,:,subj);
@@ -85,7 +89,7 @@ for subj=1:numel(subjects);
        ERTData.(strcat('NSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('NSzblueallStage',Stagestring)),ERTData.(strcat('NSzblueStage',Stagestring))(:,:,subj));
        ERTData.(strcat('NSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('NSzpurpleallStage',Stagestring)),ERTData.(strcat('NSzpurpleStage',Stagestring))(:,:,subj));
        end
-     end  
+      end  
       end 
       
   
@@ -123,7 +127,7 @@ save(fullfile(ERTpath,strcat(experimentName,'-', 'ERTData')), 'ERTData');
 % Here, only data from the day each animal reached criteria,last day of stage 7 and 8 will be saved
 % to the data to input 
 
-encodinginputpath='Y:\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\Parker encoding model\Richard_data_to_input\';
+encodinginputpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\data to input';
 
 subjects= fieldnames(subjData);
 subj=[];
@@ -132,27 +136,26 @@ session=[];
 data_to_input_GADVPFP=struct(); 
 gcamp_raw=struct();   
 
-for subj=1:numel(subjects);
+for subj=1:numel(subjects)
     fieldname=string(subjects(subj));
     x=0;
-    s1=0
+    s1=0;
     cutTime_stage7={};
     DSonsetindex_stage7=[];
     DSpox_stage7={};
-  DSlox_stage7={};
+    DSlox_stage7={};
     DSPElatency_stage7={};
     inPortDS_stage7={};
     poxDS_stage7={};
            
-    for session = 1:numel(subjData.(subjects{subj}));
-       if subjData.(subjects{subj})(session).box == 1
+    for session = 1:numel(subjData.(subjects{subj}))
+       if subjData.(subjects{subj})(session).box == 1 || subjData.(subjects{subj})(session).box==3
            
      % STAGE 5
            
            if subjData.(subjects{subj})(session).Acriteria==1  %if the animal reached criteria, add this data to the struct
            
             x=1;%use for saving files and not saving subj files that do not meet criteria
-           
             %g_camp_465
            gcamp_raw.blue_criteria=subjData.(subjects{subj})(session).reblue'; 
            gcamp_raw.blue_dayb4criteria=subjData.(subjects{subj})(session-1).reblue';
@@ -265,7 +268,7 @@ for subj=1:numel(subjects);
            data_to_input_GADVPFP.g_output(1).gcamp_raw.purple_cat(:)= gcamp_raw_purple_cat;
 
             %sampling rate
-           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40; % we down sample to 40 Hz for all subjects
            
            %cutTime for moving z-score
            data_to_input_GADVPFP.g_output(1).cutTime_criteria(:)=cutTime_criteria;
@@ -360,10 +363,9 @@ for subj=1:numel(subjects);
 % 
 %            end
        
-       elseif subjData.(subjects{subj})(session).box == 2
+       elseif subjData.(subjects{subj})(session).box == 2 || subjData.(subjects{subj})(session).box==4
            if subjData.(subjects{subj})(session).Bcriteria==1  
            x=1;
-   
        % STAGE 5        
            %g_camp_465
            gcamp_raw.blue_criteria(:)=subjData.(subjects{subj})(session).reblue'; 
@@ -477,7 +479,7 @@ for subj=1:numel(subjects);
 
 
             %sampling rate
-           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40; % we down sample to 40 Hz for all subjects
            
            %cutTime for moving z-score
            data_to_input_GADVPFP.g_output(1).cutTime_criteria(:)=cutTime_criteria;
@@ -570,8 +572,8 @@ for subj=1:numel(subjects);
 %            
 %            end
            
-       end
-    end
+       end 
+    end %end session loop
 
  
 if x==1
@@ -580,4 +582,4 @@ save(fullfile(encodinginputpath,strcat(experimentName,'_',fieldname,'_', 'data_t
 end 
 gcamp_raw=struct();   
 data_to_input_GADVPFP=struct();
-end
+end %end subj loop

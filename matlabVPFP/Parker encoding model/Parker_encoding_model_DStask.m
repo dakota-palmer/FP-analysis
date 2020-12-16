@@ -22,7 +22,7 @@ load(uigetfile('*.mat')); %choose the subjDataAnalyzed.mat file to open for your
   
 
 condition = 'data_to_input' %/example';
-subjects =  1%[1:numel(files)]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
+subjects =  1:7%[1:numel(files)]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
 
 
 for subject=1:numel(subjects)
@@ -806,6 +806,8 @@ for subject=1:numel(subjects)
     
     %clear variables between thisSessionInds
     kernelStart= []; kernelEnd= []; con_times= []; this_con_times= [];
+    
+    kernelStart= nan(1,numel(currentSubj(thisSessionInd).periDS.DS)); 
 
     %First loop through and shift kernels to event timings
     for DStrial= 1:numel(currentSubj(thisSessionInd).periDS.DS)
@@ -816,8 +818,8 @@ for subject=1:numel(subjects)
             if ~isnan(this_con_times(DStrial)) %only run if is an event here, keep nan? or exclude trial?
 
                 %kernel onset should depend on # of shifts forward and back??
-                kernelStart(DStrial)= this_con_times(DStrial)-shift_back;
-                kernelEnd(DStrial)= this_con_times(DStrial)+shift_forward;
+                kernelStart(DStrial)= this_con_times(DStrial)-shift_back(session);
+                kernelEnd(DStrial)= this_con_times(DStrial)+shift_forward(session);
 
                 kernel_Shifted(kernelStart(DStrial):kernelEnd(DStrial),con)= kernel(:, con);
             end        

@@ -6,9 +6,11 @@ clear all
 close all
 clc
 
+cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
+
 %determine if folder exists and if so purge it, if not create it
 curr_dir = pwd;
-save_folder = 'encoding_results/pl';
+save_folder = 'output/criteria';
 if exist(save_folder)==0
     mkdir(save_folder)
 else
@@ -17,9 +19,9 @@ else
     cd ../..
 end
     
-figsave_folder='\\files.umn.edu\ahc\MNPI\neuroscience\labs\richard\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\Parker encoding model\encoding_results\figs\40 Hz\set baseline\';
-condition = 'Richard_data_to_input';
-subjects = [1 2 3 4 5 ];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
+figsave_folder='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\output';
+condition = 'data to input';
+subjects = 1:7%[1 2 3 4 5 ];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
 
 for subj=1:numel(subjects)
@@ -64,11 +66,11 @@ for subj=1:numel(subjects)
     %'output' & 'g_output' are actually loaded at the beginning of this
     %script -- dp
     % converting into hertz for every event occuring during recording
-    DSonsetindex=data_to_input_GADVPFP.output(1).DSonsetindex;
+    DSonsetindex=data_to_input_GADVPFP.output(1).DSonsetindex_criteria;
     
      % cutTime
     
-    cutTime=data_to_input_GADVPFP.g_output(1).cutTime; 
+    cutTime=data_to_input_GADVPFP.g_output(1).cutTime_criteria; 
     
     DSTimes=cutTime(DSonsetindex).*data_to_input_GADVPFP.g_output(1).samp_rate;
     
