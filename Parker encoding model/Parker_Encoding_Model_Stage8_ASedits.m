@@ -1,5 +1,6 @@
-% RICHARD LAB ADAPTATION OF PARKER ENCODING MODEL
-
+% RICHARD LAB ADAPTATION OF PARKER ENCODING MODEL- Stage 8 variable reward
+% must stage pump of interest variable, line 23, for analyzing different
+% variable reward ( rewards are in different pumps)
 % function[answer]=inscopix_spline_regression(condition,neuron)
 
 clear all
@@ -8,7 +9,7 @@ clc
 
 %determine if folder exists and if so purge it, if not create it
 curr_dir = pwd;
-save_folder = 'encoding_results/pl';
+save_folder = 'encoding_results\stage8\pump2';
 % if exist(save_folder)==0
 %     mkdir(save_folder)
 % else
@@ -17,14 +18,14 @@ save_folder = 'encoding_results/pl';
 %     cd ../..
 % end
 %     
-figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage5_EncodingModel_Figs\';
+figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage8_encoding model\pump2\';
 condition = 'Richard_data_to_input';
 subjects = [1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
-
+pumpofinterest=2;
 
 for subj=1:numel(subjects)
     
-    clearvars -except curr_dir save_folder figsave_folder condition subjects subj subjDataPEM kernel_Shifted_all
+    clearvars -except curr_dir save_folder figsave_folder condition subjects subj subjDataPEM kernel_Shifted_all pumpofinterest
     
     tic
     %how much time should you shift back (in seconds)
@@ -65,47 +66,76 @@ for subj=1:numel(subjects)
     %script -- dp
     % Just using indicies, no longer converting into hertz for every event occuring during recording
     
-   %STAGE 5- criteria 
-    DSonsetindex=data_to_input_GADVPFP.output(1).DSonsetindex_criteria;
+%    %STAGE 5- criteria 
+%     DSonsetindex=data_to_input_GADVPFP.output(1).DSonsetindex_criteria;
+%     
+%     DSPEindex=data_to_input_GADVPFP.output(1).DSpoxind_criteria;
+%     
+%     DSLickindex=data_to_input_GADVPFP.output(1).DSloxind_criteria;
+%     
+%      % cutTime
+%     
+%     cutTime=data_to_input_GADVPFP.g_output(1).cutTime_criteria; 
+%     
+%     %TimeStamps
+%     DSTimes=cutTime(DSonsetindex);
+%     
+%     DSPElatency= data_to_input_GADVPFP.output(1).DSPElatency_criteria;
+%     
+%     inPortDS= data_to_input_GADVPFP.output(1).inPortDS_criteria;
+%     
+%     poxDS=data_to_input_GADVPFP.output(1).poxDS_criteria;
+%     
+% %     NSTimes=data_to_input_GADVPFP.output(1).NSTimes.* data_to_input_GADVPFP.g_output(1).samp_rate;
+% %     
+% %     NSPETimes=data_to_input_GADVPFP.output(1).NSpox.*data_to_input_GADVPFP.g_output(1).samp_rate;
+% %     
+% %     NSLickTimes=data_to_input_GADVPFP.output(1).NSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
+% %     
+% %     NSPElatency= data_to_input_GADVPFP.output(1).NSPElatencey.*data_to_input_GADVPFP.g_output(1).samp_rate;
+% %     
+% %     inPortNS= data_to_input_GADVPFP.output(1).inPortNS;
+% %     
+% %     poxNS=data_to_input_GADVPFP.output(1).poxNS;
+%     
+%     % frequencey sampling rate (in hZ)
+%     fs=data_to_input_GADVPFP.g_output(1).samp_rate;
+%     
+%     % g_camp
+%     gcamp_y_blue=data_to_input_GADVPFP.g_output(1).gcamp_raw.blue;
+%     gcamp_y_purple=data_to_input_GADVPFP.g_output(1).gcamp_raw.purple;
+
+if isfield(data_to_input_GADVPFP,'output_stage8')
+  %STAGE 8 
+   
+    DSpump=data_to_input_GADVPFP.output_stage8(1).DSpump_stage8{end}; % end is indicating we are using the last day of stage 8 to run the model on
     
-    DSPEindex=data_to_input_GADVPFP.output(1).DSpoxind_criteria;
+    DSonsetindex=data_to_input_GADVPFP.output_stage8(1).DSonsetindex_stage8{end};
     
-    DSLickindex=data_to_input_GADVPFP.output(1).DSloxind_criteria;
+    DSPEindex=data_to_input_GADVPFP.output_stage8(1).DSpoxind_stage8{end};
+    
+    DSLickindex=data_to_input_GADVPFP.output_stage8(1).DSloxind_stage8{end};
     
      % cutTime
     
-    cutTime=data_to_input_GADVPFP.g_output(1).cutTime_criteria; 
+    cutTime=data_to_input_GADVPFP.g_output_stage8(1).cutTime_stage8{end}; 
     
     %TimeStamps
     DSTimes=cutTime(DSonsetindex);
     
-    DSPElatency= data_to_input_GADVPFP.output(1).DSPElatency_criteria;
+    DSPElatency= data_to_input_GADVPFP.output_stage8(1).DSPElatency_stage8{end};
     
-    inPortDS= data_to_input_GADVPFP.output(1).inPortDS_criteria;
+    inPortDS= data_to_input_GADVPFP.output_stage8(1).inPortDS_stage8{end};
     
-    poxDS=data_to_input_GADVPFP.output(1).poxDS_criteria;
-    
-%     NSTimes=data_to_input_GADVPFP.output(1).NSTimes.* data_to_input_GADVPFP.g_output(1).samp_rate;
-%     
-%     NSPETimes=data_to_input_GADVPFP.output(1).NSpox.*data_to_input_GADVPFP.g_output(1).samp_rate;
-%     
-%     NSLickTimes=data_to_input_GADVPFP.output(1).NSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
-%     
-%     NSPElatency= data_to_input_GADVPFP.output(1).NSPElatencey.*data_to_input_GADVPFP.g_output(1).samp_rate;
-%     
-%     inPortNS= data_to_input_GADVPFP.output(1).inPortNS;
-%     
-%     poxNS=data_to_input_GADVPFP.output(1).poxNS;
-    
-    % frequencey sampling rate (in hZ)
-    fs=data_to_input_GADVPFP.g_output(1).samp_rate;
+    poxDS=data_to_input_GADVPFP.output_stage8(1).poxDS_stage8{end};
+   
+    % frequencey sampling rate 
+    fs=data_to_input_GADVPFP.g_output_stage8(1).samp_rate;
     
     % g_camp
-    gcamp_y_blue=data_to_input_GADVPFP.g_output(1).gcamp_raw.blue;
-    gcamp_y_purple=data_to_input_GADVPFP.g_output(1).gcamp_raw.purple;
+    gcamp_y_blue=data_to_input_GADVPFP.g_output_stage8(1).gcamp_raw.blue{end};
+    gcamp_y_purple=data_to_input_GADVPFP.g_output_stage8(1).gcamp_raw.purple{end};    
 
-  
-   
        %% Moving Z-score
 % Here we are calculating the z-score 10 seconds before the DS for each DS   
 % 
@@ -135,8 +165,10 @@ for subj=1:numel(subjects)
             z_gcamp_y_blue_temp=[];
             z_gcamp_y_purple_temp=[];
             
-            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_blue_baseline)/z_blue_std; fprintf('blue Z-scored \n')
-            z_gcamp_y_purple_temp(:,:)=(gcamp_y_purple(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_purple_baseline)/z_purple_std; fprintf('purple Z-scored \n')
+            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_blue_baseline)/z_blue_std; 
+            %fprintf('blue Z-scored \n')
+            z_gcamp_y_purple_temp(:,:)=(gcamp_y_purple(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_purple_baseline)/z_purple_std; 
+            %fprintf('purple Z-scored \n')
             
             z_gcamp_y_blue= cat(2,z_gcamp_y_blue(:,:),z_gcamp_y_blue_temp(:,:));
             z_gcamp_y_purple= cat(2,z_gcamp_y_purple(:,:),z_gcamp_y_purple_temp(:,:));
@@ -153,10 +185,8 @@ for subj=1:numel(subjects)
             z_gcamp_y_blue_temp=[];
             z_gcamp_y_purple_temp=[];
             
-            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs):end)-z_blue_baseline)/z_blue_std; 
-            %fprintf('blue Z-scored \n')
-            z_gcamp_y_purple_temp(:,:)=(gcamp_y_purple(DSonset-(tb*fs):end)-z_purple_baseline)/z_purple_std; 
-            %fprintf('purple Z-scored \n')
+            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs):end)-z_blue_baseline)/z_blue_std; fprintf('blue Z-scored \n')
+            z_gcamp_y_purple_temp(:,:)=(gcamp_y_purple(DSonset-(tb*fs):end)-z_purple_baseline)/z_purple_std; fprintf('purple Z-scored \n')
             
             z_gcamp_y_blue= cat(2,z_gcamp_y_blue(:,:),z_gcamp_y_blue_temp(:,:));
             z_gcamp_y_purple= cat(2,z_gcamp_y_purple(:,:),z_gcamp_y_purple_temp(:,:));
@@ -330,6 +360,7 @@ for subj=1:numel(subjects)
     subjDataPEM.(subj_name).periDSParker.DSzblueAllTrials= currentSubj(1).DSzblueAllTrials;
     subjDataPEM.(subj_name).periDSParker.DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials;
     
+    subjDataPEM.(subj_name).periDSParker.pumpid= DSpump';
             % Means 
             currentSubj(1).DSzblueMean= nanmean(currentSubj(1).DSzblueAllTrials,1); 
             currentSubj(1).DSzpurpleMean= nanmean( currentSubj(1).DSzpurpleAllTrials,1); 
@@ -666,10 +697,16 @@ for subj=1:numel(subjects)
     poxDS= []; %output.firstPoxDS;%[]; 
     loxDS= []; %output.firstLoxDS;%[];
     
+    % for stage 8 trials want pump1 and pump 2 analysis to be seperate
+        %transpose so same shape as DSTimes
+        DSpump=DSpump';
+        %find indicies for "pumpofinterest"
+        DSpumpind=find(DSpump==pumpofinterest);
+    
     gcamp_y= nan(size(z_gcamp_y_blue));
         %loop through trials and exclude events that occur outside of the
         %periDS window for each trial
-    for cue=1:length(DSTimes) % for each DS Trial 
+    for cue=1:length(DSTimes(DSpumpind)) % for each DS Trial that is also a trial with the pump( reward) of interest
         if DSTimes(cue)> cutTime(periDSstarts(cue)) &&  DSTimes(cue) < cutTime(periDSends(cue)) %if this cue onset occurs between periDS window start and end, keep this DS
              DS= [DS, DSonsetindex(cue)];
              
@@ -684,8 +721,8 @@ for subj=1:numel(subjects)
         gcamp_y(periDSstarts(cue):periDSends(cue))= z_gcamp_y_blue(periDSstarts(cue):periDSends(cue));
     end
     
-    poxDS= DSPEindex; %output.firstPoxDS;%[]; 
-    loxDS= DSLickindex; %output.firstLoxDS;%[];
+    poxDS= DSPEindex(DSpumpind); %output.firstPoxDS;%[]; 
+    loxDS= DSLickindex(DSpumpind); %output.firstLoxDS;%[];
     
             
 
@@ -979,7 +1016,7 @@ for subj=1:numel(subjects)
     kernelStart= []; kernelEnd= []; con_times= []; this_con_times= []; gcamp_model_sum=[];
 
     %First loop through and shift kernels to event timings
-    for DStrial= 1:numel(DSonsetindex)
+    for DStrial= 1:numel(DS)
         for con= 1:numel(cons)
             con_times(:,con)=eval(cons{con}); %Retrieve event timings for this event type (con) by evaluating the variable (with the same name as cons{con}) that was created above in this script
             this_con_times(DStrial)= con_times(DStrial,con);
@@ -1002,7 +1039,7 @@ for subj=1:numel(subjects)
     %then I guess get the gcamp_model for each event type in the peri-cue
     %window, then sum?
 
-    for DStrial= 1:numel(DSonsetindex)  
+    for DStrial= 1:numel(DS)  
         %sum values across all event types in the peri-DS windows for each trial 
         gcamp_model_sum(:,DStrial)= nansum(kernel_Shifted(periDSstarts(DStrial):periDSends(DStrial),:),2);% sum two event kernels for this trial in the 2 dimension
         
@@ -1036,7 +1073,7 @@ for subj=1:numel(subjects)
     end
  kernel_Shifted_all.kernels_DSTrials.(subj_name)=kernels_DStrials;
  kernel_Shifted_all.gcamp_model_sum.(subj_name)=gcamp_model_sum;
- kernel_Shifted_all.DSzblueAllTrials.(subj_name)=currentSubj(1).DSzblueAllTrials;
+ kernel_Shifted_all.DSzblueAllTrials.(subj_name)=currentSubj(1).DSzblueAllTrials(DSpumpind',:);
 
     %same as above but model mean across trials instead of trial-by-trial
 %     figure; hold on; title(strcat('Mean across all DS trials- modeled gcamp trace vs. actual peri-DS trace'));
@@ -1053,7 +1090,7 @@ for subj=1:numel(subjects)
     end %end con loop
     subplot(numel(cons)+1, 1, con+1); hold on; title('modeled vs. actual GCaMP');
     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
-    plot(timeLock,currentSubj(1).DSzblueMean, 'b');
+    plot(timeLock,nanmean(currentSubj(1).DSzblueAllTrials(DSpumpind',:),1), 'b');
     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
 
         gcf;
@@ -1062,6 +1099,67 @@ for subj=1:numel(subjects)
         cd(strcat(figsave_folder,'\Mean_Model\'));;
         savefig(figsave_name);
         
+% %% Create graph of all subjects ( SEM area)
+% %reorganise z-score data for all animals
+% 
+% DSkernel_Shifted_all=[];
+% PEkernel_Shifted_all=[];
+% Lickkernel_Shifted_all=[]; 
+% modelsum_Shifted_all=[];
+% DSzblueAllTrials_Shifted_all=[];
+% 
+% for subject= 1:length(subjects);
+% % create matrix with all DS onset DSkernels for all animals (1st sheet in
+% % 3D matrix)
+% fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
+% 
+% DSkernel_Shifted_all= cat(2,DSkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,1));
+% % create matrix with all PE DSkernels for all animals(2nd sheet in
+% % 3D matrix)
+% PEkernel_Shifted_all= cat(2,PEkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,2));
+% 
+% % create matrix with all lick DSkernels for all animals(3rd sheet in
+% % 3D matrix)
+% 
+% Lickkernel_Shifted_all= cat(2,Lickkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,3));
+% 
+% 
+% % modelsum matrix
+% modelsum_Shifted_all= cat(2,modelsum_Shifted_all,kernel_Shifted_all.gcamp_model_sum.(fns{subject})(:,:));
+% 
+% %DSzalltrials matrix
+% DSzblueAllTrials_Shifted_all= cat(2,DSzblueAllTrials_Shifted_all,kernel_Shifted_all.DSzblueAllTrials.(fns{subject})(:,:)');
+% end
+% 
+% %% matlab plots
+% figure();
+%   plot(timeLock,nanmean(DSkernel_Shifted_all,2), 'k');hold on;
+%   plot(timeLock,nanmean(PEkernel_Shifted_all,2), 'b');hold on;
+%   plot(timeLock,nanmean(Lickkernel_Shifted_all,2),'m');hold off;
+%   legend('average DS trace (sum kernels- across animals)', 'average PE trace (sum kernels- across animals)','average Lick trace (sum kernels- across animals)');
+%     
+%         gcf;
+%         [filepath,name,ext] = fileparts(file_name);
+%         figsave_name=strcat('DSonset_Pox_Lick_regressiontraces',name);
+%         cd(strcat(figsave_folder,'\across animals\'));;
+%         savefig(figsave_name);
+% figure();
+%   plot(timeLock,nanmean(modelsum_Shifted_all,2), 'k');hold on;
+%   plot(timeLock,nanmean(DSzblueAllTrials_Shifted_all,2), 'b');hold off;
+%   legend('average model trace (sum kernels- across animals)', 'average z-score (across animals)');
+%         
+%         gcf;
+%         [filepath,name,ext] = fileparts(file_name);
+%         figsave_name=strcat('sumregressiontrace_zscoretrace',name);
+%         cd(strcat(figsave_folder,'\across animals\'));;
+%         savefig(figsave_name);
+
+ toc
+ cd(curr_dir)
+else% else conditional for stage 8
+end% end if else conditional for stage 8
+end %end subj loop
+
 %% Create graph of all subjects ( SEM area)
 %reorganise z-score data for all animals
 
@@ -1071,10 +1169,12 @@ Lickkernel_Shifted_all=[];
 modelsum_Shifted_all=[];
 DSzblueAllTrials_Shifted_all=[];
 
-for subject= 1:length(subjects);
+fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
+
+for subject= 1:length(fns);
 % create matrix with all DS onset DSkernels for all animals (1st sheet in
 % 3D matrix)
-fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
+
 
 DSkernel_Shifted_all= cat(2,DSkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,1));
 % create matrix with all PE DSkernels for all animals(2nd sheet in
@@ -1100,25 +1200,94 @@ figure();
   plot(timeLock,nanmean(PEkernel_Shifted_all,2), 'b');hold on;
   plot(timeLock,nanmean(Lickkernel_Shifted_all,2),'m');hold off;
   legend('average DS trace (sum kernels- across animals)', 'average PE trace (sum kernels- across animals)','average Lick trace (sum kernels- across animals)');
-    
-        gcf;
+ 
+         gcf;
         [filepath,name,ext] = fileparts(file_name);
-        figsave_name=strcat('DSonset_Pox_Lick_regressiontraces',name);
-        cd(strcat(figsave_folder,'\across animals\'));;
-        savefig(figsave_name);
+        figsave_name=strcat('Avg_Kernels');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);  
+  
 figure();
   plot(timeLock,nanmean(modelsum_Shifted_all,2), 'k');hold on;
   plot(timeLock,nanmean(DSzblueAllTrials_Shifted_all,2), 'b');hold off;
   legend('average model trace (sum kernels- across animals)', 'average z-score (across animals)');
-        
-        gcf;
+  
+  
+         gcf;
         [filepath,name,ext] = fileparts(file_name);
-        figsave_name=strcat('sumregressiontrace_zscoretrace',name);
-        cd(strcat(figsave_folder,'\across animals\'));;
+        figsave_name=strcat('Avg_ModelMean');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
+    
+%% gramm plots
+
+%DS kernel
+figure()
+g=gramm('x',timeLock,'y',DSkernel_Shifted_all');
+g.stat_summary('geom','area','type','sem')
+g.set_names('x','Time from DS onset(sec)','y','Regression Coefficient','group','DSonset');
+g.axe_property('YLim',[-1 1.8]);
+g.set_title('DS Onset Kernel');
+g.draw()
+
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_DSKernel');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
         savefig(figsave_name);
 
- toc
- cd(curr_dir)
-end %end subj loop
+%PE kernel
+figure()
+g=gramm('x',timeLock,'y',PEkernel_Shifted_all')
+g.stat_summary('geom','area','type','sem')
+g.set_names('x','Time from PE(sec)','y','Regression Coefficient');
+g.set_color_options('map','d3_10');
+g.axe_property('YLim',[-1 1.8]);
+g.set_title('Port Entry Kernel');
+g.draw()
 
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_PEKernel');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
+
+
+%Lick kernel
+figure()
+g=gramm('x',timeLock,'y',Lickkernel_Shifted_all')
+g.stat_summary('geom','area','type','sem')
+g.set_names('x','Time from Initial Lick(sec)','y','Regression Coefficient');
+g.set_color_options('map','brewer2');
+g.axe_property('YLim',[-1 1.8]);
+g.set_title('Initial Lick Kernel');
+g.draw()
+
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_LickKernel');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
+
+
+
+figure()
+g=gramm('x',timeLock,'y',modelsum_Shifted_all');
+g.stat_summary('geom','area','type','sem')
+g.set_color_options('chroma',0);
+g.set_names('x','Time from DS onset(sec)','y','regression beta','color','model');
+g.set_title('black=model and blue=z-score');
+g.draw()
+g.update('x',timeLock,'y',DSzblueAllTrials_Shifted_all')
+g.stat_summary('geom','area','type','sem')
+g.set_color_options('map','matlab');
+g.axe_property('YLim',[-1.5 3.5]);
+g.draw()
+
+
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_Modelmean_gramm');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
 

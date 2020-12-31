@@ -7,10 +7,12 @@ Lickkernel_Shifted_all=[];
 modelsum_Shifted_all=[];
 DSzblueAllTrials_Shifted_all=[];
 
-for subject= 1:length(subjects);
+fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
+
+for subject= 1:length(fns);
 % create matrix with all DS onset DSkernels for all animals (1st sheet in
 % 3D matrix)
-fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
+
 
 DSkernel_Shifted_all= cat(2,DSkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,1));
 % create matrix with all PE DSkernels for all animals(2nd sheet in
@@ -36,11 +38,24 @@ figure();
   plot(timeLock,nanmean(PEkernel_Shifted_all,2), 'b');hold on;
   plot(timeLock,nanmean(Lickkernel_Shifted_all,2),'m');hold off;
   legend('average DS trace (sum kernels- across animals)', 'average PE trace (sum kernels- across animals)','average Lick trace (sum kernels- across animals)');
-    
+ 
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_Kernels');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);  
+  
 figure();
   plot(timeLock,nanmean(modelsum_Shifted_all,2), 'k');hold on;
   plot(timeLock,nanmean(DSzblueAllTrials_Shifted_all,2), 'b');hold off;
   legend('average model trace (sum kernels- across animals)', 'average z-score (across animals)');
+  
+  
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_ModelMean');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
     
 %% gramm plots
 
@@ -53,6 +68,12 @@ g.axe_property('YLim',[-1 1.8]);
 g.set_title('DS Onset Kernel');
 g.draw()
 
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_DSKernel');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
+
 %PE kernel
 figure()
 g=gramm('x',timeLock,'y',PEkernel_Shifted_all')
@@ -62,6 +83,13 @@ g.set_color_options('map','d3_10');
 g.axe_property('YLim',[-1 1.8]);
 g.set_title('Port Entry Kernel');
 g.draw()
+
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_PEKernel');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
+
 
 %Lick kernel
 figure()
@@ -73,12 +101,20 @@ g.axe_property('YLim',[-1 1.8]);
 g.set_title('Initial Lick Kernel');
 g.draw()
 
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_LickKernel');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
+
+
 
 figure()
 g=gramm('x',timeLock,'y',modelsum_Shifted_all');
 g.stat_summary('geom','area','type','sem')
 g.set_color_options('chroma',0);
-g.set_names('x','Time from DS onset(sec)','y','regression beta','group','DSonset');
+g.set_names('x','Time from DS onset(sec)','y','regression beta','color','model');
+g.set_title('black=model and blue=z-score');
 g.draw()
 g.update('x',timeLock,'y',DSzblueAllTrials_Shifted_all')
 g.stat_summary('geom','area','type','sem')
@@ -87,26 +123,33 @@ g.axe_property('YLim',[-1.5 3.5]);
 g.draw()
 
 
-%% same as above but model mean across animals instead of trials
-%     figure; hold on; title(strcat('Mean across all DS trials- modeled gcamp trace vs. actual peri-DS trace'));
-%     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
-%     plot(timeLock,currentSubj(session).periDS.DSzblueMean, 'b');
-%     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
-    
-    %Let's do one big figure with mean of each kernel and sum separately
-    %subplotted
-    figure; hold on; sgtitle('DS trials- mean event kernels and mean modeled GCaMP');
-    for con= 1:numel(cons) %loop through event types (cons)
-        subplot(numel(cons)+1, 1, con); hold on; title(cons{con}); %subplot of this event's kernel
-        plot(timeLock, nanmean(kernels_DStrials(:,:,con),2), conColors{con});
-    end %end con loop
-    subplot(numel(cons)+1, 1, con+1); hold on; title('modeled vs. actual GCaMP');
-    plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
-    plot(timeLock,currentSubj(1).DSzblueMean, 'b');
-    legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
-
-        gcf;
+         gcf;
         [filepath,name,ext] = fileparts(file_name);
-        figsave_name=strcat('DSonset_PoxDS_ModelMean',name);
-        cd(strcat(figsave_folder,'\Mean_Model\'));;
+        figsave_name=strcat('Avg_Modelmean_gramm');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
         savefig(figsave_name);
+
+
+% %% same as above but model mean across animals instead of trials
+% %     figure; hold on; title(strcat('Mean across all DS trials- modeled gcamp trace vs. actual peri-DS trace'));
+% %     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
+% %     plot(timeLock,currentSubj(session).periDS.DSzblueMean, 'b');
+% %     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
+%     
+%     %Let's do one big figure with mean of each kernel and sum separately
+%     %subplotted
+%     figure; hold on; sgtitle('DS trials- mean event kernels and mean modeled GCaMP');
+%     for con= 1:numel(cons) %loop through event types (cons)
+%         subplot(numel(cons)+1, 1, con); hold on; title(cons{con}); %subplot of this event's kernel
+%         plot(timeLock, nanmean(kernels_DStrials(:,:,con),2), conColors{con});
+%     end %end con loop
+%     subplot(numel(cons)+1, 1, con+1); hold on; title('modeled vs. actual GCaMP');
+%     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
+%     plot(timeLock,currentSubj(1).DSzblueMean, 'b');
+%     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
+% 
+%         gcf;
+%         [filepath,name,ext] = fileparts(file_name);
+%         figsave_name=strcat('DSonset_PoxDS_ModelMean',name);
+%         cd(strcat(figsave_folder,'\Mean_Model\'));;
+%         savefig(figsave_name);
