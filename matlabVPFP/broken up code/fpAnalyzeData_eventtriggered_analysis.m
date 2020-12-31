@@ -277,6 +277,20 @@ for subj= 1:numel(subjects) %for each subject
    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
    for session = 1:numel(currentSubj) %for each training session this subject completed
 
+        subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected= [];
+           
+         
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue= [];
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple= [];
+              
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue= []; 
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple= [];
+                
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblueMean = [];
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurpleMean = []; 
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblueMean = [];
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurpleMean = [];
+          
         %get the DS cues
         DSselected= currentSubj(session).DS;  
 
@@ -361,6 +375,7 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
             
+
            elseif isnan(DSselected(cue)) %if there are no valid pe this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected(cue)= nan;
                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(1:periCueFrames+1,1,cue)= nan;
@@ -371,12 +386,29 @@ for subj= 1:numel(subjects) %for each subject
            
            %save DSpox data
                 if ~isnan(DSselected(cue))
+
+                %get the mean response to the DS for this session
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to 1st PE 
+
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple, 3); 
+
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblueMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue, 3);
+
+            subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple, 3);
+           
+            
+
                 subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(cue,1)= firstPox;
                 subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(cue,1)= firstPoxind;%index in cut time
-                else
-                subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(cue,1)= nan;
-                subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(cue,1)= nan;    
-                end
+           
+           else
+           subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPox(cue,1)= nan;
+                subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(cue,1)=nan;
+                
+    
+           end
+           
+
        
                   
 

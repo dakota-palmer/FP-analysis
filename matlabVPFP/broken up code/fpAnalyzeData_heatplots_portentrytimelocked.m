@@ -76,11 +76,20 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
 
     
     %now get the actual photometry data
-    for session = 1:numel(currentSubj) %for each training session this subject completed       
+    for session = 1:numel(currentSubj) %for each training session this subject completed 
+         
+        %if there's no DS data, fill with NaNs first
+            if isempty(currentSubj(session).periDSpox.DSzpoxblueMean)
+            currentSubj(session).periDSpox.DSzpoxblueMean= NaN(size(timeLock'));
+            currentSubj(session).periDSpox.DSzpoxpurpleMean= NaN(size(timeLock'));
+            end
+        
+        
             if session ==1 %for the first session, get this sessions periDS blue z score response
                         currentSubj(1).DSzpoxblueSessionMean= currentSubj(session).periDSpox.DSzpoxblueMean; 
                         currentSubj(1).DSzpoxpurpleSessionMean= currentSubj(session).periDSpox.DSzpoxpurpleMean;
-                else % add on periDS response for subsequent sessions
+            else
+                 % add on periDS response for subsequent sessions
                         currentSubj(1).DSzpoxblueSessionMean= cat(2, currentSubj(1).DSzpoxblueSessionMean, currentSubj(session).periDSpox.DSzpoxblueMean);
                         currentSubj(1).DSzpoxpurpleSessionMean= cat(2, currentSubj(1).DSzpoxpurpleSessionMean, currentSubj(session).periDSpox.DSzpoxpurpleMean);
             end
@@ -315,6 +324,11 @@ end %end subject loop
      
      for session = 1:numel(currentSubj) %for each session this subject completed
 
+         if isempty(currentSubj(session).periDSpox.DSzpoxblueMean) %if there's no NS data, fill with NaNs
+            currentSubj(session).periDSpox.DSzpoxblueMean= NaN(size(timeLock'));
+            currentSubj(session).periDSpox.DSzpoxpurpleMean=  NaN(size(timeLock'));
+         end
+         
          allRats.meanDSzpoxblue(:,session,subj)= currentSubj(session).periDSpox.DSzpoxblueMean;
          allRats.meanDSzpoxpurple(:,session,subj)= currentSubj(session).periDSpox.DSzpoxpurpleMean;
 
@@ -720,10 +734,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         if session==1 %for first session, initialize 
             
     
-            
+           if ~isempty(currentSubj(session).periDSpox.DSselected) %if there's valid DS data 
            currentSubj(1).DSzpoxblueAllTrials= squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,DSselected)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
            currentSubj(1).DSzpoxpurpleAllTrials= squeeze(currentSubj(session).periDSpox.DSzpoxpurple(:,:,DSselected)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
            currentSubj(1).DSpoxpeLatencyAllTrials= currentSubj(session).behavior.DSpeLatency(DSselected); %collect all the 1st PE latency values from trials of interest
+           end
            
            if ~isempty(currentSubj(session).periNSpox.NSselected) %if there's valid NS data
                 currentSubj(1).NSzpoxblueAllTrials= squeeze(currentSubj(session).periNSpox.NSzpoxblue(:,:,NSselected)); 
@@ -735,10 +750,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
            end
            
         else %add subsequent sessions using cat()
+            if ~isempty(currentSubj(session).periDSpox.DSselected) %if there's valid DS data
             currentSubj(1).DSzpoxblueAllTrials = cat(2, currentSubj.DSzpoxblueAllTrials, (squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
             currentSubj(1).DSzpoxpurpleAllTrials = cat(2, currentSubj.DSzpoxpurpleAllTrials, (squeeze(currentSubj(session).periDSpox.DSzpoxpurple(:,:,DSselected)))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
             currentSubj(1).DSpoxpeLatencyAllTrials = cat(2,currentSubj(1).DSpoxpeLatencyAllTrials,currentSubj(session).behavior.DSpeLatency(DSselected)); %collect all of the DSpeLatencies for sorting between sessions
-          
+            end
             
             
             if ~isempty(currentSubj(session).periNSpox.NSselected)
@@ -793,11 +809,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
      
      stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
      
-     topDSzpoxblue= stdFactor*abs(mean((std(currentSubj(1).DSzpoxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpoxpurple= stdFactor*abs(mean((std(currentSubj(1).DSzpoxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzpoxblue= stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzpoxpurple= stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-     bottomDSzpoxblue = -stdFactor*abs(mean((std(currentSubj(1).DSzpoxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpoxpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzpoxpurpleAllTrials, 0, 2))));
+     bottomDSzpoxblue = -stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     bottomDSzpoxpurple= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxpurpleAllTrials, 0, 2))));
      
      %now choose the most extreme of these two (between blue and
      %purple)to represent the color axis 

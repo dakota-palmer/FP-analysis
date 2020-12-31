@@ -359,7 +359,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
 %% DS PLOTS
 
- timeLock = [-periCueFrames:periCueFrames]/fs;  %define a shared common time axis, timeLock, where cue onset =0
+ timeLock = [-preCueFrames:postCueFrames]/fs; %define a shared common time axis, timeLock, where cue onset =0
     
     %DS z plot
     figure(figureCount);
@@ -452,7 +452,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
    
 %   set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving  
- saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_DSperiCueandPEZ_AllTrials_latencysorted','.pdf')); %save the current figure in fig format
+%  saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_DSperiCueandPEZ_AllTrials_latencysorted','.pdf')); %save the current figure in fig format
     figureCount= figureCount+1;
 
 
@@ -553,8 +553,8 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
    
       
 %       set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving  
-      saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_NSperiCueandPEZ_AllTrials_latencysorted','.pdf')); %save the current figure in fig format
-    
+%       saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_NSperiCueandPEZ_AllTrials_latencysorted','.pdf')); %save the current figure in fig format
+%     
       figureCount= figureCount+1;
  end
    

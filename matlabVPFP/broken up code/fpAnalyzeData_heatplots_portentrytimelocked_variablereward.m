@@ -59,6 +59,7 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
             if rewardSessionCount==1 %for first session, initialize 
                 
                 %now we'll use the reward identity (pump) indices to get only responses to those specific trials 
+                if ~isempty(currentSubj(session).periDSpox.DSselected) %if there's valid DS data
                 currentSubj(1).DSzpoxbluePump1= squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump1)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
                 currentSubj(1).DSzpoxbluePump2= squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump2)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
                 currentSubj(1).DSzpoxbluePump3= squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump3)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
@@ -68,12 +69,13 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
                 currentSubj(1).DSzpoxpurplePump3= squeeze(currentSubj(session).periDSpox.DSzpoxpurple(:,:,indPump3)); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
 
                 rewardSessionCount= rewardSessionCount+1;
-                
+                end
 %                 currentSubj(1).DSzpurpleAllTrials= squeeze(currentSubj(session).periDS.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
 % 
 %                 currentSubj(1).NSzblueAllTrials= squeeze(currentSubj(session).periNS.NSzblue); 
 %                 currentSubj(1).NSzpurpleAllTrials= squeeze(currentSubj(session).periNS.NSzpurple);
             else %add subsequent sessions using cat()
+                if ~isempty(currentSubj(session).periDSpox.DSselected) %if there's valid DS data
                 currentSubj(1).DSzpoxbluePump1 = cat(2, currentSubj(1).DSzpoxbluePump1, squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump1))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
                 currentSubj(1).DSzpoxbluePump2 = cat(2, currentSubj(1).DSzpoxbluePump2, squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump2))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
                 currentSubj(1).DSzpoxbluePump3 = cat(2, currentSubj(1).DSzpoxbluePump3, squeeze(currentSubj(session).periDSpox.DSzpoxblue(:,:,indPump3))); %concatenate- this contains z score response to DS from every DS (should have #columns= ~30 cues x #sessions)
@@ -88,7 +90,7 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
 % 
 %                 currentSubj(1).NSzblueAllTrials = cat(2, currentSubj.NSzblueAllTrials, (squeeze(currentSubj(session).periNS.NSzblue))); 
 %                 currentSubj(1).NSzpurpleAllTrials = cat(2, currentSubj.NSzpurpleAllTrials, (squeeze(currentSubj(session).periNS.NSzpurple))); 
-
+                end
             end
              %save for later
     

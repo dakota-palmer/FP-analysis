@@ -145,6 +145,10 @@ figureCount= figureCount+1; %iterate the figure count
 %    g (1,1).set_color_options('map','brewer_dark') 
      g(1,1).set_color_options('map','pm') %pm has enough colors to prevent errors (so far)
       
+
+%    g (1,1).set_color_options('map','brewer_dark')
+   
+
    g(2,1)= gramm('x',days,'y',NSpeRatio,'color',id)
    g(2,1).geom_line()
    g(2,1).set_names('x','training day','y','port entry ratio (# of trials with PE / total # of trials)','color','Subject')
@@ -153,6 +157,9 @@ figureCount= figureCount+1; %iterate the figure count
 %    g(2,1).set_color_options('map','brewer_dark')
    g(2,1).set_color_options('map','pm')
     g.draw()
+
+
+
    
    saveas(gcf, strcat(figPath,'AvgDSPE_NSPE'),'fig');
    %% PLOT PE RATIO IN FIRST 10SEC
@@ -180,15 +187,21 @@ figureCount= figureCount+1; %iterate the figure count
    j(1,1).update('color',id);%update plots on same subplot, in this case (1,1)
    j(1,1).geom_line()
    j(1,1).set_names('x','training day','y','port entry ratio in first 10 sec(# of trials with PE / total # of trials)','color','Subject')
-%    j(1,1).set_color_options('map','brewer_pastel')
- 
+   j(1,1).set_color_options('map','pm')
+
+%    j(1,1).set_color_options('map','brewer2')
+  
+
    %NS PE ratio in first 10 sec for all animals, will display as pastel
    %lines  
    j(2,1).update('color',id)
    j(2,1).geom_line()
    j(2,1).set_names('x','training day','y','port entry ratio in first 10 sec(# of trials with PE / total # of trials)','color','Subject')
    j(2,1).set_line_options('styles',{'--'})
-%    j(2,1).set_color_options('map','brewer_pastel')
+   j(2,1).set_color_options('map','pm')
+
+%    j(2,1).set_color_options('map','brewer2')
+
    j.draw();
  
     %make figure full screen, save, and close this figure

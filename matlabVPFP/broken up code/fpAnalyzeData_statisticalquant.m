@@ -192,7 +192,7 @@ b.draw()
    b.set_names('x','Cue Type','y','Mean Z-Score')
    b.set_title(' Average 405 nm Z Score-Citeria')
    b.axe_property('YLim',[-2 3])
-   b.set_color_options('map','brewer_dark')
+   b.set_color_options('map','pm')
 b.draw()
 %  figure();   
 %    c=gramm('x',binsignaltypeblueall,'y', binzblueall,'color',bincuetypeblue,'subset',bincriteriastage5all==1);
@@ -418,14 +418,14 @@ g.update('x',xaxisgroup,'y',observedZvalues,'color',ratIDZtype);
 g.geom_point();
 g.set_title('Fitted Values and Observed Values')
 g.set_names('x','Response Type','y','Z Response','color','ratID');
-g.set_color_options('map','brewer_dark')
+g.set_color_options('map','pm')
 g.draw();
 
 g.update('x',xaxisgroup,'y',observedZvalues,'color',ratIDZtype);
 g.geom_line();
 g.set_names('x','Response Type','y','Z Response');
 g.set_layout_options('legend',false)
-g.set_color_options('map','brewer_dark')
+g.set_color_options('map','pm')
 g.draw();
 
 g.export('file_name','GLMM_Bar_Scatter','export_path',figPath,'file_type','pdf');

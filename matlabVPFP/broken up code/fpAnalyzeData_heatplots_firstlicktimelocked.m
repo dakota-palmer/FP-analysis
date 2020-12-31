@@ -845,11 +845,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
      
     %same, but defining color axes for NS
     if ~isempty(currentSubj(1).NSzloxblueAllTrials) %only run this if there's NS data
-        topNSzloxblue= stdFactor*abs(mean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-        topNSzloxpurple= stdFactor*abs(mean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+        topNSzloxblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+        topNSzloxpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-        bottomNSzloxblue= -stdFactor*abs(mean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));
-        bottomNSzloxpurple= -stdFactor*abs(mean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));
+        bottomNSzloxblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));
+        bottomNSzloxpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));
 
         bottomAllNSlox= min(bottomNSzloxblue, bottomNSzloxpurple);
         topAllNSlox= max(topNSzloxblue, topNSzloxpurple);
@@ -1157,11 +1157,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
      
     %same, but defining color axes for NS
     if ~isempty(currentSubj(1).NSzloxblueAllTrials) %only run this if there's NS data
-        topNSzloxblue= stdFactor*abs(mean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-        topNSzloxpurple= stdFactor*abs(mean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+        topNSzloxblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+        topNSzloxpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-        bottomNSzloxblue= -stdFactor*abs(mean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));
-        bottomNSzloxpurple= -stdFactor*abs(mean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));
+        bottomNSzloxblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzloxblueAllTrials, 0, 2))));
+        bottomNSzloxpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzloxpurpleAllTrials, 0, 2))));
 
         bottomAllNSlox= min(bottomNSzloxblue, bottomNSzloxpurple);
         topAllNSlox= max(topNSzloxblue, topNSzloxpurple);

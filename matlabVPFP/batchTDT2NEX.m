@@ -1,7 +1,7 @@
 %dp 8.5.19
 %adapted from https://www.mathworks.com/matlabcentral/answers/437494-how-to-loop-through-all-files-in-subfolders-in-a-main-folder
 
-tankPath= 'F:\TDT Photometry tanks\DP_DSTrainingv02_TDT2-191203-124106\VP-VTA-FP round 2\_needNex'; %define the parent folder housing all tank subfolders
+tankPath= 'D:\Photometry\GAD-VPFP\09to16\Day 45'; %define the parent folder housing all tank subfolders
 
 tankDir = dir(fullfile(tankPath,'*')); 
 

@@ -55,9 +55,7 @@ for subj= 1:numel(subjects) %for each subject
     daysDS=vertcat(daysDS,days);
     stageDS=vertcat(stageDS,stage);
     DSzSessionblueMean= vertcat(DSzSessionblueMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periDSpox.DSzpoxblueMean);
-    NSzSessionblueMean= vertcat(NSzSessionblueMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periNSpox.NSzpoxblueMean);
     DSzSessionpurpleMean= vertcat(DSzSessionpurpleMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periDSpox.DSzpoxpurpleMean);
-    NSzSessionpurpleMean= vertcat(NSzSessionpurpleMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periNSpox.NSzpoxpurpleMean);
     timeLocktracesDS= vertcat(timeLocktracesDS,timeLock');
     
     
@@ -111,8 +109,10 @@ for subj= 1:numel(subjects) %for each subject
          daysNS=vertcat(daysNS,days);
          timeLocktracesNS= vertcat(timeLocktracesNS,timeLock');
          idNS=vertcat(idNS,repid');
-         
-          % find the non zero indicies in NSitroduced column 
+         NSzSessionblueMean= vertcat(NSzSessionblueMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periNSpox.NSzpoxblueMean);
+         NSzSessionpurpleMean= vertcat(NSzSessionpurpleMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periNSpox.NSzpoxpurpleMean);
+          
+         % find the non zero indicies in NSitroduced column 
          if subjData.(subjectsAnalyzed{subj})(day).box == 1
              if (subjData.(subjectsAnalyzed{subj})(day).NSAintro == 1)
                  repNSintroNS = repelem(1, length(timeLock));

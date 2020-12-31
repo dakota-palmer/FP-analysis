@@ -17,9 +17,15 @@ profile on; %For optimization/trackin g performance of the code- this starts the
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-metaDataAddress = 'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
+% <<<<<<< Updated upstream
+% metaDataAddress = 'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
+% 
+% nexAddress =  'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\'; % nex file location 
+% =======
+metaDataAddress = 'E:\Photometry\nexFilesVPFP\DS Training All\GADVPFPall_metadata_VP_final.xlsx'; % excel file location 
 
-nexAddress =  'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\'; % nex file location 
+nexAddress =  'E:\Photometry\nexFilesVPFP\DS Training All'; % nex file location 
+% >>>>>>> Stashed changes
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 %note: assembly of this nex file list is case-sensitive (I had a minor issue
 %where files with subjects in caps were being loaded before uncapitalized
@@ -27,7 +33,7 @@ nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 % figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-experimentName= 'vp-vta-fp'; %change experiment name for automatic naming of figures
+experimentName= 'GADVPFP'; %change experiment name for automatic naming of figures
 
 %% Loop through each nex file, extracting data
 
@@ -45,13 +51,19 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     
     sesNum=sesNum+1; %increment the loop
      
-    [~,~,excelData] = xlsread(metaDataAddress); %import metadata from excel spreadsheet
+    [excelData] = readcell(metaDataAddress); %import metadata from excel spreadsheet
+    excelData(cellfun(@(x) any(ismissing(x)),  excelData)) ={[]};
+    
     fileIndex= find(strcmp(excelData(:,1),fName)); %search the spreadsheet data for the matching fileName to get index for matching metadata
     
+
   %skip over atypical DS training files (stage=0)... (e.g. magazine training session where stage =0)
     if excelData{fileIndex,5}== 0
        continue; 
     end
+
+
+
     
     sesData(file).date= excelData{fileIndex,2}();
     
@@ -261,12 +273,22 @@ toc
 end %End file loop
 
     %% Reorganize data into struct by subject 
+   %% Reorganize data into struct by subject 
     
     %identify unique rats and associate data from all sessions with rat
     %instead of boxF
     rats= cat(1, sesData.ratA, sesData.ratB);
     rats= unique(rats);
 
+    trialCount = 0; %counter for looping to fill subjData appropriately
+      
+    %identify unique rats and associate data from all sessions with rat
+    %instead of boxF
+%     for r=1:length(sesData)
+%     ratsA= sesData(r).ratA;
+%     ratsB= sesData(r).ratA;
+%     end
+    rats= unique(rats);
     trialCount = 0; %counter for looping to fill subjData appropriately
     
 for rat = 1:numel(rats) 

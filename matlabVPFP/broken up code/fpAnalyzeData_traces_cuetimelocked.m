@@ -23,6 +23,15 @@
     pumppurplesignalDS=[];
     pumpdayTimeLock=[];
     pumpTimeLock=[];
+    tracecuetype=[];
+    tracezblueall=[];
+    tracezpurpleall=[];
+    traceidall=[];
+    tracedaysall=[];
+    tracecriteriastage5all=[];
+    traceNSintroall=[];
+    timeLocktracesall=[];
+    tracestageall=[];
 
 %this is gathering average data across days from each animal, there is no individual trials represented in this data    
 figureCount= figureCount+1; %iterate the figure count
@@ -43,9 +52,9 @@ for subj= 1:numel(subjects) %for each subject
     daysDS=vertcat(daysDS,days);
     stageDS=vertcat(stageDS,stage);
     DSzSessionblueMean= vertcat(DSzSessionblueMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periDS.DSzblueMean);
-    NSzSessionblueMean= vertcat(NSzSessionblueMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periNS.NSzblueMean);
+   
     DSzSessionpurpleMean= vertcat(DSzSessionpurpleMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periDS.DSzpurpleMean);
-    NSzSessionpurpleMean= vertcat(NSzSessionpurpleMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periNS.NSzpurpleMean);
+  
     timeLocktracesDS= vertcat(timeLocktracesDS,timeLock');
     
     
@@ -99,7 +108,9 @@ for subj= 1:numel(subjects) %for each subject
          daysNS=vertcat(daysNS,days);
          timeLocktracesNS= vertcat(timeLocktracesNS,timeLock');
          idNS=vertcat(idNS,repid');
-         
+         NSzSessionblueMean= vertcat(NSzSessionblueMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periNS.NSzblueMean);
+         NSzSessionpurpleMean= vertcat(NSzSessionpurpleMean,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).periNS.NSzpurpleMean);
+          
           % find the non zero indicies in NSitroduced column 
          if subjData.(subjectsAnalyzed{subj})(day).box == 1
              if (subjData.(subjectsAnalyzed{subj})(day).NSAintro == 1)
