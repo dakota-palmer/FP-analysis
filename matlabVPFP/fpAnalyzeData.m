@@ -1465,6 +1465,9 @@ for subj= 1:numel(subjects) %for each subject
 %                subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple(:,:,cue) = nan;
 %             end
             
+            %save the time window for baseline calculations
+            subjDataAnalyzed.(subjects{subj})(session).periDS.baselineWindow(:,:,cue)= DSonset-slideTime:DSonset; 
+                
         
             %lets save the baseline mean and std used for z score calc- so
             %that we can use this same baseline for other analyses
@@ -1573,6 +1576,9 @@ for subj= 1:numel(subjects) %for each subject
                 baselineMeanpurple=nanmean(currentSubj(session).repurple((NSonset-slideTime):NSonset)); %baseline mean purple 10s prior to DS onset for boxA
                 baselineStdpurple=std(currentSubj(session).repurple((NSonset-slideTime):NSonset)); %baseline stdDev purple 10s prior to DS onset for boxA
 
+                %save the time window for baseline calculations
+                subjDataAnalyzed.(subjects{subj})(session).periNS.baselineWindow(:,:,cue)= NSonset-slideTime:NSonset; 
+                
                 %save the data in the subjDataAnalyzed struct under the periNS field
                 
                 subjDataAnalyzed.(subjects{subj})(session).periNS.NS(cue)= currentSubj(session).NS(cue); %this way only analyzed cues are included
@@ -4513,6 +4519,14 @@ end %end subject loop
 %~~~~Logic here assumes that reward identity changes = coded as different
 %stage in metadata excel sheet
 
+    %initialize between subj arrays
+allSubjPumpIDs= []
+allSubjPumpOnTimeRel= [];
+allSubjPEDSblue= [];
+allSubjPEDSpurple= [];
+allSubjfirstLickDS= [];
+PEDSbluePump1= []; PEDSpurplePump1=[];
+
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
     
@@ -4609,11 +4623,24 @@ for subj= 1:numel(subjects)
              xlabel('time from PE (s)');
              ylabel('z score relative to pre-cue baseline)');
 
+             %let's save data from this pump on this stage for later
+             %between-subjects plots
+             PEDSbluePump1(:,thisStage,subj)= nanmean(PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{1}))),2); 
+             PEDSpurplePump1(:,thisStage,subj)= nanmean(PEDSpurple(:,find(strcmp(rewardIDs,rewardsThisStage{1}))),2);
+             PEDSbluePump2(:,thisStage,subj)= nanmean(PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{2}))),2);
+             PEDSpurplePump2(:,thisStage,subj)= nanmean(PEDSpurple(:,find(strcmp(rewardIDs,rewardsThisStage{2}))),2);
+             PEDSbluePump3(:,thisStage,subj)= nanmean(PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{3}))),2);
+             PEDSpurplePump3(:,thisStage,subj)= nanmean(PEDSpurple(:,find(strcmp(rewardIDs,rewardsThisStage{3}))),2);
+             
+             firstLickPump1(:,thisStage,subj)= nanmean(firstLickDS(pumpIDs==1));
+             firstLickPump2(:,thisStage,subj)= nanmean(firstLickDS(pumpIDs==2));
+             firstLickPump3(:,thisStage,subj)= nanmean(firstLickDS(pumpIDs==3));
+             
          end %end stage loop
         linkaxes();
         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving      
 
-        legend('465nm z score','405nm z score', 'pump on', 'first PE during DS');
+        legend('465nm z score','405nm z score', 'pump on', 'first PE during DS', 'first lick');
                         
         figureCount= figureCount+1;
                 
@@ -4621,8 +4648,102 @@ for subj= 1:numel(subjects)
 %         end %end variable reward session conditional
 %     end
     
-   
+% %need to replace all empty all zero columns in photometry data with nan
+% PEDSbluePump1(:,~any(PEDSbluePump1,1),subj) = nan;
+% PEDSpurplePump1(:,~any(PEDSpurplePump1,1),subj) = nan;
+
+%let's save this subject's data into arrays for between subjects plots
+%perhaps easiest way to do this is to cat all together
+allSubjPumpIDs= [allSubjPumpIDs; pumpIDs]
+
+allSubjPumpOnTimeRel= [allSubjPumpOnTimeRel; pumpOnTimeRel];
+
+allSubjPEDSblue= [allSubjPEDSblue, PEDSblue];
+allSubjPEDSpurple= [allSubjPEDSpurple,PEDSpurple];
+allSubjfirstLickDS= [allSubjfirstLickDS, firstLickDS];
+
 end %end subj loop
+
+%need to replace all empty all zero columns in photometry data with nan
+% testPEDSbluePump1= nan(size(PEDSbluePump1));
+for subj=1:numel(subjects)
+    for emptyStage= find(~any(PEDSbluePump1(:,:,subj))==1)
+        PEDSbluePump1(:,emptyStage,subj) = nan(size(PEDSbluePump1,1),1);
+        PEDSpurplePump1(:,emptyStage,subj) = nan(size(PEDSpurplePump1,1),1);
+         PEDSbluePump2(:,emptyStage,subj) = nan(size(PEDSbluePump2,1),1);
+        PEDSpurplePump2(:,emptyStage,subj) = nan(size(PEDSpurplePump2,1),1);
+         PEDSbluePump3(:,emptyStage,subj) = nan(size(PEDSbluePump3,1),1);
+        PEDSpurplePump3(:,emptyStage,subj) = nan(size(PEDSpurplePump3,1),1);
+        
+        firstLickPump1(:,emptyStage,subj) = nan;
+        firstLickPump2(:,emptyStage, subj)= nan;
+        firstLickPump3(:,emptyStage, subj)= nan;
+    end
+end
+
+%calculate SEM
+allRewardStages= 8:12;%manual for now
+for thisStage= allRewardStages 
+    semPEDSbluePump1= nanstd(PEDSbluePump1(:,thisStage,:),0,3)/sqrt(numel(subjects));
+end
+%take mean across subjects
+PEDSbluePump1= nanmean(PEDSbluePump1,3);
+PEDSpurplePump1=  nanmean(PEDSpurplePump1,3);
+PEDSbluePump2= nanmean(PEDSbluePump2,3);
+PEDSpurplePump2= nanmean(PEDSpurplePump2,3);
+PEDSbluePump3= nanmean(PEDSbluePump3,3);
+PEDSpurplePump3= nanmean(PEDSpurplePump3,3);
+
+
+
+%% Now make plots of between-subjects mean activity
+            
+rewardColors= ['g','r','y']; %color plots based on reward identity
+
+figure(figureCount); sgtitle('between subj-peri first PE DSz by reward identity (between subj mean of all trials by stage)');
+%             subplot(1, numel(allRewardStages), find(allRewardStages==thisStage)); hold on;
+allRewardStages= 8:12;%manual for now
+for thisStage= [allRewardStages] 
+     %There will be one subplot per rewardStage
+            %with traces for each rewardID
+
+             subplot(3, numel(allRewardStages),find(thisStage==[allRewardStages])); hold on; title(strcat('stage-',num2str(thisStage),'-pump1-reward=',rewardsThisStage{1}));
+%              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{1}))), rewardColors(1)); %plot all trials
+             plot(timeLock,PEDSbluePump1(:,thisStage), 'b'); %plot mean across all trials (for this stage)
+%              plot(timeLock,PEDSpurplePump1(:,thisStage), 'm'); %plot mean across all trials (for this stage)
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==1))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
+             plot(ones(2,1)*firstLickPump1(:,thisStage), ylim, 'r');% overlay mean first lick time
+%              
+             subplot(3, numel(allRewardStages), numel(allRewardStages)+find(thisStage==[allRewardStages])); hold on; title(strcat('stage-',num2str(thisStage),'-pump2-reward=',rewardsThisStage{2}));
+%              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{2}))), rewardColors(2)); %plot all trials
+             plot(timeLock,PEDSbluePump2(:,thisStage), 'b'); %plot mean across all trials (for this stage)
+%              plot(timeLock,PEDSpurplePump2(:,thisStage), 'm'); %plot mean across all trials (for this stage)
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==2))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
+             plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r');% overlay mean first lick time
+%              
+             subplot(3, numel(allRewardStages), numel(allRewardStages)+numel(allRewardStages)+find(allRewardStages==thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'-pump3-reward=',rewardsThisStage{3}));
+% %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{3}))), rewardColors(3)); %plot all trials
+             plot(timeLock,PEDSbluePump3(:,thisStage), 'b'); %plot mean across all trials (for this stage)
+%              plot(timeLock,PEDSpurplePump3(:,thisStage), 'm'); %plot mean across all trials (for this stage)
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==3))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
+             plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r');% overlay mean first lick time
+
+             
+             xlabel('time from PE (s)');
+             ylabel('z score relative to pre-cue baseline)');
+             legend('465nm','pump on','port entry', 'first lick');
+             
+             linkaxes();
+
+end
+
+%first take mean across all trials 
+allSubjPEDSblueMean= nanmean(squeeze(allSubjPEDSblue), 1); 
+allSubjPEDSpurpleMean= nanmean(squeeze(allSubjPEDSpurple),1); 
+
 
 
 %% ~~~Plots by Stage ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4825,7 +4946,7 @@ end
 
 linkaxes(); %link axes for scale comparison
 
-colors= [136/255,86/255,167/255;127/255,191/255,123/255]; %https://colorbrewer2.org/#type=sequential&scheme=BuPu&n=3
+colors= [136/255,86/255,167/255;127/255,191/255,123/255; 118/255,42/255,131/255]; %https://colorbrewer2.org/#type=sequential&scheme=BuPu&n=3
 
 
 
@@ -5800,6 +5921,7 @@ effectWindow= effectStart*fs:effectEnd*fs; %Indices of the time window for the e
 allSubjPEDSblue= []; allSubjPEDSpurple= []; allSubjPENSblue= []; allSubjPENSpurple=[];
 allSubjNoPEDSblue= []; allSubjNoPEDSpurple= []; allSubjNoPENSblue= []; allSubjNoPENSpurple= [];
 allSubjInPortDSblue= []; allSubjInPortDSpurple= []; allSubjInPortNSblue= []; allSubjInPortNSpurple= [];
+allSubjFirstPoxDS= []; allSubjFirstPoxNS= [];
 
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
@@ -5809,6 +5931,7 @@ for subj= 1:numel(subjects)
         includedSessions= []; %excluded sessions will reset between unique stages
         inPortDSblue= []; inPortDSpurple= []; noPEDSblue= []; noPEDSpurple= []; PEDSblue= []; PEDSpurple= []; %reset between sessions
         inPortNSblue= []; inPortNSpurple= []; noPENSblue= []; noPENSpurple= []; PENSblue= []; PENSpurple= []; %reset between sessions
+        firstPoxDS=[]; firstPoxNS= [];
         
         %loop through all sessions and record index of sessions that correspond only to this stage
         for session= 1:numel(currentSubj)
@@ -5831,6 +5954,14 @@ for subj= 1:numel(subjects)
             for PEtrial= currentSubj(includedSession).trialOutcome.DSoutcome==1 %loop through trials and cat responses into one array
                 PEDSblue= [PEDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(:,:,PEtrial),3)];
                 PEDSpurple= [PEDSpurple, nanmean(currentSubj(includedSession).periDS.DSzpurple(:,:,PEtrial),3)];
+                
+                %record first pe and lick latency for later overlay on plots
+                %TODO: there is some bug here or earlier with poxDSrel that might
+                %make PEtrials empty? just skipping over empty cells here
+                %(checking to make sure PEtrial==1)
+                
+                firstPoxDS(includedSessions==includedSession)= nanmean((cellfun(@(v)v(1),currentSubj(includedSession).behavior.poxDSrel(PEtrial==1))));
+
             end
             
             for noPEtrial= currentSubj(includedSession).trialOutcome.DSoutcome==2 %loop through trials and cat responses into one array
@@ -5848,6 +5979,8 @@ for subj= 1:numel(subjects)
             for PEtrial= currentSubj(includedSession).trialOutcome.NSoutcome==1 %loop through trials and cat responses into one array
                 PENSblue= [PENSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(:,:,PEtrial),3)];
                 PENSpurple= [PENSpurple, nanmean(currentSubj(includedSession).periNS.NSzpurple(:,:,PEtrial),3)];
+            
+                firstPoxNS(includedSessions==includedSession)= nanmean((cellfun(@(v)v(1),currentSubj(includedSession).behavior.poxNSrel(PEtrial==1))));
             end
             
             for noPEtrial= currentSubj(includedSession).trialOutcome.NSoutcome==2 %loop through trials and cat responses into one array
@@ -5860,6 +5993,7 @@ for subj= 1:numel(subjects)
                 inPortNSpurple= [inPortNSpurple, nanmean(currentSubj(includedSession).periNS.NSzpurple(:,:,inPortTrial),3)];
             end    
             
+            
          end %end includedSession loop         
         
           %collect data from all subjects for a between-subjects mean plot
@@ -5871,6 +6005,8 @@ for subj= 1:numel(subjects)
         
         allSubjInPortDSblue(:,thisStage, subj)= nanmean(inPortDSblue, 2);
         allSubjInPortDSpurple(:,thisStage, subj)= nanmean(inPortDSpurple,2);
+       
+                
 
     
         if ~isempty(PENSblue)
@@ -5884,6 +6020,10 @@ for subj= 1:numel(subjects)
            allSubjInPortNSblue(:,thisStage,subj)= nanmean(inPortNSblue,2);
            allSubjInPortNSpurple(:,thisStage,subj)= nanmean(inPortNSpurple,2);
         end
+        
+        %collect mean pe and lick latency for this stage as well, so we can overlay in plots
+        allSubjFirstPoxDS(:,thisStage,subj)= nanmean(firstPoxDS);
+        allSubjFirstPoxNS(:,thisStage,subj)= nanmean(firstPoxNS);        
          
         figure(figureCount); hold on; sgtitle(strcat(subjectsAnalyzed{subj},'peri-DS response session means by PE outcome'));
         
@@ -5964,7 +6104,9 @@ for subj= 1:numel(subjects)
     
     allSubjInPortNSblue(:,find(all(allSubjInPortNSblue(:,:,subj)==0)), subj)= nan;
     allSubjInPortNSpurple(:,find(all(allSubjInPortNSpurple(:,:,subj)==0)), subj)= nan;
-
+    
+    allSubjFirstPoxDS(:,find(allSubjFirstPoxDS(:,:,subj)==0),subj)=nan;
+    allSubjFirstPoxNS(:,find(allSubjFirstPoxNS(:,:,subj)==0),subj)=nan;
 
 end
 
@@ -6009,7 +6151,8 @@ for subj= 1:numel(subjects)
         semLinePosAllSubj= thisStagePEDSpurple+semPEDSpurpleAllSubj;
         semLineNegAllSubj= thisStagePEDSpurple-semPEDSpurpleAllSubj;
         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
-      
+        xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
+        
         subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'DS noPE')) 
 %         plot(timeLock, (allSubjNoPEDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjNoPEDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
@@ -6023,6 +6166,8 @@ for subj= 1:numel(subjects)
         semLinePosAllSubj= thisStageNoPEDSpurple+semNoPEDSpurpleAllSubj;
         semLineNegAllSubj= thisStageNoPEDSpurple-semNoPEDSpurpleAllSubj;
         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
+        
         subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'DS inPort')) 
 %         plot(timeLock, (allSubjInPortDSblue(:,thisStage,subj)),'b--'); %plot each individual subject mean blue
 %         plot(timeLock, (allSubjInPortDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
@@ -6036,6 +6181,8 @@ for subj= 1:numel(subjects)
         semLinePosAllSubj= thisStageInPortDSpurple+semInPortDSpurpleAllSubj;
         semLineNegAllSubj= thisStageInPortDSpurple-semInPortDSpurpleAllSubj;
         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],'m','EdgeColor','None');alpha(0.3);
+        
+        xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
         
         if thisStage==1
            legend('465 individual subj mean', '405 individual subj mean', '465 all subj mean','405 all subj mean');
@@ -6122,12 +6269,15 @@ end
 linkaxes();
 
 
-%Now let's do a between subj with DS and NS 465 overlaid
+% Now let's do a between subj with DS and NS 465 overlaid
+
+stagesToPlot= [4,5,7,12] %easy way to plot specific stages
+eventLineLimits= [-1,4]; %range of ylim for vertical line overlays @ events
 
 figure;
 figureCount=figureCount+1; sgtitle('peri-cue response by PE outcome: mean between subjects ');
 for subj= 1:numel(subjects)
-    for thisStage= 1:size(allSubjDSblue,2) 
+    for thisStage= stagesToPlot 
         thisStagePEDSblue= nanmean(allSubjPEDSblue(:,thisStage,:),3);
         thisStagePEDSpurple= nanmean(allSubjPEDSpurple(:,thisStage,:),3);
         
@@ -6146,6 +6296,8 @@ for subj= 1:numel(subjects)
         thisStageInPortNSblue= nanmean(allSubjInPortNSblue(:,thisStage,:),3);
         thisStageInPortNSpurple= nanmean(allSubjInPortNSpurple(:,thisStage,:),3);
         
+        thisStageFirstPoxDS= nanmean(allSubjFirstPoxDS(:,thisStage,:),3);
+        thisStageFirstPoxNS= nanmean(allSubjFirstPoxNS(:,thisStage,:),3);
         
               %calculate SEM between subjects
         semPEDSblueAllSubj= []; semPEDSpurpleAllSubj=[]; semPENSblueAllSubj= []; semPENSpurpleAllSubj=[]; %reset btwn stages
@@ -6167,7 +6319,7 @@ for subj= 1:numel(subjects)
 
 
                 %DS
-        subplot(subplot(3, size(allSubjPEDSblue,2), thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'PEtrial')) 
+        subplot(subplot(3, numel(stagesToPlot), find(stagesToPlot==thisStage))); hold on; title(strcat('stage-',num2str(thisStage),'PEtrial')) 
         plot(timeLock, thisStagePEDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStagePENSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
             %sem overlay
@@ -6178,8 +6330,22 @@ for subj= 1:numel(subjects)
         semLinePosAllSubj= thisStagePENSblue+semPENSblueAllSubj;
         semLineNegAllSubj= thisStagePENSblue-semPENSblueAllSubj;
         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
-      
-        subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'noPE trial')) 
+        
+            %overlay line at cue onset
+        plot([0,0],eventLineLimits,'k--');
+%         xline(0, 'k--');
+            %overlay line at mean first PE
+        plot([thisStageFirstPoxDS, thisStageFirstPoxDS], eventLineLimits,'m-.');
+%         xline(thisStageFirstPoxDS, 'm--');
+       
+%         if ~isnan(thisStageFirstPoxNS)
+% %             xline(thisStageFirstPoxNS, 'g--');
+%             plot([thisStageFirstPoxNS, thisStageFirstPoxNS], eventLineLimits,'g--');
+%         end
+%         
+        xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
+        
+        subplot(subplot(3, numel(stagesToPlot), numel(stagesToPlot)+find(stagesToPlot==thisStage))); hold on; title(strcat('stage-',num2str(thisStage),'noPE trial')) 
         plot(timeLock, thisStageNoPEDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStageNoPENSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
             %sem overlay
@@ -6190,9 +6356,13 @@ for subj= 1:numel(subjects)
         semLinePosAllSubj= thisStageNoPENSblue+semNoPENSblueAllSubj;
         semLineNegAllSubj= thisStageNoPENSblue-semNoPENSblueAllSubj;
         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
-           
+        xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
 
-        subplot(subplot(3, size(allSubjPEDSblue,2), size(allSubjPEDSblue,2)+size(allSubjPEDSblue,2)+thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'DS inPort')) 
+           %overlay line at cue onset
+        plot([0,0],eventLineLimits,'k--');
+%         xline(0,'k--');
+        
+        subplot(subplot(3, numel(stagesToPlot), numel(stagesToPlot)+numel(stagesToPlot)+find(stagesToPlot==thisStage))); hold on; title(strcat('stage-',num2str(thisStage),'DS inPort')) 
         plot(timeLock, thisStageInPortDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStageInPortNSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
             %sem overlay
@@ -6203,14 +6373,127 @@ for subj= 1:numel(subjects)
         semLinePosAllSubj= thisStageInPortNSblue+semInPortNSblueAllSubj;
         semLineNegAllSubj= thisStageInPortNSblue-semInPortNSblueAllSubj;
         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
-      
-        if thisStage==1
-           legend('DS 465','NS 465');
-        end
+        xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
+       
+            %overlay line at cue onset
+        plot([0,0],eventLineLimits,'k--');
+%         xline(0,'k--');
+        
+        
+%         if find(stagesToPlot==thisStage)==1 
+subplot(3,4,1)
+           legend('DS 465','NS 465','sem','sem','cue onset','mean port entry latency');
+%         end
     end
 end
+linkaxes();
 
-linkaxes(); %link axes for scale comparison
+%~~~~making big pretty figures for presentation
+%     for thisStage= 1:size(allSubjDSblue,2) 
+%         
+%         figure;
+%         figureCount=figureCount+1; sgtitle('peri-cue response by PE outcome: mean between subjects ');
+%         thisStagePEDSblue= nanmean(allSubjPEDSblue(:,thisStage,:),3);
+%         thisStagePEDSpurple= nanmean(allSubjPEDSpurple(:,thisStage,:),3);
+%         
+%         thisStageNoPEDSblue= nanmean(allSubjNoPEDSblue(:,thisStage,:),3);
+%         thisStageNoPEDSpurple= nanmean(allSubjNoPEDSpurple(:,thisStage,:),3);
+% 
+%         thisStageInPortDSblue= nanmean(allSubjInPortDSblue(:,thisStage,:),3);
+%         thisStageInPortDSpurple= nanmean(allSubjInPortDSpurple(:,thisStage,:),3);
+%         
+%         thisStagePENSblue= nanmean(allSubjPENSblue(:,thisStage,:),3);
+%         thisStagePENSpurple= nanmean(allSubjPENSpurple(:,thisStage,:),3);
+%         
+%         thisStageNoPENSblue= nanmean(allSubjNoPENSblue(:,thisStage,:),3);
+%         thisStageNoPENSpurple= nanmean(allSubjNoPENSpurple(:,thisStage,:),3);
+% 
+%         thisStageInPortNSblue= nanmean(allSubjInPortNSblue(:,thisStage,:),3);
+%         thisStageInPortNSpurple= nanmean(allSubjInPortNSpurple(:,thisStage,:),3);
+%         
+%         thisStageFirstPoxDS= nanmean(allSubjFirstPoxDS(:,thisStage,:),3);
+%         thisStageFirstPoxNS= nanmean(allSubjFirstPoxNS(:,thisStage,:),3);
+%         
+%               %calculate SEM between subjects
+%         semPEDSblueAllSubj= []; semPEDSpurpleAllSubj=[]; semPENSblueAllSubj= []; semPENSpurpleAllSubj=[]; %reset btwn stages
+%         semNoPEDSblueAllSubj= []; semNoPEDSpurpleAllSubj= []; semNoPENSblueAllSubj= []; semNoPENSpurpleAllSubj= [];
+%         semInPortDSblueAllSubj= []; semInPortDSpurpleAllSubj= []; semInPortNSblueALlSubj= []; semInPortNSpurpleAllSubj=[];
+%         
+%         semPEDSblueAllSubj= nanstd(allSubjPEDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semPEDSpurpleAllSubj= nanstd(allSubjPEDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semNoPEDSblueAllSubj= nanstd(allSubjNoPEDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semNoPEDSpurpleAllSubj= nanstd(allSubjNoPEDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semInPortDSblueAllSubj= nanstd(allSubjInPortDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semInPortDSpurpleAllSubj= nanstd(allSubjInPortDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semPENSblueAllSubj= nanstd(allSubjPENSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semPENSpurpleAllSubj= nanstd(allSubjPENSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semNoPENSblueAllSubj= nanstd(allSubjNoPENSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semNoPENSpurpleAllSubj= nanstd(allSubjNoPENSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semInPortNSblueAllSubj= nanstd(allSubjInPortNSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%         semInPortNSpurpleAllSubj= nanstd(allSubjInPortNSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+% 
+% 
+%                 %DS
+%         subplot(subplot(3, 1, 1)); hold on; title(strcat('stage-',num2str(thisStage),'PEtrial')) 
+%         plot(timeLock, thisStagePEDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, thisStagePENSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
+%             %sem overlay
+%         semLinePosAllSubj= thisStagePEDSblue+semPEDSblueAllSubj;
+%         semLineNegAllSubj= thisStagePEDSblue-semPEDSblueAllSubj;
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.15);
+%         
+%         semLinePosAllSubj= thisStagePENSblue+semPENSblueAllSubj;
+%         semLineNegAllSubj= thisStagePENSblue-semPENSblueAllSubj;
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
+%         xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
+%         
+%             %overlay line at cue onset
+%         plot([0,0],ylim,'k--');
+% %         xline(0, 'k--');
+%             %overlay line at mean first PE
+%         plot([thisStageFirstPoxDS, thisStageFirstPoxDS], ylim,'m--');
+% %         xline(thisStageFirstPoxDS, 'm--');
+%        
+%         if ~isnan(thisStageFirstPoxNS)
+% %             xline(thisStageFirstPoxNS, 'g--');
+%             plot([thisStageFirstPoxNS, thisStageFirstPoxNS], ylim,'g--');
+%         end
+%         
+%         subplot(subplot(3, 1, 2)); hold on; title(strcat('stage-',num2str(thisStage),'noPE trial')) 
+%         plot(timeLock, thisStageNoPEDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, thisStageNoPENSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
+%             %sem overlay
+%         semLinePosAllSubj= thisStageNoPEDSblue+semNoPEDSblueAllSubj;
+%         semLineNegAllSubj= thisStageNoPEDSblue-semNoPEDSblueAllSubj;
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.15);
+%         
+%         semLinePosAllSubj= thisStageNoPENSblue+semNoPENSblueAllSubj;
+%         semLineNegAllSubj= thisStageNoPENSblue-semNoPENSblueAllSubj;
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
+%         xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
+% 
+%         subplot(subplot(3, 1,3)); hold on; title(strcat('stage-',num2str(thisStage),'DS inPort')) 
+%         plot(timeLock, thisStageInPortDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+%         plot(timeLock, thisStageInPortNSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
+%             %sem overlay
+%         semLinePosAllSubj= thisStageInPortDSblue+semInPortDSblueAllSubj;
+%         semLineNegAllSubj= thisStageInPortDSblue-semInPortDSblueAllSubj;
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.15);
+%         
+%         semLinePosAllSubj= thisStageInPortNSblue+semInPortNSblueAllSubj;
+%         semLineNegAllSubj= thisStageInPortNSblue-semInPortNSblueAllSubj;
+%         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
+%         xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
+%        
+%              %overlay line at cue onset
+%         plot([0,0],ylim,'k--');
+%         
+%         if thisStage==1
+%            legend('DS 465','NS 465');
+%         end
+%     end
+% 
+% linkaxes(); %link axes for scale comparison
 %% Scatter of cue-elicited response vs. port entry outcome (does cue elicited response predict PE?)
 
 %goal here will be to create scatter of mean response to cue with 3 different outcomes: no PE, PE, or already in port (denoted by color of plot) 
@@ -7482,7 +7765,7 @@ end %end subject loop
 % 
 % close;
     
-%% Artifact elimination
+% %% Artifact elimination
 % 
 % %Artifacts should be considered fast deflections in both shannels in the same
 % %direction, or we could just use the 405nm to keep it simple
@@ -7504,8 +7787,8 @@ end %end subject loop
 %     disp(strcat('artifact elimination_', subjects{subj}));
 %     
 %     
-%     figure(figureCount);
-%     figureCount=figureCount+1;
+% %     figure(figureCount);
+% %     figureCount=figureCount+1;
 %     sgtitle(strcat('Rat #',num2str(currentSubj(1).rat), 'artifact detection'));
 %     
 %     subplotCount=1;
@@ -7533,37 +7816,37 @@ end %end subject loop
 %     dArtifactIndex= find(dPurple>dThreshold | dPurple<-dThreshold);
 %     
 %     dArtifactsVals= dPurple(dPurple>dThreshold | dPurple<-dThreshold);
+% %     
+% %     subplot(numel(currentSubj),3,subplotCount);
+% %     subplotCount=subplotCount+1;
+% %     hold on;
+% %     plot(currentSubj(session).dPurple, 'm');
+% %     
+% %     title('dPurple');
+% %     %overlay threshold
+% %     plot([1,numel(currentSubj(session).dPurple)], [dMean - dThreshold, dMean - dThreshold], 'k--');
+% %     plot([1,numel(currentSubj(session).dPurple)], [dMean + dThreshold, dMean + dThreshold], 'k--');
+% %     %overlay points beyond threshold
+% %     scatter(dArtifactIndex, dArtifactsVals, 'rx')
+% %    
 %     
-%     subplot(numel(currentSubj),3,subplotCount);
-%     subplotCount=subplotCount+1;
-%     hold on;
-%     plot(currentSubj(session).dPurple, 'm');
-%     
-%     title('dPurple');
-%     %overlay threshold
-%     plot([1,numel(currentSubj(session).dPurple)], [dMean - dThreshold, dMean - dThreshold], 'k--');
-%     plot([1,numel(currentSubj(session).dPurple)], [dMean + dThreshold, dMean + dThreshold], 'k--');
-%     %overlay points beyond threshold
-%     scatter(dArtifactIndex, dArtifactsVals, 'rx')
-%    
-%     
-%     % let's put these excluded timestamps over the raw purple trace to compare
-%     
-%        subplot(numel(currentSubj), 3, subplotCount);
-%        subplotCount= subplotCount+1;
-%        hold on;
-%        plot(currentSubj(session).repurple, 'm'); %plot 405 signal
-%        title('repurple, artifact timestamps calculated based on dPurple');
-%        
-%        %overlay + and - the threshold relative to the mean 405 signal
-%        plot([1,numel(currentSubj(session).repurple)], [nanmean(currentSubj(session).repurple) + artifactThreshold, nanmean(currentSubj(session).repurple) + artifactThreshold], 'k--')
-%        plot([1,numel(currentSubj(session).repurple)], [nanmean(currentSubj(session).repurple) - artifactThreshold, nanmean(currentSubj(session).repurple) - artifactThreshold], 'k--')
-% 
-%        scatter(dArtifactIndex, ones(numel(dArtifactIndex),1)*artifactThreshold+nanmean(currentSubj(session).repurple), 'rx'); 
-%     
-%        %plot blue too
-%        plot(currentSubj(session).reblue);
-%     
+% %     % let's put these excluded timestamps over the raw purple trace to compare
+% %     
+% %        subplot(numel(currentSubj), 3, subplotCount);
+% %        subplotCount= subplotCount+1;
+% %        hold on;
+% %        plot(currentSubj(session).repurple, 'm'); %plot 405 signal
+% %        title('repurple, artifact timestamps calculated based on dPurple');
+% %        
+% %        %overlay + and - the threshold relative to the mean 405 signal
+% %        plot([1,numel(currentSubj(session).repurple)], [nanmean(currentSubj(session).repurple) + artifactThreshold, nanmean(currentSubj(session).repurple) + artifactThreshold], 'k--')
+% %        plot([1,numel(currentSubj(session).repurple)], [nanmean(currentSubj(session).repurple) - artifactThreshold, nanmean(currentSubj(session).repurple) - artifactThreshold], 'k--')
+% % 
+% %        scatter(dArtifactIndex, ones(numel(dArtifactIndex),1)*artifactThreshold+nanmean(currentSubj(session).repurple), 'rx'); 
+% %     
+% %        %plot blue too
+% %        plot(currentSubj(session).reblue);
+% %     
 % 
 %     
 % 
@@ -7599,18 +7882,18 @@ end %end subject loop
 %     repurpleNoArtifact= currentSubj(session).repurple(~isnan(cutTime));
 %     
 %     
-%    subplot(numel(currentSubj), 3, subplotCount);
-%    subplotCount= subplotCount+1;
-%    hold on;
-%    plot(repurpleNoArtifact, 'm'); %plot 405 signal
-%    title('artifacts removed- this method isnt working');
-% 
-%    scatter(dArtifactIndex, ones(numel(dArtifactIndex),1)*artifactThreshold+nanmean(currentSubj(session).repurple), 'rx'); 
-% 
-%    %plot blue too
-%    plot(reblueNoArtifact, 'b');
-% 
-%    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% %    subplot(numel(currentSubj), 3, subplotCount);
+% %    subplotCount= subplotCount+1;
+% %    hold on;
+% %    plot(repurpleNoArtifact, 'm'); %plot 405 signal
+% %    title('artifacts removed- this method isnt working');
+% % 
+% %    scatter(dArtifactIndex, ones(numel(dArtifactIndex),1)*artifactThreshold+nanmean(currentSubj(session).repurple), 'rx'); 
+% % 
+% %    %plot blue too
+% %    plot(reblueNoArtifact, 'b');
+% % 
+% %    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 % 
 %    
 %    %this method doesn't seem to work well enough- but at least we have
@@ -7632,8 +7915,8 @@ end %end subject loop
 % %    saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_ArtifactID','.tiff')); %save the current figure in fig format
 % 
 % end %end subj loop
-   
-%% HEAT PLOT WITH ARTIFACT TRIALS EXCLUDED
+%    
+% % HEAT PLOT WITH ARTIFACT TRIALS EXCLUDED
 % 
 % %Now that we have timestamps of 'artifacts', check if the peri-event window
 % %includes an artifact. If so, exclude this trial.
@@ -7656,7 +7939,7 @@ end %end subject loop
 %                 for artifact= currentSubj(session).photometrySignals.dArtifactTimes
 %                     %if artifact occurs between preEventTime and postEventTime
 %                     if artifact>preEventTimeDS && artifact<postEventTimeDS
-%                         disp(strcat('rat_ ', num2str(currentSubj(1).rat), ' session ', num2str(session), ' artifact detected, exluding DS_', num2str(cue), ' from heat plot'))
+%                         disp(strcat('rat_ ', num2str(currentSubj(1).rat), ' session ', num2str(session), ' artifact detected, exluding DS_', num2str(cue), ' from heat plot'));
 %                         DSexcluded= [DSexcluded, cue]; %add this cue to the list of excluded cues for this session
 %                         continue; %if this cue has an artifact, we don't need to keep checking anymore
 %                     end
@@ -7699,7 +7982,7 @@ end %end subject loop
 %                     for artifact= currentSubj(session).photometrySignals.dArtifactTimes
 %                         %if artifact occurs between preEventTime and postEventTime
 %                         if artifact>preEventTimeNS && artifact<postEventTimeNS
-%                             disp(strcat('rat_ ', num2str(currentSubj(1).rat), ' session ', num2str(session), ' artifact detected, exluding NS_', num2str(cue), ' from heat plot'))
+%                             disp(strcat('rat_ ', num2str(currentSubj(1).rat), ' session ', num2str(session), ' artifact detected, exluding NS_', num2str(cue), ' from heat plot'));
 %                             NSexcluded= [NSexcluded, cue]; %add this cue to the list of excluded cues for this session
 %                             continue; %if this cue has an artifact, we don't need to keep checking anymore
 %                         end
@@ -7879,12 +8162,21 @@ end %end subject loop
 %         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 % 
 %         saveas(gcf, strcat(figPath, subjData.(subjects{subj})(1).experiment, '_', subjectsAnalyzed{subj}, '_periCueZ_AllTrials','.fig')); %save the current figure in fig format
-%     end
+%    
+%         %2d 
+% %         figureCount= figureCount+1; figure(figureCount);
+% %         sgtitle('artifact removed vs raw peri-DS z');
+% %         subplot(2,1,1); title('raw peri DS'); hold on;
+% %         plot(currentSubj(1).DSzblueAllTrials, 'b');
+% %         plot(nanmean(currentSubj(1).DSzblueAllTrials,2), 'k');
+% 
+%       
+%   end
 %     
-%     
-%     
+%    
 %     figureCount= figureCount+1;
-
+%     
+% 
 % end%end subj loop
 
 %% experimenting with nonlinear colormap
