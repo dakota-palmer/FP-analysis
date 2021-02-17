@@ -6,9 +6,14 @@ clear all
 close all
 clc
 
+% cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
+
+
 %determine if folder exists and if so purge it, if not create it
 curr_dir = pwd;
-save_folder = 'encoding_results/pl';
+
+save_folder = 'encoding_results\satge5criteria';
+
 % if exist(save_folder)==0
 %     mkdir(save_folder)
 % else
@@ -17,9 +22,14 @@ save_folder = 'encoding_results/pl';
 %     cd ../..
 % end
 %     
-figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage5_EncodingModel_Figs\';
+
+figsave_folder='F:\Shared drives\Richard Lab\Data\Ally\Stage5_EncodingModel_Figs\';
 condition = 'Richard_data_to_input';
 subjects = [1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
+
+% figsave_folder='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\output';
+% condition = 'data to input';
+% subjects = 1:7%[1 2 3 4 5 ];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
 
 for subj=1:numel(subjects)
@@ -36,6 +46,9 @@ for subj=1:numel(subjects)
     shift_con=0;   %Should we shift the stimulus events so they start at 0?
     
     %---- Data Extraction-----
+%     cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
+
+    
     %opens folder to be tested
     file_root=pwd;
     cd(condition)
@@ -64,8 +77,10 @@ for subj=1:numel(subjects)
     %'output' & 'g_output' are actually loaded at the beginning of this
     %script -- dp
     % Just using indicies, no longer converting into hertz for every event occuring during recording
+
     
    %STAGE 5- criteria 
+
     DSonsetindex=data_to_input_GADVPFP.output(1).DSonsetindex_criteria;
     
     DSPEindex=data_to_input_GADVPFP.output(1).DSpoxind_criteria;
@@ -78,6 +93,11 @@ for subj=1:numel(subjects)
     
     %TimeStamps
     DSTimes=cutTime(DSonsetindex);
+    
+%     DSPETimes=cutTime(DSPEindex);
+%     
+%     DSLickTimes=cutTime(DSLickindex);
+
     
     DSPElatency= data_to_input_GADVPFP.output(1).DSPElatency_criteria;
     
@@ -104,11 +124,9 @@ for subj=1:numel(subjects)
     gcamp_y_blue=data_to_input_GADVPFP.g_output(1).gcamp_raw.blue;
     gcamp_y_purple=data_to_input_GADVPFP.g_output(1).gcamp_raw.purple;
 
-  
-   
        %% Moving Z-score
 % Here we are calculating the z-score 10 seconds before the DS for each DS   
-% 
+  disp('calculating moving z-score');
     z_gcamp_y_blue=[];
     z_gcamp_y_purple=[];
     tb=10; % how many seconds back from DS you want to normalize to
@@ -135,8 +153,10 @@ for subj=1:numel(subjects)
             z_gcamp_y_blue_temp=[];
             z_gcamp_y_purple_temp=[];
             
-            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_blue_baseline)/z_blue_std; fprintf('blue Z-scored \n')
-            z_gcamp_y_purple_temp(:,:)=(gcamp_y_purple(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_purple_baseline)/z_purple_std; fprintf('purple Z-scored \n')
+            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_blue_baseline)/z_blue_std;
+            %fprintf('blue Z-scored \n')
+            z_gcamp_y_purple_temp(:,:)=(gcamp_y_purple(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_purple_baseline)/z_purple_std; 
+%             fprintf('purple Z-scored \n')
             
             z_gcamp_y_blue= cat(2,z_gcamp_y_blue(:,:),z_gcamp_y_blue_temp(:,:));
             z_gcamp_y_purple= cat(2,z_gcamp_y_purple(:,:),z_gcamp_y_purple_temp(:,:));
@@ -788,6 +808,8 @@ for subj=1:numel(subjects)
     x_all=mean_center(x_basic); %todo: missing fxn % the mean is calculated and the lasso regression shrinks values toward this cental point
     gcamp_y=gcamp_temp;
     
+    disp('running regression');
+    
     [stats.beta,stats.p]=lasso(x_all,gcamp_y','cv',5);    %Lasso with cross-validation % Nathan says we can use glmfit instead
     sum_betas=max(stats.beta(:,stats.p.IndexMinMSE));    %Selects betas that minimize MSE
     if sum_betas==0; stats.p.IndexMinMSE=max(find(max(stats.beta)>0.0001)); end  %Makes sure there are no all zero betas
@@ -1062,6 +1084,10 @@ for subj=1:numel(subjects)
         cd(strcat(figsave_folder,'\Mean_Model\'));;
         savefig(figsave_name);
         
+ toc
+ cd(curr_dir)
+end %end first subj loop
+
 %% Create graph of all subjects ( SEM area)
 %reorganise z-score data for all animals
 
@@ -1071,10 +1097,12 @@ Lickkernel_Shifted_all=[];
 modelsum_Shifted_all=[];
 DSzblueAllTrials_Shifted_all=[];
 
-for subject= 1:length(subjects);
+fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
+
+for subject= 1:length(fns);
 % create matrix with all DS onset DSkernels for all animals (1st sheet in
 % 3D matrix)
-fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
+
 
 DSkernel_Shifted_all= cat(2,DSkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,1));
 % create matrix with all PE DSkernels for all animals(2nd sheet in
@@ -1100,25 +1128,97 @@ figure();
   plot(timeLock,nanmean(PEkernel_Shifted_all,2), 'b');hold on;
   plot(timeLock,nanmean(Lickkernel_Shifted_all,2),'m');hold off;
   legend('average DS trace (sum kernels- across animals)', 'average PE trace (sum kernels- across animals)','average Lick trace (sum kernels- across animals)');
-    
-        gcf;
+ 
+         gcf;
         [filepath,name,ext] = fileparts(file_name);
-        figsave_name=strcat('DSonset_Pox_Lick_regressiontraces',name);
-        cd(strcat(figsave_folder,'\across animals\'));;
-        savefig(figsave_name);
+        figsave_name=strcat('Avg_Kernels');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);  
+  
 figure();
   plot(timeLock,nanmean(modelsum_Shifted_all,2), 'k');hold on;
   plot(timeLock,nanmean(DSzblueAllTrials_Shifted_all,2), 'b');hold off;
   legend('average model trace (sum kernels- across animals)', 'average z-score (across animals)');
-        
-        gcf;
+  
+  
+         gcf;
         [filepath,name,ext] = fileparts(file_name);
-        figsave_name=strcat('sumregressiontrace_zscoretrace',name);
-        cd(strcat(figsave_folder,'\across animals\'));;
+        figsave_name=strcat('Avg_ModelMean');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
+    
+%% gramm plots
+
+%DS kernel
+figure()
+g=gramm('x',timeLock,'y',DSkernel_Shifted_all');
+g.stat_summary('geom','area','type','sem')
+g.set_names('x','Time from DS onset(sec)','y','Regression Coefficient','group','DSonset');
+g.axe_property('YLim',[-1 1.8]);
+g.set_title('DS Onset Kernel');
+g.draw()
+
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_DSKernel');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
         savefig(figsave_name);
 
- toc
- cd(curr_dir)
-end %end subj loop
+%PE kernel
+figure()
+g=gramm('x',timeLock,'y',PEkernel_Shifted_all')
+g.stat_summary('geom','area','type','sem')
+g.set_names('x','Time from PE(sec)','y','Regression Coefficient');
+g.set_color_options('map','d3_10');
+g.axe_property('YLim',[-1 1.8]);
+g.set_title('Port Entry Kernel');
+g.draw()
+
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_PEKernel');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
 
 
+%Lick kernel
+figure()
+g=gramm('x',timeLock,'y',Lickkernel_Shifted_all')
+g.stat_summary('geom','area','type','sem')
+g.set_names('x','Time from Initial Lick(sec)','y','Regression Coefficient');
+g.set_color_options('map','brewer2');
+g.axe_property('YLim',[-1 1.8]);
+g.set_title('Initial Lick Kernel');
+g.draw()
+
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_LickKernel');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
+
+
+
+figure()
+g=gramm('x',timeLock,'y',modelsum_Shifted_all');
+g.stat_summary('geom','area','type','sem')
+g.set_color_options('chroma',0);
+g.set_names('x','Time from DS onset(sec)','y','regression beta','color','model');
+g.set_title('black=model and blue=z-score');
+g.draw()
+g.update('x',timeLock,'y',DSzblueAllTrials_Shifted_all')
+g.stat_summary('geom','area','type','sem')
+g.set_color_options('map','matlab');
+g.axe_property('YLim',[-1.5 3.5]);
+g.draw()
+
+
+         gcf;
+        [filepath,name,ext] = fileparts(file_name);
+        figsave_name=strcat('Avg_Modelmean_gramm');
+        cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
+        savefig(figsave_name);
+
+
+ 
+ disp('all done');
