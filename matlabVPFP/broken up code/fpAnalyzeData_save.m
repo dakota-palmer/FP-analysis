@@ -1,10 +1,22 @@
-%% Save the analyzed data 
+%% Save the analyzed data
+%ALLY
 %save the subjDataAnalyzed struct for later analysis
-structpath='Y:\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output'
-save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed'); %the second argument here is the variable being saved, the first is the filename
+structpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output\'
+save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed','-v7.3'); %the second argument here is the variable being saved, the first is the filename
 
+
+%DAKOTA
+% structpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code'
+% save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 for files >2gb
 %% save data from each stage from each animal for ERT analysis
-ERTpath='Y:\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output\ERT';
+ERTpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output\ERT\';
+
+
+% 
+%DAKOTA
+% %% save data from each stage from each animal for ERT analysis
+% ERTpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\ERT'
+
 ERTData=struct();
 subj=[];
 session=[];
@@ -23,18 +35,19 @@ for subj=1:numel(subjects);
        ERTData.(strcat('DSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue(:,:,trial)';
        ERTData.(strcat('DSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple(:,:,trial)';
        
+    
        if Stage==8
        ERTData.DSzStage8pump(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(trial,:);
        ERTData.NSzStage8pump(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(trial,:);  
        end
    end %end trial loop
    
-   if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5; %repeat for NS
-       for trial=1:size(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue,3)
-       ERTData.(strcat('NSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue(:,:,trial)';
-       ERTData.(strcat('NSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple(:,:,trial)';
+   for trial = 1:size(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue,3) %repeat for NS
+       if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5;
+           ERTData.(strcat('NSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue(:,:,trial)';
+           ERTData.(strcat('NSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple(:,:,trial)';
        end
-   end
+   end %end ns trial loop
    
    %organize all data from last day of each stage into one matrix which is
    %how photometry event detection reads data
@@ -42,14 +55,15 @@ for subj=1:numel(subjects);
         
 
      if Stage<=5 
-           if subj==1 %initialize for first subject?
-           ERTData.(strcat('DSzblueallStage',Stagestring))= ERTData.(strcat('DSzblueStage',Stagestring));
-           ERTData.(strcat('DSzpurpleallStage',Stagestring))= ERTData.(strcat('DSzpurpleStage',Stagestring));
-           else   
-           ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
-           ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
-           end
+       if subj==1
+       ERTData.(strcat('DSzblueallStage',Stagestring))= ERTData.(strcat('DSzblueStage',Stagestring));
+       ERTData.(strcat('DSzpurpleallStage',Stagestring))= ERTData.(strcat('DSzpurpleStage',Stagestring));
+       else   
+       ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
+       ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
+       end
      elseif Stage>5 
+
         ERTData.(strcat('DSzblueallStage',Stagestring))=[];
         ERTData.(strcat('DSzpurpleallStage',Stagestring))= [];
         ERTData.DSzStage8pumpall= [];         
@@ -62,6 +76,21 @@ for subj=1:numel(subjects);
            ERTData.DSzStage8pumpall=vertcat(ERTData.DSzStage8pumpall,ERTData.DSzStage8pump(:,:,subj));
            end
            end
+
+       if subj==1
+       ERTData.(strcat('DSzblueallStage',Stagestring))= ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj);
+       ERTData.(strcat('DSzpurpleallStage',Stagestring))= ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj);
+       if Stage==8
+       ERTData.DSzStage8pumpall= ERTData.DSzStage8pump(:,:,subj);
+       end
+       else   
+       ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
+       ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
+       if Stage==8
+       ERTData.DSzStage8pumpall=vertcat(ERTData.DSzStage8pumpall,ERTData.DSzStage8pump(:,:,subj));
+       end
+       end
+
      end
        
 
@@ -72,6 +101,7 @@ for subj=1:numel(subjects);
       if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5
       
        if Stage<=5 
+
            if subj==1
            ERTData.(strcat('NSzblueallStage',Stagestring))= ERTData.(strcat('NSzblueStage',Stagestring));
            ERTData.(strcat('NSzpurpleallStage',Stagestring))= ERTData.(strcat('NSzpurpleStage',Stagestring));
@@ -90,6 +120,9 @@ for subj=1:numel(subjects);
            end
         end  
      end 
+
+       
+
       
   
       
@@ -127,9 +160,15 @@ save(fullfile(ERTpath,strcat(experimentName,'-', 'ERTData')), 'ERTData');
 % to the data to input 
 
 
+
 %encodinginputpath='C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\output\Parker_encoding_model\Richard_data_to_input';
 
-encodinginputpath='Y:\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\Parker encoding model\Richard_data_to_input\';
+%ALLY
+encodinginputpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\Parker encoding model\Richard_data_to_input\';
+% 
+% 
+% %DAKOTA
+% encodinginputpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\data to input';
 
 
 subjects= fieldnames(subjData);
@@ -139,18 +178,24 @@ session=[];
 data_to_input_GADVPFP=struct(); 
 gcamp_raw=struct();   
 
-for subj=1:numel(subjects);
+for subj=1:numel(subjects)
     fieldname=string(subjects(subj));
     x=0;
     s1=0;
+
     v1=0;
     cutTime_stage7={};
     DSonsetindex_stage7={};
+
+%     cutTime_stage7={};
+%     DSonsetindex_stage7=[];
+
     DSpox_stage7={};
     DSlox_stage7={};
     DSPElatency_stage7={};
     inPortDS_stage7={};
     poxDS_stage7={};
+
     pumpindstage8={};
     cutTime_stage8={};
     DSonsetindex_stage8={};
@@ -160,15 +205,15 @@ for subj=1:numel(subjects);
     inPortDS_stage8={};
     poxDS_stage8={};
            
-    for session = 1:numel(subjData.(subjects{subj}));
-       if subjData.(subjects{subj})(session).box == 1
+           
+    for session = 1:numel(subjData.(subjects{subj}))
+       if subjData.(subjects{subj})(session).box == 1 || subjData.(subjects{subj})(session).box==3
            
      % STAGE 5
            
            if subjData.(subjects{subj})(session).Acriteria==1  %if the animal reached criteria, add this data to the struct
            
             x=1;%use for saving files and not saving subj files that do not meet criteria
-           
             %g_camp_465
            gcamp_raw.blue_criteria=subjData.(subjects{subj})(session).reblue'; 
            gcamp_raw.blue_dayb4criteria=subjData.(subjects{subj})(session-1).reblue';
@@ -281,7 +326,7 @@ for subj=1:numel(subjects);
            data_to_input_GADVPFP.g_output(1).gcamp_raw.purple_cat(:)= gcamp_raw_purple_cat;
 
             %sampling rate
-           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40; % we down sample to 40 Hz for all subjects
            
            %cutTime for moving z-score
            data_to_input_GADVPFP.g_output(1).cutTime_criteria(:)=cutTime_criteria;
@@ -289,6 +334,7 @@ for subj=1:numel(subjects);
            
            end
            
+
      % STAGE 7
            
            if subjData.(subjects{subj})(session).trainStage==7 %if the animal reached criteria, add this data to the struct
@@ -426,10 +472,99 @@ for subj=1:numel(subjects);
   
            end %end stage 8 conditionalfor box 1
        
-       elseif subjData.(subjects{subj})(session).box == 2
+   
+
+%      % STAGE 7
+%            
+%            if subjData.(subjects{subj})(session).trainStage==7 %if the animal reached criteria, add this data to the struct
+%            
+%             s=s1+1;%use for saving files and not saving subj files that do not meet criteria
+%             s1=s1+1
+%             %g_camp_465
+%            gcamp_raw.blue_stage7{s}=subjData.(subjects{subj})(session).reblue'; 
+%         
+%             %g_camp_405
+%            gcamp_raw.purple_stage7{s}=subjData.(subjects{subj})(session).repurple'; 
+%        
+%            %cutTime for moving z-score
+%            
+%            cutTime_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+% 
+%            %DS Index
+%            
+%            DSonsetindex_stage7(:,:,s)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
+%            
+%  
+% %            %DS Times
+% %           
+% %            DSTimes_stage7{s}=cutTime_stage7( DSonsetindex_stage7(:,:,s));
+%            
+%            %DS Pox
+%            DSpox_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(:)';
+%           
+%            %DS Lox
+%            DSlox_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLoxind(:)';
+%          
+%            %DS latency
+%            DSPElatency_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
+%          
+%            %inPortDS
+%            inPortDS_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
+%     
+%            %poxDS
+%            poxDS_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
+%           
+%            %DS stage 7 data- save to struct
+%            %data_to_input_GADVPFP.output(1).DSTimes_stage7{s}=DSTimes_stage7{s};
+%            data_to_input_GADVPFP.output(1).DSonsetindex_stage7{s}=DSonsetindex_stage7(:,:,s);
+%            data_to_input_GADVPFP.output(1).DSpoxind_stage7{s}=DSpox_stage7{s};
+%            data_to_input_GADVPFP.output(1).DSloxind_stage7{s}=DSlox_stage7{s};
+%            data_to_input_GADVPFP.output(1).DSPElatency_stage7{s}=DSPElatency_stage7{s};
+%            data_to_input_GADVPFP.output(1).inPortDS_stage7{s}=inPortDS_stage7{s};
+%            data_to_input_GADVPFP.output(1).poxDS_stage7{s}=poxDS_stage7{s};% all pox not just index of first pox
+%            
+
+           
+           
+%TODO: ADD NS DATA
+%            %g_camp_465
+%            data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
+%            
+%            %moving median g_camp_465
+%            data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff';
+%            
+%            %g_camp_405
+%            data_to_input_GADVPFP.g_output(1).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+%            
+%            %moving median g_camp_405
+%            data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff';
+%                      %fitted signal
+%           data_to_input_GADVPFP.g_output(1).fit(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.fit;
+%            
+%            %df/f signal
+%            data_to_input_GADVPFP.g_output(1).df(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.df; 
+%             
+%             % save g.ouput data to struct
+%             data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.blue{s}= gcamp_raw.blue_stage7{s};
+%            data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.blue{s}= gcamp_raw.blue_stage7{s};
+%            
+%            data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.purple{s}= gcamp_raw.purple_stage7{s};
+%            data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.purple{s}= gcamp_raw.purple_stage7{s};
+% 
+%             %sampling rate
+%            data_to_input_GADVPFP.g_output_stage7(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+%            
+%            %cutTime for moving z-score
+%            data_to_input_GADVPFP.g_output(1).cutTime_stage7{s}=cutTime_stage7{s};
+%            
+%            
+% 
+%            end
+       
+       elseif subjData.(subjects{subj})(session).box == 2 || subjData.(subjects{subj})(session).box==4 
            if subjData.(subjects{subj})(session).Bcriteria==1  
            x=1;
-   
+
        % STAGE 5        
            %g_camp_465
            gcamp_raw.blue_criteria(:)=subjData.(subjects{subj})(session).reblue'; 
@@ -543,7 +678,7 @@ for subj=1:numel(subjects);
 
 
             %sampling rate
-           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+           data_to_input_GADVPFP.g_output(1).samp_rate(:)= 40; % we down sample to 40 Hz for all subjects
            
            %cutTime for moving z-score
            data_to_input_GADVPFP.g_output(1).cutTime_criteria(:)=cutTime_criteria;
@@ -551,6 +686,7 @@ for subj=1:numel(subjects);
            
            end
            
+
                 % STAGE 7
            
            if subjData.(subjects{subj})(session).trainStage==7 %if the animal reached criteria, add this data to the struct
@@ -706,8 +842,96 @@ for subj=1:numel(subjects);
            data_to_input_GADVPFP.g_output_stage8(1).cutTime_stage8{v}=cutTime_stage8{v};
   
            end %end stage 8 conditionalfor box 2
-       end
-    end
+    
+
+%                 % STAGE 7
+%            
+%            if subjData.(subjects{subj})(session).trainStage==7 %if the animal reached criteria, add this data to the struct
+%            
+%             s=s1+1;%use for saving files and not saving subj files that do not meet criteria
+%             s1=s1+1
+%             %g_camp_465
+%            gcamp_raw.blue_stage7{s}=subjData.(subjects{subj})(session).reblue'; 
+%         
+%             %g_camp_405
+%            gcamp_raw.purple_stage7{s}=subjData.(subjects{subj})(session).repurple'; 
+%        
+%            %cutTime for moving z-score
+%            
+%            cutTime_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+% 
+%            %DS Index
+%            
+%            DSonsetindex_stage7(:,:,s)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
+%            
+%  
+% %            %DS Times
+% %           
+% %            DSTimes_stage7{s}=cutTime_stage7( DSonsetindex_stage7(:,:,s));
+%            
+%            %DS Pox
+%            DSpox_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(:)';
+%           
+%            %DS Lox
+%            DSlox_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLoxind(:)';
+%          
+%            %DS latency
+%            DSPElatency_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
+%          
+%            %inPortDS
+%            inPortDS_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
+%     
+%            %poxDS
+%            poxDS_stage7{s}=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
+%           
+%            %DS stage 7 data- save to struct
+%            %data_to_input_GADVPFP.output(1).DSTimes_stage7{s}=DSTimes_stage7{s};
+%            data_to_input_GADVPFP.output_stage7(1).DSonsetindex_stage7{s}=DSonsetindex_stage7(:,:,s);
+%            data_to_input_GADVPFP.output_stage7(1).DSpoxind_stage7{s}=DSpox_stage7{s};
+%            data_to_input_GADVPFP.output_stage7(1).DSloxind_stage7{s}=DSlox_stage7{s};
+%            data_to_input_GADVPFP.output_stage7(1).DSPElatency_stage7{s}=DSPElatency_stage7{s};
+%            data_to_input_GADVPFP.output_stage7(1).inPortDS_stage7{s}=inPortDS_stage7{s};
+%            data_to_input_GADVPFP.output_stage7(1).poxDS_stage7{s}=poxDS_stage7{s};% all pox not just index of first pox
+%            
+% 
+%            
+%            
+% %TODO: ADD NS DATA
+% %            %g_camp_465
+% %            data_to_input_GADVPFP.g_output(1).gcamp_raw.blue(:)=subjData.(subjects{subj})(session).reblue';
+% %            
+% %            %moving median g_camp_465
+% %            data_to_input_GADVPFP.g_output(1).gcamp_movmean.blue(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff';
+% %            
+% %            %g_camp_405
+% %            data_to_input_GADVPFP.g_output(1).gcamp_raw.purple(:)=subjData.(subjects{subj})(session).repurple';
+% %            
+% %            %moving median g_camp_405
+% %            data_to_input_GADVPFP.g_output(1).gcamp_movmean.purple(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff';
+% %                      %fitted signal
+% %           data_to_input_GADVPFP.g_output(1).fit(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.fit;
+% %            
+% %            %df/f signal
+% %            data_to_input_GADVPFP.g_output(1).df(:)=subjDataAnalyzed.(subjects{subj})(session).photometry.df; 
+%             
+%             % save g.ouput data to struct
+%             data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.blue{s}= gcamp_raw.blue_stage7{s};
+%            data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.blue{s}= gcamp_raw.blue_stage7{s};
+%            
+%            data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.purple{s}= gcamp_raw.purple_stage7{s};
+%            data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.purple{s}= gcamp_raw.purple_stage7{s};
+% 
+%             %sampling rate
+%            data_to_input_GADVPFP.g_output_stage7(1).samp_rate(:)= 40 % we down sample to 40 Hz for all subjects
+%            
+%            %cutTime for moving z-score
+%            data_to_input_GADVPFP.g_output_stage7(1).cutTime_stage7{s}=cutTime_stage7{s};
+%            
+        
+           
+       end %end box1 conditional ( 1 and 3)
+    end %end session loop
+
 
  
 if x==1
@@ -718,4 +942,4 @@ end
 %reset for next animal(subject)
 gcamp_raw=struct();   
 data_to_input_GADVPFP=struct();
-end
+end %end subj loop
