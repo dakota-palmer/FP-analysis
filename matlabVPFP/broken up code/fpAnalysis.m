@@ -3,12 +3,15 @@
 
 % cd ('C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
 
-cd ('Y:\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\');
+cd ('Z:\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\');
 
 
-fpAnalyzeData_create_struct_with_animal_data();
-fpAnalyzeData_behavioral_analysis();
-fpAnalyzeData_eventtriggered_analysis();
+
+% cd ('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
+
+fpAnalyzeData_create_struct_with_animal_data;
+fpAnalyzeData_behavioral_analysis;
+fpAnalyzeData_eventtriggered_analysis;
 
 %% Plot Analyzed Data
 fpAnalyzeData_heatplots_cuetimelocked;
@@ -16,6 +19,7 @@ fpAnalyzeData_heatplots_portentrytimelocked;
 fpAnalyzeData_heatplots_firstlicktimelocked;
 fpAnalyzeData_heatplots_cuetimelocked_variablereward;
 fpAnalyzeData_heatplots_portentrytimelocked_variablereward;
+fpAnalyzeData_CueTimeLockSorted_nextto_PETimeLockedSorted
 fpAnalyzeData_behavioralplots;
 fpAnalyzeData_traces_cuetimelocked; 
 fpAnalyzeData_traces_portentrytimelocked;
