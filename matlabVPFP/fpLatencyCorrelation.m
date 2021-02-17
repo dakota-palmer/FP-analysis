@@ -4,6 +4,10 @@ load(uigetfile('*.mat')); %choose the subjDataAnalyzed file to open for your exp
 
 subjects= fieldnames(subjDataAnalyzed);
 
+figPath= 'C:\Users\Dakota\Desktop\testFigs\latencyCorrelation';
+
+figureCount=1; %just convenient for keeping track of figures
+
 %% Correlation between peri-cue Z score and PE latency
 
 %If we want to relate Z scored fluorescence with PE latency, one way to do
@@ -20,10 +24,11 @@ for subj= 1:numel(subjects)
     
     timeLock= currentSubj(1).periDS.timeLock;
     
-    includedSessions= []; %reset between subjects
+     figure(figureCount); %1 fig per subj with all stages subplotted
 
     for thisStage= allStages
-
+        includedSessions= []; %reset between subjects
+        
         %loop through all sessions and record index of sessions that correspond only to this stage
         for session= 1:numel(currentSubj)
             if currentSubj(session).trainStage == thisStage %only include sessions from this stage
@@ -56,23 +61,58 @@ for subj= 1:numel(subjects)
             [rho(1,timeStamp),pval(1,timeStamp)]= corr(blueZ(:,timeStamp),peLat(:,timeStamp), 'Rows', 'Complete'); %Complete= ignore nan rows
         end
         
-        figure; hold on; sgtitle(strcat(subjects{subj},',-Stage-',num2str(thisStage), '-blueZ:PE latency by timestamp'));
-        subplot(2,1,1); hold on; title('correlation coeff rho'); plot(timeLock,rho);
-        xlabel('time from cue onset');
+            %some code here for individual figures for each stage
+%         figure; hold on; sgtitle(strcat(subjects{subj},',-Stage-',num2str(thisStage), '-blueZ:PE latency by timestamp'));
+%         subplot(2,1,1); hold on; title('correlation coeff rho'); plot(timeLock,rho);
+%         xlabel('time from cue onset');
+%         ylabel('corr coeff: all trials of this timestamp x latency from all trials'); 
         
         rhoSig= nan(size(rho));
         rhoSig(pval<=.05)= rho(pval<=.05); %get only values below alpha criteria
-        subplot(2,1,2); hold on; title('correlation coeff rho pval<=.05'); plot(timeLock,rhoSig);
-        xlabel('time from cue onset');        
+%         subplot(2,1,2); hold on; title('correlation coeff rho pval<=.05'); plot(timeLock,rhoSig);
+%         xlabel('time from cue onset');        
+%         
+%         linkaxes();
         
-        linkaxes();
+    %would be nice to have a stage-by-stage plot in one figure:
+        hold on; sgtitle(strcat(strcat(subjects{subj},'corr coeff rho-blueZ:PE latency by timestamp')));
+        subplot(2, allStages(end), thisStage); title(strcat('stage-',num2str(thisStage)),'-rho'); hold on;
         
+        xlabel('time to DS onset (s)'); ylabel('corr coef for this timestamp');
+        plot(timeLock,rho);  
+        plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
+        
+        if thisStage>=4 %before stage 4, mean PE latency tends to be longer than 10s, so linkaxes makes everything look small. Very likely that all the data displayed in plots happens before mean PE latency
+            plot([nanmean(peLat(:,1)),nanmean(peLat(:,1))],[-0.5,0.5], 'g--'); %overlay vertical line @ mean PE latency
+        end
+        %add only one legend for the last subplot (seems to be easiest solution)
+        if thisStage== allStages(end)
+            legend('rho', 'DS onset', 'mean PE latency');
+        end
+        
+        subplot(2, allStages(end), allStages(end)+thisStage); title(strcat('stage-',num2str(thisStage),'rho(pval<.05)')); hold on;
+        xlabel('time to DS onset (s)'); ylabel('corr coef for this timestamp');
+        plot(timeLock,rhoSig); 
+        plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
+        if thisStage>=4 %before stage 4, mean PE latency tends to be longer than 10s, so linkaxes makes everything look small. Very likely that all the data displayed in plots happens before mean PE latency
+            plot([nanmean(peLat(:,1)),nanmean(peLat(:,1))],[-0.5,0.5], 'g--'); %overlay vertical line @ mean PE latency
+        end        
     end %end thisStage loop
+    linkaxes();
+    set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+    saveas(gcf,strcat(currentSubj(session).experiment, '_', subjects{subj}, '_ZscoreXpeLatencyCorr'));
+        %dp saving by path not working for some reason?
+%     saveas(gcf, strcat(figPath,currentSubj(session).experiment, '_', subjects{subj}, '_ZscoreXpeLatencyCorr')); %save the current figure in fig format
+    figureCount=figureCount+1;
 end %end subj loop
 
+%% ~~~~~~~older code below~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 %% Impulse response function
+
+%this is older code, but could be useful to exclude data after port
+%entry (e.g. to isolate only pre-PE activity)
 
 %Should be able to visualize/approximate impulse response function (to cue) by
 %excluding all timestamps after port entry & averaging result
@@ -132,3 +172,212 @@ for subj= 1:numel(subjects)
     end%end session loop
 end%end subj loop
 
+%% Scatter of cue-elicited response vs. port entry outcome (does cue elicited response predict PE?)
+
+%again, old code that may be useful in relating post-cue activity to action
+%outcome...
+
+%goal here will be to create scatter of mean response to cue with 3 different outcomes: no PE, PE, or already in port (denoted by color of plot) 
+
+%first set parameters
+cueResponseLastFrame=.8*fs; %time after cue over which to take avg activity (t in seconds * fs)
+cueResponseFirstFrame= (periCueFrames-postCueFrames)+ (.5*fs); %first frame after cue onset = (periCueFrames-postCueFrames)+1
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    allStages= unique([currentSubj.trainStage]);
+   
+    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+        includedSessions= []; %excluded sessions will reset between unique stages
+        
+        inPortDSblue= []; inPortDSpurple= []; noPEDSblue= []; noPEDSpurple= []; PEDSblue= []; PEDSpurple= []; %reset between sessions
+        inPortNSblue= []; inPortNSpurple= []; noPENSblue= []; noPENSpurple= []; PENSblue= []; PENSpurple= []; %reset between sessions
+        
+        %loop through all sessions and record index of sessions that correspond only to this stage
+        for session= 1:numel(currentSubj)
+            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+            end
+        end%end session loop
+    
+         for includedSession= includedSessions %loop through only sessions that match this stage
+            DSinPort= []; DSnoPE= []; DSPE= []; %reset between sessions
+            NSinPort= []; NSnoPE= []; NSPE= [];
+             %Extracting cue response
+             %to do so, will use
+             %cueOnsetFrame:cueOnsetFrame+cueResponseFrames as indices to
+             %pull out relevant photometry data and will take the mean()
+
+              %Identify trials where animal was in port at trial start,
+              %trials with no PE, and trials with a valid PE. For each
+              %trial type, loop through trials and get mean
+              %cue-elicited response 
+
+                %First, let's get trials where animal was already in port
+                DSinPort= find(~isnan(currentSubj(includedSession).behavior.inPortDS));
+
+                %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
+                DSnoPE = find(cellfun('isempty', currentSubj(includedSession).behavior.poxDS));
+                 %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+                 for inPortTrial= DSinPort
+                    DSnoPE(DSnoPE==inPortTrial)=[]; %eliminate trials where animal was in port
+                 end
+                 
+             %lastly, get trials with valid PE
+             DSPE= find(~cellfun('isempty', currentSubj(includedSession).behavior.poxDS));
+              %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+             for inPortTrial= DSinPort
+                 DSPE(DSPE==inPortTrial)=[]; %eliminate trials where animal was in port
+             end
+             
+                %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
+             if ~isempty(intersect(DSinPort,DSnoPE)) || ~isempty(intersect(DSinPort, DSPE)) || ~isempty(intersect(DSnoPE, DSPE))
+                disp('~~~~~~~~error: trial types not mutually exclusive');
+             end
+             
+             %Repeat for NS trials
+             %First, let's get trials where animal was already in port
+                NSinPort= find(~isnan(currentSubj(includedSession).behavior.inPortNS));
+
+                %Then, let's get trials where animal did not make a PE during the cue epoch. (cellfun('isempty'))
+                NSnoPE = find(cellfun('isempty', currentSubj(includedSession).behavior.poxNS))'; %transpose ' due to shape
+                 %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+                 for inPortTrial= NSinPort
+                    NSnoPE(NSnoPE==inPortTrial)=[]; %eliminate trials where animal was in port
+                 end
+                 
+             %lastly, get trials with valid PE
+             NSPE= find(~cellfun('isempty', currentSubj(includedSession).behavior.poxNS))'; %transpose ' due to shape
+              %additional check here to make sure animal was not in the
+                %port at trial start even if a valid PE exists
+             for inPortTrial= NSinPort
+                 NSPE(NSPE==inPortTrial)=[]; %eliminate trials where animal was in port
+             end
+             
+                %Make sure the trial types are all mutually exclusive to prevent errors (intersect() should return empty because no trials should be the same) 
+             if ~isempty(intersect(NSinPort,NSnoPE)) || ~isempty(intersect(NSinPort, NSPE)) || ~isempty(intersect(NSnoPE, NSPE))
+                disp('~~~~~~~~error: trial types not mutually exclusive');
+             end
+             
+             
+         %Now, loop through each trial type and get mean cue response for each trial
+            for inPortTrial = DSinPort %loop through trials and cat mean response into one array
+                inPortDSblue= [inPortDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,inPortTrial))];
+            end    
+
+            for noPEtrial= DSnoPE
+                noPEDSblue= [noPEDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,noPEtrial))];
+            end
+
+            for PEtrial= DSPE
+                PEDSblue= [PEDSblue, nanmean(currentSubj(includedSession).periDS.DSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,PEtrial))];
+            end   
+
+            if thisStage >= 5
+                for inPortTrial = NSinPort %loop through trials and cat mean response into one array
+                    inPortNSblue= [inPortNSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,inPortTrial))];
+                end    
+
+                for noPEtrial= NSnoPE
+                    noPENSblue= [noPENSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,noPEtrial))];
+                end
+
+                for PEtrial= NSPE
+                    PENSblue= [PENSblue, nanmean(currentSubj(includedSession).periNS.NSzblue(cueResponseFirstFrame:cueResponseFirstFrame+cueResponseLastFrame,:,PEtrial))];
+                end
+            end
+          
+         end %end includedSession loop
+        
+               %TODO: would be much more efficient to loop through trial
+               %types (inPort, PE, noPE) instead of having discrete
+               %variables for each
+         %calculate within-subjects & within-stage SEM 
+         SEMinPortDSblue= nanstd(inPortDSblue)/sqrt(numel(inPortDSblue)); %calculate SEM for each stage (n= # trials with this PE outcome)
+         SEMnoPEDSblue= nanstd(noPEDSblue)/sqrt(numel(noPEDSblue));
+         SEMPEDSblue= nanstd(PEDSblue)/sqrt(numel(noPEDSblue));
+         
+         SEMinPortNSblue= nanstd(inPortNSblue)/sqrt(numel(inPortNSblue)); %calculate SEM for each stage (n= # trials with this PE outcome)
+         SEMnoPENSblue= nanstd(noPENSblue)/sqrt(numel(noPENSblue));
+         SEMPENSblue= nanstd(PENSblue)/sqrt(numel(noPENSblue));
+         
+        
+        figure(figureCount); hold on; sgtitle(strcat(subjectsAnalyzed{subj},'-PE outcome vs. mean cue response (',num2str(cueResponseFirstFrame/fs-preCueFrames/fs) ,': ' ,num2str(cueResponseLastFrame/fs),' s)'));
+        subplot(2, allStages(end), thisStage); title(strcat('DS stage-',num2str(thisStage))); hold on;
+%         histogram(inPortDSblue); %hist
+%         histogram(noPEDSblue);
+%         histogram(PEDSblue);
+%         xlabel('mean 465nm DS response');
+%         ylabel('trial count');
+        scatter(ones(1,numel(inPortDSblue)), inPortDSblue); %scatter
+        scatter(2*ones(1,numel(noPEDSblue)), noPEDSblue);
+        scatter(3*ones(1,numel(PEDSblue)), PEDSblue);
+        
+            %overlay mean & SEM
+        plot([1-.2, 1+.2], [nanmean(inPortDSblue), nanmean(inPortDSblue)], 'k');
+        plot([1-.2,1+.2] , [nanmean(inPortDSblue)+SEMinPortDSblue, nanmean(inPortDSblue)+SEMinPortDSblue], 'k--');%overlay + sem of each subject
+        plot([1-.2,1+.2] , [nanmean(inPortDSblue)-SEMinPortDSblue, nanmean(inPortDSblue)-SEMinPortDSblue], 'k--');%overlay - sem of each subject
+        plot([1, 1], [nanmean(inPortDSblue),nanmean(inPortDSblue)-SEMinPortDSblue], 'k--'); %connect -SEM to mean
+        plot([1, 1], [nanmean(inPortDSblue),nanmean(inPortDSblue)+SEMinPortDSblue], 'k--'); %connect -SEM to mean
+        
+        plot([2-.2, 2+.2], [nanmean(noPEDSblue), nanmean(noPEDSblue)], 'k');
+        plot([2-.2,2+.2] , [nanmean(noPEDSblue)+SEMnoPEDSblue, nanmean(noPEDSblue)+SEMnoPEDSblue], 'k--');%overlay + sem of each subject
+        plot([2-.2,2+.2] , [nanmean(noPEDSblue)-SEMnoPEDSblue, nanmean(noPEDSblue)-SEMnoPEDSblue], 'k--');%overlay - sem of each subject
+        plot([2, 2], [nanmean(noPEDSblue),nanmean(noPEDSblue)-SEMnoPEDSblue], 'k--'); %connect -SEM to mean
+        plot([2, 2], [nanmean(noPEDSblue),nanmean(noPEDSblue)+SEMnoPEDSblue], 'k--'); %connect -SEM to mean
+        
+        plot([3-.2, 3+.2], [nanmean(PEDSblue), nanmean(PEDSblue)], 'k');
+        plot([3-.2,3+.2] , [nanmean(PEDSblue)+SEMPEDSblue, nanmean(PEDSblue)+SEMPEDSblue], 'k--');%overlay + sem of each subject
+        plot([3-.2,3+.2] , [nanmean(PEDSblue)-SEMPEDSblue, nanmean(PEDSblue)-SEMPEDSblue], 'k--');%overlay - sem of each subject
+        plot([3, 3], [nanmean(PEDSblue),nanmean(PEDSblue)-SEMPEDSblue], 'k--'); %connect -SEM to mean
+        plot([3, 3], [nanmean(PEDSblue),nanmean(PEDSblue)+SEMPEDSblue], 'k--'); %connect -SEM to mean
+        
+        xlim([0,4]);
+        
+        xlabel('PE outcome');
+        ylabel('mean 465nm z score response');
+        if thisStage==allStages(1)
+           legend('in port at cue onset', 'no port entry (unrewarded)', 'port entry during cue epoch (rewarded)'); 
+        end
+        
+            %NS plot
+        subplot(2,allStages(end), allStages(end)+thisStage); title(strcat('NS stage-', num2str(thisStage))); hold on;
+        scatter(ones(1,numel(inPortNSblue)), inPortNSblue); %scatter
+        scatter(2*ones(1,numel(noPENSblue)), noPENSblue);
+        scatter(3*ones(1,numel(PENSblue)), PENSblue);
+        
+                    %overlay mean & SEM
+        plot([1-.2, 1+.2], [nanmean(inPortNSblue), nanmean(inPortNSblue)], 'k');
+        plot([1-.2,1+.2] , [nanmean(inPortNSblue)+SEMinPortNSblue, nanmean(inPortNSblue)+SEMinPortNSblue], 'k--');%overlay + sem of each subject
+        plot([1-.2,1+.2] , [nanmean(inPortNSblue)-SEMinPortNSblue, nanmean(inPortNSblue)-SEMinPortNSblue], 'k--');%overlay - sem of each subject
+        plot([1, 1], [nanmean(inPortNSblue),nanmean(inPortNSblue)-SEMinPortNSblue], 'k--'); %connect -SEM to mean
+        plot([1, 1], [nanmean(inPortNSblue),nanmean(inPortNSblue)+SEMinPortNSblue], 'k--'); %connect -SEM to mean
+        
+        plot([2-.2, 2+.2], [nanmean(noPENSblue), nanmean(noPENSblue)], 'k');
+        plot([2-.2,2+.2] , [nanmean(noPENSblue)+SEMnoPENSblue, nanmean(noPENSblue)+SEMnoPENSblue], 'k--');%overlay + sem of each subject
+        plot([2-.2,2+.2] , [nanmean(noPENSblue)-SEMnoPENSblue, nanmean(noPENSblue)-SEMnoPENSblue], 'k--');%overlay - sem of each subject
+        plot([2, 2], [nanmean(noPENSblue),nanmean(noPENSblue)-SEMnoPENSblue], 'k--'); %connect -SEM to mean
+        plot([2, 2], [nanmean(noPENSblue),nanmean(noPENSblue)+SEMnoPENSblue], 'k--'); %connect -SEM to mean
+        
+        plot([3-.2, 3+.2], [nanmean(PENSblue), nanmean(PENSblue)], 'k');
+        plot([3-.2,3+.2] , [nanmean(PENSblue)+SEMPENSblue, nanmean(PENSblue)+SEMPENSblue], 'k--');%overlay + sem of each subject
+        plot([3-.2,3+.2] , [nanmean(PENSblue)-SEMPENSblue, nanmean(PENSblue)-SEMPENSblue], 'k--');%overlay - sem of each subject
+        plot([3, 3], [nanmean(PENSblue),nanmean(PENSblue)-SEMPENSblue], 'k--'); %connect -SEM to mean
+        plot([3, 3], [nanmean(PENSblue),nanmean(PENSblue)+SEMPENSblue], 'k--'); %connect -SEM to mean
+        
+        xlim([0,4]);
+        
+        xlabel('PE outcome');
+        ylabel('mean 465nm z score response');
+        if thisStage==allStages(1)
+           legend('in port at cue onset', 'no port entry (unrewarded)', 'port entry during cue epoch (unrewarded)'); 
+        end
+        
+    end %end Stage loop 
+       set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+%        linkaxes();
+
+      figureCount= figureCount+1;
+end %end subj loop
