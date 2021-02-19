@@ -643,7 +643,7 @@ end %end subject loop
 
 %Parameters
 preCueTime= 2; %t in seconds to examine before cue
-postCueTime= 10; %t in seconds to examine after cue
+postCueTime= 4; %t in seconds to examine after cue
 
 preCueFrames= preCueTime*fs;
 postCueFrames= postCueTime*fs;

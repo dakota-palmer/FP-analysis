@@ -8,6 +8,17 @@ figPath= 'C:\Users\Dakota\Desktop\testFigs\latencyCorrelation';
 
 figureCount=1; %just convenient for keeping track of figures
 
+fs=40;
+
+%% Remove excluded subjects (if you haven't already)
+
+excludedSubjs= {'rat8'}%{'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
+
+subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
+
+subjects= fieldnames(subjDataAnalyzed); %get an updated list of included subjs
+
+
 %% Correlation between peri-cue Z score and PE latency
 
 %If we want to relate Z scored fluorescence with PE latency, one way to do
@@ -17,17 +28,41 @@ figureCount=1; %just convenient for keeping track of figures
 %every timestamp of interest. Result is a beta coefficient for every
 %timestamp with PE latency, so we can plot it over time.
 
+
+%this will simply collect all of the unique stages from
+%all subjects into an array (allStages)
+allStages= []; %initialize
+for subj= 1:numel(subjects) %for each subject analyzed
+    currentSubj= subjDataAnalyzed.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+    allStages= [allStages, unique([currentSubj.trainStage])]; %cat unique stage values for all subj into one array
+end
+allStages= unique(allStages); %keep the unique stages (eliminate repeats from multiple subjects)
+    
+timeLock= subjDataAnalyzed.(subjects{subj})(1).periDS.timeLock; 
+
+
+rho= nan(numel(subjects), numel(timeLock), numel(allStages)); %prefill with nan
+pval= nan(numel(subjects), numel(timeLock), numel(allStages)); %prefill with nan
+rhoSig= nan(size(rho));
+
 for subj= 1:numel(subjects)
     currentSubj=subjDataAnalyzed.(subjects{subj});
-    allStages= unique([currentSubj.trainStage]);
+%     allStages= unique([currentSubj.trainStage]);
 
     
-    timeLock= currentSubj(1).periDS.timeLock;
+%     timeLock= currentSubj(1).periDS.timeLock;
     
      figure(figureCount); %1 fig per subj with all stages subplotted
 
     for thisStage= allStages
+        if ~any([currentSubj.trainStage]==thisStage) %only run if this subject performed this stage
+%             blueZ= nan(30, numel(timeLock));
+%             peLat= nan(30, numel(timeLock));
+                continue;
+        end
         includedSessions= []; %reset between subjects
+%         rho(subj,:,thisStage)= nan(numel(timeLock),1); %prefill with nan, save for all stages so we can plot all results later
+%         pval(subj,:,thisStage)= nan(numel(timeLock),1);
         
         %loop through all sessions and record index of sessions that correspond only to this stage
         for session= 1:numel(currentSubj)
@@ -57,8 +92,9 @@ for subj= 1:numel(subjects)
         
         
         %now run correlation for each timeStamp
+        %we will collect the correlation results from all subjects (1 row= 1 subject)
         for timeStamp= 1:numel(timeLock)
-            [rho(1,timeStamp),pval(1,timeStamp)]= corr(blueZ(:,timeStamp),peLat(:,timeStamp), 'Rows', 'Complete'); %Complete= ignore nan rows
+            [rho(subj,timeStamp,thisStage),pval(subj,timeStamp,thisStage)]= corr(blueZ(:,timeStamp),peLat(:,timeStamp), 'Rows', 'Complete'); %Complete= ignore nan rows
         end
         
             %some code here for individual figures for each stage
@@ -67,8 +103,8 @@ for subj= 1:numel(subjects)
 %         xlabel('time from cue onset');
 %         ylabel('corr coeff: all trials of this timestamp x latency from all trials'); 
         
-        rhoSig= nan(size(rho));
-        rhoSig(pval<=.05)= rho(pval<=.05); %get only values below alpha criteria
+%         rhoSig(subj,:,thisStage)= nan(1,size(rho,2));
+        rhoSig(subj,pval(subj,:,thisStage)<=.05,thisStage)= rho(subj,pval(subj,:,thisStage)<=.05,thisStage); %get only values below alpha criteria
 %         subplot(2,1,2); hold on; title('correlation coeff rho pval<=.05'); plot(timeLock,rhoSig);
 %         xlabel('time from cue onset');        
 %         
@@ -79,7 +115,7 @@ for subj= 1:numel(subjects)
         subplot(2, allStages(end), thisStage); title(strcat('stage-',num2str(thisStage)),'-rho'); hold on;
         
         xlabel('time to DS onset (s)'); ylabel('corr coef for this timestamp');
-        plot(timeLock,rho);  
+        plot(timeLock,rho(subj,:,thisStage));  
         plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
         
         if thisStage>=4 %before stage 4, mean PE latency tends to be longer than 10s, so linkaxes makes everything look small. Very likely that all the data displayed in plots happens before mean PE latency
@@ -92,7 +128,7 @@ for subj= 1:numel(subjects)
         
         subplot(2, allStages(end), allStages(end)+thisStage); title(strcat('stage-',num2str(thisStage),'rho(pval<.05)')); hold on;
         xlabel('time to DS onset (s)'); ylabel('corr coef for this timestamp');
-        plot(timeLock,rhoSig); 
+        plot(timeLock,rhoSig(subj,:,thisStage)); 
         plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
         if thisStage>=4 %before stage 4, mean PE latency tends to be longer than 10s, so linkaxes makes everything look small. Very likely that all the data displayed in plots happens before mean PE latency
             plot([nanmean(peLat(:,1)),nanmean(peLat(:,1))],[-0.5,0.5], 'g--'); %overlay vertical line @ mean PE latency
@@ -105,6 +141,45 @@ for subj= 1:numel(subjects)
 %     saveas(gcf, strcat(figPath,currentSubj(session).experiment, '_', subjects{subj}, '_ZscoreXpeLatencyCorr')); %save the current figure in fig format
     figureCount=figureCount+1;
 end %end subj loop
+
+%% now make one figure with all subjects plotted as individual lines- this is incorrect bc it is only taking rho from the last stage
+
+stagesToPlot= [5]; %define specific stages you want to plot here
+
+% for thisStage= stagesToPlot
+for thisStage= stagesToPlot
+    for subj= 1:numel(subjects)
+
+        figure(figureCount); hold on; sgtitle(strcat(currentSubj(1).experiment,'-corr coeff rho-blueZ:PE latency by timestamp'));
+
+        subplot(2, numel(stagesToPlot), find(stagesToPlot==thisStage)); title(strcat('stage-',num2str(thisStage)),'-rho'); hold on;
+
+        xlabel('time to DS onset (s)'); ylabel('corr coef for this timestamp');
+        plot(timeLock,rho(subj,:,thisStage));  
+%         plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
+
+        if thisStage>=4 %before stage 4, mean PE latency tends to be longer than 10s, so linkaxes makes everything look small. Very likely that all the data displayed in plots happens before mean PE latency
+%             plot([nanmean(peLat(:,1)),nanmean(peLat(:,1))],[-0.5,0.5], 'g--'); %overlay vertical line @ mean PE latency
+        end
+        %add only one legend for the last subplot (seems to be easiest solution)
+        if thisStage== stagesToPlot(end)
+%             legend('rho', 'DS onset', 'mean PE latency');
+        end
+
+        subplot(2,  numel(stagesToPlot), numel(stagesToPlot)+find(stagesToPlot==thisStage)); title(strcat('stage-',num2str(thisStage),'rho(pval<.05)')); hold on;
+        xlabel('time to DS onset (s)'); ylabel('corr coef for this timestamp');
+        plot(timeLock,rhoSig(subj,:,thisStage)); 
+%         plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
+        if thisStage>=4 %before stage 4, mean PE latency tends to be longer than 10s, so linkaxes makes everything look small. Very likely that all the data displayed in plots happens before mean PE latency
+%             plot([nanmean(peLat(:,1)),nanmean(peLat(:,1))],[-0.5,0.5], 'g--'); %overlay vertical line @ mean PE latency
+        end        
+    end %end subj loop
+end %end stage loop
+legend(subjects)
+linkaxes();
+set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+saveas(gcf,strcat(currentSubj(session).experiment, '_', subjects{subj}, '_ZscoreXpeLatencyCorr'));
+
 
 %% ~~~~~~~older code below~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
