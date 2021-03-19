@@ -17,9 +17,9 @@ profile on; %For optimization/trackin g performance of the code- this starts the
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
-metaDataAddress = 'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx'; % excel file location 
+metaDataAddress = 'H:\Photometry nex files\GAD-VP-VTA-FP\mag training\GAD-VP-VTA-FP-metadata.xlsx'; % excel file location 
 
-nexAddress =  'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\'; % nex file location 
+nexAddress =  'H:\Photometry nex files\GAD-VP-VTA-FP\mag training\'; % nex file location 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 %note: assembly of this nex file list is case-sensitive (I had a minor issue
 %where files with subjects in caps were being loaded before uncapitalized
@@ -27,7 +27,7 @@ nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 % figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-experimentName= 'VP-VTA-FP'; %change experiment name for automatic naming of figures
+experimentName= 'GAD-VP-VTA-FP'; %change experiment name for automatic naming of figures
 
 %% Loop through each nex file, extracting data
 
@@ -48,10 +48,10 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     [~,~,excelData] = xlsread(metaDataAddress); %import metadata from excel spreadsheet
     fileIndex= find(strcmp(excelData(:,1),fName)); %search the spreadsheet data for the matching fileName to get index for matching metadata
     
-    %skip over atypical DS training files (stage=0)... (e.g. magazine training session where stage =0)
-    if excelData{fileIndex,5}== 0
-       continue; 
-    end
+%     %skip over atypical DS training files (stage=0)... (e.g. magazine training session where stage =0)
+%     if excelData{fileIndex,5}== 0
+%        continue; 
+%     end
      
     
     
@@ -205,6 +205,11 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
       
     %% Preprocessing- downsample to 40Hz and remove some datapoints at beginning & end to remove artifacts
     %Downsample to 40hz from fs (fs is defined with contvars in the beginning)
+    
+    if length(blueA)~=length(blueB) %show error if number of datapoints in streams differs... no idea where this is coming from but it seems to happen from time to time. If it happens, cutTime won't be correct so may have to adjust with cutTimeA and cutTimeB (though it's unclear at what point in the recording the missing timestamps would be?)
+        error('~~~~~~~~~~~error- length(blueA)~length(blueB)~~~~'); %for some reason the # of datapoints can differ between box 1 and 2??
+      %this seems relevant: https://www.tdt.com/docs/technotes/ttankx/#issue_2
+    end
     reblueA=resample(blueA,40,round(fs));       %Downsample to 40Hz from fs %consider using downsample() function here instead of resample()?
     repurpleA=resample(purpleA,40,round(fs));
 
@@ -349,6 +354,29 @@ for rat = 1:numel(rats)
     end  
 end %end subject loop
 
+%% quick visualization here
+subjects= fieldnames(subjData);
+for subj= 1:numel(subjects)
+    currentSubj= subjData.(subjects{subj})
+    for session= 1:numel(currentSubj)
+        fitPurple= controlFit(currentSubj(session).reblue, currentSubj(session).repurple);
+        figure; title(strcat(subjects{subj},'-box-',num2str(currentSubj(session).box),'-',currentSubj(session).fileName));
+        hold on
+        plot(currentSubj(session).cutTime', currentSubj(session).reblue, 'b'); %plot 465nm trace
+        plot(currentSubj(session).cutTime', fitPurple,'m'); %plot 405nm trace
+        xlabel('time (s)');
+        ylabel('mV');
+        legend('blue (465)',' fitted purple (405)');
+       
+        figure; subplot(3,1,1); hold on; title('diff(reblue)');
+        plot(diff(currentSubj(session).reblue),'b');
+        subplot(3,1,2); hold on; title('diff(repurple)');
+        plot(diff(currentSubj(session).repurple),'m');
+        subplot(3,1,3); hold on; title('diff(reblue)-diff(repurple)');
+        plot(diff(currentSubj(session).reblue)-diff(currentSubj(session).repurple),'g');
+        linkaxes();
+    end
+end
 %% Sort struct by training day for each subject before saving
 %at times files are loaded out of order, this will organize everything by training day (each row in the struct = 1 session) 
 
@@ -356,7 +384,11 @@ subjects= fieldnames(subjData); %access subjData struct with dynamic fieldnames
 
 for subj = 1:numel(subjects)
  currentSubj= subjData.(subjects{subj}); 
- subjTable = struct2table(currentSubj); % convert the struct array to a table
+ 
+%  dates= [currentSubj.date]; %probably quicker method?
+%  [dates,sortOrder]=sortrows(dates);
+ 
+ subjTable = struct2table(currentSubj)%, 'AsArray',1); % convert the struct array to a table
  subjTableSorted = sortrows(subjTable, 'trainDay'); % sort the table by 'trainDay'
  subjData.(subjects{subj}) = table2struct(subjTableSorted);
 end
@@ -440,6 +472,16 @@ for subj= 1:numel(subjects) %for each subject
 end %end subj loop
  
 
+%% Remove abnormal sessions
+    %skip over atypical DS training files (stage=0)... (e.g. magazine training session where stage =0)
+for subj= 1:numel(subjects)
+    currentSubj= subjData.(subjects{subj});
+    for session=1:numel(currentSubj)
+        if currentSubj(session).trainStage==0
+            currentSubj(session)=[]; %if stage 0, delete data
+        end
+    end
+end
 %% Save .mat
 %save the subjData struct for later analysis
 save(strcat(experimentName,'-', date, 'subjDataRaw'), 'subjData'); %the second argument here is the variable saved, the first is the filename
@@ -456,7 +498,7 @@ profile viewer;
 % sessions
 
    
-% code here for quickly examining traces to check for dynamic signal
+%%  code here for quickly examining traces to check for dynamic signal
         % Fitted session plots (so that 2 signals overlap)
 %         fitPurpleA= controlFit(reblueA, repurpleA);
 %         figure;

@@ -643,7 +643,7 @@ end %end subject loop
 
 %Parameters
 preCueTime= 2; %t in seconds to examine before cue
-postCueTime= 4; %t in seconds to examine after cue
+postCueTime= 10; %t in seconds to examine after cue
 
 preCueFrames= preCueTime*fs;
 postCueFrames= postCueTime*fs;
@@ -4512,14 +4512,14 @@ end %end subject loop
 %     end %end variable reward conditional
 % end %end subject loop
 
-%% Plot post-PE response based on reward identity
-%dp 10/30/2020 goal of this section is to create plot of post-PE activity
-%for each unique reward identity (should be than plotting by pump)
-
-%~~~~Logic here assumes that reward identity changes = coded as different
-%stage in metadata excel sheet
-
-    %initialize between subj arrays
+% %% Plot post-PE response based on reward identity
+% %dp 10/30/2020 goal of this section is to create plot of post-PE activity
+% %for each unique reward identity (should be than plotting by pump)
+% 
+% %~~~~Logic here assumes that reward identity changes = coded as different
+% %stage in metadata excel sheet
+% 
+% %     initialize between subj arrays
 % allSubjPumpIDs= []
 % allSubjPumpOnTimeRel= [];
 % allSubjPEDSblue= [];
@@ -4684,7 +4684,9 @@ end %end subject loop
 % %calculate SEM
 % allRewardStages= 8:12;%manual for now
 % for thisStage= allRewardStages 
-%     semPEDSbluePump1= nanstd(PEDSbluePump1(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%     semPEDSbluePump1(:,find(allRewardStages==thisStage))= nanstd(PEDSbluePump1(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%     semPEDSbluePump2(:,find(allRewardStages==thisStage))= nanstd(PEDSbluePump2(:,thisStage,:),0,3)/sqrt(numel(subjects));
+%     semPEDSbluePump3(:,find(allRewardStages==thisStage))= nanstd(PEDSbluePump3(:,thisStage,:),0,3)/sqrt(numel(subjects));
 % end
 % %take mean across subjects
 % PEDSbluePump1= nanmean(PEDSbluePump1,3);
@@ -4693,9 +4695,9 @@ end %end subject loop
 % PEDSpurplePump2= nanmean(PEDSpurplePump2,3);
 % PEDSbluePump3= nanmean(PEDSbluePump3,3);
 % PEDSpurplePump3= nanmean(PEDSpurplePump3,3);
-
-
-
+% 
+% 
+% 
 % %% Now make plots of between-subjects mean activity
 %             
 % rewardColors= ['g','r','y']; %color plots based on reward identity
@@ -4714,7 +4716,11 @@ end %end subject loop
 %              plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==1))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
 %              plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
 %              plot(ones(2,1)*firstLickPump1(:,thisStage), ylim, 'r');% overlay mean first lick time
+%              semPatchPos= PEDSbluePump1(:,thisStage)+semPEDSbluePump1(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+%              semPatchNeg= PEDSbluePump1(:,thisStage)-semPEDSbluePump1(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+%              patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.3); %overlay SEM patch
 % %              
+% 
 %              subplot(3, numel(allRewardStages), numel(allRewardStages)+find(thisStage==[allRewardStages])); hold on; title(strcat('stage-',num2str(thisStage),'-pump2-reward=',rewardsThisStage{2}));
 % %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{2}))), rewardColors(2)); %plot all trials
 %              plot(timeLock,PEDSbluePump2(:,thisStage), 'b'); %plot mean across all trials (for this stage)
@@ -4722,7 +4728,11 @@ end %end subject loop
 %              plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==2))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
 %              plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
 %              plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r');% overlay mean first lick time
-% %              
+%              semPatchPos= PEDSbluePump2(:,thisStage)+semPEDSbluePump2(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+%              semPatchNeg= PEDSbluePump2(:,thisStage)-semPEDSbluePump2(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+%              patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.3); %overlay SEM patch
+%              %              
+% 
 %              subplot(3, numel(allRewardStages), numel(allRewardStages)+numel(allRewardStages)+find(allRewardStages==thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'-pump3-reward=',rewardsThisStage{3}));
 % % %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{3}))), rewardColors(3)); %plot all trials
 %              plot(timeLock,PEDSbluePump3(:,thisStage), 'b'); %plot mean across all trials (for this stage)
@@ -4730,7 +4740,9 @@ end %end subject loop
 %              plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==3))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
 %              plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
 %              plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r');% overlay mean first lick time
-% 
+%              semPatchPos= PEDSbluePump3(:,thisStage)+semPEDSbluePump3(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+%              semPatchNeg= PEDSbluePump3(:,thisStage)-semPEDSbluePump3(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+%              patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.3); %overlay SEM patch
 %              
 %              xlabel('time from PE (s)');
 %              ylabel('z score relative to pre-cue baseline)');
@@ -4743,7 +4755,7 @@ end %end subject loop
 % %first take mean across all trials 
 % allSubjPEDSblueMean= nanmean(squeeze(allSubjPEDSblue), 1); 
 % allSubjPEDSpurpleMean= nanmean(squeeze(allSubjPEDSpurple),1); 
-
+% 
 
 
 %% ~~~Plots by Stage ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
