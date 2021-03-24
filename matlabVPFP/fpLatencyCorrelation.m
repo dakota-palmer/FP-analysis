@@ -15,17 +15,17 @@ fs=40;
 
 %% Remove excluded subjects (if you haven't already)
 
-excludedSubjs= {'rat8'}%{'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
+excludedSubjs= {'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
 
-subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
+% subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
 
 subjects= fieldnames(subjDataAnalyzed); %get an updated list of included subjs
 
 
 %% temp code specific to GAD-VPFP
-%code sex for plots 0=F 1=M
-subjSex= [0,0,0,0,1,1,0,1,1,0,1,0,1,0]; %does not include rat8
-
+% %code sex for plots 0=F 1=M
+% subjSex= [0,0,0,0,1,1,0,1,1,0,1,0,1,0]; %GADVPFP; does not include rat8
+subjSex= zeros(size(subjects));
 
 
 %% Correlation between peri-cue Z score and PE latency
@@ -53,6 +53,9 @@ timeLock= subjDataAnalyzed.(subjects{subj})(1).periDS.timeLock;
 rho= nan(numel(subjects), numel(timeLock), numel(allStages)); %prefill with nan
 pval= nan(numel(subjects), numel(timeLock), numel(allStages)); %prefill with nan
 rhoSig= nan(size(rho));
+
+peLatAllSubj= nan(numel(subjects), numel(allStages)); %prefill with nan
+
 
 for subj= 1:numel(subjects)
     currentSubj=subjDataAnalyzed.(subjects{subj});
@@ -142,6 +145,10 @@ for subj= 1:numel(subjects)
         if thisStage>=4 %before stage 4, mean PE latency tends to be longer than 10s, so linkaxes makes everything look small. Very likely that all the data displayed in plots happens before mean PE latency
             plot([nanmean(peLat(:,1)),nanmean(peLat(:,1))],[-0.5,0.5], 'g--'); %overlay vertical line @ mean PE latency
         end        
+        
+        %saving peLat between subjects for plotting later
+        peLatAllSubj(subj,thisStage)= nanmean(peLat(:,1));
+        
     end %end thisStage loop
     linkaxes();
     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
@@ -161,19 +168,17 @@ for thisStage= stagesToPlot
 
         figure(figureCount); hold on; sgtitle(strcat(currentSubj(1).experiment,'-corr coeff rho-blueZ:PE latency by timestamp'));
 
-        subplot(2, numel(stagesToPlot), find(stagesToPlot==thisStage)); title(strcat('stage-',num2str(thisStage)),'-rho'); hold on;
+%         subplot(2, numel(stagesToPlot), find(stagesToPlot==thisStage)); title(strcat('stage-',num2str(thisStage)),'-rho'); hold on;
 
-        xlabel('time to DS onset (s)'); ylabel('corr coef for this timestamp');
+        xlabel('time from DS onset (s)'); ylabel('mean correlation coefficient for this timestamp');
         
         if subjSex(subj)==0 %change plot color depending on sex
-            plot(timeLock,rho(subj,:,thisStage),'g');  
+            plot(timeLock,rho(subj,:,thisStage))%,'g');  
         elseif subjSex(subj)==1
-            plot(timeLock,rho(subj,:,thisStage),'b');
+            plot(timeLock,rho(subj,:,thisStage))%,'b');
         end
         
-%         plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
-        plot(timeLock,nanmean(rho(:,:,thisStage),1), 'k-', 'LineWidth', 2); %overlay mean btwn subj
-
+        
         if thisStage>=4 %before stage 4, mean PE latency tends to be longer than 10s, so linkaxes makes everything look small. Very likely that all the data displayed in plots happens before mean PE latency
 %             plot([nanmean(peLat(:,1)),nanmean(peLat(:,1))],[-0.5,0.5], 'g--'); %overlay vertical line @ mean PE latency
         end
@@ -182,20 +187,39 @@ for thisStage= stagesToPlot
 %             legend('rho', 'DS onset', 'mean PE latency');
         end
 
-        subplot(2,  numel(stagesToPlot), numel(stagesToPlot)+find(stagesToPlot==thisStage)); title(strcat('stage-',num2str(thisStage),'rho(pval<.05)')); hold on;
-        xlabel('time to DS onset (s)'); ylabel('corr coef for this timestamp');
-        if subjSex(subj)==0 %change plot color depending on sex
-            plot(timeLock,rhoSig(subj,:,thisStage),'g');  
-        elseif subjSex(subj)==1
-            plot(timeLock,rhoSig(subj,:,thisStage),'b');
-        end%         plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
+%         subplot(2,  numel(stagesToPlot), numel(stagesToPlot)+find(stagesToPlot==thisStage)); title(strcat('stage-',num2str(thisStage),'rho(pval<.05)')); hold on;
+%         xlabel('time from DS onset (s)'); ylabel('corr coef for this timestamp');
+%         if subjSex(subj)==0 %change plot color depending on sex
+%             plot(timeLock,rhoSig(subj,:,thisStage),'g');  
+%         elseif subjSex(subj)==1
+%             plot(timeLock,rhoSig(subj,:,thisStage),'b');
+%         end%         plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
 
         if thisStage>=4 %before stage 4, mean PE latency tends to be longer than 10s, so linkaxes makes everything look small. Very likely that all the data displayed in plots happens before mean PE latency
 %             plot([nanmean(peLat(:,1)),nanmean(peLat(:,1))],[-0.5,0.5], 'g--'); %overlay vertical line @ mean PE latency
         end        
     end %end subj loop
+        
+        %plot mean btwn subjects
+        plot(timeLock,nanmean(rho(:,:,thisStage),1), 'k-', 'LineWidth', 2); %overlay mean btwn subj
+
+    
+        %plot SEM between subjects
+        semDSblueAllSubj= []; ; %calculate SEM
+        semDSblueAllSubj= nanstd(rho(:,:,thisStage),0,1)/sqrt(numel(subjects));
+             %overlay SEM 
+        semLinePosAllSubj= nanmean(rho(:,:,thisStage),1)+semDSblueAllSubj;
+        semLineNegAllSubj= nanmean(rho(:,:,thisStage),1)-semDSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj,semLineNegAllSubj(end:-1:1)],'b','EdgeColor','None');alpha(0.3);
+          
+        plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
+
+        
+        %plot mean peLat between subjects
+        plot([nanmean(peLatAllSubj(:,thisStage)),nanmean(peLatAllSubj(:,thisStage))],[-0.5,0.5],'m-.'); %overlay vertical line @ cue onset
+        legend(subjects{:},'mean','sem','cue','mean peLat')
+
 end %end stage loop
-legend(subjects)
 linkaxes();
 set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 saveas(gcf,strcat(currentSubj(session).experiment, '_', subjects{subj}, '_ZscoreXpeLatencyCorr'));

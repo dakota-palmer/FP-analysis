@@ -28,7 +28,7 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 
 excludedSubjs= {'rat8'}; %cell array with strings of excluded subj fieldnames
 
-subjData= rmfield(subjData,excludedSubjs);
+% subjData= rmfield(subjData,excludedSubjs);
 
 subjects= fieldnames(subjData); %get an updated list of included subjs
 

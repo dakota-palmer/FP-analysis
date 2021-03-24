@@ -3,11 +3,11 @@
 
 % cd ('C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
 
-cd ('Z:\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\');
+% cd ('Z:\Ally\Code\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\');
 
 
 
-% cd ('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
+cd ('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
 
 fpAnalyzeData_create_struct_with_animal_data;
 fpAnalyzeData_behavioral_analysis;
