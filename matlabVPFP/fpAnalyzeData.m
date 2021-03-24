@@ -31,6 +31,39 @@ subjects= fieldnames(subjData); %get an updated list of included subjs
 
 subjIncluded= subjects;
 
+%% Remove excluded sessions
+%easily exclude sessions at the beginning of the script
+
+
+for subj= 1:numel(subjects)
+    currentSubj= subjData.(subjects{subj});
+    stagesToInclude= 12;
+    
+    allStages= unique([currentSubj.trainStage]); 
+    allStages= allStages(allStages==stagesToInclude); %only include extinction stage 12
+    
+    if isempty(allStages) %if this subj doesn't have any data from stage of interest, delete it
+        subjData= rmfield(subjData,subjects{subj});
+    end
+    
+    for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+        includedSessions= []; %excluded sessions will reset between unique stages
+        
+        %loop through all sessions and record index of sessions that correspond only to this stage
+        for session= 1:numel(currentSubj)
+            if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+               includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+            end
+        end%end session loop
+    
+        %this gives us an index of all sessions to exclude for a subj
+        excludeInd = setdiff(1:numel(currentSubj),includedSessions);
+
+        %now actually remove sessions
+        subjData.(subjects{subj})(excludeInd)=[]; %delete sessions that aren't of the stage defined
+    end
+end
+
 %% ~~~Fix DS TTL pulses from variable reward identity stages  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     %for stages with variable reward identity (3 pumps, 3 rewards)
     %indicated by 1, 2, or 3 DS TTL pulses in rapid succession (because
@@ -4575,7 +4608,7 @@ for subj= 1:numel(subjects)
                 rewardIDs= cell(size(pumpIDs)); %start with empty cell array (bc dealing with strings) and fill based on pumpID
                 rewardIDs(find(pumpIDs==1))= {currentSubj(includedSession).reward.pump1};
                 rewardIDs(find(pumpIDs==2))= {currentSubj(includedSession).reward.pump2};
-                rewardIDs(find(pumpIDs==3))= {currentSubj(includedSession).reward.pump3};
+                rewardIDs(pumpIDs==3)= {currentSubj(includedSession).reward.pump3};
             end %end includedSession loop
           
             %Now that we have the trial data and reward identity, let's make plots

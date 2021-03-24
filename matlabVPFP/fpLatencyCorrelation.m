@@ -15,17 +15,17 @@ fs=40;
 
 %% Remove excluded subjects (if you haven't already)
 
-excludedSubjs= {'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
+excludedSubjs= {'rat8'};%{'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
 
-% subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
+subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
 
 subjects= fieldnames(subjDataAnalyzed); %get an updated list of included subjs
 
 
 %% temp code specific to GAD-VPFP
 % %code sex for plots 0=F 1=M
-% subjSex= [0,0,0,0,1,1,0,1,1,0,1,0,1,0]; %GADVPFP; does not include rat8
-subjSex= zeros(size(subjects));
+subjSex= [0,0,0,0,1,1,0,1,1,0,1,0,1,0]; %GADVPFP; does not include rat8
+% subjSex= zeros(size(subjects));
 
 
 %% Correlation between peri-cue Z score and PE latency
