@@ -15,9 +15,9 @@ fs=40;
 
 %% Remove excluded subjects (if you haven't already)
 
-excludedSubjs= {'rat8'};%{'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
+excludedSubjs= {'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
 
-subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
+% subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
 
 subjects= fieldnames(subjDataAnalyzed); %get an updated list of included subjs
 
@@ -97,11 +97,25 @@ for subj= 1:numel(subjects)
                       blueZ(trialCount,timeStamp)= currentSubj(includedSession).periDS.DSzblue(timeStamp,1,cue);
                       peLat(trialCount,timeStamp)= currentSubj(includedSession).behavior.poxDSrel{cue}(1); %get only first PE latency
                     end%end timestamp loop
+                    
+                    %now exclude timestamps after port entry (to prevent contamination from consumption)
+                   tsExcluded= []; 
+                   tsExcluded= find(timeLock>=currentSubj(includedSession).behavior.poxDSrel{cue}(1)); 
+
+                   %make excluded timestamps nan
+                    %exclude ts after first PE
+                   blueZ(trialCount,tsExcluded)= nan; 
+                   peLat(trialCount, tsExcluded)= nan;
+                    
                    trialCount=trialCount+1; %iterate trialCount for indexing
                 end %end DS with port entry loop
             end %end all DS loop
         end %end includedSession loop
         
+%         figure(1); hold on;
+%         for trial=1:trialCount
+%             plot(blueZ(trial,:)) %just visualizing to make sure post port entry timestamps are being removed
+%         end
         
         %now run correlation for each timeStamp
         %we will collect the correlation results from all subjects (1 row= 1 subject)
@@ -149,6 +163,14 @@ for subj= 1:numel(subjects)
         %saving peLat between subjects for plotting later
         peLatAllSubj(subj,thisStage)= nanmean(peLat(:,1));
         
+        if subj==1
+           testLat=[]; 
+        end
+        if thisStage==5
+           testLat=[testLat;peLat(:,1)]; %getting data for power analysis
+        end
+        
+        
     end %end thisStage loop
     linkaxes();
     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
@@ -160,7 +182,7 @@ end %end subj loop
 
 %% now make one figure with all subjects plotted as individual lines
 
-stagesToPlot= [5]; %define specific stages you want to plot here
+stagesToPlot= [7]; %define specific stages you want to plot here
 
 % for thisStage= stagesToPlot
 for thisStage= stagesToPlot
@@ -212,7 +234,7 @@ for thisStage= stagesToPlot
         semLineNegAllSubj= nanmean(rho(:,:,thisStage),1)-semDSblueAllSubj;
         patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj,semLineNegAllSubj(end:-1:1)],'b','EdgeColor','None');alpha(0.3);
           
-        plot([0,0],[-0.5,0.5],'k--'); %overlay vertical line @ cue onset
+        plot([0,0],[-0.3,0.3],'k--'); %overlay vertical line @ cue onset
 
         
         %plot mean peLat between subjects

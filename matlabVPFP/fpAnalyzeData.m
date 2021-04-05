@@ -25,7 +25,7 @@ fs= 40; %This is important- if you change sampling frequency of photometry recor
 
 excludedSubjs= {'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
 
-subjData= rmfield(subjData,excludedSubjs);
+% subjData= rmfield(subjData,excludedSubjs);
 
 subjects= fieldnames(subjData); %get an updated list of included subjs
 
@@ -37,17 +37,21 @@ subjIncluded= subjects;
 
 for subj= 1:numel(subjects)
     currentSubj= subjData.(subjects{subj});
-    stagesToInclude= 12;
-    
     allStages= unique([currentSubj.trainStage]); 
-    allStages= allStages(allStages==stagesToInclude); %only include extinction stage 12
+    
+    stagesToInclude= 12%allStages;%1:5;
+    
+    allStages= allStages(ismember(allStages,stagesToInclude)) %pull out only relevant stages
+    
+    includedSessions= []; %excluded sessions will reset between subj
+
     
     if isempty(allStages) %if this subj doesn't have any data from stage of interest, delete it
         subjData= rmfield(subjData,subjects{subj});
+        continue;
     end
     
     for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
-        includedSessions= []; %excluded sessions will reset between unique stages
         
         %loop through all sessions and record index of sessions that correspond only to this stage
         for session= 1:numel(currentSubj)
@@ -55,14 +59,16 @@ for subj= 1:numel(subjects)
                includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
             end
         end%end session loop
-    
+    end %end this stage loop
         %this gives us an index of all sessions to exclude for a subj
         excludeInd = setdiff(1:numel(currentSubj),includedSessions);
 
         %now actually remove sessions
         subjData.(subjects{subj})(excludeInd)=[]; %delete sessions that aren't of the stage defined
-    end
+%     end
 end
+
+subjects= fieldnames(subjData); %keep subj list up to date
 
 %% ~~~Fix DS TTL pulses from variable reward identity stages  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     %for stages with variable reward identity (3 pumps, 3 rewards)
@@ -676,7 +682,7 @@ end %end subject loop
 
 %Parameters
 preCueTime= 2; %t in seconds to examine before cue
-postCueTime= 4; %t in seconds to examine after cue
+postCueTime= 2; %t in seconds to examine after cue
 
 preCueFrames= preCueTime*fs;
 postCueFrames= postCueTime*fs;
@@ -2481,6 +2487,11 @@ for subj= 1:numel(subjectsAnalyzed) %for each subject analyzed
     currentSubj(1).NSzblueSessionMean= currentSubj(1).NSzblueSessionMean';
     currentSubj(1).NSzpurpleSessionMean= currentSubj(1).NSzpurpleSessionMean';
    
+    %just replace 0 with nan here for ease (TODO: temp fix)
+    currentSubj(1).NSzblueSessionMean(currentSubj(1).NSzblueSessionMean==0)=nan;
+    currentSubj(1).NSpurpleSessionMean(currentSubj(1).NSzpurpleSessionMean==0)=nan;
+
+    
     %get list of session days for heatplot y axis
 %     subjTrialNS=[]; %keep track of sessions that have valid NS trials
 %     dateNS= [];
@@ -2707,6 +2718,10 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
     currentSubj(1).NSzblueAllTrials= currentSubj(1).NSzblueAllTrials';
     currentSubj(1).NSzpurpleAllTrials= currentSubj(1).NSzpurpleAllTrials';
       
+        %just replace 0 with nan here for ease (TODO: temp fix)
+    currentSubj(1).NSzblueAllTrials(currentSubj(1).NSzblueAllTrials==0)=nan;
+    currentSubj(1).NSzpurpleAllTrials(currentSubj(1).NSzpurpleAllTrials==0)=nan;
+
     
     %get a trial count to use for the heatplot ytick
     currentSubj(1).totalDScount= 1:size(currentSubj(1).DSzblueAllTrials,1); 
@@ -2816,7 +2831,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         %plot blue NS
         subplot(2,2,2); %subplot for shared colorbar
 
-        heatNSzblueAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzblueAllTrials);
+        heatNSzblueAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzblueAllTrials, 'AlphaData', ~isnan(currentSubj(1).NSzblueAllTrials));
         title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' blue z score response surrounding every NS ')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
         xlabel('seconds from cue onset');
         ylabel(strcat('NS trial (n= ', num2str(currentSubj(1).totalNScount(end)), ')'));
@@ -2830,7 +2845,7 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
         
            %   plot purple NS (subplotted for shared colorbar)
         subplot(2,2,4);
-        heatNSzpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzpurpleAllTrials); 
+        heatNSzpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalNScount,currentSubj(1).NSzpurpleAllTrials, 'AlphaData', ~isnan(currentSubj(1).NSzpurpleAllTrials)); 
 
         title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding every NS ')) %'(n= ', num2str(unique(trialDSnum)),')')); 
         xlabel('seconds from cue onset');
