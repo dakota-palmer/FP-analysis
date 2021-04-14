@@ -4805,6 +4805,7 @@ allSubjPEDSblueMean= nanmean(squeeze(allSubjPEDSblue), 1);
 allSubjPEDSpurpleMean= nanmean(squeeze(allSubjPEDSpurple),1); 
 
 %% Classify trials by outcome history (trying to get at RPE)
+% plotting peri-first PE in DS epoch based on outcome
 
 trialsBack= 1; %trying to build in some future support for integrating history over multiple trials
 
@@ -4965,13 +4966,21 @@ for subj= 1:numel(subjects)
           colors= colors/255; %values above were from colorbrewer based on 0-255 scale, matlab wants them between 0-1 so just divide
           colororder(colors);
           Legend={};
-          for transitionType= transitionsPossible %loop through possible transition types
-              if sum(outcomeTransitions==transitionType)>0 %possible that we don't have a trial of a given type, if so this avoids an error
-%                   plot(timeLock,PEDSblue(:,outcomeTransitions==transitionType),'color',colors(find(transitionsPossible==transitionType),:));
-                  plot(timeLock, nanmean(PEDSblue(:,outcomeTransitions==transitionType),2), 'lineWidth',3);
-                  Legend= [Legend,(transitionLabelsPossible{transitionsPossible==transitionType})];
+          for transitionType= 1:numel(transitionsPossible) %loop through possible transition types
+              %plotting mean first in one loop to get legend, then individual trials
+              if sum(outcomeTransitions==transitionsPossible(transitionType))>0 %possible that we don't have a trial of a given type, if so this avoids an error
+%                   plot(timeLock,PEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),'color',colors(find(transitionsPossible==transitionsPossible(transitionType)),:)); %individual trials
+                  plot(timeLock, nanmean(PEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),2), 'lineWidth',3); %mean of all trials
+                  Legend= [Legend,(transitionLabelsPossible{transitionType})];
               end
+
           end
+          
+         for transitionType= 1:numel(transitionsPossible)           
+            if sum(outcomeTransitions==transitionsPossible(transitionType))>0 %possible that we don't have a trial of a given type, if so this avoids an error
+%               plot(timeLock,PEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),'color',colors(find(transitionsPossible==transitionsPossible(transitionType)),:)); %individual trials
+            end
+         end
           
          xlabel('time from first PE in DS epoch');
          ylabel('z score 465nm');
