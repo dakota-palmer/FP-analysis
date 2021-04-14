@@ -39,7 +39,7 @@ for subj= 1:numel(subjects)
     currentSubj= subjData.(subjects{subj});
     allStages= unique([currentSubj.trainStage]); 
     
-    stagesToInclude= 12%allStages;%1:5;
+    stagesToInclude= allStages;%1:5;
     
     allStages= allStages(ismember(allStages,stagesToInclude)) %pull out only relevant stages
     
@@ -4804,7 +4804,181 @@ end
 allSubjPEDSblueMean= nanmean(squeeze(allSubjPEDSblue), 1); 
 allSubjPEDSpurpleMean= nanmean(squeeze(allSubjPEDSpurple),1); 
 
+%% Classify trials by outcome history (trying to get at RPE)
 
+trialsBack= 1; %trying to build in some future support for integrating history over multiple trials
+
+%will need to determine which pump corresponds to 'hi', 'med', 'lo' values
+%for each stage/session. Then probably can calculate an RPE estimate based
+%on n trials back
+
+for subj= 1:numel(subjects)
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+    
+          allStages= unique([currentSubj.trainStage]); 
+          allRewardStages= allStages(allStages>=8);
+          for thisStage= allRewardStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+              includedSessions= []; %excluded sessions will reset between unique stages
+              %clear between stages
+              rewardIDs= []; PEDSblue= []; PEDSpurple= []; pumpIDs= []; rewardsThisStage=[]; pumpOnTimeRel=[]; firstLickDS=[];%reset between subjects
+              outcomeValue= []; outcomeExpected= []; outcomeRPE= []; outcomeTransitions= [];
+               %loop through all sessions and record index of sessions that correspond only to this stage
+            for session= 1:numel(currentSubj)
+                if currentSubj(session).trainStage == thisStage %only include sessions from this stage
+                   includedSessions= [includedSessions, session]; % just cat() this session into the list of sessions to save
+                end
+            end%end session loop
+            
+            for includedSession= includedSessions
+                peTrial= []; %reset between sessions
+
+                lickTrial= []; %want to get first lick timings so we can  plot overlay, but cell array makes indexing a bit more complicated 
+                %fill empty lick cells with nan, just easier to index into
+                currentSubj(includedSession).behavior.LoxDSpoxRel(find(cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel)))=nan; 
+                firstLoxThisStage= nan(size(currentSubj(includedSession).periDS.DS)); %start with nan
+                firstLoxThisStage(find(~cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel)))= cellfun(@(v)v(1),currentSubj(includedSession).behavior.loxDSpoxRel(find(~cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel))));
+                
+                
+                for peTrial=find(currentSubj(includedSession).trialOutcome.DSoutcome==1)
+                    pumpIDs= [pumpIDs; currentSubj(includedSession).reward.DSreward(peTrial)]; %list of pump identity for every peTrial                   
+        
+                    pumpOnTimeRel= [pumpOnTimeRel; currentSubj(includedSession).reward.pumpOnFirstPErel(peTrial)];
+                    
+                    PEDSblue= [PEDSblue, squeeze(currentSubj(includedSession).periDSpox.DSzpoxblue(:,:,peTrial))]; %list of peri- first PE response for every peTrial
+                    PEDSpurple= [PEDSpurple, squeeze(currentSubj(includedSession).periDSpox.DSzpoxpurple(:,:,peTrial))]; %list of peri- first PE response for every peTrial
+                    
+%                     firstLickDS= [firstLickDS, nan(size(PEtrial))]; %start with nan, then replace with lick timings (since some trials may have no lick)
+%                     firstLickDS= [firstLickDS, cellfun(@(v)v(1),currentSubj(includedSession).behavior.loxDSpoxRel(peTrial))];
+                    firstLickDS= [firstLickDS, firstLoxThisStage(peTrial)];
+
+                end %end loop through PEtrials
+
+                %make list of reward IDs given known pumpIDs for each trial
+                rewardIDs= cell(size(pumpIDs)); %start with empty cell array (bc dealing with strings) and fill based on pumpID
+                rewardIDs(find(pumpIDs==1))= {currentSubj(includedSession).reward.pump1};
+                rewardIDs(find(pumpIDs==2))= {currentSubj(includedSession).reward.pump2};
+                rewardIDs(pumpIDs==3)= {currentSubj(includedSession).reward.pump3};
+          
+            %Now that we have the trial data and reward identity, let's make plots
+            %based on each pump
+            %Assuming that identity in each pump is constant for each
+            %stage! Also assuming 3 pumps always being used!
+            %todo: doesn't have to be this way, I think code added around
+            %~april 2021 for trial-by-trial outcome analyses has fixes for this
+            %todo: there's an extra layer of cells being introduced here by using {1} {2} {3}, should be (1) (2) (3)
+            rewardsThisStage{1}= unique(rewardIDs(find(pumpIDs==1)));
+            rewardsThisStage{2}= unique(rewardIDs(find(pumpIDs==2)));
+            rewardsThisStage{3}= unique(rewardIDs(find(pumpIDs==3)));
+            
+            %now we have reward identities, let's convert these to some
+            %numerical value
+            %Ottenheimer et al 2020 used maltodextrin='rho, a free parameter we estimated during model fitting', 1=sucrose, 0=water 
+                %let's make a cell array of possible outcomes along with an
+                %array of corresponding numerical 'values'
+            outcomes= {'20% sucrose','10% sucrose', '5% sucrose', 'DI H20', 'empty'};
+            values= [2,1,0.5,0,0];
+%             for pump= 1:numel(rewardsThisStage)
+%                 hiRewardIndex= ismember(rewardsThisStage,'20% sucrose')%(rewardsThisStage{pump}, '20% sucrose');
+%             end
+            %loop through each possible reward outcomes and find matching pump
+            %that corresponds in this session
+            for outcome= 1:numel(outcomes) %now find the corresponding value of each pump outcome in this session 
+                for pump= 1:numel(rewardsThisStage) %3 pumps
+                    %if this pump contains this reward outcome string, will return true and we'll assign the corresponding numerical outcome value to this pump  
+                    if (contains(outcomes(outcome),rewardsThisStage{pump}))==1
+                        pumpValue(pump)= values(outcome);
+                    end 
+                end
+            end
+            
+            %now that we have pump values, assign outcome value to each
+            %trial
+            outcomeValue= pumpValue(pumpIDs)';
+            
+            %let's classify expected value of each trial based on previous outcome (n trials
+            %back?)... probably want to do a more complicated model
+            for trial= 1:numel(pumpIDs) %loop through all trials
+                if trial <= trialsBack %if we don't have n trials before the current trial
+                   outcomeExpected(trial) = 1; %simply = learned value of 10% sucrose?
+                else
+                    %now this is just grabbing the value of n trials back,
+                    %if we want to integrate history over multiple trials
+                    %we'll have to do some kind of summation of averaging function
+                    outcomeExpected(trial,1)= sum(pumpIDs(trial-trialsBack:trial-1)); 
+                end
+            end
+            
+            %now that we have outcome and expected value for each trial, we
+            %can compute an RPE for each trial
+            
+            
+            %very simple outcome-expected here
+            outcomeRPE= outcomeValue-outcomeExpected;
+%             numel(unique(outcomeRPE)) %just checking
+
+            %let's classify trials by outcome transition (we might see
+            %something different from RPE e.g. maybe a pump1->pump1 looks
+            %different from a pump3->pump3 even if RPE is the same)
+            
+            %first find unique combinations (could be helpful for looping later)
+            %since it's possible to get the same outcome multiple trials in
+            %a row, making an array of possible outcomes with a duplicate
+            %for each trial included, doesn't seem to be a built in matlab
+            %function for this with replacement so using code from https://www.mathworks.com/matlabcentral/answers/429709-combinations-of-a-vector-with-replacement
+          
+            rewardsThisStage= [rewardsThisStage{:}]; %when I made this earlier I guess I accidentally added an extra layer of cells... removing this to make it easier to do the strcat function below
+            
+            [A1,A2] = ndgrid(1:numel(rewardsThisStage));
+            transitionsPossible= arrayfun(@(k) polyval([A2(k),A1(k)],10), 1:numel(A1))'; %these are the unique transition combos
+            
+            %now let's get the corresponding unique labels of actual
+                %reward (good for plot legends), code from https://www.mathworks.com/matlabcentral/answers/392649-generate-combinations-of-cells-that-contain-text
+            [A1,A2] = ndgrid(1:numel(rewardsThisStage));
+            transitionLabelsPossible = strcat(rewardsThisStage(A2(:)),'-->',rewardsThisStage(A1(:)))';
+            
+            %now go trial by trial and assign transition type along with label
+             for trial= 1:numel(pumpIDs) %loop through all trials
+                if trial <= trialsBack
+                   outcomeTransitions(trial)= 1; %not sure how to deal with the earliest trials except just mark them as 1 (could make nan)
+                   outcomeTransitionLabels{trial}= 'firstTrials';
+                else
+                    %concatenate outcome history (use sprintf to combine
+                    %into one value)
+                   outcomeTransitions(trial)= str2num(sprintf(num2str(pumpIDs(trial-trialsBack:trial))));
+                   
+                   %let's also save label of what was actually in the pumps (good
+                   %for figure legends)
+                   outcomeTransitionLabels{trial}= strcat((rewardIDs{pumpIDs(trial-trialsBack:trial)}));
+                end
+             end
+         
+            end %end includedSession loop
+          
+            
+            %~~~PLOTS by outcomeTransition
+          %one fig per stage, subplot of all transition types?
+          %maybe better to do one plot per stage with overlaid mean of
+          %transitions
+          figure; hold on; title(strcat(subjects{subj},'-stage-',num2str(thisStage),'-','PEDS blue, trials by transitionType'));
+           %assigning some colors for plotting manually here
+          colors= [103,0,31; 178,24,43; 214,96,77; 244,165,130;253,219,199; 209,229,240; 146,197,222; 67, 147, 195; 33,102,172; 5,48,97];
+          colors= colors/255; %values above were from colorbrewer based on 0-255 scale, matlab wants them between 0-1 so just divide
+          colororder(colors);
+          Legend={};
+          for transitionType= transitionsPossible %loop through possible transition types
+              if sum(outcomeTransitions==transitionType)>0 %possible that we don't have a trial of a given type, if so this avoids an error
+%                   plot(timeLock,PEDSblue(:,outcomeTransitions==transitionType),'color',colors(find(transitionsPossible==transitionType),:));
+                  plot(timeLock, nanmean(PEDSblue(:,outcomeTransitions==transitionType),2), 'lineWidth',3);
+                  Legend= [Legend,(transitionLabelsPossible{transitionsPossible==transitionType})];
+              end
+          end
+          
+         xlabel('time from first PE in DS epoch');
+         ylabel('z score 465nm');
+         legend(Legend);
+    end %end stage loop
+
+end % end subj loop
 
 
 %% ~~~Plots by Stage ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
