@@ -186,10 +186,10 @@ end %end subject loop
 
 %% ~~~Photometry plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 %% Within-subjects raw photometry plots - all in 1 figure
-% In this section, we'll plot the "raw" (it's been preprocessed and
-% downsampled) 405nm and 465nm photometry traces from each session. This makes 
-% one figure per subject with all session traces subplotted so may be slow if you have a lot of sessions
-% useful if you have a few sessions, but too unwieldy with >10sessions
+% % In this section, we'll plot the "raw" (it's been preprocessed and
+% % downsampled) 405nm and 465nm photometry traces from each session. This makes 
+% % one figure per subject with all session traces subplotted so may be slow if you have a lot of sessions
+% % useful if you have a few sessions, but too unwieldy with >10sessions
 %  
 % for subj= 1:numel(subjects) %for each subject
 %     
@@ -238,11 +238,11 @@ end %end subject loop
 %         %make figure full screen, save, and close this figure
 %         set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 % %         saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
-% %         close; %close 
-% end1
+%         close; %close 
+% end
 
 
-% %% Within-subjects raw photometry plots- separate figures
+%% Within-subjects raw photometry plots- separate figures
 % for subj= 1:numel(subjects) %for each subject
 %     
 %     currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
@@ -682,7 +682,7 @@ end %end subject loop
 
 %Parameters
 preCueTime= 2; %t in seconds to examine before cue
-postCueTime= 2; %t in seconds to examine after cue
+postCueTime= 5; %t in seconds to examine after cue
 
 preCueFrames= preCueTime*fs;
 postCueFrames= postCueTime*fs;
@@ -4823,6 +4823,7 @@ for subj= 1:numel(subjects)
               %clear between stages
               rewardIDs= []; PEDSblue= []; PEDSpurple= []; pumpIDs= []; rewardsThisStage=[]; pumpOnTimeRel=[]; firstLickDS=[];%reset between subjects
               outcomeValue= []; outcomeExpected= []; outcomeRPE= []; outcomeTransitions= [];
+              noPEDSblue= []; noPEDSpurple=[]; DSblue=[]; DSpurple=[]; PEDS= []; noPEDS= []; DScount= [];
                %loop through all sessions and record index of sessions that correspond only to this stage
             for session= 1:numel(currentSubj)
                 if currentSubj(session).trainStage == thisStage %only include sessions from this stage
@@ -4840,20 +4841,37 @@ for subj= 1:numel(subjects)
                 firstLoxThisStage(find(~cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel)))= cellfun(@(v)v(1),currentSubj(includedSession).behavior.loxDSpoxRel(find(~cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel))));
                 
                 
-                for peTrial=find(currentSubj(includedSession).trialOutcome.DSoutcome==1)
-                    pumpIDs= [pumpIDs; currentSubj(includedSession).reward.DSreward(peTrial)]; %list of pump identity for every peTrial                   
+                for trial=1:numel(currentSubj(includedSession).periDS.DS)
+                    pumpIDs= [pumpIDs; currentSubj(includedSession).reward.DSreward(trial)]; %list of pump identity for every peTrial                   
         
-                    pumpOnTimeRel= [pumpOnTimeRel; currentSubj(includedSession).reward.pumpOnFirstPErel(peTrial)];
+                    pumpOnTimeRel= [pumpOnTimeRel; currentSubj(includedSession).reward.pumpOnFirstPErel(trial)];
                     
-                    PEDSblue= [PEDSblue, squeeze(currentSubj(includedSession).periDSpox.DSzpoxblue(:,:,peTrial))]; %list of peri- first PE response for every peTrial
-                    PEDSpurple= [PEDSpurple, squeeze(currentSubj(includedSession).periDSpox.DSzpoxpurple(:,:,peTrial))]; %list of peri- first PE response for every peTrial
+                    DSblue= [DSblue, squeeze(currentSubj(includedSession).periDS.DSzblue(:,:,trial))]; %list of peri- first PE response for every peTrial
+                    DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple(:,:,trial))]; %list of peri- first PE response for every peTrial
+                    
+                    %save indices of trials by PE outcome (noPE, PE, inPort)
+                    if currentSubj(includedSession).trialOutcome.DSoutcome(trial)==1
+                        PEDS= [PEDS, trial];
+                    end
+                    if currentSubj(includedSession).trialOutcome.DSoutcome(trial)==2
+                        noPEDS= [noPEDS, trial];
+                    end
                     
 %                     firstLickDS= [firstLickDS, nan(size(PEtrial))]; %start with nan, then replace with lick timings (since some trials may have no lick)
 %                     firstLickDS= [firstLickDS, cellfun(@(v)v(1),currentSubj(includedSession).behavior.loxDSpoxRel(peTrial))];
-                    firstLickDS= [firstLickDS, firstLoxThisStage(peTrial)];
-
+                    firstLickDS= [firstLickDS, firstLoxThisStage(trial)];
+                    
+                    DScount= DScount+1; %total trial count
                 end %end loop through PEtrials
 
+                %now let's isolate PE and noPE trials
+                %will need to have nan size of DSblue then fill in right
+                %trials
+%                 noPEDSblue= nan(size(DSblue));
+                noPEDSblue(:,noPEDS)= DSblue(:,noPEDS);
+%                 PEDSblue= nan(size(DSblue));
+                PEDSblue(:,PEDS)= DSblue(:,PEDS);
+                
                 %make list of reward IDs given known pumpIDs for each trial
                 rewardIDs= cell(size(pumpIDs)); %start with empty cell array (bc dealing with strings) and fill based on pumpID
                 rewardIDs(find(pumpIDs==1))= {currentSubj(includedSession).reward.pump1};
@@ -4960,17 +4978,18 @@ for subj= 1:numel(subjects)
           %one fig per stage, subplot of all transition types?
           %maybe better to do one plot per stage with overlaid mean of
           %transitions
-          figure; hold on; title(strcat(subjects{subj},'-stage-',num2str(thisStage),'-','PEDS blue, trials by transitionType'));
+          subplot(2,1,1); hold on; title(strcat(subjects{subj},'-stage-',num2str(thisStage),'-','peri DS blue, PE trials by transitionType'));
            %assigning some colors for plotting manually here
           colors= [103,0,31; 178,24,43; 214,96,77; 244,165,130;253,219,199; 209,229,240; 146,197,222; 67, 147, 195; 33,102,172; 5,48,97];
           colors= colors/255; %values above were from colorbrewer based on 0-255 scale, matlab wants them between 0-1 so just divide
           colororder(colors);
           Legend={};
+          
           for transitionType= 1:numel(transitionsPossible) %loop through possible transition types
               %plotting mean first in one loop to get legend, then individual trials
               if sum(outcomeTransitions==transitionsPossible(transitionType))>0 %possible that we don't have a trial of a given type, if so this avoids an error
 %                   plot(timeLock,PEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),'color',colors(find(transitionsPossible==transitionsPossible(transitionType)),:)); %individual trials
-                  plot(timeLock, nanmean(PEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),2), 'lineWidth',3); %mean of all trials
+                  plot(timeLock, nanmean(DSblue(:,outcomeTransitions==transitionsPossible(transitionType)),2), 'lineWidth',3); %mean of all trials
                   Legend= [Legend,(transitionLabelsPossible{transitionType})];
               end
 
@@ -4981,12 +5000,26 @@ for subj= 1:numel(subjects)
 %               plot(timeLock,PEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),'color',colors(find(transitionsPossible==transitionsPossible(transitionType)),:)); %individual trials
             end
          end
+         
+          subplot(2,1,2); hold on; title(strcat(subjects{subj},'-stage-',num2str(thisStage),'-','peri DS blue, noPE trials by transitionType'));
+              if sum(outcomeTransitions==transitionsPossible(transitionType))>0 %possible that we don't have a trial of a given type, if so this avoids an error
+%                   plot(timeLock,noPEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),'color',colors(find(transitionsPossible==transitionsPossible(transitionType)),:)); %individual trials
+                  plot(timeLock, nanmean(noPEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),2), 'lineWidth',3); %mean of all trials
+                  Legend= [Legend,(transitionLabelsPossible{transitionType})];
+              end
+
           
-         xlabel('time from first PE in DS epoch');
+         for transitionType= 1:numel(transitionsPossible)           
+            if sum(outcomeTransitions==transitionsPossible(transitionType))>0 %possible that we don't have a trial of a given type, if so this avoids an error
+%               plot(timeLock,noPEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),'color',colors(find(transitionsPossible==transitionsPossible(transitionType)),:)); %individual trials
+            end
+         end
+                   
+         xlabel('time from DS');
          ylabel('z score 465nm');
          legend(Legend);
     end %end stage loop
-
+figure;
 end % end subj loop
 
 

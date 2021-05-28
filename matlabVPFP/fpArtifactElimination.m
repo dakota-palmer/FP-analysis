@@ -1,12 +1,18 @@
 %% load data- here temporarily (remove if put in fpAnalysis workflow)
 
-load(uigetfile); %load subjData
-load(uigetfile); %load subjDataAnalyzed
+cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP')
+
+
+load(uigetfile('*.mat')); %load subjData
+load(uigetfile('*.mat')); %load subjDataAnalyzed
 
 % subjects= fieldnames(subjData);
 subjects= fieldnames(subjDataAnalyzed);
 
 figureCount=1; fs= 40; 
+
+%temporarily restricting to single session to compare methods
+subjects= {'rat8'}
 
 %% Photobleach correction
  %Going for something like (Patel et al 2019 bioRxiv)
@@ -1151,8 +1157,9 @@ for subj= 1:numel(subjDataAnalyzed)
         dRepurple= diff(currentSubj(session).repurple);
 
     
-        dReblue= movmean(dReblue, 1*fs);
-        dRepurple= movmean(dRepurple, 1*fs);
+        %I think if this is done over a rolling window it will work better, instantaeous change is too quick 
+        dReblue= movmean(dReblue, 2*fs);
+        dRepurple= movmean(dRepurple, 2*fs);
 
         trendAgrees= zeros(size(dReblue));
         
@@ -1172,43 +1179,63 @@ for subj= 1:numel(subjDataAnalyzed)
         s.signal = controlFit(currentSubj(session).reblue, currentSubj(session).repurple); %currentSubj(session).repurple;
 
         signal = s.signal;
-        figure;
-        ax1= subplot(4, 1, 1);
-        plot(signal, 'm-'); hold on; title('signal');
-        plot(currentSubj(session).reblue, 'b');
-        grid on;
+
         % Now fix the signal.
-        windowWidth = 60*fs; %DEFINE TIME WINDOW
-        kernel = ones(1, windowWidth) / windowWidth;
-        blurredSignal = conv(signal, kernel, 'same');
-       ax2= subplot(4, 1, 2); hold on; title('blurredSignal');
-        plot(blurredSignal, 'm-');
-        grid on;
-%         MAD= movstd(signal, windowWidth);
-        MAD= movmad(signal, windowWidth); %new method, using movmad()
-        % MAD = abs(signal - blurredSignal); %original method, using conv()
-        ax3= subplot(4, 1, 3);
-        plot(MAD, 'm-'); hold on; title('mean absolute difference (MAD)')
-        grid on;
-%         threshold= mean(MAD)+2*std(MAD); %10; %DEFINE THRESHOLD- original method, static
-%         threshold= movmedian(MAD, windowWidth)+std(MAD)*2; %worked ok, misses some of #2, bad #4
-%         threshold= movmean(MAD, windowWidth)+std(MAD)*2; %worked ok, misses some of #2, may hit some ca events
-            threshold= movmean(MAD, 500*fs)+std(MAD)*3; %does pretty well, misses some of 2 but hits #4
-%         yline(threshold, 'r--'); %plot static threshold
-        plot(threshold, 'r--') %plot dynamic threshold
-        badIndexes= MAD>threshold;%MAD(trendAgrees==1)>threshold(trendAgrees==1);
-        fixedSignal= signal;
-        fixedSignal(badIndexes)=nan;
-        currentSubj(session).reblue(badIndexes)= nan;
-        ax4= subplot(4, 1, 4); hold on; title('fixedSignal');
-        plot(fixedSignal, 'm-');
-        grid on;
-        plot(currentSubj(session).reblue,'b');
-        linkaxes([ax1,ax3,ax4],'x'); linkaxes([ax1,ax4],'y');
+%         windowWidth = 60*fs; %DEFINE TIME WINDOW
+        %as it stands, longer window = higher threshold, smoother MAD
+        %also makes "blurred" signal sharper
+        
+        %15s window seems pretty good
+        
+        %two versions of this, original uses convolution to "blur"/smoothen the
+        %signal and gets the mean absolute difference between actual signal
+        %and this "blurred" version... I think the "blurred" version is
+        %acting as a rough moving baseline in this way. Instead of doing
+        %this I also made a version that uses the movmad() function to
+        %compute a moving median absolute deviation of the signal. Whatever
+        %method is used, then check if MAD is above some threshold and
+        %remove timestamps where it is.
+        convWindowWidth = round([1, 2, 3] * fs); %time window sizes to test ; round bc needs to be integer for indexing
+        thresholdWindowWidth= round([2]*fs)
+        for convwindow= convWindowWidth %loop throught window sizes
+            figure; sgtitle(strcat('window width=',num2str(convwindow/fs),'s'));
+            ax1= subplot(4, 1, 1);
+            plot(signal, 'm-'); hold on; title('signal');
+            plot(currentSubj(session).reblue, 'b');
+            grid on;
+            kernel = ones(1, convwindow) / convwindow;
+            blurredSignal = conv(signal, kernel, 'same');
+            ax2= subplot(4, 1, 2); hold on; title('blurredSignal');
+            plot(blurredSignal, 'm-');
+            grid on;
+%             MAD= movstd(signal, windowWidth);
+%             MAD= movmad(signal, window/2); %new method, using movmad()
+            MAD = abs(signal - blurredSignal); %original method, using conv()
+            ax3= subplot(4, 1, 3);
+            plot(MAD, 'm-'); hold on; title('mean absolute difference (MAD)')
+            grid on;
+    %         threshold= mean(MAD)+2*std(MAD); %10; %DEFINE THRESHOLD- original method, static
+    %         threshold= movmedian(MAD, windowWidth)+std(MAD)*2; %worked ok, misses some of #2, bad #4
+    %         threshold= movmean(MAD, windowWidth)+std(MAD)*2; %worked ok, misses some of #2, may hit some ca events
+                threshold= movmean(MAD, thresholdWindowWidth)+std(MAD)*3; %does pretty well, misses some of 2 but hits #4
+    %         yline(threshold, 'r--'); %plot static threshold
+            plot(threshold, 'r--') %plot dynamic threshold
+            badIndexes= MAD>threshold;%MAD(trendAgrees==1)>threshold(trendAgrees==1);
+            fixedSignal= signal;
+            fixedSignal(badIndexes)=nan;
+            currentSubj(session).reblue(badIndexes)= nan;
+            ax4= subplot(4, 1, 4); hold on; title('fixedSignal');
+            plot(fixedSignal, 'm-');
+            grid on;
+            plot(currentSubj(session).reblue,'b');
+            linkaxes([ax1,ax3,ax4],'x'); linkaxes([ax1,ax4],'y');
+        end %end loop through window sizes 
+        
+        
+        %trying to make interactive plot with GUI to easily test parameters
+
     end
 end
-
-
     
     %% another
     
