@@ -14,6 +14,30 @@ figureCount=1; fs= 40;
 %temporarily restricting to single session to compare methods
 subjects= {'rat8'}
 
+
+
+%% fit and launch gui
+
+%longer threshold window = can capture broader artifacts (e.g. period of
+%stability between two extreme rise and fall times)
+
+%shorter movMADS window= more MADS variability, more individual shifts resolved which combine if using longer windows 
+
+for subj= 1:numel(subjects)
+    includedSessions= [8];
+    currentSubj= subjData.(subjects{subj})
+    for session= includedSessions
+        reblue= currentSubj(session).reblue;
+        %simple 1st order fit
+        fitpurple= controlFit(currentSubj(session).reblue, currentSubj(session).repurple);
+        
+        %launch gui app artifactParmeterTest(signal,reference)
+        artifactParameterTest(reblue, fitpurple)
+    end
+end
+
+
+
 %% Photobleach correction
  %Going for something like (Patel et al 2019 bioRxiv)
 for subj= 1:numel(subjects) %for each subject
