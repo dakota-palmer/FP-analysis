@@ -4817,8 +4817,12 @@ for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
     
           allStages= unique([currentSubj.trainStage]); 
-          allRewardStages= allStages(allStages>=8);
+          allRewardStages= allStages(allStages>=8 & allStages<12); %12 = extinction so exclude
+          
           for thisStage= allRewardStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
+              
+              figure() %1 fig per subj per stage
+             
               includedSessions= []; %excluded sessions will reset between unique stages
               %clear between stages
               rewardIDs= []; PEDSblue= []; PEDSpurple= []; pumpIDs= []; rewardsThisStage=[]; pumpOnTimeRel=[]; firstLickDS=[];%reset between subjects
@@ -4832,7 +4836,7 @@ for subj= 1:numel(subjects)
             end%end session loop
             
             for includedSession= includedSessions
-                peTrial= []; %reset between sessions
+                peTrial= []; noPEtrial=[]; %reset between sessions
 
                 lickTrial= []; %want to get first lick timings so we can  plot overlay, but cell array makes indexing a bit more complicated 
                 %fill empty lick cells with nan, just easier to index into
@@ -4840,37 +4844,64 @@ for subj= 1:numel(subjects)
                 firstLoxThisStage= nan(size(currentSubj(includedSession).periDS.DS)); %start with nan
                 firstLoxThisStage(find(~cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel)))= cellfun(@(v)v(1),currentSubj(includedSession).behavior.loxDSpoxRel(find(~cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel))));
                 
-                
+                %get all DS trial data first, then isolate PE vs no PE later
                 for trial=1:numel(currentSubj(includedSession).periDS.DS)
                     pumpIDs= [pumpIDs; currentSubj(includedSession).reward.DSreward(trial)]; %list of pump identity for every peTrial                   
         
-                    pumpOnTimeRel= [pumpOnTimeRel; currentSubj(includedSession).reward.pumpOnFirstPErel(trial)];
+                    pumpOnTimeRel= [pumpOnTimeRel; currentSubj(includedSession).reward.pumpOnDSrel(trial)];
                     
-                    DSblue= [DSblue, squeeze(currentSubj(includedSession).periDS.DSzblue(:,:,trial))]; %list of peri- first PE response for every peTrial
-                    DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple(:,:,trial))]; %list of peri- first PE response for every peTrial
+                    DSblue= [DSblue, squeeze(currentSubj(includedSession).periDS.DSzblue(:,:,trial))]; %list of peri- DS response for every trial
+                    DSpurple= [DSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple(:,:,trial))]; %list of peri- DS response for every trial
                     
-                    %save indices of trials by PE outcome (noPE, PE, inPort)
-                    if currentSubj(includedSession).trialOutcome.DSoutcome(trial)==1
-                        PEDS= [PEDS, trial];
-                    end
-                    if currentSubj(includedSession).trialOutcome.DSoutcome(trial)==2
-                        noPEDS= [noPEDS, trial];
-                    end
+%                     %save indices of trials by PE outcome (noPE, PE, inPort)
+%                     if currentSubj(includedSession).trialOutcome.DSoutcome(trial)==1
+%                         PEDS= [PEDS, trial];
+%                     end
+%                     if currentSubj(includedSession).trialOutcome.DSoutcome(trial)==2
+%                         noPEDS= [noPEDS, trial];
+%                     end
                     
 %                     firstLickDS= [firstLickDS, nan(size(PEtrial))]; %start with nan, then replace with lick timings (since some trials may have no lick)
 %                     firstLickDS= [firstLickDS, cellfun(@(v)v(1),currentSubj(includedSession).behavior.loxDSpoxRel(peTrial))];
                     firstLickDS= [firstLickDS, firstLoxThisStage(trial)];
                     
                     DScount= DScount+1; %total trial count
-                end %end loop through PEtrials
+                end %end loop through DS
 
+%                 for peTrial=find(currentSubj(includedSession).trialOutcome.DSoutcome==1)
+%                     pumpIDs= [pumpIDs; currentSubj(includedSession).reward.DSreward(peTrial)]; %list of pump identity for every peTrial                   
+%         
+%                     pumpOnTimeRel= [pumpOnTimeRel; currentSubj(includedSession).reward.pumpOnFirstPErel(peTrial)];
+%                     
+%                     PEDSblue= [PEDSblue, squeeze(currentSubj(includedSession).periDS.DSzblue(:,:,peTrial))]; %list of peri- first PE response for every peTrial
+%                     PEDSpurple= [PEDSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple(:,:,peTrial))]; %list of peri- first PE response for every peTrial
+%                     
+% %                     firstLickDS= [firstLickDS, nan(size(PEtrial))]; %start with nan, then replace with lick timings (since some trials may have no lick)
+% %                     firstLickDS= [firstLickDS, cellfun(@(v)v(1),currentSubj(includedSession).behavior.loxDSpoxRel(peTrial))];
+%                     firstLickDS= [firstLickDS, firstLoxThisStage(peTrial)];
+%                 end %end loop through PEtrials
+% 
+%                  for noPEtrial=find(currentSubj(includedSession).trialOutcome.DSoutcome==2)
+% %                     pumpIDs= [pumpIDs; currentSubj(includedSession).reward.DSreward(noPEtrial)]; %list of pump identity for every peTrial                   
+%         
+%                     %but, no pump on if no pe
+% %                     pumpOnTimeRel= [pumpOnTimeRel; currentSubj(includedSession).reward.pumpOnFirstPErel(noPEtrial)];
+%                     
+%                     noPEDSblue= [noPEDSblue, squeeze(currentSubj(includedSession).periDS.DSzblue(:,:,noPEtrial))]; %list of peri- first PE response for every peTrial
+%                     noPEDSpurple= [noPEDSpurple, squeeze(currentSubj(includedSession).periDS.DSzpurple(:,:,noPEtrial))]; %list of peri- first PE response for every peTrial
+%                     
+% %                     firstLickDS= [firstLickDS, nan(size(PEtrial))]; %start with nan, then replace with lick timings (since some trials may have no lick)
+% %                     firstLickDS= [firstLickDS, cellfun(@(v)v(1),currentSubj(includedSession).behavior.loxDSpoxRel(peTrial))];
+% %                     firstLickDS= [firstLickDS, firstLoxThisStage(noPEtrial)];
+%                 end %end loop through PEtrials
+                
                 %now let's isolate PE and noPE trials
                 %will need to have nan size of DSblue then fill in right
                 %trials
-%                 noPEDSblue= nan(size(DSblue));
-                noPEDSblue(:,noPEDS)= DSblue(:,noPEDS);
-%                 PEDSblue= nan(size(DSblue));
-                PEDSblue(:,PEDS)= DSblue(:,PEDS);
+% %                 noPEDSblue= nan(size(DSblue));
+%                 noPEDSblue(:,noPEDS)= DSblue(:,noPEDS);
+% %                 PEDSblue= nan(size(DSblue));
+%                 PEDSblue(:,PEDS)= DSblue(:,PEDS);
                 
                 %make list of reward IDs given known pumpIDs for each trial
                 rewardIDs= cell(size(pumpIDs)); %start with empty cell array (bc dealing with strings) and fill based on pumpID
@@ -4971,7 +5002,30 @@ for subj= 1:numel(subjects)
                 end
              end
          
-            end %end includedSession loop
+             %finally, identify PE vs. noPE trials
+            PEtrial=find(currentSubj(includedSession).trialOutcome.DSoutcome==1);
+            noPEtrial=find(currentSubj(includedSession).trialOutcome.DSoutcome==2);
+            
+            %intermediate assignment so size of DSblue is same as PEDS and noPEDS.
+            %empty trials for each will just be nan
+            i= nan(size(DSblue,1),size(currentSubj(includedSession).periDS.DSblue,3));
+%             i(:,~PEtrial)= nan;
+%             i(:,setdiff(1:end,PEtrial));
+             i(:,PEtrial)=DSblue(:,PEtrial);
+            %cat this session with previous
+            
+            PEDSblue= [PEDSblue, i];
+            
+           i=nan(size(DSblue,1),size(currentSubj(includedSession).periDS.DSblue,3));
+           i(:,noPEtrial)= DSblue(:,noPEtrial);
+%             i= DSblue;
+%             i(:,setdiff(1:end,noPEtrial));
+%             i(:,1:end~=noPEtrial)= nan;
+            noPEDSblue= [noPEDSblue, i];
+                
+            
+             
+        end %end includedSession loop
           
             
             %~~~PLOTS by outcomeTransition
@@ -4989,12 +5043,13 @@ for subj= 1:numel(subjects)
               %plotting mean first in one loop to get legend, then individual trials
               if sum(outcomeTransitions==transitionsPossible(transitionType))>0 %possible that we don't have a trial of a given type, if so this avoids an error
 %                   plot(timeLock,PEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),'color',colors(find(transitionsPossible==transitionsPossible(transitionType)),:)); %individual trials
-                  plot(timeLock, nanmean(DSblue(:,outcomeTransitions==transitionsPossible(transitionType)),2), 'lineWidth',3); %mean of all trials
+                  plot(timeLock, nanmean(PEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),2), 'lineWidth',3); %mean of all trials
                   Legend= [Legend,(transitionLabelsPossible{transitionType})];
               end
 
           end
-          
+          legend(Legend);
+
          for transitionType= 1:numel(transitionsPossible)           
             if sum(outcomeTransitions==transitionsPossible(transitionType))>0 %possible that we don't have a trial of a given type, if so this avoids an error
 %               plot(timeLock,PEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),'color',colors(find(transitionsPossible==transitionsPossible(transitionType)),:)); %individual trials
@@ -5005,7 +5060,7 @@ for subj= 1:numel(subjects)
               if sum(outcomeTransitions==transitionsPossible(transitionType))>0 %possible that we don't have a trial of a given type, if so this avoids an error
 %                   plot(timeLock,noPEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),'color',colors(find(transitionsPossible==transitionsPossible(transitionType)),:)); %individual trials
                   plot(timeLock, nanmean(noPEDSblue(:,outcomeTransitions==transitionsPossible(transitionType)),2), 'lineWidth',3); %mean of all trials
-                  Legend= [Legend,(transitionLabelsPossible{transitionType})];
+%                   Legend= [Legend,(transitionLabelsPossible{transitionType})];
               end
 
           
@@ -5017,9 +5072,8 @@ for subj= 1:numel(subjects)
                    
          xlabel('time from DS');
          ylabel('z score 465nm');
-         legend(Legend);
+%          legend(Legend);
     end %end stage loop
-figure;
 end % end subj loop
 
 

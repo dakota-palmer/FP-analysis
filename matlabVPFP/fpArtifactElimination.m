@@ -23,10 +23,43 @@ subjects= {'rat8'}
 
 %shorter movMADS window= more MADS variability, more individual shifts resolved which combine if using longer windows 
 
+
+
 for subj= 1:numel(subjects)
     includedSessions= [8];
     currentSubj= subjData.(subjects{subj})
     for session= includedSessions
+        
+        %TODO: might want to normalize both signals (z score) before artifact ID
+        %and elimination. It seems the magnitude of deviations in mV is unequal
+        %between channels. I wonder if normalizing would help.
+        
+        
+        %first, let's determine direction of changes in 465nm and 405nm signal...
+        %artifacts should be limited to times when 405nm and 465nm are trending in the same direction
+        %else, we might accidentally remove some calcium events (where inverse calcium signal: ca++ is driving a dip in the 405nm signal)
+%         dReblue= diff(currentSubj(session).reblue);
+%         dRepurple= diff(currentSubj(session).repurple);
+
+    
+        %I think if this is done over a rolling window it will work better, instantaeous change is too quick 
+        dReblue= movmean(dReblue, 2*fs);
+        dRepurple= movmean(dRepurple, 2*fs);
+
+        trendAgrees= zeros(size(dReblue));
+        
+        trendAgrees(dReblue>0 & dRepurple>0)= 1; %mark times when both channels deviate in same direction as eligible for artifact elimination 
+        trendAgrees(dReblue<0 & dRepurple<0)=1; 
+        
+        figure;
+        subplot(3,1,1); hold on; title('diff reblue');
+        plot(dReblue, 'b');
+        subplot(3,1,2); hold on; title('diff repurple');
+        plot(dRepurple, 'm');
+        subplot(3,1,3); hold on; title('trend agrees');
+        plot([trendAgrees,trendAgrees],[zeros(size(trendAgrees)), ones(size(trendAgrees))]);
+        
+        
         reblue= currentSubj(session).reblue;
         %simple 1st order fit
         fitpurple= controlFit(currentSubj(session).reblue, currentSubj(session).repurple);
