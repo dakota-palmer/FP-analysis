@@ -42,10 +42,32 @@ from tdt import read_block, epoc_filter, download_demo_data
 """ 
 **Importing the Data**
 """
+from os import chdir, getcwd
+wd=getcwd()
+chdir(wd)
 
-download_demo_data()
+#%%  example data:
+# download_demo_data()
 BLOCKPATH = 'data/FiPho-180416'
 data = read_block(BLOCKPATH)
+
+#%% my data:
+BLOCKPATH= r'H:\TDT Photometry tanks\DP_DSTrainingv02-190822-171545\_VP-VTA-FP round 2\VP-VTA-FP8and9-191118-114543'
+data = read_block(BLOCKPATH)
+
+print(data.info)
+
+print(data) #in example data, PtAB is an epoc, _4054 and _4654 are streams
+
+#in the example data, I believe shock_code corresponds to the specific count of event they want to pull (they only pick one?)
+
+#exploring data first
+# a simple plot
+# fig1 = plt.subplots(figsize=(10, 6))
+# plt.stem(data.epocs.Pox1.onset, data.epocs.Pox1.data)
+# plt.show()
+
+#%% 
 
 """
 **Setup the variables for the data you want to extract**
@@ -58,6 +80,21 @@ Event store name. This holds behavioral codes that are read through ports A & B 
 REF_EPOC = 'PtAB' 
 SHOCK_CODE = [64959] # shock onset event code we are interested in
 
+#my data
+REF_EPOC= 'Pox1'
+SHOCK_CODE= [1]
+
+#collect PEs during DS epochs. Finding PEs between cue onset and cue end
+SHOCK_CODE= np.array([])
+cueDur=10
+
+for cue in data.epocs._DDS.onset:
+    SHOCK_CODE= np.concatenate([SHOCK_CODE,
+                   data.epocs.Pox1.onset[((data.epocs.Pox1.onset>cue) & 
+                             (data.epocs.Pox1.onset<(cue+cueDur)))]]
+                              )
+#convert to list for epoc_filter() function
+SHOCK_CODE= SHOCK_CODE.tolist
 """
 Make some variables up here to so if they change in new recordings you won't have to change everything downstream
 """
@@ -68,6 +105,12 @@ TRANGE = [-10, 20] # window size [start time relative to epoc onset, window dura
 BASELINE_PER = [-10, -6] # baseline period within our window
 ARTIFACT = np.inf # optionally set an artifact rejection level
 
+#my data
+ISOS = 'Dv2A' # 405nm channel. Formally STREAM_STORE1 in Matlab example
+GCaMP = 'Dv1A' # 465nm channel. Formally STREAM_STORE2 in Matlab example
+TRANGE = [-10, 20] # window size [start time relative to epoc onset, window duration]
+BASELINE_PER = [-10, -1] # baseline period within our window
+ARTIFACT = np.inf # optionally set an artifact rejection level
 """
 **Use epoc_filter to extract data around our epoc event**
 

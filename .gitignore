@@ -1,3 +1,4 @@
+.ipynb_checkpoints
 
 matlabVPFP/fpExtractData.asv
 matlabVPFP/VPFP-QuantNeuro-26-Nov-2019.mat
@@ -51,3 +52,24 @@ python/data/VTA4-190125-100559/FastedSucrose1-190125-092937_VTA4-190125-100559.t
 python/data/VTA4-190125-100559/FastedSucrose1-190125-092937_VTA4-190125-100559.tsq
 python/data/VTA4-190125-100559/Notes.txt
 python/data/VTA4-190125-100559/StoresListing.txt
+
+
+*.Tbk
+*.Tdx
+*.tev
+*.tin
+*.tnt
+*.tsq
+python/tdt/data/VTA4-190125-100559/StoresListing.txt
+python/tdt/data/VTA4-190125-100559/Notes.txt
+python/tdt/data/VTA4-190125-100559/desktop.ini
+python/tdt/data/Subject1-180426-120951/StoresListing.txt
+python/tdt/data/Subject1-180426-120951/Notes.txt
+python/tdt/data/Subject1-180426-120951/desktop.ini
+python/tdt/data/FiPho-180416/StoresListing.txt
+python/tdt/data/FiPho-180416/desktop.ini
+python/tdt/data/desktop.ini
+python/tdt/data/Algernon-180308-130351/StoresListing.txt
+python/tdt/data/Algernon-180308-130351/desktop.ini
+python/tdt/requirements.txt
+python/tdt/LICENSE
