@@ -10,8 +10,8 @@ close all
 % addpath('C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\Figs');
 % figPath = 'C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\justrawFigs\VPFP\'; %location for output figures to be saved
 
-addpath('G:\Shared drives\Richard Lab\Data\Ally\GADVPFP_Figs');
-figPath = 'G:\Shared drives\Richard Lab\Data\Ally\GADVPFP_Figs'; %location for output figures to be saved
+addpath('G:\Shared drives\Richard Lab\Data\Ally\VPLHFP Figs\');
+figPath = 'G:\Shared drives\Richard Lab\Data\Ally\VPLHFP Figs\'; %location for output figures to be saved
 
 
 % %% Load struct containing data organized by subject
@@ -58,6 +58,27 @@ subjIncluded= subjects;
        subjDataAnalyzed.(subjects{subj})(session).box= currentSubj(session).box;       
    end %end session loop
 end %end subject loop
+
+% %% Number the start dates for each rat and display any errors
+% Rat = subjDataAnalyzed.rat{1};% initializing at first animal
+% k = 1;
+% for i=1:length(subjDataAnalyzed.date)
+%     RatinTable=subjDataAnalyzed.rat{i};
+%     if RatinTable==Rat% if TrainingData.StartDate and Rat are the same, will give you logical 1, and TraindayData.Day(i,1)=k
+%          subjDataAnalyzed.(subjects{subj})(session).trainDay(i,1) = k;
+%         k = k + 1;% add one to k everytime there is another day for the same subject
+%         if i < length(TrainingData.StartDate) && TrainingData.StartDate{i} == TrainingData.StartDate{i+1} % check if the date in next row is the same as the current one
+%             fprintf('repeated date %d with rat %s\n', TrainingData.StartDate{i}, TrainingData.Subject{i});
+%         end
+%     else
+%         k = 1;% reinitialize for another animal
+%         Rat = subjDataAnalyzed.rat{i};
+%         TrainingData.Day(i,1) = k;
+%         k = k + 1;% then  add 1 to k to keep going through if loop
+%     end
+% end
+
+
 %% Photobleach correction
  %Going for something like (Patel et al 2019 bioRxiv)
 for subj= 1:numel(subjects) %for each subject
