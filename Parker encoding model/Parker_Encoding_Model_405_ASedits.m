@@ -12,7 +12,7 @@ clc
 %determine if folder exists and if so purge it, if not create it
 curr_dir = pwd;
 
-save_folder = 'encoding_results\satge5criteria\465';
+save_folder = 'encoding_results\satge5criteria\405';
 
 % if exist(save_folder)==0
 %     mkdir(save_folder)
@@ -23,7 +23,7 @@ save_folder = 'encoding_results\satge5criteria\465';
 % end
 %     
 
-figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage5_EncodingModel_Figs\465';
+figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage5_EncodingModel_Figs\405\';
 condition = 'Richard_data_to_input';
 subjects = [1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
@@ -686,7 +686,7 @@ for subj=1:numel(subjects)
     poxDS= []; %output.firstPoxDS;%[]; 
     loxDS= []; %output.firstLoxDS;%[];
     
-    gcamp_y= nan(size(z_gcamp_y_blue));
+    gcamp_y= nan(size(z_gcamp_y_purple));
         %loop through trials and exclude events that occur outside of the
         %periDS window for each trial
     for cue=1:length(DSTimes) % for each DS Trial 
@@ -701,7 +701,7 @@ for subj=1:numel(subjects)
   %exclude photometry data outside of trials (easier to just make nan because elimnating timestamps will require remapping of event times?)
 %  gcamp_y= [gcamp_y,gcamp_normalized(periDSstarts(cue):periDSends(cue))]; 
 
-        gcamp_y(periDSstarts(cue):periDSends(cue))= z_gcamp_y_blue(periDSstarts(cue):periDSends(cue));
+        gcamp_y(periDSstarts(cue):periDSends(cue))= z_gcamp_y_purple(periDSstarts(cue):periDSends(cue));
     end
     
     poxDS= DSPEindex; %output.firstPoxDS;%[]; 
@@ -963,10 +963,10 @@ for subj=1:numel(subjects)
     
     %Now, lets make a figure of peri-event plots to compare with kernels
     figure();
-    periCueTime= linspace(-preCueFrames/fs,postCueFrames/fs, numel(currentSubj(1).DSzblueMean)); %Time axis for graph
+    periCueTime= linspace(-preCueFrames/fs,postCueFrames/fs, numel(currentSubj(1).DSzpurpleMean)); %Time axis for graph
     hold on;title('peri-DS');
-    plot(periCueTime,squeeze(currentSubj(1).DSzblueAllTrials), 'b');
-    plot(periCueTime,currentSubj(1).DSzblueMean, 'k', 'LineWidth', 2);
+    plot(periCueTime,squeeze(currentSubj(1).DSzpurpleAllTrials), 'b');
+    plot(periCueTime,currentSubj(1).DSzpurpleMean, 'k', 'LineWidth', 2);
     scatter(DSPElatency, ones(length(DSPElatency),1)*5, 'g.'); %overlay all PE latencies
     scatter(nanmean(DSPElatency), 5, 20, 'g*'); %overlay mean DS pe latency
     
@@ -1044,7 +1044,7 @@ for subj=1:numel(subjects)
         end %end con loop
         subplot(numel(cons)+1, 1, con+1); hold on;
         plot(timeLock,gcamp_model_sum(:,DStrial), 'k');
-        plot(timeLock,currentSubj(1).DSzblueAllTrials(DStrial,:), 'b');
+        plot(timeLock,currentSubj(1).DSzpurpleAllTrials(DStrial,:), 'b');
         legend('modeled trace (sum kernels)', 'actual trace (z scored based on pre-cue baseline)');
 
          gcf;
@@ -1058,7 +1058,7 @@ for subj=1:numel(subjects)
     end
  kernel_Shifted_all.kernels_DSTrials.(subj_name)=kernels_DStrials;
  kernel_Shifted_all.gcamp_model_sum.(subj_name)=gcamp_model_sum;
- kernel_Shifted_all.DSzblueAllTrials.(subj_name)=currentSubj(1).DSzblueAllTrials;
+ kernel_Shifted_all.DSzpurpleAllTrials.(subj_name)=currentSubj(1).DSzpurpleAllTrials;
 
     %same as above but model mean across trials instead of trial-by-trial
 %     figure; hold on; title(strcat('Mean across all DS trials- modeled gcamp trace vs. actual peri-DS trace'));
@@ -1075,7 +1075,7 @@ for subj=1:numel(subjects)
     end %end con loop
     subplot(numel(cons)+1, 1, con+1); hold on; title('modeled vs. actual GCaMP');
     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
-    plot(timeLock,currentSubj(1).DSzblueMean, 'b');
+    plot(timeLock,currentSubj(1).DSzpurpleMean, 'b');
     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
 
         gcf;
@@ -1095,7 +1095,7 @@ DSkernel_Shifted_all=[];
 PEkernel_Shifted_all=[];
 Lickkernel_Shifted_all=[]; 
 modelsum_Shifted_all=[];
-DSzblueAllTrials_Shifted_all=[];
+DSzpurpleAllTrials_Shifted_all=[];
 
 fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
 
@@ -1119,7 +1119,7 @@ Lickkernel_Shifted_all= cat(2,Lickkernel_Shifted_all,kernel_Shifted_all.kernels_
 modelsum_Shifted_all= cat(2,modelsum_Shifted_all,kernel_Shifted_all.gcamp_model_sum.(fns{subject})(:,:));
 
 %DSzalltrials matrix
-DSzblueAllTrials_Shifted_all= cat(2,DSzblueAllTrials_Shifted_all,kernel_Shifted_all.DSzblueAllTrials.(fns{subject})(:,:)');
+DSzpurpleAllTrials_Shifted_all= cat(2,DSzpurpleAllTrials_Shifted_all,kernel_Shifted_all.DSzpurpleAllTrials.(fns{subject})(:,:)');
 end
 
 %% matlab plots
@@ -1137,7 +1137,7 @@ figure();
   
 figure();
   plot(timeLock,nanmean(modelsum_Shifted_all,2), 'k');hold on;
-  plot(timeLock,nanmean(DSzblueAllTrials_Shifted_all,2), 'b');hold off;
+  plot(timeLock,nanmean(DSzpurpleAllTrials_Shifted_all,2), 'b');hold off;
   legend('average model trace (sum kernels- across animals)', 'average z-score (across animals)');
   
   
@@ -1206,7 +1206,7 @@ g.set_color_options('chroma',0);
 g.set_names('x','Time from DS onset(sec)','y','regression beta','color','model');
 g.set_title('black=model and blue=z-score');
 g.draw()
-g.update('x',timeLock,'y',DSzblueAllTrials_Shifted_all')
+g.update('x',timeLock,'y',DSzpurpleAllTrials_Shifted_all')
 g.stat_summary('geom','area','type','sem')
 g.set_color_options('map','matlab');
 g.axe_property('YLim',[-1.5 3.5]);

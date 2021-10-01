@@ -75,14 +75,18 @@ for subj= 1:numel(subjects) %for each subject
     
     
     %Transpose for readability
+     if currentSubj(session).trainStage <5
     currentSubj(1).DSzblueSessionMeanA= currentSubj(1).DSzblueSessionMeanA';
     currentSubj(1).DSzpurpleSessionMeanA= currentSubj(1).DSzpurpleSessionMeanA';
-    
+     end
+     
+      if currentSubj(session).trainStage ==5
     currentSubj(1).DSzblueSessionMeanB= currentSubj(1).DSzblueSessionMeanB';
     currentSubj(1).DSzpurpleSessionMeanB= currentSubj(1).DSzpurpleSessionMeanB';
     currentSubj(1).NSzblueSessionMeanB= currentSubj(1).NSzblueSessionMeanB';
     currentSubj(1).NSzpurpleSessionMeanB= currentSubj(1).NSzpurpleSessionMeanB';
-    
+      end
+      
     if currentSubj(session).trainStage >5
     currentSubj(1).DSzblueSessionMeanC= currentSubj(1).DSzblueSessionMeanC';
     currentSubj(1).DSzpurpleSessionMeanC= currentSubj(1).DSzpurpleSessionMeanC';
@@ -124,19 +128,21 @@ for subj= 1:numel(subjects) %for each subject
      stdFactor= 4; %multiplicative factor- how many stds away should we set our max & min color value? 
      
      %cond A
+      if currentSubj(session).trainStage <5
      topDSzblueA= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
      topDSzpurpleA= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
      bottomDSzblueA = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanA, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
      bottomDSzpurpleA= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanA, 0, 2))));
-     
+      end
      %cond b
+      if currentSubj(session).trainStage==5
      topDSzblueB= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
      topDSzpurpleB= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
      bottomDSzblueB = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanB, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
      bottomDSzpurpleB= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanB, 0, 2))));
-     
+      end
      %cond c
      if currentSubj(session).trainStage >5
      topDSzblueC= stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
@@ -144,11 +150,22 @@ for subj= 1:numel(subjects) %for each subject
 
      bottomDSzblueC = -stdFactor*abs(nanmean((std(currentSubj(1).DSzblueSessionMeanC, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
      bottomDSzpurpleC= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleSessionMeanC, 0, 2))));
-    
+     end
      
-     bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC];
-     tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC];
-     
+     if currentSubj(session).trainStage >5
+        if exist('bottomDSzblueA') & exist('bottomDSzblueB')
+        bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzblueC, bottomDSzpurpleA, bottomDSzpurpleB, bottomDSzpurpleC];
+        tops= [topDSzblueA, topDSzblueB, topDSzblueC, topDSzpurpleA, topDSzpurpleB, topDSzpurpleC];
+        elseif exist('bottomDSzblueA') & ~exist('bottomDSzblueB')
+        bottoms= [bottomDSzblueA, bottomDSzblueC, bottomDSzpurpleA, bottomDSzpurpleC];
+        tops= [topDSzblueA, topDSzblueC, topDSzpurpleA, topDSzpurpleC];
+        elseif exist('bottomDSzblueB') & ~exist('bottomDSzblueA')
+        bottoms= [bottomDSzblueB, bottomDSzblueC, bottomDSzpurpleB, bottomDSzpurpleC];
+        tops= [topDSzblueB, topDSzblueC, topDSzpurpleB, topDSzpurpleC];
+        elseif ~exist('bottomDSzblueB') & ~exist('bottomDSzblueA')
+        bottoms= [ bottomDSzblueC, bottomDSzpurpleC];
+        tops= [ topDSzblueC,topDSzpurpleC];
+        end
      else 
      bottoms= [bottomDSzblueA, bottomDSzblueB, bottomDSzpurpleA, bottomDSzpurpleB];
      tops= [topDSzblueA, topDSzblueB, topDSzpurpleA, topDSzpurpleB];
@@ -188,7 +205,7 @@ for subj= 1:numel(subjects) %for each subject
 
         sgtitle(strcat(subjData.(subjects{subj})(1).experiment, ' ', subjects{subj}, 'Avg response by session to DS across training stages')); %add big title above all subplots
 
-
+  if currentSubj(session).trainStage <5
         subplot(2,3,1) %plot of stage 1-4 blue (cond A blue)
         
             imagesc(timeLock,subjSessA,currentSubj(1).DSzblueSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
@@ -200,10 +217,10 @@ for subj= 1:numel(subjects) %for each subject
             caxis([bottomMeanShared topMeanShared]); %use a shared color axis to encompass all values
 
             c= colorbar; %colorbar legend
-            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
+            c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');       
+  end        
             
-            
+    if currentSubj(session).trainStage ==5
         subplot(2,3,2) %plot of stage 5 blue (cond B blue)
             
             imagesc(timeLock,subjSessB,currentSubj(1).DSzblueSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
@@ -216,7 +233,8 @@ for subj= 1:numel(subjects) %for each subject
 
             c= colorbar; %colorbar legend
             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
+    end   
+            
      if currentSubj(session).trainStage >5    
         subplot(2,3,3) %plot of stage 6-8 blue (cond C blue)
             imagesc(timeLock,subjSessC,currentSubj(1).DSzblueSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
@@ -231,6 +249,7 @@ for subj= 1:numel(subjects) %for each subject
             c.Label.String= strcat('DS 465nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
      end  
 
+      if currentSubj(session).trainStage<5 
        subplot(2,3,4) %plot of stage 1-4 purple (cond A purple)
             imagesc(timeLock,subjSessA,currentSubj(1).DSzpurpleSessionMeanA) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
             title(strcat('daily avg 405nm z score response surrounding DS- Stages 1-4')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
@@ -242,7 +261,9 @@ for subj= 1:numel(subjects) %for each subject
 
             c= colorbar; %colorbar legend
             c.Label.String= strcat('DS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
+      end
+      
+        if currentSubj(session).trainStage ==5
        subplot(2,3,5) %plot of stage 5 purple (cond B purple)
             imagesc(timeLock,subjSessB,currentSubj(1).DSzpurpleSessionMeanB) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));
             title(strcat('daily avg 405nm z score response surrounding DS- Stage 5')); %'(n= ', num2str(unique(trialDSnum)),')')); %display the possible number of cues in a session (this is why we used unique())
@@ -254,7 +275,7 @@ for subj= 1:numel(subjects) %for each subject
 
             c= colorbar; %colorbar legend
             c.Label.String= strcat('DS 405nm z-score calculated from', num2str(slideTime/fs), 's preceding cue');
-              
+        end       
       if currentSubj(session).trainStage >5    
        subplot(2,3,6) %plot of stage 6-8 purple (cond C purple)
             imagesc(timeLock,subjSessC,currentSubj(1).DSzpurpleSessionMeanC) %, 'AlphaData', ~isnan(currentSubj(1).DSzblueSessionMean));

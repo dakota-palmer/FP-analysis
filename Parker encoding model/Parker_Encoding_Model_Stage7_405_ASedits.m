@@ -1,19 +1,16 @@
-% RICHARD LAB ADAPTATION OF PARKER ENCODING MODEL
-
+% RICHARD LAB ADAPTATION OF PARKER ENCODING MODEL- Stage 7 (delay between
+% PE and reward delivery)
+% must stage pump of interest variable, line 23, for analyzing different
+% variable reward ( rewards are in different pumps)
 % function[answer]=inscopix_spline_regression(condition,neuron)
 
 clear all
 close all
 clc
 
-% cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
-
-
 %determine if folder exists and if so purge it, if not create it
 curr_dir = pwd;
-
-save_folder = 'encoding_results\satge5criteria\465';
-
+save_folder = 'encoding_results\stage7\405';
 % if exist(save_folder)==0
 %     mkdir(save_folder)
 % else
@@ -22,20 +19,14 @@ save_folder = 'encoding_results\satge5criteria\465';
 %     cd ../..
 % end
 %     
-
-figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage5_EncodingModel_Figs\465';
+figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage7_EncodingModel_Figs\405\';
 condition = 'Richard_data_to_input';
 subjects = [1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
-
-% figsave_folder='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\output';
-% condition = 'data to input';
-% subjects = 1:7%[1 2 3 4 5 ];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
 
 for subj=1:numel(subjects)
     
-    clearvars -except curr_dir save_folder figsave_folder condition subjects subj subjDataPEM kernel_Shifted_all
-    
+    clearvars -except curr_dir save_folder figsave_folder condition subjects subj subjDataPEM kernel_Shifted_all 
     tic
     %how much time should you shift back (in seconds)
     time_back_orig=5;
@@ -46,9 +37,6 @@ for subj=1:numel(subjects)
     shift_con=0;   %Should we shift the stimulus events so they start at 0?
     
     %---- Data Extraction-----
-%     cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
-
-    
     %opens folder to be tested
     file_root=pwd;
     cd(condition)
@@ -77,56 +65,78 @@ for subj=1:numel(subjects)
     %'output' & 'g_output' are actually loaded at the beginning of this
     %script -- dp
     % Just using indicies, no longer converting into hertz for every event occuring during recording
+    
+%    %STAGE 5- criteria 
+%     DSonsetindex=data_to_input_GADVPFP.output(1).DSonsetindex_criteria;
+%     
+%     DSPEindex=data_to_input_GADVPFP.output(1).DSpoxind_criteria;
+%     
+%     DSLickindex=data_to_input_GADVPFP.output(1).DSloxind_criteria;
+%     
+%      % cutTime
+%     
+%     cutTime=data_to_input_GADVPFP.g_output(1).cutTime_criteria; 
+%     
+%     %TimeStamps
+%     DSTimes=cutTime(DSonsetindex);
+%     
+%     DSPElatency= data_to_input_GADVPFP.output(1).DSPElatency_criteria;
+%     
+%     inPortDS= data_to_input_GADVPFP.output(1).inPortDS_criteria;
+%     
+%     poxDS=data_to_input_GADVPFP.output(1).poxDS_criteria;
+%     
+% %     NSTimes=data_to_input_GADVPFP.output(1).NSTimes.* data_to_input_GADVPFP.g_output(1).samp_rate;
+% %     
+% %     NSPETimes=data_to_input_GADVPFP.output(1).NSpox.*data_to_input_GADVPFP.g_output(1).samp_rate;
+% %     
+% %     NSLickTimes=data_to_input_GADVPFP.output(1).NSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
+% %     
+% %     NSPElatency= data_to_input_GADVPFP.output(1).NSPElatencey.*data_to_input_GADVPFP.g_output(1).samp_rate;
+% %     
+% %     inPortNS= data_to_input_GADVPFP.output(1).inPortNS;
+% %     
+% %     poxNS=data_to_input_GADVPFP.output(1).poxNS;
+%     
+%     % frequencey sampling rate (in hZ)
+%     fs=data_to_input_GADVPFP.g_output(1).samp_rate;
+%     
+%     % g_camp
+%     gcamp_y_blue=data_to_input_GADVPFP.g_output(1).gcamp_raw.blue;
+%     gcamp_y_purple=data_to_input_GADVPFP.g_output(1).gcamp_raw.purple;
 
+if isfield(data_to_input_GADVPFP,'output_stage7')
+  %STAGE 7 
     
-   %STAGE 5- criteria 
-
-    DSonsetindex=data_to_input_GADVPFP.output(1).DSonsetindex_criteria;
+    DSonsetindex=data_to_input_GADVPFP.output_stage7(1).DSonsetindex_stage7{end};
     
-    DSPEindex=data_to_input_GADVPFP.output(1).DSpoxind_criteria;
+    DSPEindex=data_to_input_GADVPFP.output_stage7(1).DSpoxind_stage7{end};
     
-    DSLickindex=data_to_input_GADVPFP.output(1).DSloxind_criteria;
+    DSLickindex=data_to_input_GADVPFP.output_stage7(1).DSloxind_stage7{end};
     
      % cutTime
     
-    cutTime=data_to_input_GADVPFP.g_output(1).cutTime_criteria; 
+    cutTime=data_to_input_GADVPFP.g_output_stage7(1).cutTime_stage7{end}; 
     
     %TimeStamps
     DSTimes=cutTime(DSonsetindex);
     
-%     DSPETimes=cutTime(DSPEindex);
-%     
-%     DSLickTimes=cutTime(DSLickindex);
-
+    DSPElatency= data_to_input_GADVPFP.output_stage7(1).DSPElatency_stage7{end};
     
-    DSPElatency= data_to_input_GADVPFP.output(1).DSPElatency_criteria;
+    inPortDS= data_to_input_GADVPFP.output_stage7(1).inPortDS_stage7{end};
     
-    inPortDS= data_to_input_GADVPFP.output(1).inPortDS_criteria;
-    
-    poxDS=data_to_input_GADVPFP.output(1).poxDS_criteria;
-    
-%     NSTimes=data_to_input_GADVPFP.output(1).NSTimes.* data_to_input_GADVPFP.g_output(1).samp_rate;
-%     
-%     NSPETimes=data_to_input_GADVPFP.output(1).NSpox.*data_to_input_GADVPFP.g_output(1).samp_rate;
-%     
-%     NSLickTimes=data_to_input_GADVPFP.output(1).NSlox.*data_to_input_GADVPFP.g_output(1).samp_rate;
-%     
-%     NSPElatency= data_to_input_GADVPFP.output(1).NSPElatencey.*data_to_input_GADVPFP.g_output(1).samp_rate;
-%     
-%     inPortNS= data_to_input_GADVPFP.output(1).inPortNS;
-%     
-%     poxNS=data_to_input_GADVPFP.output(1).poxNS;
-    
-    % frequencey sampling rate (in hZ)
-    fs=data_to_input_GADVPFP.g_output(1).samp_rate;
+    poxDS=data_to_input_GADVPFP.output_stage7(1).poxDS_stage7{end};
+   
+    % frequencey sampling rate 
+    fs=data_to_input_GADVPFP.g_output_stage7(1).samp_rate;
     
     % g_camp
-    gcamp_y_blue=data_to_input_GADVPFP.g_output(1).gcamp_raw.blue;
-    gcamp_y_purple=data_to_input_GADVPFP.g_output(1).gcamp_raw.purple;
+    gcamp_y_blue=data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.blue{end};
+    gcamp_y_purple=data_to_input_GADVPFP.g_output_stage7(1).gcamp_raw.purple{end};    
 
        %% Moving Z-score
 % Here we are calculating the z-score 10 seconds before the DS for each DS   
-  disp('calculating moving z-score');
+% 
     z_gcamp_y_blue=[];
     z_gcamp_y_purple=[];
     tb=10; % how many seconds back from DS you want to normalize to
@@ -153,10 +163,10 @@ for subj=1:numel(subjects)
             z_gcamp_y_blue_temp=[];
             z_gcamp_y_purple_temp=[];
             
-            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_blue_baseline)/z_blue_std;
+            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_blue_baseline)/z_blue_std; 
             %fprintf('blue Z-scored \n')
             z_gcamp_y_purple_temp(:,:)=(gcamp_y_purple(DSonset-(tb*fs): DSonset_b-(tb*fs)-1)-z_purple_baseline)/z_purple_std; 
-%             fprintf('purple Z-scored \n')
+            %fprintf('purple Z-scored \n')
             
             z_gcamp_y_blue= cat(2,z_gcamp_y_blue(:,:),z_gcamp_y_blue_temp(:,:));
             z_gcamp_y_purple= cat(2,z_gcamp_y_purple(:,:),z_gcamp_y_purple_temp(:,:));
@@ -173,10 +183,8 @@ for subj=1:numel(subjects)
             z_gcamp_y_blue_temp=[];
             z_gcamp_y_purple_temp=[];
             
-            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs):end)-z_blue_baseline)/z_blue_std; 
-            %fprintf('blue Z-scored \n')
-            z_gcamp_y_purple_temp(:,:)=(gcamp_y_purple(DSonset-(tb*fs):end)-z_purple_baseline)/z_purple_std; 
-            %fprintf('purple Z-scored \n')
+            z_gcamp_y_blue_temp(:,:)=(gcamp_y_blue(DSonset-(tb*fs):end)-z_blue_baseline)/z_blue_std; fprintf('blue Z-scored \n')
+            z_gcamp_y_purple_temp(:,:)=(gcamp_y_purple(DSonset-(tb*fs):end)-z_purple_baseline)/z_purple_std; fprintf('purple Z-scored \n')
             
             z_gcamp_y_blue= cat(2,z_gcamp_y_blue(:,:),z_gcamp_y_blue_temp(:,:));
             z_gcamp_y_purple= cat(2,z_gcamp_y_purple(:,:),z_gcamp_y_purple_temp(:,:));
@@ -350,6 +358,7 @@ for subj=1:numel(subjects)
     subjDataPEM.(subj_name).periDSParker.DSzblueAllTrials= currentSubj(1).DSzblueAllTrials;
     subjDataPEM.(subj_name).periDSParker.DSzpurpleAllTrials= currentSubj(1).DSzpurpleAllTrials;
     
+   
             % Means 
             currentSubj(1).DSzblueMean= nanmean(currentSubj(1).DSzblueAllTrials,1); 
             currentSubj(1).DSzpurpleMean= nanmean( currentSubj(1).DSzpurpleAllTrials,1); 
@@ -686,10 +695,12 @@ for subj=1:numel(subjects)
     poxDS= []; %output.firstPoxDS;%[]; 
     loxDS= []; %output.firstLoxDS;%[];
     
+    % for stage 8 trials want pump1 and pump 2 analysis to be seperate
+    
     gcamp_y= nan(size(z_gcamp_y_blue));
         %loop through trials and exclude events that occur outside of the
         %periDS window for each trial
-    for cue=1:length(DSTimes) % for each DS Trial 
+    for cue=1:length(DSTimes) % for each DS Trial that is also a trial with the pump( reward) of interest
         if DSTimes(cue)> cutTime(periDSstarts(cue)) &&  DSTimes(cue) < cutTime(periDSends(cue)) %if this cue onset occurs between periDS window start and end, keep this DS
              DS= [DS, DSonsetindex(cue)];
              
@@ -701,7 +712,7 @@ for subj=1:numel(subjects)
   %exclude photometry data outside of trials (easier to just make nan because elimnating timestamps will require remapping of event times?)
 %  gcamp_y= [gcamp_y,gcamp_normalized(periDSstarts(cue):periDSends(cue))]; 
 
-        gcamp_y(periDSstarts(cue):periDSends(cue))= z_gcamp_y_blue(periDSstarts(cue):periDSends(cue));
+        gcamp_y(periDSstarts(cue):periDSends(cue))= z_gcamp_y_purple(periDSstarts(cue):periDSends(cue));
     end
     
     poxDS= DSPEindex; %output.firstPoxDS;%[]; 
@@ -807,8 +818,6 @@ for subj=1:numel(subjects)
     
     x_all=mean_center(x_basic); %todo: missing fxn % the mean is calculated and the lasso regression shrinks values toward this cental point
     gcamp_y=gcamp_temp;
-    
-    disp('running regression');
     
     [stats.beta,stats.p]=lasso(x_all,gcamp_y','cv',5);    %Lasso with cross-validation % Nathan says we can use glmfit instead
     sum_betas=max(stats.beta(:,stats.p.IndexMinMSE));    %Selects betas that minimize MSE
@@ -965,8 +974,8 @@ for subj=1:numel(subjects)
     figure();
     periCueTime= linspace(-preCueFrames/fs,postCueFrames/fs, numel(currentSubj(1).DSzblueMean)); %Time axis for graph
     hold on;title('peri-DS');
-    plot(periCueTime,squeeze(currentSubj(1).DSzblueAllTrials), 'b');
-    plot(periCueTime,currentSubj(1).DSzblueMean, 'k', 'LineWidth', 2);
+    plot(periCueTime,squeeze(currentSubj(1).DSzpurpleAllTrials), 'b');
+    plot(periCueTime,currentSubj(1).DSzpurpleMean, 'k', 'LineWidth', 2);
     scatter(DSPElatency, ones(length(DSPElatency),1)*5, 'g.'); %overlay all PE latencies
     scatter(nanmean(DSPElatency), 5, 20, 'g*'); %overlay mean DS pe latency
     
@@ -1044,7 +1053,7 @@ for subj=1:numel(subjects)
         end %end con loop
         subplot(numel(cons)+1, 1, con+1); hold on;
         plot(timeLock,gcamp_model_sum(:,DStrial), 'k');
-        plot(timeLock,currentSubj(1).DSzblueAllTrials(DStrial,:), 'b');
+        plot(timeLock,currentSubj(1).DSzpurpleAllTrials(DStrial,:), 'b');
         legend('modeled trace (sum kernels)', 'actual trace (z scored based on pre-cue baseline)');
 
          gcf;
@@ -1058,7 +1067,7 @@ for subj=1:numel(subjects)
     end
  kernel_Shifted_all.kernels_DSTrials.(subj_name)=kernels_DStrials;
  kernel_Shifted_all.gcamp_model_sum.(subj_name)=gcamp_model_sum;
- kernel_Shifted_all.DSzblueAllTrials.(subj_name)=currentSubj(1).DSzblueAllTrials;
+ kernel_Shifted_all.DSzpurpleAllTrials.(subj_name)=currentSubj(1).DSzpurpleAllTrials;
 
     %same as above but model mean across trials instead of trial-by-trial
 %     figure; hold on; title(strcat('Mean across all DS trials- modeled gcamp trace vs. actual peri-DS trace'));
@@ -1075,7 +1084,7 @@ for subj=1:numel(subjects)
     end %end con loop
     subplot(numel(cons)+1, 1, con+1); hold on; title('modeled vs. actual GCaMP');
     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
-    plot(timeLock,currentSubj(1).DSzblueMean, 'b');
+    plot(timeLock,currentSubj(1).DSzpurpleMean, 'b');
     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
 
         gcf;
@@ -1084,9 +1093,66 @@ for subj=1:numel(subjects)
         cd(strcat(figsave_folder,'\Mean_Model\'));;
         savefig(figsave_name);
         
+% %% Create graph of all subjects ( SEM area)
+% %reorganise z-score data for all animals
+% 
+% DSkernel_Shifted_all=[];
+% PEkernel_Shifted_all=[];
+% Lickkernel_Shifted_all=[]; 
+% modelsum_Shifted_all=[];
+% DSzblueAllTrials_Shifted_all=[];
+% 
+% for subject= 1:length(subjects);
+% % create matrix with all DS onset DSkernels for all animals (1st sheet in
+% % 3D matrix)
+% fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
+% 
+% DSkernel_Shifted_all= cat(2,DSkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,1));
+% % create matrix with all PE DSkernels for all animals(2nd sheet in
+% % 3D matrix)
+% PEkernel_Shifted_all= cat(2,PEkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,2));
+% 
+% % create matrix with all lick DSkernels for all animals(3rd sheet in
+% % 3D matrix)
+% 
+% Lickkernel_Shifted_all= cat(2,Lickkernel_Shifted_all,kernel_Shifted_all.kernels_DSTrials.(fns{subject})(:,:,3));
+% 
+% 
+% % modelsum matrix
+% modelsum_Shifted_all= cat(2,modelsum_Shifted_all,kernel_Shifted_all.gcamp_model_sum.(fns{subject})(:,:));
+% 
+% %DSzalltrials matrix
+% DSzblueAllTrials_Shifted_all= cat(2,DSzblueAllTrials_Shifted_all,kernel_Shifted_all.DSzblueAllTrials.(fns{subject})(:,:)');
+% end
+% 
+% %% matlab plots
+% figure();
+%   plot(timeLock,nanmean(DSkernel_Shifted_all,2), 'k');hold on;
+%   plot(timeLock,nanmean(PEkernel_Shifted_all,2), 'b');hold on;
+%   plot(timeLock,nanmean(Lickkernel_Shifted_all,2),'m');hold off;
+%   legend('average DS trace (sum kernels- across animals)', 'average PE trace (sum kernels- across animals)','average Lick trace (sum kernels- across animals)');
+%     
+%         gcf;
+%         [filepath,name,ext] = fileparts(file_name);
+%         figsave_name=strcat('DSonset_Pox_Lick_regressiontraces',name);
+%         cd(strcat(figsave_folder,'\across animals\'));;
+%         savefig(figsave_name);
+% figure();
+%   plot(timeLock,nanmean(modelsum_Shifted_all,2), 'k');hold on;
+%   plot(timeLock,nanmean(DSzblueAllTrials_Shifted_all,2), 'b');hold off;
+%   legend('average model trace (sum kernels- across animals)', 'average z-score (across animals)');
+%         
+%         gcf;
+%         [filepath,name,ext] = fileparts(file_name);
+%         figsave_name=strcat('sumregressiontrace_zscoretrace',name);
+%         cd(strcat(figsave_folder,'\across animals\'));;
+%         savefig(figsave_name);
+
  toc
  cd(curr_dir)
-end %end first subj loop
+else% else conditional for stage 7
+end% end if else conditional for stage 7
+end %end subj loop
 
 %% Create graph of all subjects ( SEM area)
 %reorganise z-score data for all animals
@@ -1095,7 +1161,7 @@ DSkernel_Shifted_all=[];
 PEkernel_Shifted_all=[];
 Lickkernel_Shifted_all=[]; 
 modelsum_Shifted_all=[];
-DSzblueAllTrials_Shifted_all=[];
+DSzpurpleAllTrials_Shifted_all=[];
 
 fns = fieldnames(kernel_Shifted_all.kernels_DSTrials);
 
@@ -1119,7 +1185,7 @@ Lickkernel_Shifted_all= cat(2,Lickkernel_Shifted_all,kernel_Shifted_all.kernels_
 modelsum_Shifted_all= cat(2,modelsum_Shifted_all,kernel_Shifted_all.gcamp_model_sum.(fns{subject})(:,:));
 
 %DSzalltrials matrix
-DSzblueAllTrials_Shifted_all= cat(2,DSzblueAllTrials_Shifted_all,kernel_Shifted_all.DSzblueAllTrials.(fns{subject})(:,:)');
+DSzpurpleAllTrials_Shifted_all= cat(2,DSzpurpleAllTrials_Shifted_all,kernel_Shifted_all.DSzpurpleAllTrials.(fns{subject})(:,:)');
 end
 
 %% matlab plots
@@ -1137,7 +1203,7 @@ figure();
   
 figure();
   plot(timeLock,nanmean(modelsum_Shifted_all,2), 'k');hold on;
-  plot(timeLock,nanmean(DSzblueAllTrials_Shifted_all,2), 'b');hold off;
+  plot(timeLock,nanmean(DSzpurpleAllTrials_Shifted_all,2), 'b');hold off;
   legend('average model trace (sum kernels- across animals)', 'average z-score (across animals)');
   
   
@@ -1154,7 +1220,7 @@ figure()
 g=gramm('x',timeLock,'y',DSkernel_Shifted_all');
 g.stat_summary('geom','area','type','sem')
 g.set_names('x','Time from DS onset(sec)','y','Regression Coefficient','group','DSonset');
-g.axe_property('YLim',[-1 1.8]);
+g.axe_property('YLim',[-20 20]);
 g.set_title('DS Onset Kernel');
 g.draw()
 
@@ -1170,7 +1236,7 @@ g=gramm('x',timeLock,'y',PEkernel_Shifted_all')
 g.stat_summary('geom','area','type','sem')
 g.set_names('x','Time from PE(sec)','y','Regression Coefficient');
 g.set_color_options('map','d3_10');
-g.axe_property('YLim',[-1 1.8]);
+g.axe_property('YLim',[-25 1]);
 g.set_title('Port Entry Kernel');
 g.draw()
 
@@ -1206,10 +1272,10 @@ g.set_color_options('chroma',0);
 g.set_names('x','Time from DS onset(sec)','y','regression beta','color','model');
 g.set_title('black=model and blue=z-score');
 g.draw()
-g.update('x',timeLock,'y',DSzblueAllTrials_Shifted_all')
+g.update('x',timeLock,'y',DSzpurpleAllTrials_Shifted_all')
 g.stat_summary('geom','area','type','sem')
 g.set_color_options('map','matlab');
-g.axe_property('YLim',[-1.5 3.5]);
+g.axe_property('YLim',[-20 10]);
 g.draw()
 
 
@@ -1219,6 +1285,4 @@ g.draw()
         cd(strcat(figsave_folder,'\Avg kernels across animals\'));;
         savefig(figsave_name);
 
-
- 
- disp('all done');
+disp('all done');

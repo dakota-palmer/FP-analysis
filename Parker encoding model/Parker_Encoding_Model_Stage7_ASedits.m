@@ -1220,7 +1220,7 @@ figure()
 g=gramm('x',timeLock,'y',DSkernel_Shifted_all');
 g.stat_summary('geom','area','type','sem')
 g.set_names('x','Time from DS onset(sec)','y','Regression Coefficient','group','DSonset');
-g.axe_property('YLim',[-1 1.8]);
+g.axe_property('YLim',[-20 20]);
 g.set_title('DS Onset Kernel');
 g.draw()
 
@@ -1236,7 +1236,7 @@ g=gramm('x',timeLock,'y',PEkernel_Shifted_all')
 g.stat_summary('geom','area','type','sem')
 g.set_names('x','Time from PE(sec)','y','Regression Coefficient');
 g.set_color_options('map','d3_10');
-g.axe_property('YLim',[-1 1.8]);
+g.axe_property('YLim',[-25 1]);
 g.set_title('Port Entry Kernel');
 g.draw()
 
@@ -1253,7 +1253,7 @@ g=gramm('x',timeLock,'y',Lickkernel_Shifted_all')
 g.stat_summary('geom','area','type','sem')
 g.set_names('x','Time from Initial Lick(sec)','y','Regression Coefficient');
 g.set_color_options('map','brewer2');
-g.axe_property('YLim',[-1 1.8]);
+g.axe_property('YLim',[-1 6]);
 g.set_title('Initial Lick Kernel');
 g.draw()
 
@@ -1275,7 +1275,7 @@ g.draw()
 g.update('x',timeLock,'y',DSzblueAllTrials_Shifted_all')
 g.stat_summary('geom','area','type','sem')
 g.set_color_options('map','matlab');
-g.axe_property('YLim',[-1.5 3.5]);
+g.axe_property('YLim',[-20 10]);
 g.draw()
 
 
