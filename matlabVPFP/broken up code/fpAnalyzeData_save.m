@@ -8,151 +8,151 @@ save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjD
 %DAKOTA
 % structpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code'
 % save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 for files >2gb
-%% save data from each stage from each animal for ERT analysis
-ERTpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output\ERT\';
-
-
-% 
-%DAKOTA
 % %% save data from each stage from each animal for ERT analysis
-% ERTpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\ERT'
-
-ERTData=struct();
-subj=[];
-session=[];
-Stage=[];
-Stagestring=[];
-
-
-
-for subj=1:numel(subjects);
-   for session = 1:numel(subjData.(subjects{subj}));
-       Stagestring=string((subjDataAnalyzed.(subjects{subj})(session).trainStage));
-       Stage=(subjDataAnalyzed.(subjects{subj})(session).trainStage);
-       
-   for trial=1:size(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue,3)
-        
-       ERTData.(strcat('DSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue(:,:,trial)';
-       ERTData.(strcat('DSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple(:,:,trial)';
-       
-    
-       if Stage==8
-       ERTData.DSzStage8pump(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(trial,:);
-       ERTData.NSzStage8pump(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(trial,:);  
-       end
-   end %end trial loop
-   
-   for trial = 1:size(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue,3) %repeat for NS
-       if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5;
-           ERTData.(strcat('NSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue(:,:,trial)';
-           ERTData.(strcat('NSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple(:,:,trial)';
-       end
-   end %end ns trial loop
-   
-   %organize all data from last day of each stage into one matrix which is
-   %how photometry event detection reads data
-       %for DSz trials
-        
-
-     if Stage<=5 
-       if subj==1
-       ERTData.(strcat('DSzblueallStage',Stagestring))= ERTData.(strcat('DSzblueStage',Stagestring));
-       ERTData.(strcat('DSzpurpleallStage',Stagestring))= ERTData.(strcat('DSzpurpleStage',Stagestring));
-       else   
-       ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
-       ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
-       end
-     elseif Stage>5 
-
-        ERTData.(strcat('DSzblueallStage',Stagestring))=[];
-        ERTData.(strcat('DSzpurpleallStage',Stagestring))= [];
-        ERTData.DSzStage8pumpall= [];         
-           
-        if exist(strcat('DSzblueStage',Stagestring));
-           ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
-           ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
-  
-           if Stage==8
-           ERTData.DSzStage8pumpall=vertcat(ERTData.DSzStage8pumpall,ERTData.DSzStage8pump(:,:,subj));
-           end
-           end
-
-       if subj==1
-       ERTData.(strcat('DSzblueallStage',Stagestring))= ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj);
-       ERTData.(strcat('DSzpurpleallStage',Stagestring))= ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj);
-       if Stage==8
-       ERTData.DSzStage8pumpall= ERTData.DSzStage8pump(:,:,subj);
-       end
-       else   
-       ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
-       ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
-       if Stage==8
-       ERTData.DSzStage8pumpall=vertcat(ERTData.DSzStage8pumpall,ERTData.DSzStage8pump(:,:,subj));
-       end
-       end
-
-     end
-       
-
-%        ERTData.(strcat('NSzblueallStage',Stage))= [];
-%        ERTData.(strcat('NSzpurpleallStage',Stage))=[];
-       
-       %for NSz trials
-      if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5
-      
-       if Stage<=5 
-
-           if subj==1
-           ERTData.(strcat('NSzblueallStage',Stagestring))= ERTData.(strcat('NSzblueStage',Stagestring));
-           ERTData.(strcat('NSzpurpleallStage',Stagestring))= ERTData.(strcat('NSzpurpleStage',Stagestring));
-           else   
-           ERTData.(strcat('NSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('NSzblueallStage',Stagestring)),ERTData.(strcat('NSzblueStage',Stagestring))(:,:,subj));
-           ERTData.(strcat('NSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('NSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
-           end
-        elseif Stage>5 
-           ERTData.(strcat('NSzblueallStage',Stagestring))=[];
-           ERTData.(strcat('NSzpurpleallStage',Stagestring))= []; 
-           if exist(strcat('NSzblueStage',Stagestring));
-   
-           ERTData.(strcat('NSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('NSzblueallStage',Stagestring)),ERTData.(strcat('NSzblueStage',Stagestring))(:,:,subj));
-           ERTData.(strcat('NSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('NSzpurpleallStage',Stagestring)),ERTData.(strcat('NSzpurpleStage',Stagestring))(:,:,subj));
-           
-           end
-        end  
-     end 
-
-       
-
-      
-  
-      
-   end %end session loop
-end %end subj loop
-
-%seperate stage 8 trials into reward(pump1) and probe trials(pump2)
-[pump1indrow]=find(ERTData.DSzStage8pumpall==1);
-[pump2indrow]=find(ERTData.DSzStage8pumpall==2);
-
-    %DSzblue
-    ERTData.DSzblueStage8pump1=ERTData.DSzblueallStage8(pump1indrow,:);
-    ERTData.DSzblueStage8pump2=ERTData.DSzblueallStage8(pump2indrow,:);
-    %DSzpurple
-    ERTData.DSzpurpleStage8pump1=ERTData.DSzpurpleallStage8(pump1indrow,:);
-    ERTData.DSzpurpleStage8pump2=ERTData.DSzpurpleallStage8(pump2indrow,:);
-     %NSzblue
-    ERTData.NSzblueStage8pump1=ERTData.NSzblueallStage8(pump1indrow,:);
-    ERTData.NSzblueStage8pump2=ERTData.NSzblueallStage8(pump2indrow,:);
-    %NSzpurple
-    ERTData.NSzpurpleStage8pump1=ERTData.NSzpurpleallStage8(pump1indrow,:);
-    ERTData.NSzpurpleStage8pump2=ERTData.NSzpurpleallStage8(pump2indrow,:);
-    
-    
-
-%establish x axis
-ERTData.timeLock=timeLock;
-
-%save 
-save(fullfile(ERTpath,strcat(experimentName,'-', 'ERTData')), 'ERTData');
+% ERTpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output\ERT\';
+% 
+% 
+% % 
+% %DAKOTA
+% % %% save data from each stage from each animal for ERT analysis
+% % ERTpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\ERT'
+% 
+% ERTData=struct();
+% subj=[];
+% session=[];
+% Stage=[];
+% Stagestring=[];
+% 
+% 
+% 
+% for subj=1:numel(subjects);
+%    for session = 1:numel(subjData.(subjects{subj}));
+%        Stagestring=string((subjDataAnalyzed.(subjects{subj})(session).trainStage));
+%        Stage=(subjDataAnalyzed.(subjects{subj})(session).trainStage);
+%        
+%    for trial=1:size(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue,3)
+%         
+%        ERTData.(strcat('DSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblue(:,:,trial)';
+%        ERTData.(strcat('DSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple(:,:,trial)';
+%        
+%     
+%        if Stage==8
+%        ERTData.DSzStage8pump(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(trial,:);
+%        ERTData.NSzStage8pump(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(trial,:);  
+%        end
+%    end %end trial loop
+%    
+%    for trial = 1:size(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue,3) %repeat for NS
+%        if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5;
+%            ERTData.(strcat('NSzblueStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblue(:,:,trial)';
+%            ERTData.(strcat('NSzpurpleStage',Stagestring))(trial,:,subj)=subjDataAnalyzed.(subjects{subj})(session).periNS.NSzpurple(:,:,trial)';
+%        end
+%    end %end ns trial loop
+%    
+%    %organize all data from last day of each stage into one matrix which is
+%    %how photometry event detection reads data
+%        %for DSz trials
+%         
+% 
+%      if Stage<=5 
+%        if subj==1
+%        ERTData.(strcat('DSzblueallStage',Stagestring))= ERTData.(strcat('DSzblueStage',Stagestring));
+%        ERTData.(strcat('DSzpurpleallStage',Stagestring))= ERTData.(strcat('DSzpurpleStage',Stagestring));
+%        else   
+%        ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
+%        ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
+%        end
+%      elseif Stage>5 
+% 
+%         ERTData.(strcat('DSzblueallStage',Stagestring))=[];
+%         ERTData.(strcat('DSzpurpleallStage',Stagestring))= [];
+%         ERTData.DSzStage8pumpall= [];         
+%            
+%         if exist(strcat('DSzblueStage',Stagestring));
+%            ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
+%            ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
+%   
+%            if Stage==8
+%            ERTData.DSzStage8pumpall=vertcat(ERTData.DSzStage8pumpall,ERTData.DSzStage8pump(:,:,subj));
+%            end
+%            end
+% 
+%        if subj==1
+%        ERTData.(strcat('DSzblueallStage',Stagestring))= ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj);
+%        ERTData.(strcat('DSzpurpleallStage',Stagestring))= ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj);
+%        if Stage==8
+%        ERTData.DSzStage8pumpall= ERTData.DSzStage8pump(:,:,subj);
+%        end
+%        else   
+%        ERTData.(strcat('DSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('DSzblueallStage',Stagestring)),ERTData.(strcat('DSzblueStage',Stagestring))(:,:,subj));
+%        ERTData.(strcat('DSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('DSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
+%        if Stage==8
+%        ERTData.DSzStage8pumpall=vertcat(ERTData.DSzStage8pumpall,ERTData.DSzStage8pump(:,:,subj));
+%        end
+%        end
+% 
+%      end
+%        
+% 
+% %        ERTData.(strcat('NSzblueallStage',Stage))= [];
+% %        ERTData.(strcat('NSzpurpleallStage',Stage))=[];
+%        
+%        %for NSz trials
+%       if ~isempty(subjDataAnalyzed.(subjects{subj})(session).periNS.NSzblueMean)&& Stage>=5
+%       
+%        if Stage<=5 
+% 
+%            if subj==1
+%            ERTData.(strcat('NSzblueallStage',Stagestring))= ERTData.(strcat('NSzblueStage',Stagestring));
+%            ERTData.(strcat('NSzpurpleallStage',Stagestring))= ERTData.(strcat('NSzpurpleStage',Stagestring));
+%            else   
+%            ERTData.(strcat('NSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('NSzblueallStage',Stagestring)),ERTData.(strcat('NSzblueStage',Stagestring))(:,:,subj));
+%            ERTData.(strcat('NSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('NSzpurpleallStage',Stagestring)),ERTData.(strcat('DSzpurpleStage',Stagestring))(:,:,subj));
+%            end
+%         elseif Stage>5 
+%            ERTData.(strcat('NSzblueallStage',Stagestring))=[];
+%            ERTData.(strcat('NSzpurpleallStage',Stagestring))= []; 
+%            if exist(strcat('NSzblueStage',Stagestring));
+%    
+%            ERTData.(strcat('NSzblueallStage',Stagestring))=vertcat(ERTData.(strcat('NSzblueallStage',Stagestring)),ERTData.(strcat('NSzblueStage',Stagestring))(:,:,subj));
+%            ERTData.(strcat('NSzpurpleallStage',Stagestring))=vertcat(ERTData.(strcat('NSzpurpleallStage',Stagestring)),ERTData.(strcat('NSzpurpleStage',Stagestring))(:,:,subj));
+%            
+%            end
+%         end  
+%      end 
+% 
+%        
+% 
+%       
+%   
+%       
+%    end %end session loop
+% end %end subj loop
+% 
+% %seperate stage 8 trials into reward(pump1) and probe trials(pump2)
+% [pump1indrow]=find(ERTData.DSzStage8pumpall==1);
+% [pump2indrow]=find(ERTData.DSzStage8pumpall==2);
+% 
+%     %DSzblue
+%     ERTData.DSzblueStage8pump1=ERTData.DSzblueallStage8(pump1indrow,:);
+%     ERTData.DSzblueStage8pump2=ERTData.DSzblueallStage8(pump2indrow,:);
+%     %DSzpurple
+%     ERTData.DSzpurpleStage8pump1=ERTData.DSzpurpleallStage8(pump1indrow,:);
+%     ERTData.DSzpurpleStage8pump2=ERTData.DSzpurpleallStage8(pump2indrow,:);
+%      %NSzblue
+%     ERTData.NSzblueStage8pump1=ERTData.NSzblueallStage8(pump1indrow,:);
+%     ERTData.NSzblueStage8pump2=ERTData.NSzblueallStage8(pump2indrow,:);
+%     %NSzpurple
+%     ERTData.NSzpurpleStage8pump1=ERTData.NSzpurpleallStage8(pump1indrow,:);
+%     ERTData.NSzpurpleStage8pump2=ERTData.NSzpurpleallStage8(pump2indrow,:);
+%     
+%     
+% 
+% %establish x axis
+% ERTData.timeLock=timeLock;
+% 
+% %save 
+% save(fullfile(ERTpath,strcat(experimentName,'-', 'ERTData')), 'ERTData');
 
 %% Save variables to input into Parker encoding model
 
@@ -214,72 +214,206 @@ for subj=1:numel(subjects)
            if subjData.(subjects{subj})(session).Acriteria==1  %if the animal reached criteria, add this data to the struct
            
             x=1;%use for saving files and not saving subj files that do not meet criteria
-            %g_camp_465
-           gcamp_raw.blue_criteria=subjData.(subjects{subj})(session).reblue'; 
-           gcamp_raw.blue_dayb4criteria=subjData.(subjects{subj})(session-1).reblue';
-           gcamp_raw.blue_2dayb4criteria=subjData.(subjects{subj})(session-2).reblue'; 
-          
+           % STAGE 5        
+           %g_camp_465
+           gcamp_raw.blue_criteria(:)=subjData.(subjects{subj})(session).reblue'; 
+           if session-1>0
+           gcamp_raw.blue_dayb4criteria(:)=subjData.(subjects{subj})(session-1).reblue';
+           end
+           if session-2>0
+           gcamp_raw.blue_2dayb4criteria(:)=subjData.(subjects{subj})(session-2).reblue'; 
+           end
+           
+           if exist('blue_dayb4criteria')& exist('blue_2dayb4criteria')
            gcamp_raw_blue_cat=horzcat( gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria,gcamp_raw.blue_2dayb4criteria);
+           elseif exist('blue_dayb4criteria')
+           gcamp_raw_blue_cat=horzcat( gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria); 
+           else
+            gcamp_raw_blue_cat=horzcat( gcamp_raw.blue_criteria);
+           end
+           
            % use this temp array to elongate the rest of the variables with
            % appropriate time stamps for the full concatenated signal
+           if exist('blue_dayb4criteria')
            temp_gcamp_raw_blue_dayb4criteria=horzcat(gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria);
+           else 
+            temp_gcamp_raw_blue_dayb4criteria= nan;    
+           end
+           
            
             %g_camp_405
            gcamp_raw.purple_criteria(:)=subjData.(subjects{subj})(session).repurple'; 
+            if session-1>0
            gcamp_raw.purple_dayb4criteria(:)=subjData.(subjects{subj})(session-1).repurple';
+            end
+             if session-2>0
            gcamp_raw.purple_2dayb4criteria(:)=subjData.(subjects{subj})(session-2).repurple'; 
-
-            gcamp_raw_purple_cat=horzcat( gcamp_raw.purple_criteria,gcamp_raw.purple_dayb4criteria,gcamp_raw.purple_2dayb4criteria);
+             end
+             
+             
+           if exist('purple_dayb4criteria')& exist('purple_2dayb4criteria')
+           gcamp_raw_purple_cat=horzcat( gcamp_raw.purple_criteria,gcamp_raw.purple_dayb4criteria,gcamp_raw.purple_2dayb4criteria);
+           elseif exist('purple_dayb4criteria')
+           gcamp_raw_purple_cat=horzcat( gcamp_raw.purple_criteria,gcamp_raw.purple_dayb4criteria); 
+           else
+            gcamp_raw_purple_cat=horzcat( gcamp_raw.purple_criteria);
+           end
            
            %cutTime for moving z-score
            cutTime_criteria=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+           if exist('gcamp_raw.blue_dayb4criteria')
            cutTime_dayb4criteria=subjDataAnalyzed.(subjects{subj})(session-1).photometry.cutTime + length(gcamp_raw.blue_criteria(:)); 
+           end
+           if exist('gcamp_raw.blue_2dayb4criteria')
            cutTime_2dayb4criteria=subjDataAnalyzed.(subjects{subj})(session-2).photometry.cutTime + length(temp_gcamp_raw_blue_dayb4criteria(:)); 
-           
+           end
+           if exist ('gcamp_raw.blue_dayb4criteria') & ('gcamp_raw.blue_2dayb4criteria')
            cutTime_cat=horzcat(cutTime_criteria,cutTime_dayb4criteria,cutTime_2dayb4criteria);
+           elseif exist ('gcamp_raw.blue_dayb4criteria')
+           cutTime_cat=horzcat(cutTime_criteria,cutTime_dayb4criteria);
+           else
+            cutTime_cat=horzcat(cutTime_criteria);  
+           end
+           
+           
+          
            %DS Index
            DSonsetindex_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
+           if exist('gcamp_raw.blue_dayb4criteria')
            DSonsetindex_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDS.DSonset(:)+ length(gcamp_raw.blue_criteria(:));
+           end
+           if exist('gcamp_raw.blue_2dayb4criteria')
            DSonsetindex_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDS.DSonset(:)+ length(temp_gcamp_raw_blue_dayb4criteria(:));
+           end
            
-           DSonset_cat=horzcat( DSonsetindex_criteria, DSonsetindex_dayb4criteria,DSonsetindex_2dayb4criteria);
+           
+            if exist ('DSonsetindex_dayb4criteria') & ('DSonsetindex_2dayb4criteria')
+            DSonset_cat=horzcat( DSonsetindex_criteria, DSonsetindex_dayb4criteria,DSonsetindex_2dayb4criteria);
+           elseif exist ('DSonsetindex_dayb4criteria')
+            DSonset_cat=horzcat( DSonsetindex_criteria, DSonsetindex_dayb4criteria);
+           else
+            DSonset_cat=horzcat( DSonsetindex_criteria);
+           end
+           
+           
            %DS Times
            DSTimes_criteria(:)=cutTime_cat( DSonsetindex_criteria(:));
+           if exist('DSonsetindex_dayb4criteria')
            DSTimes_dayb4criteria(:)=cutTime_cat(DSonsetindex_dayb4criteria(:));
+           end
+           if exist('DSonsetindex_2dayb4criteria')
            DSTimes_2dayb4criteria(:)=cutTime_cat(DSonsetindex_2dayb4criteria(:));
+           end
            
-           DSTimes_cat=horzcat(DSTimes_criteria,DSTimes_dayb4criteria,DSTimes_2dayb4criteria);
-           %DS Pox
-           DSpox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(:)';
+          
+            if exist ('DSTimes_dayb4criteria') & ('DSTimes_2dayb4criteria')
+            DSTimes_cat=horzcat(DSTimes_criteria,DSTimes_dayb4criteria,DSTimes_2dayb4criteria);
+           elseif exist (' DSTimes_dayb4criteria')
+           DSTimes_cat=horzcat(DSTimes_criteria,DSTimes_dayb4criteria);
+           else
+            DSTimes_cat=horzcat(DSTimes_criteria);
+            end
+           
+           
+           
+           %DSpox
+           
+            DSpox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(:)';
+           if exist('DSonsetindex_dayb4criteria')
            DSpox_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDSpox.firstPoxind(:)';
-           DSpox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSpox.firstPoxind(:)';
+           end
+           if exist('DSonsetindex_2dayb4criteria')
+            DSpox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSpox.firstPoxind(:)';
+           end
            
-           DSpox_cat=horzcat(DSpox_criteria,DSpox_dayb4criteria,DSpox_2dayb4criteria);
+          
+            if exist ('DSpox_dayb4criteria') & ('DSpox_2dayb4criteria')
+            DSpox_cat=horzcat(DSpox_criteria,DSpox_dayb4criteria,DSpox_2dayb4criteria);
+           elseif exist (' DSpox_dayb4criteria')
+           DSpox_cat=horzcat(DSpox_criteria,DSpox_dayb4criteria);
+           else
+            DSpox_cat=horzcat(DSpox_criteria);
+            end
+            
+            
            %DS Lox
+            
            DSlox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLoxind(:)';
+           if exist('DSonsetindex_dayb4criteria')
            DSlox_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDSlox.firstLoxind(:)';
+           end
+           if exist('DSonsetindex_2dayb4criteria')
            DSlox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSlox.firstLoxind(:)';
+           end
            
+          
+           if exist ('DSlox_dayb4criteria') & ('DSlox_2dayb4criteria')
            DSlox_cat=horzcat(DSlox_criteria,DSlox_dayb4criteria,DSlox_2dayb4criteria);
-           %DS latency
-           DSPElatency_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
-           DSPElatency_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.DSpeLatency(:);
-           DSPElatency_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.DSpeLatency(:);
+           elseif exist ('DSlox_dayb4criteria')
+           DSlox_cat=horzcat(DSlox_criteria,DSlox_dayb4criteria);
+           else
+           DSlox_cat=horzcat(DSlox_criteria);
+           end
+            
 
-           DSPElatency_cat=horzcat(DSPElatency_criteria,DSPElatency_dayb4criteria,DSPElatency_2dayb4criteria);
-           %inPortDS
-           inPortDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
-           inPortDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.inPortDS;
-           inPortDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.inPortDS;
+           %DS latency
            
+           DSPElatency_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
+           if exist('DSonsetindex_dayb4criteria')
+           DSPElatency_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.DSpeLatency(:);
+           end
+           if exist('DSonsetindex_2dayb4criteria')
+           DSPElatency_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.DSpeLatency(:);
+           end
+           
+          
+           if exist ('DSPElatency_dayb4criteria') & ('DSPElatency_2dayb4criteria')
+           DSPElatency_cat=horzcat(DSPElatency_criteria,DSPElatency_dayb4criteria,DSPElatency_2dayb4criteria);
+           elseif exist ('DSPElatency_dayb4criteria')
+           DSPElatency_cat=horzcat(DSPElatency_criteria,DSPElatency_dayb4criteria);
+           else
+           DSPElatency_cat=horzcat(DSPElatency_criteria);
+           end
+           
+           %inPortDS
+           
+           inPortDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
+           if exist('DSonsetindex_dayb4criteria')
+           inPortDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.inPortDS;
+           end
+           if exist('DSonsetindex_2dayb4criteria')
+           inPortDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.inPortDS;
+           end
+           
+          
+           if exist ('inPortDS_dayb4criteria') & ('inPortDS_2dayb4criteria')
            inPortDS_cat=horzcat(inPortDS_criteria,inPortDS_dayb4criteria,inPortDS_2dayb4criteria);
+           elseif exist ('inPortDS_dayb4criteria')
+           inPortDS_cat=horzcat(inPortDS_criteria,inPortDS_dayb4criteria);
+           else
+           inPortDS_cat=horzcat(inPortDS_criteria);
+           end
+           
            
            %poxDS
-           poxDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
-           poxDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.poxDS;
-           poxDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.poxDS;
            
+           poxDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
+           if exist('DSonsetindex_dayb4criteria')
+           poxDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.poxDS;
+           end
+           if exist('DSonsetindex_2dayb4criteria')
+           poxDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.poxDS;
+           end
+           
+          
+           if exist ('poxDS_dayb4criteria') & (' poxDS_2dayb4criteria')
            poxDS_cat=horzcat(poxDS_criteria,poxDS_dayb4criteria,poxDS_2dayb4criteria);
+           elseif exist ('poxDS_dayb4criteria')
+           poxDS_cat=horzcat(poxDS_criteria,poxDS_dayb4criteria);
+           else
+           poxDS_cat=horzcat(poxDS_criteria);
+           end
+           
            
            %DS criteria day data- save to struct
            data_to_input_GADVPFP.output(1).DSTimes_criteria(:)=DSTimes_criteria;
@@ -568,69 +702,205 @@ for subj=1:numel(subjects)
        % STAGE 5        
            %g_camp_465
            gcamp_raw.blue_criteria(:)=subjData.(subjects{subj})(session).reblue'; 
+           if session-1>0
            gcamp_raw.blue_dayb4criteria(:)=subjData.(subjects{subj})(session-1).reblue';
+           end
+           if session-2>0
            gcamp_raw.blue_2dayb4criteria(:)=subjData.(subjects{subj})(session-2).reblue'; 
-
+           end
+           
+           if exist('blue_dayb4criteria')& exist('blue_2dayb4criteria')
            gcamp_raw_blue_cat=horzcat( gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria,gcamp_raw.blue_2dayb4criteria);
+           elseif exist('blue_dayb4criteria')
+           gcamp_raw_blue_cat=horzcat( gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria); 
+           else
+            gcamp_raw_blue_cat=horzcat( gcamp_raw.blue_criteria);
+           end
+           
            % use this temp array to elongate the rest of the variables with
            % appropriate time stamps for the full concatenated signal
+           if exist('blue_dayb4criteria')
            temp_gcamp_raw_blue_dayb4criteria=horzcat(gcamp_raw.blue_criteria,gcamp_raw.blue_dayb4criteria);
+           else 
+            temp_gcamp_raw_blue_dayb4criteria= nan;    
+           end
+           
            
             %g_camp_405
            gcamp_raw.purple_criteria(:)=subjData.(subjects{subj})(session).repurple'; 
+            if session-1>0
            gcamp_raw.purple_dayb4criteria(:)=subjData.(subjects{subj})(session-1).repurple';
+            end
+             if session-2>0
            gcamp_raw.purple_2dayb4criteria(:)=subjData.(subjects{subj})(session-2).repurple'; 
-
-            gcamp_raw_purple_cat=horzcat( gcamp_raw.purple_criteria,gcamp_raw.purple_dayb4criteria,gcamp_raw.purple_2dayb4criteria);
+             end
+             
+             
+           if exist('purple_dayb4criteria')& exist('purple_2dayb4criteria')
+           gcamp_raw_purple_cat=horzcat( gcamp_raw.purple_criteria,gcamp_raw.purple_dayb4criteria,gcamp_raw.purple_2dayb4criteria);
+           elseif exist('purple_dayb4criteria')
+           gcamp_raw_purple_cat=horzcat( gcamp_raw.purple_criteria,gcamp_raw.purple_dayb4criteria); 
+           else
+            gcamp_raw_purple_cat=horzcat( gcamp_raw.purple_criteria);
+           end
+           
            %cutTime for moving z-score
            cutTime_criteria=subjDataAnalyzed.(subjects{subj})(session).photometry.cutTime; 
+           if exist('gcamp_raw.blue_dayb4criteria')
            cutTime_dayb4criteria=subjDataAnalyzed.(subjects{subj})(session-1).photometry.cutTime + length(gcamp_raw.blue_criteria(:)); 
+           end
+           if exist('gcamp_raw.blue_2dayb4criteria')
            cutTime_2dayb4criteria=subjDataAnalyzed.(subjects{subj})(session-2).photometry.cutTime + length(temp_gcamp_raw_blue_dayb4criteria(:)); 
-           
+           end
+           if exist ('gcamp_raw.blue_dayb4criteria') & ('gcamp_raw.blue_2dayb4criteria')
            cutTime_cat=horzcat(cutTime_criteria,cutTime_dayb4criteria,cutTime_2dayb4criteria);
+           elseif exist ('gcamp_raw.blue_dayb4criteria')
+           cutTime_cat=horzcat(cutTime_criteria,cutTime_dayb4criteria);
+           else
+            cutTime_cat=horzcat(cutTime_criteria);  
+           end
+           
+           
+          
            %DS Index
            DSonsetindex_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(:);
+           if exist('gcamp_raw.blue_dayb4criteria')
            DSonsetindex_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDS.DSonset(:)+ length(gcamp_raw.blue_criteria(:));
+           end
+           if exist('gcamp_raw.blue_2dayb4criteria')
            DSonsetindex_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDS.DSonset(:)+ length(temp_gcamp_raw_blue_dayb4criteria(:));
+           end
            
-           DSonset_cat=horzcat( DSonsetindex_criteria, DSonsetindex_dayb4criteria,DSonsetindex_2dayb4criteria);
+           
+            if exist ('DSonsetindex_dayb4criteria') & ('DSonsetindex_2dayb4criteria')
+            DSonset_cat=horzcat( DSonsetindex_criteria, DSonsetindex_dayb4criteria,DSonsetindex_2dayb4criteria);
+           elseif exist ('DSonsetindex_dayb4criteria')
+            DSonset_cat=horzcat( DSonsetindex_criteria, DSonsetindex_dayb4criteria);
+           else
+            DSonset_cat=horzcat( DSonsetindex_criteria);
+           end
+           
+           
            %DS Times
            DSTimes_criteria(:)=cutTime_cat( DSonsetindex_criteria(:));
+           if exist('DSonsetindex_dayb4criteria')
            DSTimes_dayb4criteria(:)=cutTime_cat(DSonsetindex_dayb4criteria(:));
+           end
+           if exist('DSonsetindex_2dayb4criteria')
            DSTimes_2dayb4criteria(:)=cutTime_cat(DSonsetindex_2dayb4criteria(:));
+           end
            
-           DSTimes_cat=horzcat(DSTimes_criteria,DSTimes_dayb4criteria,DSTimes_2dayb4criteria);
-           %DS Pox
-           DSpox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(:)';
+          
+            if exist ('DSTimes_dayb4criteria') & ('DSTimes_2dayb4criteria')
+            DSTimes_cat=horzcat(DSTimes_criteria,DSTimes_dayb4criteria,DSTimes_2dayb4criteria);
+           elseif exist (' DSTimes_dayb4criteria')
+           DSTimes_cat=horzcat(DSTimes_criteria,DSTimes_dayb4criteria);
+           else
+            DSTimes_cat=horzcat(DSTimes_criteria);
+            end
+           
+           
+           
+           %DSpox
+           
+            DSpox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSpox.firstPoxind(:)';
+           if exist('DSonsetindex_dayb4criteria')
            DSpox_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDSpox.firstPoxind(:)';
-           DSpox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSpox.firstPoxind(:)';
+           end
+           if exist('DSonsetindex_2dayb4criteria')
+            DSpox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSpox.firstPoxind(:)';
+           end
            
-           DSpox_cat=horzcat(DSpox_criteria,DSpox_dayb4criteria,DSpox_2dayb4criteria);
+          
+            if exist ('DSpox_dayb4criteria') & ('DSpox_2dayb4criteria')
+            DSpox_cat=horzcat(DSpox_criteria,DSpox_dayb4criteria,DSpox_2dayb4criteria);
+           elseif exist (' DSpox_dayb4criteria')
+           DSpox_cat=horzcat(DSpox_criteria,DSpox_dayb4criteria);
+           else
+            DSpox_cat=horzcat(DSpox_criteria);
+            end
+            
+            
            %DS Lox
+            
            DSlox_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).periDSlox.firstLoxind(:)';
+           if exist('DSonsetindex_dayb4criteria')
            DSlox_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).periDSlox.firstLoxind(:)';
+           end
+           if exist('DSonsetindex_2dayb4criteria')
            DSlox_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).periDSlox.firstLoxind(:)';
+           end
            
+          
+           if exist ('DSlox_dayb4criteria') & ('DSlox_2dayb4criteria')
            DSlox_cat=horzcat(DSlox_criteria,DSlox_dayb4criteria,DSlox_2dayb4criteria);
-           %DS latency
-           DSPElatency_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
-           DSPElatency_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.DSpeLatency(:);
-           DSPElatency_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.DSpeLatency(:);
+           elseif exist ('DSlox_dayb4criteria')
+           DSlox_cat=horzcat(DSlox_criteria,DSlox_dayb4criteria);
+           else
+           DSlox_cat=horzcat(DSlox_criteria);
+           end
+            
 
-           DSPElatency_cat=horzcat(DSPElatency_criteria,DSPElatency_dayb4criteria,DSPElatency_2dayb4criteria);
-           %inPortDS
-           inPortDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
-           inPortDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.inPortDS;
-           inPortDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.inPortDS;
+           %DS latency
            
+           DSPElatency_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.DSpeLatency(:);
+           if exist('DSonsetindex_dayb4criteria')
+           DSPElatency_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.DSpeLatency(:);
+           end
+           if exist('DSonsetindex_2dayb4criteria')
+           DSPElatency_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.DSpeLatency(:);
+           end
+           
+          
+           if exist ('DSPElatency_dayb4criteria') & ('DSPElatency_2dayb4criteria')
+           DSPElatency_cat=horzcat(DSPElatency_criteria,DSPElatency_dayb4criteria,DSPElatency_2dayb4criteria);
+           elseif exist ('DSPElatency_dayb4criteria')
+           DSPElatency_cat=horzcat(DSPElatency_criteria,DSPElatency_dayb4criteria);
+           else
+           DSPElatency_cat=horzcat(DSPElatency_criteria);
+           end
+           
+           %inPortDS
+           
+           inPortDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.inPortDS;
+           if exist('DSonsetindex_dayb4criteria')
+           inPortDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.inPortDS;
+           end
+           if exist('DSonsetindex_2dayb4criteria')
+           inPortDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.inPortDS;
+           end
+           
+          
+           if exist ('inPortDS_dayb4criteria') & ('inPortDS_2dayb4criteria')
            inPortDS_cat=horzcat(inPortDS_criteria,inPortDS_dayb4criteria,inPortDS_2dayb4criteria);
+           elseif exist ('inPortDS_dayb4criteria')
+           inPortDS_cat=horzcat(inPortDS_criteria,inPortDS_dayb4criteria);
+           else
+           inPortDS_cat=horzcat(inPortDS_criteria);
+           end
+           
            
            %poxDS
-           poxDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
-           poxDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.poxDS;
-           poxDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.poxDS;
            
+           poxDS_criteria(:)=subjDataAnalyzed.(subjects{subj})(session).behavior.poxDS;
+           if exist('DSonsetindex_dayb4criteria')
+           poxDS_dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-1).behavior.poxDS;
+           end
+           if exist('DSonsetindex_2dayb4criteria')
+           poxDS_2dayb4criteria(:)=subjDataAnalyzed.(subjects{subj})(session-2).behavior.poxDS;
+           end
+           
+          
+           if exist ('poxDS_dayb4criteria') & (' poxDS_2dayb4criteria')
            poxDS_cat=horzcat(poxDS_criteria,poxDS_dayb4criteria,poxDS_2dayb4criteria);
+           elseif exist ('poxDS_dayb4criteria')
+           poxDS_cat=horzcat(poxDS_criteria,poxDS_dayb4criteria);
+           else
+           poxDS_cat=horzcat(poxDS_criteria);
+           end
+           
+           
+         
            
            %DS criteria day data- save to struct
            data_to_input_GADVPFP.output(1).DSTimes_criteria(:)=DSTimes_criteria;
