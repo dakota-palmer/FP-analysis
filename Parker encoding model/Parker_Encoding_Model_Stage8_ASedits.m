@@ -7,9 +7,13 @@ clear all
 close all
 clc
 
+cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
+
 %determine if folder exists and if so purge it, if not create it
 curr_dir = pwd;
-save_folder = 'encoding_results\stage8\pump2';
+% save_folder = 'encoding_results\stage8\pump2';
+save_folder = 'encoding_results\stage8\probe\465';
+
 % if exist(save_folder)==0
 %     mkdir(save_folder)
 % else
@@ -18,8 +22,10 @@ save_folder = 'encoding_results\stage8\pump2';
 %     cd ../..
 % end
 %     
-figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage8_encoding model\pump2\';
-condition = 'Richard_data_to_input';
+% figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage8_encoding model\pump2\';
+figsave_folder='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\output';
+% condition = 'Richard_data_to_input';
+condition='data to input';
 subjects = [1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 pumpofinterest=2;
 

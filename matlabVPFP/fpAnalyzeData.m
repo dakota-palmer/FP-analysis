@@ -22,8 +22,12 @@ figureCount= 1 ; %keep track of figure # throughout to prevent overwriting
 fs= 40; %This is important- if you change sampling frequency of photometry recordings for some reason, change this too! TODO: just save this in subjData as more metadata
 
 %% Remove excluded subjects
+%cell array with strings of excluded subj fieldnames
 
-excludedSubjs= {'rat20', 'rat16','rat10'}; %{'rat8','rat9','rat10','rat11','rat12','rat13','rat14','rat15','rat16','rat17','rat19'} %cell array with strings of excluded subj fieldnames
+%gcamp
+excludedSubjs= {'rat20', 'rat16','rat10'}
+%control
+% excludedSubjs= {'rat8','rat9','rat11','rat12','rat13','rat14','rat15','rat17','rat19'} ; 
 
 subjData= rmfield(subjData,excludedSubjs);
 
@@ -4647,25 +4651,25 @@ for subj= 1:numel(subjects)
 %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{1}))), rewardColors(1)); %plot all trials
              plot(timeLock,nanmean(PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{1}))),2), 'b'); %plot mean across all trials (for this stage)
              plot(timeLock,nanmean(PEDSpurple(:,find(strcmp(rewardIDs,rewardsThisStage{1}))),2), 'm'); %plot mean across all trials (for this stage)
-             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==1))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
-             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
-             plot(ones(2,1)*nanmean(firstLickDS(pumpIDs==1)), ylim, 'r');% overlay mean first lick time
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==1))), ylim, 'g', 'LineWidth',3); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k', 'LineWidth',3);%overlay line for PE
+             plot(ones(2,1)*nanmean(firstLickDS(pumpIDs==1)), ylim, 'r', 'LineWidth',3);% overlay mean first lick time
              
              subplot(3, numel(allRewardStages), numel(allRewardStages)+find(allRewardStages==thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'-pump2-reward=',rewardsThisStage{2}));
 %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{2}))), rewardColors(2)); %plot all trials
              plot(timeLock,nanmean(PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{2}))),2), 'b'); %plot mean across all trials (for this stage)
              plot(timeLock,nanmean(PEDSpurple(:,find(strcmp(rewardIDs,rewardsThisStage{2}))),2), 'm'); %plot mean across all trials (for this stage)
-             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==2))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
-             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
-             plot(ones(2,1)*nanmean(firstLickDS(pumpIDs==2)), ylim, 'r');% overlay mean first lick time
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==2))), ylim, 'g', 'LineWidth',3); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k', 'LineWidth',3);%overlay line for PE
+             plot(ones(2,1)*nanmean(firstLickDS(pumpIDs==2)), ylim, 'r', 'LineWidth',3);% overlay mean first lick time
              
              subplot(3, numel(allRewardStages), numel(allRewardStages)+numel(allRewardStages)+find(allRewardStages==thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'-pump3-reward=',rewardsThisStage{3}));
 %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{3}))), rewardColors(3)); %plot all trials
              plot(timeLock,nanmean(PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{3}))),2), 'b'); %plot mean across all trials (for this stage)
              plot(timeLock,nanmean(PEDSpurple(:,find(strcmp(rewardIDs,rewardsThisStage{3}))),2), 'm'); %plot mean across all trials (for this stage)
-             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==3))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
-             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
-             plot(ones(2,1)*nanmean(firstLickDS(pumpIDs==3)), ylim, 'r');% overlay mean first lick time
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==3))), ylim, 'g', 'LineWidth',3); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k', 'LineWidth',3);%overlay line for PE
+             plot(ones(2,1)*nanmean(firstLickDS(pumpIDs==3)), ylim, 'r', 'LineWidth',3);% overlay mean first lick time
 
              
              xlabel('time from PE (s)');
@@ -4761,9 +4765,9 @@ for thisStage= [allRewardStages]
 %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{1}))), rewardColors(1)); %plot all trials
              plot(timeLock,PEDSbluePump1(:,thisStage), 'b'); %plot mean across all trials (for this stage)
 %              plot(timeLock,PEDSpurplePump1(:,thisStage), 'm'); %plot mean across all trials (for this stage)
-             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==1))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
-             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
-             plot(ones(2,1)*firstLickPump1(:,thisStage), ylim, 'r');% overlay mean first lick time
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==1))), ylim, 'g','LineWidth',3); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k','LineWidth',3);%overlay line for PE
+             plot(ones(2,1)*firstLickPump1(:,thisStage), ylim, 'r','LineWidth',3);% overlay mean first lick time
              semPatchPos= PEDSbluePump1(:,thisStage)+semPEDSbluePump1(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
              semPatchNeg= PEDSbluePump1(:,thisStage)-semPEDSbluePump1(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
              patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.3); %overlay SEM patch
@@ -4773,9 +4777,9 @@ for thisStage= [allRewardStages]
 %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{2}))), rewardColors(2)); %plot all trials
              plot(timeLock,PEDSbluePump2(:,thisStage), 'b'); %plot mean across all trials (for this stage)
 %              plot(timeLock,PEDSpurplePump2(:,thisStage), 'm'); %plot mean across all trials (for this stage)
-             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==2))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
-             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
-             plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r');% overlay mean first lick time
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==2))), ylim, 'g', 'LineWidth',3); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k', 'LineWidth',3);%overlay line for PE
+             plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r', 'LineWidth',3);% overlay mean first lick time
              semPatchPos= PEDSbluePump2(:,thisStage)+semPEDSbluePump2(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
              semPatchNeg= PEDSbluePump2(:,thisStage)-semPEDSbluePump2(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
              patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.3); %overlay SEM patch
@@ -4785,9 +4789,9 @@ for thisStage= [allRewardStages]
 % %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{3}))), rewardColors(3)); %plot all trials
              plot(timeLock,PEDSbluePump3(:,thisStage), 'b'); %plot mean across all trials (for this stage)
 %              plot(timeLock,PEDSpurplePump3(:,thisStage), 'm'); %plot mean across all trials (for this stage)
-             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==3))), ylim, 'g'); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
-             plot(ones(2,1)*0, ylim, 'k');%overlay line for PE
-             plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r');% overlay mean first lick time
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==3))), ylim, 'g', 'LineWidth',3); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k', 'LineWidth',3);%overlay line for PE
+             plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r', 'LineWidth',3);% overlay mean first lick time
              semPatchPos= PEDSbluePump3(:,thisStage)+semPEDSbluePump3(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
              semPatchNeg= PEDSbluePump3(:,thisStage)-semPEDSbluePump3(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
              patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.3); %overlay SEM patch
@@ -4822,7 +4826,7 @@ for subj= 1:numel(subjects)
     allStages= unique([currentSubj.trainStage]);
     %dp 10/1/2021 between subj stuff should work if you only run one stage at a time (if
     %reward IDs change code needs to be updated to accomodate)
-    allRewardStages= 11%allStages(allStages>=8 & allStages<12); %12 = extinction so exclude
+    allRewardStages= allStages(allStages>=8 & allStages<12); %12 = extinction so exclude
     
     for thisStage= allRewardStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
         
@@ -5227,7 +5231,7 @@ for subj= 1:numel(subjects)
     
 end % end subj loop
 
-close all;
+% close all;
     % between-subj stuff 
 %collect data from all subjects for a between-subjects mean plot
 %take mean across all subjects

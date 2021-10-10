@@ -1,9 +1,9 @@
 %% Run Analysis on Extracted Data
 
 
-% cd ('C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
+cd ('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
 
- cd ('C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\');
+%  cd ('C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\');
 
 
 
@@ -26,6 +26,11 @@ fpAnalyzeData_traces_portentrytimelocked;
 fpAnalyzeData_heatplots_cuetimelocked_stages_avgtrainday;
 fpAnalyzeData_heatplots_cuetimelocked_stages_latencysorttrials; 
 fpAnalyzeData_statisticalquant; 
+
+%% Variable outcome analyses
+fpAnalyzeData_outcome_dataprep;
+fpAnalyzeData_outcome_analysis;
+
 %% Save
 fpAnalyzeData_save;
 

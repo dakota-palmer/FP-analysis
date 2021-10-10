@@ -6,12 +6,12 @@ close all
 
 % Make sure the figPath is correct!
 % 
-% cd('C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
-% addpath('C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\Figs');
-% figPath = 'C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\justrawFigs\VPFP\'; %location for output figures to be saved
+cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
+addpath('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\Figs');
+figPath = 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\justrawFigs\VPFP\'; %location for output figures to be saved
 
-addpath('G:\Shared drives\Richard Lab\Data\Ally\VPLHFP Figs\');
-figPath = 'G:\Shared drives\Richard Lab\Data\Ally\VPLHFP Figs\'; %location for output figures to be saved
+% addpath('G:\Shared drives\Richard Lab\Data\Ally\VPLHFP Figs\');
+% figPath = 'G:\Shared drives\Richard Lab\Data\Ally\VPLHFP Figs\'; %location for output figures to be saved
 
 
 % %% Load struct containing data organized by subject
@@ -26,9 +26,9 @@ figureCount= 1 ; %keep track of figure # throughout to prevent overwriting
 fs= 40; %This is important- if you change sampling frequency of photometry recordings for some reason, change this too! TODO: just save this in subjData as more metadata
 %% Remove excluded subjects
 
-excludedSubjs= {'rat8'}; %cell array with strings of excluded subj fieldnames
+excludedSubjs= {'rat19','rat17','rat15','rat14','rat13','rat12','rat11','rat9','rat8'}%{'rat16','rat10','rat20'}; %cell array with strings of excluded subj fieldnames
 
-% subjData= rmfield(subjData,excludedSubjs);
+subjData= rmfield(subjData,excludedSubjs);
 
 subjects= fieldnames(subjData); %get an updated list of included subjs
 

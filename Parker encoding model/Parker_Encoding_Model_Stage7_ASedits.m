@@ -8,9 +8,14 @@ clear all
 close all
 clc
 
+cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
+
+
 %determine if folder exists and if so purge it, if not create it
 curr_dir = pwd;
-save_folder = 'encoding_results\stage7';
+% save_folder = 'encoding_results\stage7';
+save_folder = 'encoding_results\_control\stage7\465';
+
 % if exist(save_folder)==0
 %     mkdir(save_folder)
 % else
@@ -19,9 +24,11 @@ save_folder = 'encoding_results\stage7';
 %     cd ../..
 % end
 %     
-figsave_folder='F:\Shared drives\Richard Lab\Data\Ally\Stage7_EncodingModel_Figs\';
-condition = 'Richard_data_to_input';
-subjects = [1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
+% figsave_folder='F:\Shared drives\Richard Lab\Data\Ally\Stage7_EncodingModel_Figs\';
+figsave_folder='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\output';
+
+condition = 'data to input\_control_subjects';
+subjects = 1:3%%1:9%[1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
 
 for subj=1:numel(subjects)

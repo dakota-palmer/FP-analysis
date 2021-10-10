@@ -1,13 +1,13 @@
 %% Save the analyzed data
 %ALLY
-%save the subjDataAnalyzed struct for later analysis
-structpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output\'
-save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed','-v7.3'); %the second argument here is the variable being saved, the first is the filename
+% %save the subjDataAnalyzed struct for later analysis
+% structpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output\'
+% save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed','-v7.3'); %the second argument here is the variable being saved, the first is the filename
 
 
 %DAKOTA
-% structpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code'
-% save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 for files >2gb
+structpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code'
+save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 for files >2gb
 % %% save data from each stage from each animal for ERT analysis
 % ERTpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output\ERT\';
 % 
@@ -161,14 +161,14 @@ save(fullfile(structpath,strcat(experimentName,'-', 'subjDataAnalyzed')), 'subjD
 
 
 
-%encodinginputpath='C:\Users\capn1\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\output\Parker_encoding_model\Richard_data_to_input';
+%encodinginputpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\output\Parker_encoding_model\Richard_data_to_input';
 
 %ALLY
-encodinginputpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\Parker encoding model\Richard_data_to_input\';
+% encodinginputpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\Parker encoding model\Richard_data_to_input\';
 % 
 % 
 % %DAKOTA
-% encodinginputpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\data to input';
+encodinginputpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\data to input';
 
 
 subjects= fieldnames(subjData);

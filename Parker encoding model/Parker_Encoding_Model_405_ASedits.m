@@ -6,7 +6,7 @@ clear all
 close all
 clc
 
-% cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
+cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
 
 
 %determine if folder exists and if so purge it, if not create it
@@ -23,9 +23,13 @@ save_folder = 'encoding_results\satge5criteria\405';
 % end
 %     
 
-figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage5_EncodingModel_Figs\405\';
-condition = 'Richard_data_to_input';
-subjects = [1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
+% figsave_folder='G:\Shared drives\Richard Lab\Data\Ally\Stage5_EncodingModel_Figs\405\';
+figsave_folder='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\output';
+
+
+% condition = 'Richard_data_to_input';
+condition= 'data to input'
+subjects = [1 2 3 4 5 6 7 8 9]%10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
 % figsave_folder='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\output';
 % condition = 'data to input';
