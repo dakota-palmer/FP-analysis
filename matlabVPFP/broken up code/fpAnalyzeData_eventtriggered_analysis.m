@@ -25,7 +25,46 @@ slideTime = 400; %define time window before cue onset to get baseline mean/stdDe
 % slideTime = 400; %define time window before cue onset to get baseline mean/stdDev for calculating sliding z scores- 400 for 10s (remember 400/40hz ~10s)
 
 
+%% AUC data
+%dp just creating a new AUC table variable for now
+
+%preallocate table with #rows equal to total session count
+sesCount= 0;
+for subj= 1:numel(subjects) %for each subject analyzed
+    currentSubj= subjDataAnalyzed.(subjects{subj});
+
+    for session = 1:numel(currentSubj) 
+       sesCount=sesCount+1;
+    end %end session loop
+   
+end
+%single AUC values per session)
+aucTable= table();
+aucTable.auc = (nan(sesCount,1));
+aucTable.aucAbs= (nan(sesCount,1));
+aucTable.subject= cell(sesCount,1); %(nan(sesCount,1));
+aucTable.date= cell(sesCount,1); %(nan(sesCount,1));
+% aucTable.date= (nan(sesCount,1));
+aucTable.stage= (nan(sesCount,1));
+aucTable.trainDay= nan(sesCount,1);
+
+
+%TODO: separate for timeseries (cumulative AUCs over timeLock)
+%will require different indexing
+aucTableTS.auc = (nan(sesCount,1));
+aucTableTS.aucAbs= cell(sesCount,1); %(nan(sesCount,1));
+aucTableTS.aucCum= cell(sesCount,1); %(nan(sesCount,1));
+aucTableTS.aucCumAbs= cell(sesCount,1); %(nan(sesCount,1));
+aucTableTS.timeLock= cell(sesCount,1); 
+aucTableTS.subject= cell(sesCount,1); %(nan(sesCount,1));
+aucTableTS.date= cell(sesCount,1); %(nan(sesCount,1));
+aucTableTS.stage= cell(sesCount,1); %(nan(sesCount,1));
+
+% aucTable.date = (nan(sesCount,1));
+% aucTable.stage= (nan(sesCount,1));
+
 %% TIMELOCK TO DS
+sesCount= 1; %cumulative session counter for aucTable
 for subj= 1:numel(subjects) %for each subject
 
     currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
@@ -113,6 +152,39 @@ for subj= 1:numel(subjects) %for each subject
 
             subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurpleMean = nanmean(subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurple, 3);
             
+            %save AUC of peri-event response, just 465nm for now
+            signal =  subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblueMean;
+           
+            auc= []; aucAbs= []; aucCum= []; aucCumAbs= [];
+            [auc, aucAbs, aucCum, aucCumAbs] = fp_AUC(signal);
+            
+            aucTable.auc(sesCount) = auc;
+            aucTable.aucAbs(sesCount)= aucAbs;
+            
+            aucTableTS.aucCum{sesCount}= aucCum;
+            aucTableTS.aucCumAbs{sesCount}= aucCumAbs;
+            aucTableTS.timeLock{sesCount}= [[-preCueFrames:postCueFrames]/fs]';
+ 
+            %save labels for these data too (1 per session)
+            aucTable.subject{sesCount}= subjects{subj};
+            aucTable.date{sesCount}= num2str(currentSubj(session).date);
+%             aucTable.date{sesCount}= datetime(currentSubj(session).date,'ConvertFrom','yyyymmdd');
+            
+            aucTable.stage(sesCount)= currentSubj(session).trainStage;
+            aucTable.trainDay(sesCount)= currentSubj(session).trainDay;
+            
+            %TODO: one label for each timestamp
+            %(so we can examine AUC timecourse later if we need to in addition to bulk AUC)
+            aucTableTS.subject{sesCount}= cell(size(aucTableTS.timeLock{sesCount}));
+            aucTableTS.subject{sesCount}(:)= {subjects{subj}};
+            aucTableTS.date{sesCount}= cell(size(aucTableTS.timeLock{sesCount}));
+            aucTableTS.date{sesCount}(:)= {currentSubj(session).date};
+%             aucTableTS.date{sesCount}(:)= {datetime(currentSubj(session).date,'ConvertFrom','yyyymmdd')};%{currentSubj(session).date};
+            aucTableTS.stage{sesCount}= cell(size(aucTableTS.timeLock{sesCount}));
+            aucTableTS.stage{sesCount}(:)= {currentSubj(session).trainStage};
+
+           
+            sesCount=sesCount+1;
    end %end session loop
 end %end subject loop
         
@@ -230,9 +302,14 @@ end %end subject loop
 % relative to cue onset, we calculate timestamps for licks relative to PE
 % as loxRel-PElatency
 
+%dp changed 10/10/2021 to correct for empty values
 for subj= 1:numel(subjects)
-    currentSubj= subjDataAnalyzed.(subjects{subj}); 
+      currentSubj= subjDataAnalyzed.(subjects{subj}); 
     for session= 1:numel(currentSubj)
+        currentSubj(session).behavior.loxDSpoxRel= cell(1,numel(currentSubj(session).periDS.DS)); %initialize
+        currentSubj(session).behavior.loxNSpoxRel= cell(1,numel(currentSubj(session).periNS.NS));
+
+        
         DSloxCount=0; %counter to tell if licks happened during any cues- if not, make empty
         NSloxCount= 0;
 
@@ -253,17 +330,17 @@ for subj= 1:numel(subjects)
         end
         
         %save the data
-        if DSloxCount >0
+%         if DSloxCount >0
                 subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSpoxRel= currentSubj(session).behavior.loxDSpoxRel;
-        else 
-            subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSpoxRel= [];
-        end
+%         else 
+%             subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSpoxRel= [];
+%         end
         
-        if NSloxCount >0
+%         if NSloxCount >0
             subjDataAnalyzed.(subjects{subj})(session).behavior.loxNSpoxRel= currentSubj(session).behavior.loxNSpoxRel;
-        else
-            subjDataAnalyzed.(subjects{subj})(session).behavior.loxNSpoxRel=[];
-        end
+%         else
+%             subjDataAnalyzed.(subjects{subj})(session).behavior.loxNSpoxRel=[];
+%         end
     end % end session loop
 end% end subj loop
 

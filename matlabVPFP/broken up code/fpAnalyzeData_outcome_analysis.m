@@ -40,6 +40,7 @@ for subj= 1:numel(subjects)
                 %fill empty lick cells with nan, just easier to index into
                 currentSubj(includedSession).behavior.LoxDSpoxRel(find(cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel)))=nan; 
                 firstLoxThisStage= nan(size(currentSubj(includedSession).periDS.DS)); %start with nan
+                %possible that there are no licks during trials?
                 firstLoxThisStage(find(~cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel)))= cellfun(@(v)v(1),currentSubj(includedSession).behavior.loxDSpoxRel(find(~cellfun(@isempty,currentSubj(includedSession).behavior.loxDSpoxRel))));
                 
                 
