@@ -44,27 +44,28 @@ aucTable.auc = (nan(sesCount,1));
 aucTable.aucAbs= (nan(sesCount,1));
 aucTable.subject= cell(sesCount,1); %(nan(sesCount,1));
 aucTable.date= cell(sesCount,1); %(nan(sesCount,1));
-% aucTable.date= (nan(sesCount,1));
 aucTable.stage= (nan(sesCount,1));
 aucTable.trainDay= nan(sesCount,1);
 
 
 %TODO: separate for timeseries (cumulative AUCs over timeLock)
 %will require different indexing
-aucTableTS.auc = (nan(sesCount,1));
-aucTableTS.aucAbs= cell(sesCount,1); %(nan(sesCount,1));
-aucTableTS.aucCum= cell(sesCount,1); %(nan(sesCount,1));
-aucTableTS.aucCumAbs= cell(sesCount,1); %(nan(sesCount,1));
-aucTableTS.timeLock= cell(sesCount,1); 
-aucTableTS.subject= cell(sesCount,1); %(nan(sesCount,1));
-aucTableTS.date= cell(sesCount,1); %(nan(sesCount,1));
-aucTableTS.stage= cell(sesCount,1); %(nan(sesCount,1));
+aucTableTS= table();
+aucTableTS.auc = (nan(sesCount*periCueFrames+1,1));
+aucTableTS.aucAbs= (nan(sesCount*periCueFrames+1,1)); %(nan(sesCount,1));
+aucTableTS.aucCum= nan(sesCount*periCueFrames+1,1); %(nan(sesCount,1));
+aucTableTS.aucCumAbs= nan(sesCount*periCueFrames+1,1); %(nan(sesCount,1));
+aucTableTS.timeLock= nan(sesCount*periCueFrames+1,1); 
+aucTableTS.subject= cell(sesCount*periCueFrames+1,1); %(nan(sesCount,1));
+aucTableTS.date= cell(sesCount*periCueFrames+1,1); %(nan(sesCount,1));
+aucTableTS.stage= nan(sesCount*periCueFrames+1,1); %(nan(sesCount,1));
 
 % aucTable.date = (nan(sesCount,1));
 % aucTable.stage= (nan(sesCount,1));
 
 %% TIMELOCK TO DS
 sesCount= 1; %cumulative session counter for aucTable
+tsInd= 1:periCueFrames+1; %cumulative timestamp index for aucTableTS
 for subj= 1:numel(subjects) %for each subject
 
     currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the curret subject within the struct
@@ -161,9 +162,9 @@ for subj= 1:numel(subjects) %for each subject
             aucTable.auc(sesCount) = auc;
             aucTable.aucAbs(sesCount)= aucAbs;
             
-            aucTableTS.aucCum{sesCount}= aucCum;
-            aucTableTS.aucCumAbs{sesCount}= aucCumAbs;
-            aucTableTS.timeLock{sesCount}= [[-preCueFrames:postCueFrames]/fs]';
+            aucTableTS.aucCum(tsInd)= aucCum;
+            aucTableTS.aucCumAbs(tsInd)= aucCumAbs;
+            aucTableTS.timeLock(tsInd)= [[-preCueFrames:postCueFrames]/fs]';
  
             %save labels for these data too (1 per session)
             aucTable.subject{sesCount}= subjects{subj};
@@ -175,16 +176,24 @@ for subj= 1:numel(subjects) %for each subject
             
             %TODO: one label for each timestamp
             %(so we can examine AUC timecourse later if we need to in addition to bulk AUC)
-            aucTableTS.subject{sesCount}= cell(size(aucTableTS.timeLock{sesCount}));
-            aucTableTS.subject{sesCount}(:)= {subjects{subj}};
-            aucTableTS.date{sesCount}= cell(size(aucTableTS.timeLock{sesCount}));
-            aucTableTS.date{sesCount}(:)= {currentSubj(session).date};
+%             aucTableTS.subject{sesCount}= cell(size(aucTableTS.timeLock{sesCount}));
+%             aucTableTS.subject{sesCount}(:)= {subjects{subj}};
+%             aucTableTS.date{sesCount}= cell(size(aucTableTS.timeLock{sesCount}));
+%             aucTableTS.date{sesCount}(:)= {currentSubj(session).date};
+% %             aucTableTS.date{sesCount}(:)= {datetime(currentSubj(session).date,'ConvertFrom','yyyymmdd')};%{currentSubj(session).date};
+%             aucTableTS.stage{sesCount}= cell(size(aucTableTS.timeLock{sesCount}));
+%             aucTableTS.stage{sesCount}(:)= {currentSubj(session).trainStage};
+            aucTableTS.subject(tsInd)= cell(periCueFrames+1,1);
+            aucTableTS.subject(tsInd)= {subjects{subj}};
+            aucTableTS.date(tsInd)= cell(periCueFrames+1,1);
+            aucTableTS.date(tsInd)= {num2str(currentSubj(session).date)};
 %             aucTableTS.date{sesCount}(:)= {datetime(currentSubj(session).date,'ConvertFrom','yyyymmdd')};%{currentSubj(session).date};
-            aucTableTS.stage{sesCount}= cell(size(aucTableTS.timeLock{sesCount}));
-            aucTableTS.stage{sesCount}(:)= {currentSubj(session).trainStage};
+%             aucTableTS.stage(tsInd)= cell(periCueFrames+1,1);
+            aucTableTS.stage(tsInd)= (currentSubj(session).trainStage);
 
            
             sesCount=sesCount+1;
+            tsInd= tsInd + periCueFrames;
    end %end session loop
 end %end subject loop
         

@@ -35,12 +35,57 @@ g(2,1).geom_point('alpha', 0.5);
 g(2,1).geom_line('alpha', 0.15);
 
 %define labels for plot axes
-g(2,1).set_names('x','date','y','AUC (peri-DS 465 z))','color','subject')
+g(2,1).set_names('x','date','y','Absolute AUC (peri-DS 465 z))','color','subject')
 g(2,1).set_title('bulk AUC by subject')
 
 g(2,1).geom_hline('yintercept',0, 'style', 'k--');
 
 g.draw() 
+
+%% now plots of cumulative AUC
+
+data=aucTableTS;
+
+%subset specific data to plot
+selection= data(data.stage<8,:);
+
+% making subplot of 1) bulk AUC  
+
+%overall mean between subjects (by date)
+g(1,1)= gramm('x', selection.timeLock, 'y', selection.aucCum);
+g(1,1).stat_summary('type','sem','geom','area');
+
+%individual subject lines
+g(1,1).update('x', selection.timeLock, 'y', selection.aucCum, 'color', selection.subject); 
+g(1,1).geom_point('alpha', 0.5);
+g(1,1).geom_line('alpha', 0.15);
+
+%define labels for plot axes
+g(1,1).set_names('x','time from DS (s)','y','cumulative AUC (peri-DS 465 z))','color','subject')
+g(1,1).set_title('bulk AUC by subject')
+
+g(1,1).geom_hline('yintercept',0, 'style', 'k--');
+
+% g(1,1).draw() 
+
+% making subplot of 2) bulk ABSOLUTE AUC
+%overall mean between subjects (by date)
+g(2,1)= gramm('x', selection.timeLock, 'y', selection.aucCumAbs);
+g(2,1).stat_summary('type','sem','geom','area');
+
+%individual subject lines
+g(2,1).update('x', selection.timeLock, 'y', selection.aucCumAbs, 'color', selection.subject); 
+g(2,1).geom_point('alpha', 0.5);
+g(2,1).geom_line('alpha', 0.15);
+
+%define labels for plot axes
+g(2,1).set_names('x','time from DS (s)','y','cumulative Absolute AUC (peri-DS 465 z))','color','subject')
+g(2,1).set_title('bulk AUC by subject')
+
+g(2,1).geom_hline('yintercept',0, 'style', 'k--');
+
+g.draw() 
+
 
 %% testing function
 % 
