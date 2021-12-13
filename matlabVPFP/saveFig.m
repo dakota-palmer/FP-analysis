@@ -1,10 +1,13 @@
 %% define function 
 %to save and close individual figures
 
-function saveFig(fig, figPath, figName, figFormat) %(time, signal)
+function saveFig(fig, figPath, figName, figFormats) %(time, signal)
 
-    set(fig,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-    saveas(fig, strcat(figPath,figName,figFormat)); %save
+    for format= numel(figFormats)
+        set(fig,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+        saveas(fig, strcat(figPath,figName,figFormats{format})); %save
+    end
+    
     close(fig);
 
 end

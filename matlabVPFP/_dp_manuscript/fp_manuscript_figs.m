@@ -1,5 +1,6 @@
 %% Initialize variables
 figPath= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\'
+figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 
 %% Encoding Model Kernels Figure
 
@@ -76,22 +77,9 @@ if stage==7 && signal==465
            title(cons(eventType));
         end
         
-%             saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'_downsampled_session_traces','.fig'));
-        saveFig(gcf, figPath, strcat(mat(file).name,'_encoding_kernels'),'.fig');
-        saveFig(gcf, figPath, strcat(mat(file).name,'_encoding_kernels'),'.png');
+        saveFig(gcf, figPath, strcat(mat(file).name,'_encoding_kernels'),figFormats);
 
-        
-%         %make figure for indidivual subj (1 per file)
-% %         figure();
-% %         sgtitle(mat(file).name);
-% %         for eventType= 1:k
-% %             subplot(k,1,eventType);
-% %             plot(timeLock, kernel(:,eventType));
-% %             title(cons(eventType));
-% %         end
-%         
-
-
+  
     end
    
     
