@@ -4804,9 +4804,73 @@ for thisStage= [allRewardStages]
 
 end
 
+
+%% same as above but all outcomes subplotted per stage??
+%in progress 11/1/21
+rewardColors= ['g','r','y']; %color plots based on reward identity
+
+figureCount=figureCount+1;
+figure(figureCount); sgtitle('between subj-peri first PE DSz by reward identity (between subj mean of all trials by stage)');
+% subplot(1, numel(allRewardStages), find(allRewardStages==thisStage)); hold on;
+allRewardStages= 8:allStages(end)%8:12;%manual for now
+for thisStage= [allRewardStages] 
+     %There will be one subplot per rewardStage
+            %with traces for each rewardID
+
+             subplot(1, numel(allRewardStages),find(thisStage==[allRewardStages])); hold on; title(strcat('stage-',num2str(thisStage),'-pump1-reward=',rewardsThisStage{1}));
+%              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{1}))), rewardColors(1)); %plot all trials
+             plot(timeLock,PEDSbluePump1(:,thisStage), rewardColors(1)); %plot mean across all trials (for this stage)
+%              plot(timeLock,PEDSpurplePump1(:,thisStage), 'm'); %plot mean across all trials (for this stage)
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==1))), ylim, 'g','LineWidth',3); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k','LineWidth',3);%overlay line for PE
+             plot(ones(2,1)*firstLickPump1(:,thisStage), ylim, 'r','LineWidth',3);% overlay mean first lick time
+             semPatchPos= PEDSbluePump1(:,thisStage)+semPEDSbluePump1(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+             semPatchNeg= PEDSbluePump1(:,thisStage)-semPEDSbluePump1(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+             patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'], rewardColors(1),'EdgeColor','None');alpha(0.3); %overlay SEM patch
+%              
+
+             subplot(1, numel(allRewardStages), find(thisStage==[allRewardStages])); hold on; title(strcat('stage-',num2str(thisStage),'-pump2-reward=',rewardsThisStage{2}));
+%              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{2}))), rewardColors(2)); %plot all trials
+             plot(timeLock,PEDSbluePump2(:,thisStage), rewardColors(2)); %plot mean across all trials (for this stage)
+%              plot(timeLock,PEDSpurplePump2(:,thisStage), 'm'); %plot mean across all trials (for this stage)
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==2))), ylim, 'g', 'LineWidth',3); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k', 'LineWidth',3);%overlay line for PE
+             plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r', 'LineWidth',3);% overlay mean first lick time
+             semPatchPos= PEDSbluePump2(:,thisStage)+semPEDSbluePump2(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+             semPatchNeg= PEDSbluePump2(:,thisStage)-semPEDSbluePump2(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+             patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'], rewardColors(2),'EdgeColor','None');alpha(0.3); %overlay SEM patch
+             %              
+
+             subplot(1, numel(allRewardStages), find(allRewardStages==thisStage)); hold on; title(strcat('stage-',num2str(thisStage),'-pump3-reward=',rewardsThisStage{3}));
+% %              plot(timeLock,PEDSblue(:,find(strcmp(rewardIDs,rewardsThisStage{3}))), rewardColors(3)); %plot all trials
+             plot(timeLock,PEDSbluePump3(:,thisStage), rewardColors(3)); %plot mean across all trials (for this stage)
+%              plot(timeLock,PEDSpurplePump3(:,thisStage), 'm'); %plot mean across all trials (for this stage)
+             plot(ones(2,1)*nanmean(unique(pumpOnTimeRel(pumpIDs==3))), ylim, 'g', 'LineWidth',3); %overlay line for pump on time (for now using nanmean bc slight differences unique() picks up probably because they haven't been rounded to the nearest timestamp)
+             plot(ones(2,1)*0, ylim, 'k', 'LineWidth',3);%overlay line for PE
+             plot(ones(2,1)*firstLickPump3(:,thisStage), ylim, 'r', 'LineWidth',3);% overlay mean first lick time
+             semPatchPos= PEDSbluePump3(:,thisStage)+semPEDSbluePump3(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+             semPatchNeg= PEDSbluePump3(:,thisStage)-semPEDSbluePump3(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
+             patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'], rewardColors(3),'EdgeColor','None');alpha(0.3); %overlay SEM patch
+             
+             xlabel('time from PE (s)');
+             ylabel('z score relative to pre-cue baseline)');
+%              legend('465nm','pump on','port entry', 'first lick');
+             legend('pump1','pump on','port entry', 'first lick', 'pump1sem', 'pump2','pump on','port entry', 'first lick', 'pump2sem', 'pump3','pump on','port entry', 'first lick', 'pump3sem');
+
+             
+             linkaxes();
+
+end
+
 %first take mean across all trials 
 allSubjPEDSblueMean= nanmean(squeeze(allSubjPEDSblue), 1); 
 allSubjPEDSpurpleMean= nanmean(squeeze(allSubjPEDSpurple),1); 
+
+%first take mean across all trials 
+allSubjPEDSblueMean= nanmean(squeeze(allSubjPEDSblue), 1); 
+allSubjPEDSpurpleMean= nanmean(squeeze(allSubjPEDSpurple),1); 
+
+
 
 %% Classify trials by outcome history (trying to get at RPE)
 % plotting peri-first PE in DS epoch based on outcome
@@ -10859,7 +10923,7 @@ end %end subject loop
 %save the subjDataAnalyzed struct for later analysis
  
 %saving as v7.3 takes longer, but necessary if >2gb
-save(strcat(experimentName,'-', date, 'subjDataAnalyzed.mat'), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 .mat for files >2gb
+save(strcat(experimentName,'-', date, 'AllsubjDataAnalyzedAllSubj.mat'), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 .mat for files >2gb
 
 allRats.preCueFrames= preCueFrames;
 allRats.postCueFrames= postCueFrames;
