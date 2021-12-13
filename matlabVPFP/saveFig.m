@@ -3,7 +3,7 @@
 
 function saveFig(fig, figPath, figName, figFormats) %(time, signal)
 
-    for format= numel(figFormats)
+    for format= 1:numel(figFormats)
         set(fig,'Position', get(0, 'Screensize')); %make the figure full screen before saving
         saveas(fig, strcat(figPath,figName,figFormats{format})); %save
     end
