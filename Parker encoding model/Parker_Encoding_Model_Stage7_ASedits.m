@@ -891,7 +891,7 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
         kernel= [];
          %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
           if eventType==1
-            tsThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
+            tsThisEvent= 1:(numel(b)/k)+1; %2:(numel(b)/k)+1; %skip first index (intercept)
           else
             tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
           end
@@ -930,10 +930,10 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
          % Bjk = regression coeff for jth spline basis fxn and kth behavioral event
          % Sj= jth spline basis fxn at time point i with length of 81 time bins
         for eventType = 1:k
-            
+            kernel=[];
              %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
               if eventType==1
-                splineThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
+                splineThisEvent= 1:(numel(b)/k)+1; %2:(numel(b)/k)+1; %skip first index (intercept)
               else
                 splineThisEvent= splineThisEvent(end)+1:splineThisEvent(end)+(numel(b)/k); 
               end
@@ -964,13 +964,15 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
         
          %separate plot of stim vs action events
         figure; hold on;
-        title(strcat(char(files(subject)),'-kernels (spline)'));
+        title(strcat(char(files(subj)),'-kernels (spline)'));
         subplot(2,1,1); hold on; title('stimulus events');
-        timeLock= linspace(0, time_back+time_forward, size(kernel,1)); %x axis starts at 0
-        plot(timeLock, kernel(:,con_shift==1));
-        ylabel('regression coefficient b');
-        xlabel('time(s)');
-        legend(cons(con_shift==1));
+        timeLock= linspace(0, time_back+time_forward, size(kernel,1))'; %x axis starts at 0
+        if ~isempty(kernel(:,con_shift==1))
+            plot(timeLock, kernel(:,con_shift==1));
+            ylabel('regression coefficient b');
+            xlabel('time(s)');
+            legend(cons(con_shift==1));
+        end
         
         subplot(2,1,2); hold on; title('action events');
         timeLock= linspace(-time_back, time_forward, size(kernel,1)); %x axis starts at -time_back
