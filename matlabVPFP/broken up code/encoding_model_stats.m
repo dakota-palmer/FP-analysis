@@ -1,0 +1,93 @@
+%dp 12/14/21 
+%instead of LASSO, exploring alternatives
+
+%load regression input data
+
+%example
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\_control\stage7\465\lasso_vp_vta_fp_rat11_data_to_input_GADVPFP_input.mat")
+
+
+%model gcamp_y based on x_all (event times)
+
+%glmfit
+[b, dev, stats]= glmfit(input.x_all,input.gcamp_y);
+
+%% dp getting warning
+ 
+% Warning: X is ill conditioned, or the model is overparameterized, and
+% some coefficients are not identifiable.  You should use caution
+% in making predictions.
+
+%I think this is due to multicolinearity? The timing of these events are
+%correlated so are not independent/can be used to predict each other?
+
+
+%% Vis- regression input
+
+figure();
+for eventType = 1:k
+%     kernelAll=[]; %clear 'kernel' between event types
+    xThisEvent= [];
+     %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
+      if eventType==1
+        tsThisEvent= 2:(size(x_all,2)/k)+1; %skip first index (intercept)
+      else
+        tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(size(x_all,2)/k); 
+      end
+
+   sumTerm= []; %clear between event types
+
+   for ts= 1:round(size(x_all,2)/k)-1 %loop through ts; using 'ts' for each timestamp instead of 'i'
+%                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
+%         kernelAll(ts,:) = stats.beta(tsThisEvent(ts),:); %all iterations of LASSO
+%         kernel(ts,:)= b(tsThisEvent(ts),:); %single beta with lowest lambda MSE
+          xThisEvent(ts,:)= x_all(:,tsThisEvent(ts)); %all shifted permutations of timestamps for this eventType
+
+   end
+
+   %subplot each kernel
+   %all possible beta values from all LASSO iterations + overlay of
+   %single beta with lowest lambda MSE
+%    timeLock= linspace(-time_back, time_forward, size(kernelAll,1));
+   subplot(k,1,eventType);
+   hold on;
+%    plot(timeLock, kernelAll);
+%    plot(timeLock, kernel, 'k', 'LineWidth', 2);
+%    hist(xThisEvent);
+   title(cons(eventType));
+end
+
+%% Vis- regression output
+figure();
+% sgtitle(save_name);
+k= numel(cons);
+for eventType = 1:k
+%     kernelAll=[]; %clear 'kernel' between event types
+    kernel= [];
+     %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
+      if eventType==1
+        tsThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
+      else
+        tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
+      end
+
+   sumTerm= []; %clear between event types
+
+   for ts= 1:round((numel(b)/k))-1 %loop through ts; using 'ts' for each timestamp instead of 'i'
+%                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
+%         kernelAll(ts,:) = stats.beta(tsThisEvent(ts),:); %all iterations of LASSO
+        kernel(ts,:)= b(tsThisEvent(ts),:); %single beta with lowest lambda MSE
+   end
+
+   %subplot each kernel
+   %all possible beta values from all LASSO iterations + overlay of
+   %single beta with lowest lambda MSE
+   timeLock= linspace(-time_back, time_forward, size(kernelAll,1));
+   subplot(k,1,eventType);
+   hold on;
+%    plot(timeLock, kernelAll);
+   plot(timeLock, kernel, 'k', 'LineWidth', 2);
+   title(cons(eventType));
+end
+% figure();
+% plot(b)

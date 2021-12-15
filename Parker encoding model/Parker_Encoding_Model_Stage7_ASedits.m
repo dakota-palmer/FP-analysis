@@ -26,20 +26,30 @@ save_folder = 'encoding_results\_control\stage7\465';
 %     
 % figsave_folder='F:\Shared drives\Richard Lab\Data\Ally\Stage7_EncodingModel_Figs\';
 figsave_folder='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\output';
+figFormats= {'.fig','.png'};
 
-condition = 'data to input\_control_subjects';
-subjects = 1:3%%1:9%[1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
+condition = 'data to input\'%_control_subjects';
+% subjects = 1:3%%1:9%[1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
+subjects = 1:9%[1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
+
+type1='spline';  %'spline','time_shift'
+
+%dp 12/15/21 saving spline and time_shift results separately to compare
+if strcmp(type1,'spline')==1
+    figsave_folder= strcat(figsave_folder, '\_spline_version');
+elseif strcmp(type1,'time_shift')==1
+    figsave_folder= strcat(figsave_folder, '\_timeShift_version');
+end
+    
 
 for subj=1:numel(subjects)
     
-    clearvars -except curr_dir save_folder figsave_folder condition subjects subj subjDataPEM kernel_Shifted_all 
+    clearvars -except curr_dir save_folder figsave_folder condition subjects subj subjDataPEM kernel_Shifted_all figFormats type1
     tic
     %how much time should you shift back (in seconds)
     time_back_orig=5;
     time_forward_orig=10;
-    
-    type1='time_shift';  %'spline','time_shift'
     
     shift_con=0;   %Should we shift the stimulus events so they start at 0?
     
@@ -826,6 +836,7 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
     x_all=mean_center(x_basic); %todo: missing fxn % the mean is calculated and the lasso regression shrinks values toward this cental point
     gcamp_y=gcamp_temp;
     
+    %TODO: better name for 'stats.p' here is 'stats.fitinfo'
     [stats.beta,stats.p]=lasso(x_all,gcamp_y','cv',5);    %Lasso with cross-validation % Nathan says we can use glmfit instead
     sum_betas=max(stats.beta(:,stats.p.IndexMinMSE));    %Selects betas that minimize MSE
     if sum_betas==0; stats.p.IndexMinMSE=max(find(max(stats.beta)>0.0001)); end  %Makes sure there are no all zero betas
@@ -834,14 +845,77 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
     %Save file
     long_name=strcat('lasso','_',char(files(subjects(subj))));
     dot_stop=find(long_name=='.');
+            
     save_name=long_name(1:dot_stop-1);
+    
+    %dp 12/15/21 saving time_shift and spline results separately to compare
+    if strcmp(type1, 'time_shift')==1
+        save_name= strcat(save_name,'_timeShiftVersion');
+    elseif strcmp(type1,'spline')==1
+        save_name= strcat(save_name,'_splineVersion');
+    end
 
     
     cd(save_folder)
-    save(save_name,'b');
+    %Should save all raw output of 'stats' instead of 'b'? Then we can do
+    %regularization/beta selection afterward
+    output= stats;
+    
+    save(strcat(save_name,'_b'),'b');
+    save(strcat(save_name,'_output'),'stats');
+    
+%     if strcmp(type1,'time_shift')==1
+%         save(strcat(save_name,'_b_timeShiftVersion'),'b');
+%         save(strcat(save_name,'_output_timeShiftVersion'),'stats');
+%     elseif strcmp(type1,'spline')==1
+%         save(strcat(save_name,'_b_splineVersion'),'b');
+%         save(strcat(save_name,'_output_splineVersion'),'stats');
+%     end
+
+    %should save the inputs too so we can examine later w/o rerunning code
+    input= [];
+    input.x_basic= x_basic; %prior to running mean_center()
+    input.x_all= x_all;
+    input.gcamp_y= gcamp_y;
+    save(strcat(save_name,'_input'),'input');
+
     cd(curr_dir)
     
+    %% 12/13/21 DP adding quick visualization of all raw LASSO output (from 'stats.beta', not
+    %just single beta from 'b' with lowest lambda MSE)
+    figure();
+    sgtitle(save_name);
+    k= numel(cons);
+    for eventType = 1:k
+        kernelAll=[]; %clear 'kernel' between event types
+        kernel= [];
+         %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
+          if eventType==1
+            tsThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
+          else
+            tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
+          end
 
+       sumTerm= []; %clear between event types
+
+       for ts= 1:round((numel(b)/k))-1 %loop through ts; using 'ts' for each timestamp instead of 'i'
+    %                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
+            kernelAll(ts,:) = stats.beta(tsThisEvent(ts),:); %all iterations of LASSO
+            kernel(ts,:)= b(tsThisEvent(ts),:); %single beta with lowest lambda MSE
+       end
+
+       %subplot each kernel
+       %all possible beta values from all LASSO iterations + overlay of
+       %single beta with lowest lambda MSE
+       timeLock= linspace(-time_back, time_forward, size(kernelAll,1));
+       subplot(k,1,eventType);
+       hold on;
+       plot(timeLock, kernelAll);
+       plot(timeLock, kernel, 'k', 'LineWidth', 2);
+       title(cons(eventType));
+    end
+    saveFig(gcf, figsave_folder, strcat(save_name,'encoding_kernels_raw_lasso'),figFormats);
+    
 %% Visualize
         
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Kernel calculation & vis~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -856,7 +930,7 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
          % Bjk = regression coeff for jth spline basis fxn and kth behavioral event
          % Sj= jth spline basis fxn at time point i with length of 81 time bins
         for eventType = 1:k
-
+            
              %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
               if eventType==1
                 splineThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
