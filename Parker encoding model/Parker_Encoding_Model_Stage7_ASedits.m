@@ -1101,11 +1101,25 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
             if ~isnan(this_con_times(DStrial)) %only run if is an event here, keep nan? or exclude trial?
 
                 %kernel onset should depend on # of shifts forward and back??
-                kernelStart(DStrial)= this_con_times(DStrial)-shift_back;
-                kernelEnd(DStrial)= this_con_times(DStrial)+shift_forward;
-
-                kernel_Shifted(kernelStart(DStrial):kernelEnd(DStrial),con)= kernel(:, con);% populate kernel shifted matrix with beta coefficients within trials, in the distinct spot of the gcamp
                 
+                %dp 12/15/21 hitting error for spline version, 81 rows of
+                %kernel don't represent time shifts so this specific code
+                %won't work, need to accomodate
+                
+                if strcmp(type1, 'time_shift')==1
+                    kernelStart(DStrial)= this_con_times(DStrial)-shift_back;
+                    kernelEnd(DStrial)= this_con_times(DStrial)+shift_forward;
+
+                    kernel_Shifted(kernelStart(DStrial):kernelEnd(DStrial),con)= kernel(:, con);% populate kernel shifted matrix with beta coefficients within trials, in the distinct spot of the gcamp
+                
+                %TODO: add code here to accomodate spline version
+                elseif strcmp(type1, 'spline')==1
+%                     kernelStart(DStrial)= this_con_times(DStrial)-shift_back;
+%                     kernelEnd(DStrial)= this_con_times(DStrial)+shift_forward;
+% 
+%                     kernel_Shifted(kernelStart(DStrial):kernelEnd(DStrial),con)= kernel(:, con);
+                end
+                        
             
             end        
         end %end event type (con) loop

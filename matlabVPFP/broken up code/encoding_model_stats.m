@@ -6,7 +6,6 @@
 %example
 load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\_control\stage7\465\lasso_vp_vta_fp_rat11_data_to_input_GADVPFP_input.mat")
 
-
 %model gcamp_y based on x_all (event times)
 
 %glmfit
@@ -20,6 +19,7 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\enc
 
 %I think this is due to multicolinearity? The timing of these events are
 %correlated so are not independent/can be used to predict each other?
+
 
 
 %% Vis- regression input
@@ -57,37 +57,92 @@ for eventType = 1:k
    title(cons(eventType));
 end
 
-%% Vis- regression output
-figure();
-% sgtitle(save_name);
-k= numel(cons);
-for eventType = 1:k
-%     kernelAll=[]; %clear 'kernel' between event types
-    kernel= [];
-     %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
-      if eventType==1
-        tsThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
-      else
-        tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
-      end
+%% Vis- regression output- Compare Spline vs Time_Shift versions
+%load regression output data, compare time_shift to spline
+timeShiftOutput= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\_control\stage7\465\lasso_vp_vta_fp_rat11_data_to_input_GADVPFP_timeShiftVersion_b.mat")
+splineOutput= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\_control\stage7\465\lasso_vp_vta_fp_rat11_data_to_input_GADVPFP_splineVersion_b.mat")
 
-   sumTerm= []; %clear between event types
+%string of which to examine, 'spline' or 'time_shift'
+type1= 'time_shift'
 
-   for ts= 1:round((numel(b)/k))-1 %loop through ts; using 'ts' for each timestamp instead of 'i'
-%                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
-%         kernelAll(ts,:) = stats.beta(tsThisEvent(ts),:); %all iterations of LASSO
-        kernel(ts,:)= b(tsThisEvent(ts),:); %single beta with lowest lambda MSE
-   end
+%spline version:
 
-   %subplot each kernel
-   %all possible beta values from all LASSO iterations + overlay of
-   %single beta with lowest lambda MSE
-   timeLock= linspace(-time_back, time_forward, size(kernelAll,1));
-   subplot(k,1,eventType);
-   hold on;
-%    plot(timeLock, kernelAll);
-   plot(timeLock, kernel, 'k', 'LineWidth', 2);
-   title(cons(eventType));
+if strcmp(type1, 'spline')==1
+    %spline version:
+%     b= splineOutput.stats.beta;
+    b= splineOutput.b;
+
+    figure();
+    sgtitle('spline b');
+    k= numel(cons);
+    for eventType = 1:k
+    %     kernelAll=[]; %clear 'kernel' between event types
+        kernel= [];
+         %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
+          if eventType==1
+            tsThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
+          else
+            tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
+          end
+
+       sumTerm= []; %clear between event types
+
+       for ts= 1:round((numel(b)/k))-1 %loop through ts; using 'ts' for each timestamp instead of 'i'
+    %                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
+    %         kernelAll(ts,:) = stats.beta(tsThisEvent(ts),:); %all iterations of LASSO
+            kernel(ts,:)= b(tsThisEvent(ts),:); %single beta with lowest lambda MSE
+       end
+% 
+%        %subplot each kernel
+%        %all possible beta values from all LASSO iterations + overlay of
+%        %single beta with lowest lambda MSE
+       timeLock= linspace(-time_back, time_forward, size(kernelAll,1));
+       subplot(k,1,eventType);
+       hold on;
+    %    plot(timeLock, kernelAll);
+       plot(timeLock, kernel, 'k', 'LineWidth', 2);
+       title(cons(eventType));
+    end
+    % figure();
+    % plot(b)
 end
-% figure();
-% plot(b)
+
+    %time_shift version:
+
+if strcmp(type1, 'time_shift')==1
+%     b= timeShiftOutput.stats.beta;
+    b= timeShiftOutput.b;
+    figure();
+    sgtitle('time-shift b');
+    k= numel(cons);
+    for eventType = 1:k
+    %     kernelAll=[]; %clear 'kernel' between event types
+        kernel= [];
+         %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
+          if eventType==1
+            tsThisEvent= 2:(numel(b)/k)+1; %skip first index (intercept)
+          else
+            tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
+          end
+
+       sumTerm= []; %clear between event types
+
+       for ts= 1:round((numel(b)/k))-1 %loop through ts; using 'ts' for each timestamp instead of 'i'
+    %                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
+    %         kernelAll(ts,:) = stats.beta(tsThisEvent(ts),:); %all iterations of LASSO
+            kernel(ts,:)= b(tsThisEvent(ts),:); %single beta with lowest lambda MSE
+       end
+
+       %subplot each kernel
+       %all possible beta values from all LASSO iterations + overlay of
+       %single beta with lowest lambda MSE
+       timeLock= linspace(-time_back, time_forward, size(kernel,1));
+       subplot(k,1,eventType);
+       hold on;
+    %    plot(timeLock, kernelAll);
+       plot(timeLock, kernel, 'k', 'LineWidth', 2);
+       title(cons(eventType));
+    end
+    % figure();
+    % plot(b)
+end
