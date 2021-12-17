@@ -3,7 +3,7 @@ figPath= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript
 figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 
 %% Load fpAnalyzedData struct
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\VP-VTA-FP-04-Oct-2021subjDataAnalyzed.mat")
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
 
 %% Encoding Model Kernels Figure
 
