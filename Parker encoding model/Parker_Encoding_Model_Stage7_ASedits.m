@@ -33,7 +33,7 @@ condition = 'data to input\'%_control_subjects';
 subjects = 1:9%[1 2 3 4 5 6 7 8 9 10 11 12];%:278; %only one example file was included- I think there should be 1 file per neuron...I guess in our case it's 1 per subj -dp
 
 
-type1='spline';  %'spline','time_shift'
+type1='time_shift';  %'spline','time_shift'
 
 %dp 12/15/21 saving spline and time_shift results separately to compare
 if strcmp(type1,'spline')==1
@@ -791,6 +791,8 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
             event_times_mat=vertcat(event_times_mat,con_binned);
             gcamp_temp=gcamp_y;
             
+            %dp 12/6/21 the basis set here is for nathan parker's data w 81
+            %time bins... should make our own custom
             %preloads basis set
             load('ben_81x25.mat')
             
@@ -877,45 +879,45 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
     input.x_basic= x_basic; %prior to running mean_center()
     input.x_all= x_all;
     input.gcamp_y= gcamp_y;
-    save(strcat(save_name,'_input'),'input');
+    save(strcat(save_name,'_input'),'input',  '-v7.3'); %large variable so need to save as v 7.3 mat
 
     cd(curr_dir)
     
     %% 12/13/21 DP adding quick visualization of all raw LASSO output (from 'stats.beta', not
-    %just single beta from 'b' with lowest lambda MSE)
-    figure();
-    sgtitle(save_name);
-    k= numel(cons);
-    for eventType = 1:k
-        kernelAll=[]; %clear 'kernel' between event types
-        kernel= [];
-         %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
-          if eventType==1
-            tsThisEvent= 1:(numel(b)/k)+1; %2:(numel(b)/k)+1; %skip first index (intercept)
-          else
-            tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
-          end
-
-       sumTerm= []; %clear between event types
-
-       for ts= 1:round((numel(b)/k))-1 %loop through ts; using 'ts' for each timestamp instead of 'i'
-    %                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
-            kernelAll(ts,:) = stats.beta(tsThisEvent(ts),:); %all iterations of LASSO
-            kernel(ts,:)= b(tsThisEvent(ts),:); %single beta with lowest lambda MSE
-       end
-
-       %subplot each kernel
-       %all possible beta values from all LASSO iterations + overlay of
-       %single beta with lowest lambda MSE
-       timeLock= linspace(-time_back, time_forward, size(kernelAll,1));
-       subplot(k,1,eventType);
-       hold on;
-       plot(timeLock, kernelAll);
-       plot(timeLock, kernel, 'k', 'LineWidth', 2);
-       title(cons(eventType));
-    end
-    saveFig(gcf, figsave_folder, strcat(save_name,'encoding_kernels_raw_lasso'),figFormats);
-    
+%     %just single beta from 'b' with lowest lambda MSE)
+%     figure();
+%     sgtitle(save_name);
+%     k= numel(cons);
+%     for eventType = 1:k
+%         kernelAll=[]; %clear 'kernel' between event types
+%         kernel= [];
+%          %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
+%           if eventType==1
+%             tsThisEvent= 1:(numel(b)/k)+1; %2:(numel(b)/k)+1; %skip first index (intercept)
+%           else
+%             tsThisEvent= tsThisEvent(end)+1:tsThisEvent(end)+(numel(b)/k); 
+%           end
+% 
+%        sumTerm= []; %clear between event types
+% 
+%        for ts= 1:round((numel(b)/k))-1 %loop through ts; using 'ts' for each timestamp instead of 'i'
+%     %                %this seems to fit- there should be 81 time bins in the example data x 7 event types ~ 567      
+%             kernelAll(ts,:) = stats.beta(tsThisEvent(ts),:); %all iterations of LASSO
+%             kernel(ts,:)= b(tsThisEvent(ts),:); %single beta with lowest lambda MSE
+%        end
+% 
+%        %subplot each kernel
+%        %all possible beta values from all LASSO iterations + overlay of
+%        %single beta with lowest lambda MSE
+%        timeLock= linspace(-time_back, time_forward, size(kernelAll,1));
+%        subplot(k,1,eventType);
+%        hold on;
+%        plot(timeLock, kernelAll);
+%        plot(timeLock, kernel, 'k', 'LineWidth', 2);
+%        title(cons(eventType));
+%     end
+%     saveFig(gcf, figsave_folder, strcat(save_name,'encoding_kernels_raw_lasso'),figFormats);
+%     
 %% Visualize
         
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Kernel calculation & vis~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -930,7 +932,7 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
          % Bjk = regression coeff for jth spline basis fxn and kth behavioral event
          % Sj= jth spline basis fxn at time point i with length of 81 time bins
         for eventType = 1:k
-            kernel=[];
+%             kernel=[];
              %for indexing rows of b easily as we loop through event types and build kernel, keep track  of timestamps (ts) that correspond to this event type 
               if eventType==1
                 splineThisEvent= 1:(numel(b)/k)+1; %2:(numel(b)/k)+1; %skip first index (intercept)
@@ -1183,7 +1185,7 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
     plot(timeLock,currentSubj(1).DSzblueMean, 'b');
     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
-
+        linkaxes();
         gcf;
         [filepath,name,ext] = fileparts(file_name);
         figsave_name=strcat('DSonset_PoxDS_ModelMean',name);
@@ -1250,6 +1252,10 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
 else% else conditional for stage 7
 end% end if else conditional for stage 7
 end %end subj loop
+
+%% Save the results from all subjects
+cd(save_folder)
+save(strcat('allSubjResults','kernel_Shifted_all'),'-v7.3')
 
 %% Create graph of all subjects ( SEM area)
 %reorganise z-score data for all animals

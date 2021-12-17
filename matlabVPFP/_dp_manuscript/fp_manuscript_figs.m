@@ -2,6 +2,9 @@
 figPath= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\'
 figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 
+%% Load fpAnalyzedData struct
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\VP-VTA-FP-04-Oct-2021subjDataAnalyzed.mat")
+
 %% Encoding Model Kernels Figure
 
 %Plot of encoding model kernels alongside peri-DS traces:
