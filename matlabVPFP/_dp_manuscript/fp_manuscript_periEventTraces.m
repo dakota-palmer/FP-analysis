@@ -236,3 +236,32 @@ i.axe_property('YLim',[-1,4]);
 i.set_title('stage 7');
 
 i.draw();
+
+%% Plotting specific subj to compare with kernels
+
+clear i
+%subset data
+data= periEventTable(periEventTable.stage==7,:);
+data= data(strcmp(data.subject,'rat8')==1,:);
+
+
+i(1,1)=gramm('x',data.timeLock,'y',data.DSblue, 'color',data.subject);
+i(1,1).stat_summary('type','sem','geom','area');
+i(1,1).set_names('x','time from event (s)','y','z-score','color','subject');
+i(1,1).set_title('Peri-DS');
+
+
+i(2,1)=gramm('x',data.timeLock,'y',data.DSbluePox, 'color',data.subject);
+i(2,1).stat_summary('type','sem','geom','area');
+i(2,1).set_names('x','time from event (s)','y','z-score','color','subject');
+i(2,1).set_title('Peri-First PE DS');
+
+i(3,1)=gramm('x',data.timeLock,'y',data.DSblueLox, 'color',data.subject);
+i(3,1).stat_summary('type','sem','geom','area');
+i(3,1).set_names('x','time from event (s)','y','z-score','color','subject');
+i(3,1).set_title('Peri-First Lick DS');
+
+i.axe_property('YLim',[-1,4]);
+i.set_title('stage 7');
+
+i.draw();

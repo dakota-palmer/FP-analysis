@@ -5,6 +5,9 @@ figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 %% Load fpAnalyzedData struct
 load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
 
+%% load encoding model output 
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\_control\stage7\465\allSubjResultskernel_Shifted_all.mat")
+
 %% Encoding Model Kernels Figure
 
 %Plot of encoding model kernels alongside peri-DS traces:
