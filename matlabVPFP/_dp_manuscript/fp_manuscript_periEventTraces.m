@@ -2,7 +2,9 @@
 %save data into table for later subplotting 
 % events= {'DS','NS','pox','lox'}
 
+
 %% Preallocate table with #rows equal to observations per session
+subjects= fieldnames(subjDataAnalyzed);
 sesCount= 0;
 for subj= 1:numel(subjects) %for each subject analyzed
     currentSubj= subjDataAnalyzed.(subjects{subj});
@@ -93,23 +95,23 @@ for subj= 1:numel(subjects)
 %         NSblueLox= nan(numel(timeLock)*numel(includedSessions), numTrials);
 %         NSpurpleLox= nan(numel(timeLock)*numel(includedSessions), numTrials);
 
-        trialInd= 1:numel(timeLock); %index for adding to photometry signal trial by trial
+        trialInd= 1:periCueFrames;%numel(timeLock); %index for adding to photometry signal trial by trial
 
         for includedSession= includedSessions %loop through only sessions that match this stage
             
             %reset btwn sessions
-            DSblue= nan(numel(timeLock), numTrials);
-            DSpurple=  nan(numel(timeLock), numTrials);
-            DSbluePox= nan(numel(timeLock), numTrials);
-            DSpurplePox= nan(numel(timeLock), numTrials);
-            DSblueLox= nan(numel(timeLock), numTrials);
-            DSpurpleLox= nan(numel(timeLock), numTrials);
-            NSblue= nan(numel(timeLock), numTrials);
-            NSpurple=  nan(numel(timeLock), numTrials);
-            NSbluePox= nan(numel(timeLock), numTrials);
-            NSpurplePox= nan(numel(timeLock), numTrials);
-            NSblueLox= nan(numel(timeLock), numTrials);
-            NSpurpleLox= nan(numel(timeLock), numTrials);
+            DSblue= nan(periCueFrames, numTrials);
+            DSpurple=  nan(periCueFrames, numTrials);
+            DSbluePox= nan(periCueFrames, numTrials);
+            DSpurplePox= nan(periCueFrames, numTrials);
+            DSblueLox= nan(periCueFrames, numTrials);
+            DSpurpleLox= nan(periCueFrames, numTrials);
+            NSblue= nan(periCueFrames, numTrials);
+            NSpurple=  nan(periCueFrames, numTrials);
+            NSbluePox= nan(periCueFrames, numTrials);
+            NSpurplePox= nan(periCueFrames, numTrials);
+            NSblueLox= nan(periCueFrames, numTrials);
+            NSpurpleLox= nan(periCueFrames, numTrials);
 
             %going trial by trial like this is inefficient but it works
             for cue= 1:numel(currentSubj(includedSession).periDS.DS)
@@ -211,6 +213,7 @@ i.draw();
 
 
 %% Stage 7 peri-Cue vs peri-Pox vs peri-Lox
+figure();
 
 clear i
 %subset data
@@ -238,6 +241,7 @@ i.set_title('stage 7');
 i.draw();
 
 %% Plotting specific subj to compare with kernels
+figure();
 
 clear i
 %subset data
