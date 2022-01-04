@@ -27,12 +27,14 @@ periEventTable.date= cell(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1)
 periEventTable.stage= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
 periEventTable.timeLock= nan(numTrials*sesCount*periCueFrames,1); 
 
+periEventTable.DStrialID = (nan(numTrials*sesCount*periCueFrames,1));
 periEventTable.DSblue = (nan(numTrials*sesCount*periCueFrames,1));
 periEventTable.DSbluePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
 periEventTable.DSblueLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
 periEventTable.DSpurple = (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
 periEventTable.DSpurplePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
 periEventTable.DSpurpleLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
+periEventTable.NStrialID = (nan(numTrials*sesCount*periCueFrames,1));
 periEventTable.NSblue = (nan(numTrials*sesCount*periCueFrames,1));
 periEventTable.NSbluePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
 periEventTable.NSblueLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
@@ -100,19 +102,22 @@ for subj= 1:numel(subjects)
         for includedSession= includedSessions %loop through only sessions that match this stage
             
             %reset btwn sessions
+            DStrialID= nan(periCueFrames, numTrials); %unique ID for each DS trial within session
             DSblue= nan(periCueFrames, numTrials);
             DSpurple=  nan(periCueFrames, numTrials);
             DSbluePox= nan(periCueFrames, numTrials);
             DSpurplePox= nan(periCueFrames, numTrials);
             DSblueLox= nan(periCueFrames, numTrials);
             DSpurpleLox= nan(periCueFrames, numTrials);
+            NStrialID= nan(periCueFrames, numTrials); %unique ID for each NS trial within session
             NSblue= nan(periCueFrames, numTrials);
             NSpurple=  nan(periCueFrames, numTrials);
             NSbluePox= nan(periCueFrames, numTrials);
             NSpurplePox= nan(periCueFrames, numTrials);
             NSblueLox= nan(periCueFrames, numTrials);
             NSpurpleLox= nan(periCueFrames, numTrials);
-
+            
+            thisTrial=1; %cumulative counter for trialID within session
             %going trial by trial like this is inefficient but it works
             for cue= 1:numel(currentSubj(includedSession).periDS.DS)
                 DSblue(trialInd,cue)= currentSubj(includedSession).periDS.DSzblue(:,:,cue); 
@@ -121,6 +126,7 @@ for subj= 1:numel(subjects)
                 DSpurplePox(trialInd,cue)= currentSubj(includedSession).periDSpox.DSzpoxpurple(:,:,cue);
                 DSblueLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxblue(:,:,cue);
                 DSpurpleLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxpurple(:,:,cue);
+                DStrialID(trialInd,cue)= cue;
             end
 
             for cue=1:numel(currentSubj(includedSession).periNS.NS)
@@ -130,6 +136,7 @@ for subj= 1:numel(subjects)
                 NSpurplePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSzpoxpurple(:,:,cue);
                 NSblueLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxblue(:,:,cue);
                 NSpurpleLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxpurple(:,:,cue);
+                NStrialID(trialInd,cue)= cue;
            end
 
 
@@ -160,6 +167,7 @@ for subj= 1:numel(subjects)
            
             
             %Save data into table
+            periEventTable.DStrialID(tsInd)= DStrialID(:);
             periEventTable.DSblue(tsInd)= DSblue(:);
             periEventTable.DSpurple(tsInd)= DSpurple(:);
             periEventTable.DSbluePox(tsInd)= DSbluePox(:);
@@ -167,6 +175,7 @@ for subj= 1:numel(subjects)
             periEventTable.DSblueLox(tsInd)= DSblueLox(:);
             periEventTable.DSpurpleLox(tsInd)= DSpurpleLox(:);
             
+            periEventTable.NStrialID(tsInd)= NStrialID(:);
             periEventTable.NSblue(tsInd)= NSblue(:);
             periEventTable.NSpurple(tsInd)= NSpurple(:);
             periEventTable.NSbluePox(tsInd)= NSbluePox(:);
