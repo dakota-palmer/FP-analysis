@@ -21,7 +21,42 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\enc
 %correlated so are not independent/can be used to predict each other?
 
 
+%% what about x_basic? 
+[b2, dev2, stats2]= glmfit(input.x_basic,input.gcamp_y);
 
+%same error
+
+%compare visually beta results from x_basic and x_all
+figure();
+hold on; 
+plot(b);
+plot(b2);
+legend('b','b2');
+
+%first 601 values are slightly different? correspond to first event (DS)?
+%why?
+
+%% visually compare x_basic v x_all
+% % figure();
+% % hold on; 
+% % plot(input.x_basic, 'k');
+% % plot(input.x_all, 'b');
+% % legend('x_basic','x_all');
+% 
+% % plot(input.x_basic(:), input.x_all(:));
+
+%no values are equivalent?
+sum(input.x_basic(:)==input.x_all(:))
+
+% figure();
+% hold on; 
+% histogram(input.x_basic(:));
+% histogram(input.x_all(:));
+% legend('x_basic','x_all');
+
+
+unique(input.x_basic)
+unique(input.x_all)
 %% Vis- regression input
 
 figure();
