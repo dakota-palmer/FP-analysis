@@ -76,6 +76,100 @@ for file= 1:length(mat)
 end %end file loop (subj)
 
 
+%% gramm plot all subjects kernels + periEvent traces
+
+%subset periEvent data for plotting
+data= periEventTable;
+data= data(data.stage==7,:); 
+
+%nice plot w gramm
+clear i;
+figure(); hold on;
+
+%Plot Between-Subj Means
+i(1,1)=gramm('x',kernelTable.timeLock,'y',kernelTable.kernelDS);
+i(1,1).set_title('DS Kernel');
+i(1,1).stat_summary('type','sem','geom','area');
+i(1,1).set_names('x','time from event (s)','y','beta');
+i(1,1).set_color_options('chroma',0,'lightness',30);
+
+i(2,1)=gramm('x',kernelTable.timeLock,'y',kernelTable.kernelPoxDS);
+i(2,1).set_title('DS PE Kernel');
+i(2,1).stat_summary('type','sem','geom','area');
+i(2,1).set_names('x','time from event (s)','y','beta');
+i(2,1).set_color_options('chroma',0,'lightness',30);
+
+i(3,1)=gramm('x',kernelTable.timeLock,'y',kernelTable.kernelLoxDS);
+i(3,1).set_title('DS Lick Kernel');
+i(3,1).stat_summary('type','sem','geom','area');
+i(3,1).set_names('x','time from event (s)','y','beta');
+i(3,1).set_color_options('chroma',0,'lightness',30);
+
+
+
+%second column with peri-event traces
+i(1,2)=gramm('x',data.timeLock,'y',data.DSblue);
+i(1,2).set_title('Peri-DS');
+i(1,2).stat_summary('type','sem','geom','area');
+i(1,2).set_names('x','time from event (s)','y','z-score');
+i(1,2).set_color_options('chroma',0,'lightness',30);
+
+
+i(2,2)=gramm('x',data.timeLock,'y',data.DSbluePox);
+i(2,2).set_title('Peri-DS PE');
+i(2,2).stat_summary('type','sem','geom','area');
+i(2,2).set_names('x','time from event (s)','y','z-score');
+i(2,2).set_color_options('chroma',0,'lightness',30);
+
+i(3,2)=gramm('x',data.timeLock,'y',data.DSblueLox);
+i(3,2).set_title('Peri-DS Lick');
+i(3,2).stat_summary('type','sem','geom','area');
+i(3,2).set_names('x','time from event (s)','y','z-score');
+i(3,2).set_color_options('chroma',0,'lightness',30);
+
+i.draw()
+
+% %plot Individual Subjects overlay~~~
+% i(1,1).update('color',kernelTable.file);
+% i(1,1).stat_summary('type','sem','geom','area');
+% i(1,1).set_color_options();
+% 
+% i(2,1).update('color',kernelTable.file)
+% i(2,1).stat_summary('type','sem','geom','area');
+% i(2,1).set_color_options();
+% 
+% i(3,1).update('color',kernelTable.file)
+% i(3,1).stat_summary('type','sem','geom','area');
+% i(3,1).set_color_options();
+% 
+% 
+% %second column with peri-event traces
+% i(1,2).update('color',periEventTable.subject);
+% i(1,2).stat_summary('type','sem','geom','area');
+% i(1,2).set_color_options();
+% 
+% i(2,2).update('color',periEventTable.subject)
+% i(2,2).stat_summary('type','sem','geom','area');
+% i(2,2).set_color_options();
+% 
+% i(3,2).update('color',periEventTable.subject)
+% i(3,2).stat_summary('type','sem','geom','area');
+% i(3,2).set_color_options();
+
+
+i.set_title('all subj');
+
+%manually set axes limits before drawing
+i(:,1).axe_property('YLim',[-0.5, 1.5]);
+i(:,2).axe_property('YLim',[-2, 5]);
+
+i.draw();
+
+linkaxes(gca,'x');
+
+saveFig(gcf, figPath, strcat('_allSubj_encoding_kernels_w_periEvent'),figFormats);
+
+
 %% 
 % %% Encoding Model Kernels Figure
 % 
