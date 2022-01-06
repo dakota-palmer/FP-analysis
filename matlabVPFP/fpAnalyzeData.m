@@ -685,8 +685,8 @@ end %end subject loop
 %collect all licks between the current cue onset and the next cue's onset
 
 %Parameters
-preCueTime= 2; %t in seconds to examine before cue
-postCueTime= 5; %t in seconds to examine after cue
+preCueTime= 5; %t in seconds to examine before cue
+postCueTime= 10; %t in seconds to examine after cue
 
 preCueFrames= preCueTime*fs;
 postCueFrames= postCueTime*fs;
@@ -1743,10 +1743,16 @@ for subj= 1:numel(subjects) %for each subject
 
         DSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
 
-       
        for cue = 1:numel(DSselected)
             
-           if ~isnan(DSselected(cue)) %skip over trials where animal was in port at cue onset or did not make a PE during cue epoch
+           if isnan(DSselected(cue)) %if there are no valid pe this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected(cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(1:periCueFrames+1,1,cue)= nan;
+               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(1:periCueFrames+1,1,cue)= nan;       
+           
+           elseif ~isnan(DSselected(cue)) %skip over trials where animal was in port at cue onset or did not make a PE during cue epoch
                
                
                  %find the minimum PE timestamp during the cue epoch (this is the 1st pe)
@@ -1767,13 +1773,16 @@ for subj= 1:numel(subjects) %for each subject
                 DSskipped= DSskipped+1;
                 continue
             end
-
-            if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
-                disp(strcat('****firstPoxDS cue ', num2str(cue), ' too close to end, continueing out'));
-                DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
-                DSselected(cue)= nan; %make this cue nan so that it's skipped in subsequent analysis
-                continue %continue out of the loop and move onto the next DS cue
-            end
+% 
+%             if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
+%                 disp(strcat('****firstPoxDS cue ', num2str(cue), ' too close to end, continueing out'));
+%                 DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
+%                 DSselected(cue)= nan; %make this cue nan so that it's skipped in subsequent analysis
+%                 continue %continue out of the loop and move onto the next DS cue
+%                 %dp 1/5/22 found bug here where continuing out and leaving
+%                 %periDSpox fields empty... should pre fill them in case of
+%                 %continue
+%             end
 
             % Calculate average baseline mean&stdDev 10s prior to DS for z-score
             %we'll retrieve the baselines calculated when we timelocked to
@@ -1799,12 +1808,13 @@ for subj= 1:numel(subjects) %for each subject
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(:,:,cue)= (((currentSubj(session).reblue(preEventTime:postEventTime))-baselineMeanblue))/(baselineStdblue); 
             subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(:,:,cue)= (((currentSubj(session).repurple(preEventTime:postEventTime))- baselineMeanpurple))/(baselineStdpurple);
  
-           elseif isnan(DSselected(cue)) %if there are no valid pe this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected(cue)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(1:periCueFrames+1,1,cue)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple(1:periCueFrames+1,1,cue)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(1:periCueFrames+1,1,cue)= nan;
-               subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(1:periCueFrames+1,1,cue)= nan;
+%            elseif isnan(DSselected(cue)) %if there are no valid pe this session(e.g. on extinction days), make nan (otherwise might skip & fill in with 0s)
+%                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSselected(cue)= nan;
+%                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxblue(1:periCueFrames+1,1,cue)= nan;
+%                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSpoxpurple(1:periCueFrames+1,1,cue)= nan;
+%                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxblue(1:periCueFrames+1,1,cue)= nan;
+%                subjDataAnalyzed.(subjects{subj})(session).periDSpox.DSzpoxpurple(1:periCueFrames+1,1,cue)= nan;
+%            end
            end
        
         end%end DSselected loop
@@ -2003,11 +2013,11 @@ for subj= 1:numel(subjects) %for each subject
                 continue
             end
 
-            if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
-                disp(strcat('****firstLoxDS cue ', num2str(cue), ' too close to end, continueing out'));
-                DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
-                continue %continue out of the loop and move onto the next DS cue
-            end
+%             if postEventTime> length(currentSubj(session).cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
+%                 disp(strcat('****firstLoxDS cue ', num2str(cue), ' too close to end, continueing out'));
+%                 DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
+%                 continue %continue out of the loop and move onto the next DS cue
+%             end
 
             % Calculate average baseline mean&stdDev 10s prior to DS for z-score
             %we'll retrieve the baselines calculated when we timelocked to

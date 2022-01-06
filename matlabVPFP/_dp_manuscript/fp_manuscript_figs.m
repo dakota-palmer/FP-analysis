@@ -3,7 +3,10 @@ figPath= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript
 figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 
 %% Load fpAnalyzedData struct
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jan-2022subjDataAnalyzed.mat")
+
+
 
 %% Create periEventTable and make peri-event 465nm plots
 fp_manuscript_periEventTraces();
