@@ -75,3 +75,8 @@ python/tdt/requirements.txt
 python/tdt/LICENSE
 *.jpg
 *.png
+*.parquet
+*.csv
+*.xlsx
+matlabVPFP/_dp_manuscript/license.txt
+matlabVPFP/_dp_manuscript/struct2tableAll.m
