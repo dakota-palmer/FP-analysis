@@ -22,26 +22,27 @@ periCueFrames= numel(currentSubj(1).periDS.timeLock);%assume constant timelock b
 
 periEventTable= table();
 
-periEventTable.subject= cell(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
-periEventTable.date= cell(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
-periEventTable.stage= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
-periEventTable.timeLock= nan(numTrials*sesCount*periCueFrames,1); 
-
-periEventTable.DStrialID = (nan(numTrials*sesCount*periCueFrames,1));
-periEventTable.DSblue = (nan(numTrials*sesCount*periCueFrames,1));
-periEventTable.DSbluePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
-periEventTable.DSblueLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
-periEventTable.DSpurple = (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
-periEventTable.DSpurplePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
-periEventTable.DSpurpleLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
-periEventTable.NStrialID = (nan(numTrials*sesCount*periCueFrames,1));
-periEventTable.NSblue = (nan(numTrials*sesCount*periCueFrames,1));
-periEventTable.NSbluePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
-periEventTable.NSblueLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
-periEventTable.NSpurple = (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
-periEventTable.NSpurplePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
-periEventTable.NSpurpleLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
+%%preallocate
+% periEventTable.subject= cell(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
+% periEventTable.date= cell(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
+% periEventTable.stage= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
+% periEventTable.timeLock= nan(numTrials*sesCount*periCueFrames,1); 
 % 
+% periEventTable.DStrialID = (nan(numTrials*sesCount*periCueFrames,1));
+% periEventTable.DSblue = (nan(numTrials*sesCount*periCueFrames,1));
+% periEventTable.DSbluePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
+% periEventTable.DSblueLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
+% periEventTable.DSpurple = (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
+% periEventTable.DSpurplePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
+% periEventTable.DSpurpleLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
+% periEventTable.NStrialID = (nan(numTrials*sesCount*periCueFrames,1));
+% periEventTable.NSblue = (nan(numTrials*sesCount*periCueFrames,1));
+% periEventTable.NSbluePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
+% periEventTable.NSblueLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
+% periEventTable.NSpurple = (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
+% periEventTable.NSpurplePox= (nan(numTrials*sesCount*periCueFrames,1)); %(nan(sesCount,1));
+% periEventTable.NSpurpleLox= nan(numTrials*sesCount*periCueFrames,1); %(nan(sesCount,1));
+% % 
 
 
 %% Loop through and get signals surrounding each event for each subj & stage
@@ -99,6 +100,10 @@ for subj= 1:numel(subjects)
 
         trialInd= 1:periCueFrames;%numel(timeLock); %index for adding to photometry signal trial by trial
 
+        %DP 2022-01-7 limiting to final session of stage 7 (to match
+        %encoding model input 
+        includedSessions= max(includedSessions);
+        
         for includedSession= includedSessions %loop through only sessions that match this stage
             
             %reset btwn sessions
