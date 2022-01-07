@@ -87,9 +87,14 @@ df.date= pd.to_datetime(df.date)
     
 eventVars= ['pox',  'lox', 'out', 'DS', 'NS', 'pumpTime']
 
-
 #find ind where event occurred (1) and overwrite with timestamp
-df.loc[df.loc[:,eventVars]==1, eventVars]= df.loc[df.loc[:,eventVars]==1, 'cutTime']
+# df.loc[df.loc[:,eventVars]==1, eventVars]= df.loc[df.loc[:,eventVars]==1, 'cutTime']
+
+test= df.loc[1:300000,:].copy()
+
+for col in eventVars:
+    test.loc[test.loc[:,col]==1, col]= test.loc[test.loc[:,col]==1, 'cutTime']
+
 
 #%% Define Event variables for your experiment 
 #make a list of all of the Event Types so that we can melt them together into one variable

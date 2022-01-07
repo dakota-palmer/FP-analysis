@@ -45,36 +45,36 @@ for session= 1:size(T,1)
     %port entry (pox)
     eventTime=[]; eventInd= [];
     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.raw(session).pox, 'nearest');   
-    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID))==1;
+    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.pox(eventInd)= 1; 
     
     %lox
     eventTime=[]; eventInd= [];
     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.raw(session).lox, 'nearest');   
-    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID))==1;
+    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.lox(eventInd)= 1;     
     %port exit (out)
     eventTime=[]; eventInd= [];
     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.raw(session).out, 'nearest');   
-    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID))==1;
+    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.out(eventInd)= 1; 
     
     %pump on (reward)
     eventTime=[]; eventInd= [];
     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.reward{session}.pumpOnTime, 'nearest');   
-    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID))==1;
+    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.pumpTime(eventInd)= 1; 
     
     %DS cue
     eventTime=[]; eventInd= [];
     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.periDS{session}.DS, 'nearest');   
-    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID))==1;
+    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.DS(eventInd)= 1; 
     
     %NS cue
     eventTime=[]; eventInd= [];
     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.periNS{session}.NS, 'nearest');   
-    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID))==1;
+    eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.NS(eventInd)= 1; 
     
     %TODO ideally will combine into 2 variables: eventTime and eventType
