@@ -18,6 +18,7 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\enc
 % easy for plotting later
 kernelTable= table();
 kernelTable.file= cell(length(mat)*(periCueFrames+1),1);
+kernelTable.subject= cell(length(mat)*(periCueFrames+1),1);
 kernelTable.timeLock= nan(length(mat)*(periCueFrames+1),1); 
 kernelTable.kernelDS= nan(length(mat)*(periCueFrames+1),1); 
 kernelTable.kernelPoxDS= nan(length(mat)*(periCueFrames+1),1); 
@@ -25,7 +26,7 @@ kernelTable.kernelLoxDS= nan(length(mat)*(periCueFrames+1),1);
 
 
 %path to .mat Mean Actual LASSO output for each subj (correlations coefficients)
-pathLasso= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\stage7\465'
+pathLasso= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\stage7\465';
 
 %loop through files and extract data
 cd(pathLasso);
@@ -66,15 +67,23 @@ for file= 1:length(mat)
         fileInd= fileInd+ periCueFrames+1;
     end
     
+    
     %assume order of eventType columns is DS, DSpox, DSlox
     kernelTable.file(fileInd)={mat(file).name};
+    
+    subject= strfind(mat(file).name, 'rat');
+    subject= mat(file).name(subject:end);
+    subject= subject(1:strfind(subject,'_')-1);
+    
+    kernelTable.subject(fileInd)= {subject};
+    
     kernelTable.timeLock(fileInd)=timeLock;
     kernelTable.kernelDS(fileInd)=kernel(:,1);
     kernelTable.kernelPoxDS(fileInd)=kernel(:,2);
     kernelTable.kernelLoxDS(fileInd)=kernel(:,3);
+    
 
 end %end file loop (subj)
-
 
 %% gramm plot all subjects kernels + periEvent traces
 
@@ -84,25 +93,25 @@ data= data(data.stage==7,:);
 
 %nice plot w gramm
 clear i;
-figure(); hold on;
+% figure(); hold on;
 
 %Plot Between-Subj Means
 i(1,1)=gramm('x',kernelTable.timeLock,'y',kernelTable.kernelDS);
 i(1,1).set_title('DS Kernel');
 i(1,1).stat_summary('type','sem','geom','area');
-i(1,1).set_names('x','time from event (s)','y','beta');
+i(1,1).set_names('x','time shift from event onset (s)','y','beta');
 i(1,1).set_color_options('chroma',0,'lightness',30);
 
 i(2,1)=gramm('x',kernelTable.timeLock,'y',kernelTable.kernelPoxDS);
 i(2,1).set_title('DS PE Kernel');
 i(2,1).stat_summary('type','sem','geom','area');
-i(2,1).set_names('x','time from event (s)','y','beta');
+i(2,1).set_names('x','time shift from event onset (s)','y','beta');
 i(2,1).set_color_options('chroma',0,'lightness',30);
 
 i(3,1)=gramm('x',kernelTable.timeLock,'y',kernelTable.kernelLoxDS);
 i(3,1).set_title('DS Lick Kernel');
 i(3,1).stat_summary('type','sem','geom','area');
-i(3,1).set_names('x','time from event (s)','y','beta');
+i(3,1).set_names('x','time shift from event onset (s)','y','beta');
 i(3,1).set_color_options('chroma',0,'lightness',30);
 
 
@@ -120,47 +129,69 @@ i(2,2).set_title('Peri-DS PE');
 i(2,2).stat_summary('type','sem','geom','area');
 i(2,2).set_names('x','time from event (s)','y','z-score');
 i(2,2).set_color_options('chroma',0,'lightness',30);
+i(2,2).set_line_options('base_size',2);
+
 
 i(3,2)=gramm('x',data.timeLock,'y',data.DSblueLox);
 i(3,2).set_title('Peri-DS Lick');
 i(3,2).stat_summary('type','sem','geom','area');
 i(3,2).set_names('x','time from event (s)','y','z-score');
 i(3,2).set_color_options('chroma',0,'lightness',30);
+i(3,2).set_line_options('base_size',2);
 
-i.draw()
 
-% %plot Individual Subjects overlay~~~
-% i(1,1).update('color',kernelTable.file);
+i.draw();
+
+%plot Individual Subjects overlay~~~
+i(1,1).update('color',kernelTable.subject);
+% i(1,1).set_title('DS Kernel');
 % i(1,1).stat_summary('type','sem','geom','area');
-% i(1,1).set_color_options();
-% 
-% i(2,1).update('color',kernelTable.file)
+i(1,1).geom_line('alpha',0.5);
+i(1,1).set_color_options();
+i(1,1).set_line_options('base_size',0.5);
+
+
+i(2,1).update('color',kernelTable.subject);
+% i(2,1).set_title('DS PE Kernel');
 % i(2,1).stat_summary('type','sem','geom','area');
-% i(2,1).set_color_options();
-% 
-% i(3,1).update('color',kernelTable.file)
+i(2,1).geom_line('alpha',0.5);
+i(2,1).set_color_options();
+i(2,1).set_line_options('base_size',0.5);
+
+
+i(3,1).update('color',kernelTable.subject);
+% i(3,1).set_title('DS Lick Kernel');
 % i(3,1).stat_summary('type','sem','geom','area');
-% i(3,1).set_color_options();
-% 
-% 
-% %second column with peri-event traces
-% i(1,2).update('color',periEventTable.subject);
-% i(1,2).stat_summary('type','sem','geom','area');
-% i(1,2).set_color_options();
-% 
-% i(2,2).update('color',periEventTable.subject)
-% i(2,2).stat_summary('type','sem','geom','area');
-% i(2,2).set_color_options();
-% 
-% i(3,2).update('color',periEventTable.subject)
-% i(3,2).stat_summary('type','sem','geom','area');
-% i(3,2).set_color_options();
+i(3,1).geom_line('alpha',0.5);
+i(3,1).set_color_options();
+i(3,1).set_line_options('base_size',0.5);
 
 
-i.set_title('all subj');
+
+%second column with peri-event traces
+i(1,2).update('color',data.subject);
+i(1,2).stat_summary('type','sem','geom','area');
+i(1,2).set_color_options();
+i(1,2).set_line_options('base_size',0.5);
+
+
+i(2,2).update('color',data.subject);
+i(2,2).stat_summary('type','sem','geom','area');
+i(2,2).set_color_options();
+i(2,2).set_line_options('base_size',0.5);
+
+
+i(3,2).update('color',data.subject);
+i(3,2).stat_summary('type','sem','geom','area');
+i(3,2).set_color_options();
+i(3,2).set_line_options('base_size',0.5);
+
+
+
+% i.set_title('all subj');
 
 %manually set axes limits before drawing
-i(:,1).axe_property('YLim',[-0.5, 1.5]);
+i(:,1).axe_property('YLim',[-1, 2]);
 i(:,2).axe_property('YLim',[-2, 5]);
 
 i.draw();
@@ -257,10 +288,10 @@ saveFig(gcf, figPath, strcat('_allSubj_encoding_kernels_w_periEvent'),figFormats
 
 %% Kernels + peri-event plot
 %individual subjects
-stage= 7
+stage= 7;
 
 %want 465nm
-signal= 465
+signal= 465;
 
 %Parameters we ran through encoding model
 %how much time should you shift back (in seconds)
@@ -274,7 +305,7 @@ k= numel(cons);
 
 if stage==7 && signal==465
     %path to .mat Mean Actual LASSO output for each subj (correlations coefficients)
-    pathLasso= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\stage7\465'
+    pathLasso= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\stage7\465';
     
     %loop through files and extract data
     cd(pathLasso);
