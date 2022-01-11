@@ -13,6 +13,8 @@ import numpy as np
 import shelve
 import seaborn as sns
 
+import dask.dataframe as dd
+
 #%% About:
 
 #this script imports data table from matlab for tidying and analysis in python
@@ -40,13 +42,12 @@ import seaborn as sns
 experimentType= 'photometry'
 
 datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp-07-Jan-2022.parquet"
-#%% ID and import raw data .xlsx
-# raw_excel = pd.read_excel(datapath)
-
-# df= pd.DataFrame(raw_excel)
-
-#import Parquet file 
+#%% ID and import Parquet file 
 df= pd.read_parquet(datapath)
+
+#% Using Dask instead of Pandas
+#good for very large memory data (e.g. photometry time series)
+# df= dd.read_parquet(datapath)
 
 # %% Exclude data
 
@@ -81,20 +82,26 @@ for thisStage in range(len(stages)):
 df.date= pd.to_datetime(df.date)
 
 
-#%% TODO:
-    #have binary coded event timings as columns, could convert to timestamps and then should be able to use the same 
-    #ds task/opto code for trialIDs, analysis etc
-    
-eventVars= ['pox',  'lox', 'out', 'DS', 'NS', 'pumpTime']
+#removing trainDay since we'll calculate it below
+df= df.drop('trainDay',axis=1)
 
-#find ind where event occurred (1) and overwrite with timestamp
-# df.loc[df.loc[:,eventVars]==1, eventVars]= df.loc[df.loc[:,eventVars]==1, 'cutTime']
+#also renaming DS and NS columns to match DS training code so everything works straightforward
+df= df.rename(columns={'DS':'DStime', 'NS':'NStime'})
 
-test= df.loc[1:300000,:].copy()
+# #%% consolidate event vars into single column
 
-for col in eventVars:
-    test.loc[test.loc[:,col]==1, col]= test.loc[test.loc[:,col]==1, 'cutTime']
+# #% Tidying: All events in single column, add trialID and trialType that matches trial 1-60 through each session.
 
+# #First, am melting columns of behavioral events into single column of event label and column of individual timestamps (value_vars= want to melt)
+# test = test.melt(id_vars=idVars, value_vars=eventVars, var_name='eventType', value_name='eventTime') #, ignore_index=False)
+
+
+# dfEventAll = df.melt(id_vars=idVars, value_vars=eventVars, var_name='eventType', value_name='eventTime').copy()
+
+
+#%% examine memory usage and dtypes
+
+df.memory_usage(deep=True)  # memory usage in bytes 
 
 #%% Define Event variables for your experiment 
 #make a list of all of the Event Types so that we can melt them together into one variable
@@ -103,34 +110,49 @@ for col in eventVars:
 #these should match the labels in your .MPC file
 
 ## e.g. for DS task with no Opto  
-eventVars= ['PEtime',  'PExEst', 'lickTime', 'DStime', 'NStime', 'UStime']
+# eventVars= ['PEtime',  'PExEst', 'lickTime', 'DStime', 'NStime', 'UStime']
 
-#e.g. for DS task with Opto
-if experimentType.__contains__('Opto'):
-    eventVars.extend(['laserTime'])
-    #eventVars= ['PEtime', 'PExEst', 'lickTime', 'laserTime', 'DStime', 'NStime', 'UStime']#,'laserOffTime']
+# #e.g. for DS task with Opto
+# if experimentType.__contains__('Opto'):
+#     eventVars.extend(['laserTime'])
+#     #eventVars= ['PEtime', 'PExEst', 'lickTime', 'laserTime', 'DStime', 'NStime', 'UStime']#,'laserOffTime']
 
-#ICSS
-if experimentType== 'ICSS':
-    eventVars= ['activeNP', 'inactiveNP', 'laserTime']
+# #ICSS
+# if experimentType== 'ICSS':
+#     eventVars= ['activeNP', 'inactiveNP', 'laserTime']
     
-#instrumental transfer + opto
-if experimentType== 'OptoInstrumentalTransfer':
-    # eventVars= ['activelp','inactivelp','rewardtimestamps','PortEntry', 
-    #             'PEtime', 'PExEst', 'lickTime', 'DStime', 'NStime', 'UStime',
-    #             'laserTime', 'laserOffTime']
-    eventVars.extend(['activeLPtime','inactiveLPtime','rewardTime', 'laserOffTime'])
+# #instrumental transfer + opto
+# if experimentType== 'OptoInstrumentalTransfer':
+#     # eventVars= ['activelp','inactivelp','rewardtimestamps','PortEntry', 
+#     #             'PEtime', 'PExEst', 'lickTime', 'DStime', 'NStime', 'UStime',
+#     #             'laserTime', 'laserOffTime']
+#     eventVars.extend(['activeLPtime','inactiveLPtime','rewardTime', 'laserOffTime'])
+
+eventVars= ['pox',  'lox', 'out', 'DStime', 'NStime', 'pumpTime']
+
 
 #%% Define ID variables for your sessions
 #these are identifying variables per sessions that should be matched up with the corresponding event variables and timestamps
 #they should variables in your session and subject metadata spreadsheets
 
 ## e.g. for DS task with no Opto
-idVars= ['fileID','subject', 'virus', 'sex', 'date', 'stage', 'cueDur', 'note']
+# idVars= ['fileID','subject', 'virus', 'sex', 'date', 'stage', 'cueDur', 'note']
 
-#e.g. for DS task with Opto
-if  experimentType.__contains__('Opto'):
-    idVars= ['fileID','subject', 'virus', 'sex', 'date', 'stage', 'cueDur', 'laserDur', 'laserFreq', 'note']
+#working with what I have now from matlab table:
+    # TODO: add additional idvars in matlab for simplicity? or could use metadata sheet like DStraining code
+idVars= ['fileID','subject', 'date', 'stage', 'cutTime', 'cueDur']
+
+
+#%% Define continuous variables for your sessions
+# continuously sampling multiple variables
+# e.g. for photometry, calcium-dependent and isosbestic signals could be faceted/grouped/analyzed more dynamically
+# guessing things that would also fit here include things like continuously sampled kinematics or ephys data 
+
+#could melt them but probably not worthwhile since # timestamps would double, just treat as separate vars 
+
+contVars= ['reblue','repurple']
+
+
 
 #%% Define Trial variables for your experiment
 # If you have variables corresponding to each individual trial 
@@ -152,15 +174,77 @@ if experimentType.__contains__('Opto'):
     df.loc[:,(trialVars)]= df.loc[:,(trialVars)].astype('Int64')
     
 #change stage to str dtype
-df.stage= df.stage.astype('str')
+#this is memory intensive I think so skipping
+# df.stage= df.stage.astype('str')
+
+#%% melt() event vars into single column
+#First, am melting columns of behavioral events into single column of event label and column of individual timestamps (value_vars= want to melt)
+dfEventAll = df.melt(id_vars=idVars+contVars, value_vars=eventVars, var_name='eventType', value_name='eventTime') #, ignore_index=False)
+
+dfEventAll.eventType= dfEventAll.eventType.astype('category')
+
+
+del df #delete to save memory
+
+#%% Replace binary coded events with timestamps
+    #have binary coded event timings as columns, could convert to timestamps and then should be able to use the same 
+    #ds task/opto code for trialIDs, analysis etc
+    
+# eventVars= ['pox',  'lox', 'out', 'DStime', 'NStime', 'pumpTime']
+
+#find ind where event occurred (1) and overwrite with timestamp, replace empties with na
+# df.loc[df.loc[:,eventVars]==1, eventVars]= df.loc[df.loc[:,eventVars]==1, 'cutTime']
+
+# # replace 0s after melt()
+# dfEventAll.loc[dfEventAll.eventTime==1,'eventTime']= dfEventAll.loc[dfEventAll.eventTime==1,'cutTime'] 
+
+dfEventAll.eventTime= dfEventAll.loc[dfEventAll.eventTime==1,'cutTime'] 
+# # test= df.loc[1:300000,:].copy()
+
+
+# test.loc[test.loc[:,eventVars]==0,eventVars]= pd.NA
+
+# test.loc[test.loc[:,eventVars]==0
+
+# test.loc[:,eventVars]==0 = pd.NA
+
+# ind= [test.loc[:,eventVars]==0] 
+
+# ind= test[test==0]
+
+# test.loc[ind]
+
+# df.loc[df.loc[:,eventVars]==0,eventVars]= pd.NA
+
+# #may even be more efficient if melt() into one var first and then do replacement?
+
+# # replace 0s after melt()
+# dfEventAll.loc[dfEventAll.eventTime==0,'eventTime']= pd.NA
+
+# #overwrite binary event coding with corresponding timestamp
+# dfEventAll.loc[dfEventAll.eventTime.notnull(),'eventTime']= dfEventAll.loc[dfEventAll.eventTime.notnull(),'cutTime'].copy()
+
+# # for col in eventVars:
+#     #kinda slow, maybe isnull() would be faster?
+    
+#     # test.loc[test.loc[:,col]==1, col]= test.loc[test.loc[:,col]==1, 'cutTime']
+    
+#     # df.loc[df.loc[:,col]==0, col]= pd.NA
+#     # df.loc[df.loc[:,col]==1, col]= df.loc[df.loc[:,col]==1, 'cutTime']
+    
+# df.loc[df.loc[:,eventVars].notnull(),eventVars]= df.loc[df.loc[:,eventVars].notnull(),'cutTime']
+
+
+
 
 #%% Tidying: All events in single column, add trialID and trialType that matches trial 1-60 through each session.
 
 #First, am melting columns of behavioral events into single column of event label and column of individual timestamps (value_vars= want to melt)
-dfEventAll = df.melt(id_vars=idVars, value_vars=eventVars, var_name='eventType', value_name='eventTime') #, ignore_index=False)
+# dfEventAll = df.melt(id_vars=idVars, value_vars=eventVars, var_name='eventType', value_name='eventTime') #, ignore_index=False)
 
 #Remove all rows with NaN eventTimes (these are just placeholders, not valid observations) 
-dfEventAll= dfEventAll[dfEventAll.eventTime.notna()]
+#shouldn't do with photometry since have continuous variables 1 value per timestamp
+# dfEventAll= dfEventAll[dfEventAll.eventTime.notna()]
 
 # remove invalid/placeholder 0s
 # TODO: seem to be removing legitimate port exits with peDur==0, not sure how to deal with this so just excluding
@@ -172,7 +256,11 @@ dfEventAll['trialID'] = dfEventAll[(dfEventAll.eventType == 'DStime') | (
     dfEventAll.eventType == 'NStime')].groupby('fileID').cumcount()
 
 #add trialType label using eventType (which will be DS or NS for valid trialIDs)
-dfEventAll['trialType']= dfEventAll[dfEventAll.trialID.notna()].eventType
+# dfEventAll['trialType']= dfEventAll[dfEventAll.trialID.notna()].eventType
+
+#dp 1/11/21 seems to be more efficient way of indexing
+dfEventAll['trialType']= dfEventAll.loc[dfEventAll.trialID.notna(),'eventType']
+
 
 #%% Assign more specific trialTypes based on trialVars (OPTO ONLY specific for now)
 if experimentType.__contains__('Opto'):
@@ -204,53 +292,103 @@ if experimentType.__contains__('Opto'):
     #now drop redundant columns
     # dfEventAll= dfEventAll.drop(['laserType','laserState'], axis=1)
      
+    
+#%% Change dtypes for categorical vars (saves memory & good for plotting & analysis later)
+dfEventAll.trialType= dfEventAll.trialType.astype('category')
+dfEventAll.trialType.cat.add_categories(['Pre-Cue','ITI'], inplace=True)
+
+dfEventAll.stage= dfEventAll.stage.astype('category')
+# dfEventAll.eventType= dfEventAll.eventType.astype('category')
+
+
+if experimentType== 'Opto':
+   dfEventAll.laserDur= dfEventAll.laserDur.astype('category')
+
+
+
+
+# #%% Melt() continuous variables?
+# # greatly increses mem usage so need to do something else here?
+## doubles timestamps so not actually worth doing
+
+# test= dfEventAll.loc[1:1000].copy()
+
+# test= test.melt(id_vars=idVars+['eventTime']+['eventType']+['trialID']+['trialType'], value_vars=contVars, var_name='signalType', value_name='fpSignal')
+
+
+# dfEventAll= dfEventAll.melt(id_vars=idVars+['eventTime']+['eventType']+['trialID']+['trialType'], value_vars=contVars, var_name='signalType', value_name='fpSignal')
+
+
+
+#%% switch to Dask for huge dataframe?
+# import dask.dataframe as dd
+
+# dfEventAll= dd.from_pandas(dfEventAll, npartitions=3)
+
+#%% could subset specific data to reduce size?
+#could load specific data up front and run separately through functions?
+
+# dfEventAll= dfEventAll.loc[dfEventAll.stage>=5]
+
 #%% Exclude false cue times due to MPC code bugs
-#need to get rid of false first cue onsets
-#DS training code error caused final cue time to overwrite first cue time (dim of array needed to be +1)
-#TODO: I think we do have the US times so could still do analyses of those
+# #need to get rid of false first cue onsets
+# #DS training code error caused final cue time to overwrite first cue time (dim of array needed to be +1)
+# #TODO: I think we do have the US times so could still do analyses of those
 
-#simply exclude very high first cue values
-idx= dfEventAll.copy().loc[((dfEventAll.trialID==0) & (dfEventAll.eventTime>=2500))].index
+# # test= dfEventAll.loc[0:1000,:].copy()
 
-print('False first DS cue removed, fileIDs:'+ (np.array2string(dfEventAll.loc[idx].fileID.sort_values().unique())))
-
-dfEventAll.loc[idx,'eventTime']=pd.NA
-dfEventAll= dfEventAll.loc[dfEventAll.eventTime.notnull()]
-
-# Fix separate bug before 11/5/2021 in the 'siren control' state set. 
-#The bug could cause the last NS timestamp to be logged as an extra DS. 
-
-# Ideal solution would be to check if last DS and NS for each file are equal (diff==0)
-# something like-
-# dfTemp= dfEventAll.loc[((dfEventAll.eventType=='NStime')|(dfEventAll.eventType=='DStime'))].copy()
-
-# # test= dfTemp.groupby(['fileID','eventType'])['eventTime'].transform('diff')
+# # test= test.loc[test.groupby(['fileID'])['trialID'].cumcount()==0].eventTime.copy()
 
 
-#Instead, as bandaid can just check if we've got an extra DS cue and remove it
-maxTrials= 29 #30 trials, so max of 29 if starting count @ 0
-dfTemp= dfEventAll.loc[dfEventAll.eventType=='DStime'].copy()
+# # test= dfEventAll.loc[dfEventAll.groupby(['fileID'])['trialID'].cumcount()==0].eventTime.copy()
 
-idx= dfTemp.copy().groupby(['fileID']).eventTime.transform('cumcount')>maxTrials
+# # #simply exclude very high first cue values
+# # idx= dfEventAll.copy().loc[((dfEventAll.trialID==0) & (dfEventAll.eventTime>=2500))].index
 
-idx= idx.loc[idx==True].index
 
-# #testing a specific session with known issue
-# dfTemp= dfTemp.loc[dfTemp.date=='2021-10-06T00:00:00.000000000'].copy()
-# # test= dfTemp.groupby(['fileID']).eventTime.cumcount()
+# #dp 1/11/2022 trying more memory efficient
+# #does not appear that this bug was present in photometry sessions so skipping
+# dfEventAll.loc[(dfEventAll.trialID==0) & (dfEventAll.eventTime>=2500), 'eventTime']= pd.NA
 
-# test= dfTemp.groupby(['fileID']).eventTime.transform('cumcount')
+# print('False first DS cue removed, fileIDs:'+ (np.array2string(dfEventAll.loc[idx].fileID.sort_values().unique())))
 
-# idx= dfTemp.groupby(['fileID']).eventTime.transform('cumcount')>=maxTrials
+# dfEventAll.loc[idx,'eventTime']=pd.NA
+# dfEventAll= dfEventAll.loc[dfEventAll.eventTime.notnull()]
 
-# dfTemp.loc[idx,:]= [[pd.NA]]
+# # Fix separate bug before 11/5/2021 in the 'siren control' state set. 
+# #The bug could cause the last NS timestamp to be logged as an extra DS. 
 
-#simply drop these false cue entries
-print('False final DS cue removed, fileIDs:'+ (np.array2string(dfTemp.loc[idx].fileID.sort_values().unique())))
-dfEventAll= dfEventAll.drop(idx).copy()
+# # Ideal solution would be to check if last DS and NS for each file are equal (diff==0)
+# # something like-
+# # dfTemp= dfEventAll.loc[((dfEventAll.eventType=='NStime')|(dfEventAll.eventType=='DStime'))].copy()
 
-#reset the index since values are now missing
-dfEventAll.reset_index(drop=True, inplace=True)
+# # # test= dfTemp.groupby(['fileID','eventType'])['eventTime'].transform('diff')
+
+
+# #Instead, as bandaid can just check if we've got an extra DS cue and remove it
+# maxTrials= 29 #30 trials, so max of 29 if starting count @ 0
+# dfTemp= dfEventAll.loc[dfEventAll.eventType=='DStime'].copy()
+
+# idx= dfTemp.copy().groupby(['fileID']).eventTime.transform('cumcount')>maxTrials
+
+# idx= idx.loc[idx==True].index
+
+# # #testing a specific session with known issue
+# # dfTemp= dfTemp.loc[dfTemp.date=='2021-10-06T00:00:00.000000000'].copy()
+# # # test= dfTemp.groupby(['fileID']).eventTime.cumcount()
+
+# # test= dfTemp.groupby(['fileID']).eventTime.transform('cumcount')
+
+# # idx= dfTemp.groupby(['fileID']).eventTime.transform('cumcount')>=maxTrials
+
+# # dfTemp.loc[idx,:]= [[pd.NA]]
+
+# #simply drop these false cue entries
+# print('False final DS cue removed, fileIDs:'+ (np.array2string(dfTemp.loc[idx].fileID.sort_values().unique())))
+# dfEventAll= dfEventAll.drop(idx).copy()
+
+# #reset the index since values are now missing
+# dfEventAll.reset_index(drop=True, inplace=True)
 
 
 
@@ -413,7 +551,10 @@ trialRange= []
 trialID= []
 fileID= []
 
-for file in trialsToAdd.fileID:#range(0,trialsToAdd.shape[0]):
+#dp 1/11/22 indexing error here?, switching back to range()
+# for file in trialsToAdd.fileID:#range(0,trialsToAdd.shape[0]):
+for file in range(0,trialsToAdd.shape[0]):
+
     
     trialRange= np.arange(-trialsToAdd.loc[file].trialID,trialsToAdd.loc[file].trialID,0.5)   
     
@@ -703,13 +844,6 @@ if experimentType.__contains__('Opto'):
     dfTidy = dfTidy.drop(columns=['laserType', 'laserState', 'laserFreq']).copy()
 
 
-#%% Change dtypes for categorical vars (good for plotting & analysis later)
-dfTidy.trialType= dfTidy.trialType.astype('category')
-dfTidy.stage= dfTidy.stage.astype('category')
-
-if experimentType== 'Opto':
-   dfTidy.laserDur= dfTidy.laserDur.astype('category')
-
 #%% Save dfTidy so it can be loaded quickly for subesequent analysis
 
 savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
@@ -717,12 +851,12 @@ savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python'
 print('saving dfTidy to file')
 
 #Save as pickel
-dfTidy.to_pickle(savePath+'dfTidy.pkl')
+dfTidy.to_pickle(savePath+'dfTidyFP.pkl')
 
 #also save other variables e.g. eventVars, idVars, trialVars for later recall (without needing to run this script again)
 # pickle.dump([idVars, eventVars, trialVars], savePath+'dfTidyMeta.pkl')
 
-saveVars= ['idVars', 'eventVars', 'trialVars', 'experimentType']
+saveVars= ['idVars', 'eventVars', 'trialVars', 'experimentType', 'contVars']
 
 #use shelve module to save variables as dict keys
 my_shelf= shelve.open(savePath+'dfTidyMeta', 'n') #start new file

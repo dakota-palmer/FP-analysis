@@ -86,20 +86,20 @@ for session= 1:size(T,1)
 end
 
 %% save table
-test= fpTable(1:5,:)
-% writetable(test, strcat('vp-vta-fp','-', date, 'test.csv', 'Delimeter', ',')); 
+% % test= fpTable(1:5,:)
+% % writetable(test, strcat('vp-vta-fp','-', date, 'test.csv', 'Delimeter', ',')); 
+% 
+% % writetable(fpTable, strcat('vp-vta-fp','-', date, 'fpTable.xlsx')); 
 
-% writetable(fpTable, strcat('vp-vta-fp','-', date, 'fpTable.xlsx')); 
+%% save table as Parquet file
+% % https://www.quora.com/When-should-I-use-parquet-file-to-store-data-instead-of-csv
+% 
+% % test.date= [test.date{:}]'
+% 
+% % datetime(test.date, 'InputFormat', 'dd/MM/yyyy HH')
+% 
+% % parquetwrite('test.parquet', test);
 
-%% save table as Parquet file?
-% https://www.quora.com/When-should-I-use-parquet-file-to-store-data-instead-of-csv
-
-%changing dtype of date, parquet doesn't like cells
-% test.date= [test.date{:}]'
+% %changing dtype of date, parquet doesn't like cells
 fpTable.date= [fpTable.date{:}]';
-
-% datetime(test.date, 'InputFormat', 'dd/MM/yyyy HH')
-
-% parquetwrite('test.parquet', test);
-
 parquetwrite(strcat('vp-vta-fp','-', date), fpTable);
