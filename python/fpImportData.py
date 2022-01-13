@@ -56,6 +56,13 @@ excludeDate= [] # ['20210604']
 # Exclude specific date(s)
 df= df[~df.date.isin(excludeDate)]
 
+#hitting memory cap, going to subset specific stages to reduce data (shouldn't really need anything below stage 3)
+stagesToInclude= [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
+df= df.loc[df.stage.isin(stagesToInclude)]
+
+#still hitting, so going to subset even further for debugging
+df= df.iloc[0:1000000]
+
 # %% Remove parentheses from variable names 
 
 import re
@@ -177,146 +184,284 @@ if experimentType.__contains__('Opto'):
 #this is memory intensive I think so skipping
 # df.stage= df.stage.astype('str')
 
-#%% melt() event vars into single column
-#First, am melting columns of behavioral events into single column of event label and column of individual timestamps (value_vars= want to melt)
-dfEventAll = df.melt(id_vars=idVars+contVars, value_vars=eventVars, var_name='eventType', value_name='eventTime') #, ignore_index=False)
+#%% dp 1/12/22 alternative approach 
+#instead of melting(), keep binary coded events and just add trialID, trialType
+#we have all of the timestamps so for each trial find the start, end, and pre-trial timestamps then should be able to label events accordingly
 
-dfEventAll.eventType= dfEventAll.eventType.astype('category')
+dfTemp= df.loc[(df.DStime==1)|(df.NStime==1)].copy()
+
+#+1 to trialID so it doesn't start at 0 (could cause issues with negative trialID)
+dfTemp.loc[:,'trialID']= dfTemp.groupby(['fileID']).cumcount()+1
+dfTemp.loc[dfTemp.DStime==1,'trialType']= 'DStime'
+dfTemp.loc[dfTemp.NStime==1,'trialType']= 'NStime'
 
 
-del df #delete to save memory
+df.loc[:,'trialID']= dfTemp.trialID
+df.loc[:,'trialType']= dfTemp.trialType
 
-#%% Replace binary coded events with timestamps
-    #have binary coded event timings as columns, could convert to timestamps and then should be able to use the same 
-    #ds task/opto code for trialIDs, analysis etc
+df.loc[:,'trialStart']= dfTemp.cutTime
+
+#assume entire cue duration here
+df.loc[:,'trialEnd']= dfTemp.cutTime+dfTemp.cueDur
+
+#use 10s as pre-cue time
+preCueDur= 10;
+
+df.loc[:,'preTrialStart']= dfTemp.cutTime-preCueDur
+
+
+# dfTemp.loc[:,'nextTrialStart']= dfTemp.groupby(['fileID','trialID'])['trialStart'].shift(-1).copy()
+
+
+#make manual exception for ts before first trialStart
+dfTemp=df.copy()
+
+dfTemp.loc[:,'firstTrial']= dfTemp.groupby('fileID')['trialStart'].transform('first')
+
+
+dfTemp.loc[dfTemp.cutTime<dfTemp.firstTrial, 'trialID']= 999
+dfTemp.loc[dfTemp.cutTime<dfTemp.firstTrial, 'trialStart']= 0
+
+#TODO: make first trialEnd= first preCue start
+
+df= dfTemp.copy()
+
+#--Now that we have timings for each trial, define events within epochs
+#first should be able to ffill(), then can use that to groupby() and relabel for pre-cue?
+dfTemp= df.copy()
+
+dfTemp.trialID= dfTemp.groupby(['fileID'])['trialID'].fillna(method='ffill')
+dfTemp.trialStart= dfTemp.groupby(['fileID'])['trialStart'].fillna(method='ffill')
+dfTemp.trialEnd= dfTemp.groupby(['fileID'])['trialEnd'].fillna(method='ffill')
+dfTemp.preTrialStart= dfTemp.groupby(['fileID'])['preTrialStart'].fillna(method='ffill')
+
+dfTemp.trialType= dfTemp.groupby(['fileID'])['trialType'].fillna(method='ffill')
+
+df= dfTemp.copy()
+
+#--save nextTrialStart for convenience
+dfTemp=df.copy()
+
+# dfTemp.loc[:,'nextTrialStart']= dfTemp.groupby('fileID')['trialStart'].transform('first')
+ 
+# trialIDs repeat, so just restrict to first one
+trialAgg= dfTemp.groupby(['fileID','trialID'])['trialID'].cumcount()==0
+
+dfTemp= dfTemp.loc[trialAgg]
+
+
+#index by file, trial. keep original index as column by calling reset_index() first
+dfTemp= dfTemp.reset_index().set_index(['fileID','trialID'])
+
+# dfTemp.set_index(['fileID','trialID'], inplace=True, drop=False)
+
+#shift data within file (level=0)
+dfTemp.loc[:,'nextTrialStart']= dfTemp.groupby(level=0)['trialStart'].shift(-1).copy()
+
+dfTemp= dfTemp.reset_index().set_index('index')
+
+#assign back to df and ffill() within file, trial
+df.loc[:,'nextTrialStart']= dfTemp.nextTrialStart
+df.nextTrialStart= df.groupby(['fileID','trialID'])['nextTrialStart'].fillna(method='ffill')
+
+
+#-- Assign ts to ITI & Pre-Cue epochs
+dfTemp= df.copy()
+
+#if this ts occurs after trialEnd and before nextTrialStart, it is ITI
+ind= ((dfTemp.cutTime<dfTemp.nextTrialStart) & (dfTemp.cutTime>dfTemp.trialEnd))
+
+test= dfTemp.loc[ind]
+
+dfTemp.loc[ind, 'trialType']= 'ITI'
+
+#manual exception for ts before first trial
+ind= dfTemp.cutTime<dfTemp.firstTrial
+dfTemp.loc[ind,'trialType']= 'ITI'
+
+#if this ts occurs within preCueDur of nextTrialStart, it is Pre-Cue
+ind= ((dfTemp.nextTrialStart-dfTemp.cutTime)<preCueDur)
+dfTemp.loc[ind, 'trialType']= 'Pre-Cue'
+
+
+#-- Recode trialIDs for ITI and Pre-Cue , consistent with DStraining python analysis code
+
+#Pre-cue = intervals of .5
+dfTemp.loc[dfTemp.trialType=='Pre-Cue', 'trialID']= dfTemp.trialID+0.5
+
+#make ITI and Pre-Cue trialIDs negative
+dfTemp.loc[((dfTemp.trialType=='ITI')|(dfTemp.trialType=='Pre-Cue')), 'trialID']= dfTemp.trialID*-1
+
+#assign back to df
+df= dfTemp.copy()
+
+
+#%% TODO:
     
-# eventVars= ['pox',  'lox', 'out', 'DStime', 'NStime', 'pumpTime']
-
-#find ind where event occurred (1) and overwrite with timestamp, replace empties with na
-# df.loc[df.loc[:,eventVars]==1, eventVars]= df.loc[df.loc[:,eventVars]==1, 'cutTime']
-
-# # replace 0s after melt()
-# dfEventAll.loc[dfEventAll.eventTime==1,'eventTime']= dfEventAll.loc[dfEventAll.eventTime==1,'cutTime'] 
-
-dfEventAll.eventTime= dfEventAll.loc[dfEventAll.eventTime==1,'cutTime'] 
-# # test= df.loc[1:300000,:].copy()
-
-
-# test.loc[test.loc[:,eventVars]==0,eventVars]= pd.NA
-
-# test.loc[test.loc[:,eventVars]==0
-
-# test.loc[:,eventVars]==0 = pd.NA
-
-# ind= [test.loc[:,eventVars]==0] 
-
-# ind= test[test==0]
-
-# test.loc[ind]
-
-# df.loc[df.loc[:,eventVars]==0,eventVars]= pd.NA
-
-# #may even be more efficient if melt() into one var first and then do replacement?
-
-# # replace 0s after melt()
-# dfEventAll.loc[dfEventAll.eventTime==0,'eventTime']= pd.NA
-
-# #overwrite binary event coding with corresponding timestamp
-# dfEventAll.loc[dfEventAll.eventTime.notnull(),'eventTime']= dfEventAll.loc[dfEventAll.eventTime.notnull(),'cutTime'].copy()
-
-# # for col in eventVars:
-#     #kinda slow, maybe isnull() would be faster?
+    #we have every timestamp and could code them as more complicated epochs 
+    #e.g. lick bout, inport, cue on
+    #could be in lieu of or in addition to the trialIDs
     
-#     # test.loc[test.loc[:,col]==1, col]= test.loc[test.loc[:,col]==1, 'cutTime']
+#REWARD/consumption epoch (based on pumpTime ?)
+#could choose a time epoch duration ~= mean consumption time?
+#also could define based on pump duration (2s)
     
-#     # df.loc[df.loc[:,col]==0, col]= pd.NA
-#     # df.loc[df.loc[:,col]==1, col]= df.loc[df.loc[:,col]==1, 'cutTime']
+rewardTime= preCueDur
+
     
-# df.loc[df.loc[:,eventVars].notnull(),eventVars]= df.loc[df.loc[:,eventVars].notnull(),'cutTime']
 
+# #%% melt() event vars into single column
+# #First, am melting columns of behavioral events into single column of event label and column of individual timestamps (value_vars= want to melt)
+# # dfEventAll = df.melt(id_vars=idVars+contVars, value_vars=eventVars, var_name='eventType', value_name='eventTime') #, ignore_index=False)
 
+# #melting() this way causes unnessesary rows to be added. one row per eventType per timestamp
+# #e.g. there's 6 duplicate timestamps for every ts for 6 events
+# #should be able to do this without adding rows?
 
+# #could ignore_index=False with melt then drop_duplicates after melting()?
+# dfEventAll = df.melt(id_vars=idVars+contVars, value_vars=eventVars, var_name='eventType', value_name='eventTime', ignore_index=False)
+# dfEventAll.drop_duplicates(inplace=True)
 
-#%% Tidying: All events in single column, add trialID and trialType that matches trial 1-60 through each session.
-
-#First, am melting columns of behavioral events into single column of event label and column of individual timestamps (value_vars= want to melt)
-# dfEventAll = df.melt(id_vars=idVars, value_vars=eventVars, var_name='eventType', value_name='eventTime') #, ignore_index=False)
-
-#Remove all rows with NaN eventTimes (these are just placeholders, not valid observations) 
-#shouldn't do with photometry since have continuous variables 1 value per timestamp
-# dfEventAll= dfEventAll[dfEventAll.eventTime.notna()]
-
-# remove invalid/placeholder 0s
-# TODO: seem to be removing legitimate port exits with peDur==0, not sure how to deal with this so just excluding
-dfEventAll = dfEventAll[dfEventAll.eventTime != 0]
-
-# add trialID column by cumulative counting each DS or NS within each file
-# now we have ID for trials 0-59 matching DS or NS within each session, nan for other events
-dfEventAll['trialID'] = dfEventAll[(dfEventAll.eventType == 'DStime') | (
-    dfEventAll.eventType == 'NStime')].groupby('fileID').cumcount()
-
-#add trialType label using eventType (which will be DS or NS for valid trialIDs)
-# dfEventAll['trialType']= dfEventAll[dfEventAll.trialID.notna()].eventType
-
-#dp 1/11/21 seems to be more efficient way of indexing
-dfEventAll['trialType']= dfEventAll.loc[dfEventAll.trialID.notna(),'eventType']
-
-
-#%% Assign more specific trialTypes based on trialVars (OPTO ONLY specific for now)
-if experimentType.__contains__('Opto'):
-    # melt() trialVars, get trialID for each trial and use this to merge label back to df 
-    dfTrial = df.melt(id_vars= idVars, value_vars=trialVars, var_name='laserType', value_name='laserState')#, ignore_index=False)
-    #remove nan placeholders
-    dfTrial= dfTrial[dfTrial.laserState.notna()]
-    
-    #get trialID
-    dfTrial['trialID'] = dfTrial.groupby('fileID').cumcount() 
-    
-    #merge trialType data back into df on matching fileID & trialID
-    dfEventAll= dfEventAll.merge(dfTrial[['trialID', 'fileID', 'laserType', 'laserState']], on=[
-        'fileID', 'trialID'], how='left')#.drop('trialID', axis=1)
-    
-    #combine laserState and laserType into one variable for labelling each trial: trialType
-    #Exclude the Lick-paired laser sessions. We will label those using a different method below  
-    # dfEventAll.loc[((dfEventAll.laserDur!='Lick')&(dfEventAll.laserDur.notnull()&(dfEventAll.trialID.notnull()))), 'trialType'] = dfEventAll.trialType.copy() + \
-    #     '_'+dfEventAll.laserState.astype(str).copy()
-    # dfTemp= dfEventAll.loc[((dfEventAll.laserDur!='Lick')&(dfEventAll.laserDur.notnull())&(dfEventAll.trialID.notnull()))] .copy()
-    
-    dfTemp= dfEventAll.loc[((dfEventAll.laserDur!='Lick')&(dfEventAll.laserState.notnull())&(dfEventAll.trialID.notnull()))].copy()
-    
-    # dfEventAll.loc[((dfEventAll.laserDur!='Lick')&(dfEventAll.laserState.notnull()&(dfEventAll.trialID.notnull()))), 'trialType'] = dfTemp.trialType.copy() + \
-    #     '_'+dfTemp.laserState.astype(str).copy()
-    dfEventAll.loc[((dfEventAll.laserDur!='Lick') & (dfEventAll.laserState==1) & (dfEventAll.trialID.notnull())), 'trialType'] = dfTemp.trialType.copy() + \
-        '_'+'laser'#dfTemp.laserState.astype(str).copy()
-    
-    #now drop redundant columns
-    # dfEventAll= dfEventAll.drop(['laserType','laserState'], axis=1)
-     
-    
-#%% Change dtypes for categorical vars (saves memory & good for plotting & analysis later)
-dfEventAll.trialType= dfEventAll.trialType.astype('category')
-dfEventAll.trialType.cat.add_categories(['Pre-Cue','ITI'], inplace=True)
-
-dfEventAll.stage= dfEventAll.stage.astype('category')
 # dfEventAll.eventType= dfEventAll.eventType.astype('category')
 
 
-if experimentType== 'Opto':
-   dfEventAll.laserDur= dfEventAll.laserDur.astype('category')
+# #if not, shouldn't melt()?
+
+
+
+# # del df #delete to save memory
+
+# #%% Replace binary coded events with timestamps
+#     #have binary coded event timings as columns, could convert to timestamps and then should be able to use the same 
+#     #ds task/opto code for trialIDs, analysis etc
+    
+# # eventVars= ['pox',  'lox', 'out', 'DStime', 'NStime', 'pumpTime']
+
+# #find ind where event occurred (1) and overwrite with timestamp, replace empties with na
+# # df.loc[df.loc[:,eventVars]==1, eventVars]= df.loc[df.loc[:,eventVars]==1, 'cutTime']
+
+# # # replace 0s after melt()
+# # dfEventAll.loc[dfEventAll.eventTime==1,'eventTime']= dfEventAll.loc[dfEventAll.eventTime==1,'cutTime'] 
+
+# dfEventAll.eventTime= dfEventAll.loc[dfEventAll.eventTime==1,'cutTime'] 
+# # # test= df.loc[1:300000,:].copy()
+
+
+# # test.loc[test.loc[:,eventVars]==0,eventVars]= pd.NA
+
+# # test.loc[test.loc[:,eventVars]==0
+
+# # test.loc[:,eventVars]==0 = pd.NA
+
+# # ind= [test.loc[:,eventVars]==0] 
+
+# # ind= test[test==0]
+
+# # test.loc[ind]
+
+# # df.loc[df.loc[:,eventVars]==0,eventVars]= pd.NA
+
+# # #may even be more efficient if melt() into one var first and then do replacement?
+
+# # # replace 0s after melt()
+# # dfEventAll.loc[dfEventAll.eventTime==0,'eventTime']= pd.NA
+
+# # #overwrite binary event coding with corresponding timestamp
+# # dfEventAll.loc[dfEventAll.eventTime.notnull(),'eventTime']= dfEventAll.loc[dfEventAll.eventTime.notnull(),'cutTime'].copy()
+
+# # # for col in eventVars:
+# #     #kinda slow, maybe isnull() would be faster?
+    
+# #     # test.loc[test.loc[:,col]==1, col]= test.loc[test.loc[:,col]==1, 'cutTime']
+    
+# #     # df.loc[df.loc[:,col]==0, col]= pd.NA
+# #     # df.loc[df.loc[:,col]==1, col]= df.loc[df.loc[:,col]==1, 'cutTime']
+    
+# # df.loc[df.loc[:,eventVars].notnull(),eventVars]= df.loc[df.loc[:,eventVars].notnull(),'cutTime']
 
 
 
 
-# #%% Melt() continuous variables?
-# # greatly increses mem usage so need to do something else here?
-## doubles timestamps so not actually worth doing
+# #%% Tidying: All events in single column, add trialID and trialType that matches trial 1-60 through each session.
 
-# test= dfEventAll.loc[1:1000].copy()
+# #First, am melting columns of behavioral events into single column of event label and column of individual timestamps (value_vars= want to melt)
+# # dfEventAll = df.melt(id_vars=idVars, value_vars=eventVars, var_name='eventType', value_name='eventTime') #, ignore_index=False)
 
-# test= test.melt(id_vars=idVars+['eventTime']+['eventType']+['trialID']+['trialType'], value_vars=contVars, var_name='signalType', value_name='fpSignal')
+# #Remove all rows with NaN eventTimes (these are just placeholders, not valid observations) 
+# #shouldn't do with photometry since have continuous variables 1 value per timestamp
+# # dfEventAll= dfEventAll[dfEventAll.eventTime.notna()]
+
+# # remove invalid/placeholder 0s
+# # TODO: seem to be removing legitimate port exits with peDur==0, not sure how to deal with this so just excluding
+# dfEventAll = dfEventAll[dfEventAll.eventTime != 0]
+
+# # add trialID column by cumulative counting each DS or NS within each file
+# # now we have ID for trials 0-59 matching DS or NS within each session, nan for other events
+# dfEventAll['trialID'] = dfEventAll[(dfEventAll.eventType == 'DStime') | (
+#     dfEventAll.eventType == 'NStime')].groupby('fileID').cumcount()
+
+# #add trialType label using eventType (which will be DS or NS for valid trialIDs)
+# # dfEventAll['trialType']= dfEventAll[dfEventAll.trialID.notna()].eventType
+
+# #dp 1/11/21 seems to be more efficient way of indexing
+# dfEventAll['trialType']= dfEventAll.loc[dfEventAll.trialID.notna(),'eventType']
 
 
-# dfEventAll= dfEventAll.melt(id_vars=idVars+['eventTime']+['eventType']+['trialID']+['trialType'], value_vars=contVars, var_name='signalType', value_name='fpSignal')
+# #%% Assign more specific trialTypes based on trialVars (OPTO ONLY specific for now)
+# if experimentType.__contains__('Opto'):
+#     # melt() trialVars, get trialID for each trial and use this to merge label back to df 
+#     dfTrial = df.melt(id_vars= idVars, value_vars=trialVars, var_name='laserType', value_name='laserState')#, ignore_index=False)
+#     #remove nan placeholders
+#     dfTrial= dfTrial[dfTrial.laserState.notna()]
+    
+#     #get trialID
+#     dfTrial['trialID'] = dfTrial.groupby('fileID').cumcount() 
+    
+#     #merge trialType data back into df on matching fileID & trialID
+#     dfEventAll= dfEventAll.merge(dfTrial[['trialID', 'fileID', 'laserType', 'laserState']], on=[
+#         'fileID', 'trialID'], how='left')#.drop('trialID', axis=1)
+    
+#     #combine laserState and laserType into one variable for labelling each trial: trialType
+#     #Exclude the Lick-paired laser sessions. We will label those using a different method below  
+#     # dfEventAll.loc[((dfEventAll.laserDur!='Lick')&(dfEventAll.laserDur.notnull()&(dfEventAll.trialID.notnull()))), 'trialType'] = dfEventAll.trialType.copy() + \
+#     #     '_'+dfEventAll.laserState.astype(str).copy()
+#     # dfTemp= dfEventAll.loc[((dfEventAll.laserDur!='Lick')&(dfEventAll.laserDur.notnull())&(dfEventAll.trialID.notnull()))] .copy()
+    
+#     dfTemp= dfEventAll.loc[((dfEventAll.laserDur!='Lick')&(dfEventAll.laserState.notnull())&(dfEventAll.trialID.notnull()))].copy()
+    
+#     # dfEventAll.loc[((dfEventAll.laserDur!='Lick')&(dfEventAll.laserState.notnull()&(dfEventAll.trialID.notnull()))), 'trialType'] = dfTemp.trialType.copy() + \
+#     #     '_'+dfTemp.laserState.astype(str).copy()
+#     dfEventAll.loc[((dfEventAll.laserDur!='Lick') & (dfEventAll.laserState==1) & (dfEventAll.trialID.notnull())), 'trialType'] = dfTemp.trialType.copy() + \
+#         '_'+'laser'#dfTemp.laserState.astype(str).copy()
+    
+#     #now drop redundant columns
+#     # dfEventAll= dfEventAll.drop(['laserType','laserState'], axis=1)
+     
+    
+# #%% Change dtypes for categorical vars (saves memory & good for plotting & analysis later)
+# dfEventAll.trialType= dfEventAll.trialType.astype('category')
+# dfEventAll.trialType.cat.add_categories(['Pre-Cue','ITI'], inplace=True)
+
+# dfEventAll.stage= dfEventAll.stage.astype('category')
+# # dfEventAll.eventType= dfEventAll.eventType.astype('category')
+
+
+# if experimentType== 'Opto':
+#    dfEventAll.laserDur= dfEventAll.laserDur.astype('category')
+
+
+
+
+# # #%% Melt() continuous variables?
+# # # greatly increses mem usage so need to do something else here?
+# ## doubles timestamps so not actually worth doing
+
+# # test= dfEventAll.loc[1:1000].copy()
+
+# # test= test.melt(id_vars=idVars+['eventTime']+['eventType']+['trialID']+['trialType'], value_vars=contVars, var_name='signalType', value_name='fpSignal')
+
+
+# # dfEventAll= dfEventAll.melt(id_vars=idVars+['eventTime']+['eventType']+['trialID']+['trialType'], value_vars=contVars, var_name='signalType', value_name='fpSignal')
 
 
 
@@ -393,138 +538,154 @@ if experimentType== 'Opto':
 
 
 
-#%% Sort events by chronological order within-file, correct trialID, and save as dfTidy
-dfTidy = dfEventAll.sort_values(by=['fileID', 'eventTime'])
+# #%% Sort events by chronological order within-file, correct trialID, and save as dfTidy
+# #for photometry/time series data sort by time axis, not eventTime
 
-#drop old, unsorted eventID
-dfTidy= dfTidy.reset_index(drop=True)
-dfTidy.index.name= 'eventID'
+# dfTidy = dfEventAll.sort_values(by=['fileID', 'cutTime'])
 
-#reset_index so we have new, sorted eventID in a column
-dfTidy.reset_index(inplace=True)
+# #more efficient
+# # dfEventAll.sort_values(by=['fileID', 'eventTime'], inplace=True)
 
-#recompute trialID now that everything is sorted chronologically
-dfTidy.trialID= dfTidy[dfTidy.trialID.notna()].groupby('fileID').cumcount()
+# #delete to save memory
+# del dfEventAll
 
+# #drop old, unsorted eventID
+# dfTidy= dfTidy.reset_index(drop=True)
+# dfTidy.index.name= 'eventID'
 
-#%% Add trialID & trialType labels to other events (events during trials and ITIs) 
-# fill in intermediate trialID values... We have absolute trialIDs now for each Cue but other events have trialID=nan
-# we can't tell for certain if events happened during a trial or ITI at this point but we do have all of the timestamps
-# and we know the cue duration, so we can calculate and assign events to a trial using this.
+# #reset_index so we have new, sorted eventID in a column
+# dfTidy.reset_index(inplace=True)
 
-# To start, fill in these values between each trialID as -trialID (could also use decimal like trial 1.5) between each actual Cue
-# Get the values and index of nan trialIDs
-# this returns a series of each nan trialID along with its index.
-indNan = dfTidy.trialID[dfTidy.trialID.isnull()].copy()
+# # #recompute trialID now that everything is sorted chronologically
+# dfTidy.trialID= dfTidy[dfTidy.trialID.notna()].groupby('fileID').cumcount()
 
 
-#Need to group by file, otherwise the ffill method here will contaminate between files (events before trial 0 in fileB are filled as 59 from fileA)
-# pandas has a function for this- groupby().ffill or .backfill or .fillna
-# this fills nan trialID
-dfTidy.trialID= dfTidy.groupby('fileID')['trialID'].fillna(method='ffill').copy()
+# #%% Add trialID & trialType labels to other events (events during trials and ITIs) 
+# # fill in intermediate trialID values... We have absolute trialIDs now for each Cue but other events have trialID=nan
+# # we can't tell for certain if events happened during a trial or ITI at this point but we do have all of the timestamps
+# # and we know the cue duration, so we can calculate and assign events to a trial using this.
 
-#Add 1 to each trialID to avoid trialID==0. 
-#Don't allow trialIDs=0, so we can avoid issues with -0 trialIDs later (-0 will equate to 0 and we don't want to mix them up)
-dfTidy.trialID= dfTidy.trialID+1
-
-# do the same for trialType
-dfTidy.trialType= dfTidy.groupby('fileID')['trialType'].fillna(method='ffill').copy()
+# # To start, fill in these values between each trialID as -trialID (could also use decimal like trial 1.5) between each actual Cue
+# # Get the values and index of nan trialIDs
+# # this returns a series of each nan trialID along with its index.
+# indNan = dfTidy.trialID[dfTidy.trialID.isnull()].copy()
 
 
-# now multiply previously nan trialIDs by -1 so we can set them apart from the valid trialIDs
-dfTidy.loc[indNan.index, 'trialID'] = dfTidy.trialID[indNan.index].copy()*-1
+# #Need to group by file, otherwise the ffill method here will contaminate between files (events before trial 0 in fileB are filled as 59 from fileA)
+# # pandas has a function for this- groupby().ffill or .backfill or .fillna
+# # this fills nan trialID
+# dfTidy.trialID= dfTidy.groupby('fileID')['trialID'].fillna(method='ffill').copy()
 
-#Fill nan trialIDs (first ITI) with a placeholder. Do this because groupby of trialID with nan will result in contamination between sessions
-#don't know why this is, but I'm guessing if any index value==nan then the entire index likely collapses to nan
-dfTidy.loc[dfTidy.trialID.isnull(),'trialID']= -999#-0.5
+# #Add 1 to each trialID to avoid trialID==0. 
+# #Don't allow trialIDs=0, so we can avoid issues with -0 trialIDs later (-0 will equate to 0 and we don't want to mix them up)
+# dfTidy.trialID= dfTidy.trialID+1
+
+# # do the same for trialType
+# dfTidy.trialType= dfTidy.groupby('fileID')['trialType'].fillna(method='ffill').copy()
 
 
-# Can get a trial end time based on cue onset, then just check
-# event times against this
+# # now multiply previously nan trialIDs by -1 so we can set them apart from the valid trialIDs
+# dfTidy.loc[indNan.index, 'trialID'] = dfTidy.trialID[indNan.index].copy()*-1
 
-dfTidy = dfTidy.sort_values(by=['fileID', 'eventTime']).copy()
+# #Fill nan trialIDs (first ITI) with a placeholder. Do this because groupby of trialID with nan will result in contamination between sessions
+# #don't know why this is, but I'm guessing if any index value==nan then the entire index likely collapses to nan
+# dfTidy.loc[dfTidy.trialID.isnull(),'trialID']= -999#-0.5
 
-# dfTidy.loc[:, 'trialStart'] = dfTidy.eventTime[dfTidy.trialID >= 0].copy()
+
+# # Can get a trial end time based on cue onset, then just check
+# # event times against this
+
+# # dfTidy = dfTidy.sort_values(by=['fileID', 'eventTime']).copy()
+
+# #more efficient?
+# #dont need to sort by eventTime
+# # dfTidy = dfTidy.sort_values(by=['fileID', 'eventTime'], inplace=True)
+
+
+# # dfTidy.loc[:, 'trialStart'] = dfTidy.eventTime[dfTidy.trialID >= 0].copy()
     
-# dfTidy.loc[:, 'trialStart'] = dfTidy.fillna(method='ffill').copy()
+# # dfTidy.loc[:, 'trialStart'] = dfTidy.fillna(method='ffill').copy()
 
-dfTidy.loc[:, 'trialEnd'] = dfTidy.eventTime[dfTidy.trialID >= 0].copy() + \
-    dfTidy.cueDur
+# dfTidy.loc[:, 'trialEnd'] = dfTidy.eventTime[dfTidy.trialID >= 0].copy() + \
+#     dfTidy.cueDur
     
-dfTidy.loc[:, 'trialEnd'] = dfTidy.fillna(method='ffill').copy()
+# dfTidy.loc[:, 'trialEnd'] = dfTidy.trialEnd.fillna(method='ffill').copy()
 
 
-#also get start of next trial (by indexing by file,trial and then shifting by 1)
-#will be used to define preCue trialTypes
-dfGroup= dfTidy.loc[dfTidy.trialID>=0].copy()
-#index by file, trial
-dfGroup.set_index(['fileID','trialID'], inplace=True)
-#get time of next trial start by shifting by 1 trial #shift data within file (level=0)
-dfGroup.loc[:, 'nextTrialStart'] = dfGroup.groupby(level=0)['eventTime'].shift(-1).copy()
-dfGroup.reset_index(inplace=True) #reset index so eventID index is kept
-dfGroup.set_index('eventID', inplace=True)
-#merge back on eventID
-dfTidy.set_index('eventID',inplace=True,drop=False)
-dfTidy= dfTidy.merge(dfGroup, 'left').copy()
+# #also get start of next trial (by indexing by file,trial and then shifting by 1)
+# #will be used to define preCue trialTypes
+# dfGroup= dfTidy.loc[dfTidy.trialID>=0].copy()
+# #index by file, trial
+# dfGroup.set_index(['fileID','trialID'], inplace=True)
+# #get time of next trial start by shifting by 1 trial #shift data within file (level=0)
+# dfGroup.loc[:, 'nextTrialStart'] = dfGroup.groupby(level=0)['eventTime'].shift(-1).copy()
+# dfGroup.reset_index(inplace=True) #reset index so eventID index is kept
+# dfGroup.set_index('eventID', inplace=True)
+# #merge back on eventID
+# dfTidy.set_index('eventID',inplace=True,drop=False)
+# dfTidy= dfTidy.merge(dfGroup, 'left').copy()
 
-#ffill for negative trialIDs
-dfTidy.nextTrialStart= dfTidy.nextTrialStart.fillna(method='ffill').copy()
+# #ffill for negative trialIDs
+# dfTidy.nextTrialStart= dfTidy.nextTrialStart.fillna(method='ffill').copy()
 
-#SIMPLE GROUPBY INDEXING!
-#for last trial set next trial start to nan
-idx = (dfTidy.groupby(['fileID'])['trialID'].transform(max).copy() == dfTidy['trialID'].copy()) | (-dfTidy.groupby(['fileID'])['trialID'].transform(max).copy() == dfTidy['trialID'].copy())
-dfTidy.loc[idx,'nextTrialStart']= pd.NA
-dfTest= dfTidy.loc[idx]
+# #SIMPLE GROUPBY INDEXING!
+# #for last trial set next trial start to nan
+# idx = (dfTidy.groupby(['fileID'])['trialID'].transform(max).copy() == dfTidy['trialID'].copy()) | (-dfTidy.groupby(['fileID'])['trialID'].transform(max).copy() == dfTidy['trialID'].copy())
+# dfTidy.loc[idx,'nextTrialStart']= pd.NA
+# dfTest= dfTidy.loc[idx]
 
-dfTidy.trialID.max() #good here
+# dfTidy.trialID.max() #good here
 
-# Add trialType for pre-cue period 
-#this is a useful epoch to have identified; can be a good control time period vs. cue presentation epoch
-preCueDur= 10 
-dfTest= dfTidy.copy()
-dfTest2= dfTest.loc[(dfTidy.nextTrialStart-dfTidy.eventTime <= preCueDur)]
+# # Add trialType for pre-cue period 
+# #this is a useful epoch to have identified; can be a good control time period vs. cue presentation epoch
+# preCueDur= 10 
+# dfTest= dfTidy.copy()
+# dfTest2= dfTest.loc[(dfTidy.nextTrialStart-dfTidy.eventTime <= preCueDur)]
 
-dfTidy.loc[(dfTidy.nextTrialStart-dfTidy.eventTime <= preCueDur),'trialType'] = 'Pre-Cue'#'Pre-'+dfTidy.trialType.copy()
+# dfTidy.loc[(dfTidy.nextTrialStart-dfTidy.eventTime <= preCueDur),'trialType'] = 'Pre-Cue'#'Pre-'+dfTidy.trialType.copy()
 
-#make pre-cue trialIDs intervals of .5
-dfTidy.loc[(dfTidy.nextTrialStart-dfTidy.eventTime <= preCueDur),'trialID'] = dfTidy.trialID.copy()-0.5
-dfTest= dfTidy.loc[dfTidy.trialID==-31]
+# #make pre-cue trialIDs intervals of .5
+# dfTidy.loc[(dfTidy.nextTrialStart-dfTidy.eventTime <= preCueDur),'trialID'] = dfTidy.trialID.copy()-0.5
+# dfTest= dfTidy.loc[dfTidy.trialID==-31]
 
-dfTidy.trialID.max() #good here
+# dfTidy.trialID.max() #good here
 
-#Special exceptions for events before first trial starts, need to be manually assigned (bc ffill method above won't work)
-#get the time of the first event in the first trial (equivalent to trial start time)
-dfTidy.loc[dfTidy.trialID== -999, 'nextTrialStart'] = dfTidy.loc[dfTidy.trialID==1].eventTime.iloc[0] 
-#make trialEnd for the first ITI the start of the recording, keeping with scheme of other ITIs which reflect "end" of last cue
-dfTidy.loc[dfTidy.trialID== -999, 'trialEnd'] = 0
+# #Special exceptions for events before first trial starts, need to be manually assigned (bc ffill method above won't work)
+# #get the time of the first event in the first trial (equivalent to trial start time)
+# dfTidy.loc[dfTidy.trialID== -999, 'nextTrialStart'] = dfTidy.loc[dfTidy.trialID==1].eventTime.iloc[0] 
+# #make trialEnd for the first ITI the start of the recording, keeping with scheme of other ITIs which reflect "end" of last cue
+# dfTidy.loc[dfTidy.trialID== -999, 'trialEnd'] = 0
 
-##ID events in the first preCue period
-dfTidy.set_index('fileID', drop=False)
+# ##ID events in the first preCue period
+# dfTidy.set_index('fileID', drop=False)
 
-dfTidy.loc[((dfTidy.trialID== -999) & (dfTidy.nextTrialStart-dfTidy.eventTime <= preCueDur)),'trialType']= 'Pre-Cue'#+ dfTidy.loc[(dfTidy.trialID==1) | (dfTidy.trialID==-0.5)].trialType.fillna(method='bfill').copy()
+# dfTidy.loc[((dfTidy.trialID== -999) & (dfTidy.nextTrialStart-dfTidy.eventTime <= preCueDur)),'trialType']= 'Pre-Cue'#+ dfTidy.loc[(dfTidy.trialID==1) | (dfTidy.trialID==-0.5)].trialType.fillna(method='bfill').copy()
 
-dfTest= dfTidy.copy()
-dfTest2= dfTest.loc[((dfTest.trialID== -999) & (dfTest.nextTrialStart-dfTidy.eventTime <= preCueDur))]
+# dfTest= dfTidy.copy()
+# dfTest2= dfTest.loc[((dfTest.trialID== -999) & (dfTest.nextTrialStart-dfTidy.eventTime <= preCueDur))]
 
-##TODO: for first ILI, make trial end the first cue onset
-# dfTidy.loc[dfTidy.trialID== -0.5,'trialEnd']= dfTidy.loc[dfTidy.loc[dfTidy.trialID==1].groupby(['fileID','trialID'])['eventTime'].cumcount()==0]
+# ##TODO: for first ILI, make trial end the first cue onset
+# # dfTidy.loc[dfTidy.trialID== -0.5,'trialEnd']= dfTidy.loc[dfTidy.loc[dfTidy.trialID==1].groupby(['fileID','trialID'])['eventTime'].cumcount()==0]
 
-# find events that occur after cue start but before cue duration end.
-# remaining events with negative trialIDs must have occurred somewhere in that ITI (or 'pre/post cue')
+# # find events that occur after cue start but before cue duration end.
+# # remaining events with negative trialIDs must have occurred somewhere in that ITI (or 'pre/post cue')
 
-dfTidy.loc[(dfTidy.trialEnd-dfTidy.eventTime >= 0) & ((dfTidy.trialEnd -
-                                                      dfTidy.eventTime).apply(np.round) < dfTidy.cueDur), 'trialID'] = dfTidy.trialID.copy()*-1
-dfTest= dfTidy.loc[dfTidy.trialID==-999].copy()
+# dfTidy.loc[(dfTidy.trialEnd-dfTidy.eventTime >= 0) & ((dfTidy.trialEnd -
+#                                                       dfTidy.eventTime).apply(np.round) < dfTidy.cueDur), 'trialID'] = dfTidy.trialID.copy()*-1
+# dfTest= dfTidy.loc[dfTidy.trialID==-999].copy()
 
-# remove trialType labels from events outside of cueDur (- trial ID or nan trialID)
+# # remove trialType labels from events outside of cueDur (- trial ID or nan trialID)
 
-#add 'ITI' trialType label for remaining events in ITI. This gets the first ITI
-dfTidy.loc[(((dfTidy.trialID < 0) & (dfTidy.trialType.isnull()))), 'trialType'] = 'ITI'
-# keep trialIDs in between integers (preCue period) by checking for nonzero modulo of 1
-#for now labelling with "ITI"
-dfTidy.loc[((dfTidy.trialID < 0) & (dfTidy.trialID % 1 == 0)), 'trialType'] = 'ITI'
+# #add 'ITI' trialType label for remaining events in ITI. This gets the first ITI
+# dfTidy.loc[(((dfTidy.trialID < 0) & (dfTidy.trialType.isnull()))), 'trialType'] = 'ITI'
+# # keep trialIDs in between integers (preCue period) by checking for nonzero modulo of 1
+# #for now labelling with "ITI"
+# dfTidy.loc[((dfTidy.trialID < 0) & (dfTidy.trialID % 1 == 0)), 'trialType'] = 'ITI'
 
-#good here
+# #good here
+
+#%% 
+dfTidy= df.copy()
 
 #%% add "dummy" placeholder entries for any  missing trialIDs 
 #since ITI/pre-cue trial definitions are contingent on behavioral events, if no events occur during a particular ITI 
@@ -676,56 +837,56 @@ dfTidy= dfCat.copy()
 
 test= dfTidy.groupby('fileID')['trialID'].unique().explode()
 
-#%% Add trialStart time (this is helpful when calculating latencies later on)
-# dfGroup= dfTidy.groupby(['fileID','trialID']).transform('cumcount')==0
+# #%% Add trialStart time (this is helpful when calculating latencies later on)
+# # dfGroup= dfTidy.groupby(['fileID','trialID']).transform('cumcount')==0
 
-dfGroup= dfTidy.groupby(['fileID','trialID']).cumcount().copy()
-#index of first event in each trial
-dfGroup= dfTidy.loc[dfGroup==0].copy()
+# dfGroup= dfTidy.groupby(['fileID','trialID']).cumcount().copy()
+# #index of first event in each trial
+# dfGroup= dfTidy.loc[dfGroup==0].copy()
 
-#ITIs
-dfTemp= dfGroup.loc[dfGroup.trialType=='ITI'].copy()
-dfGroup.loc[dfGroup.trialType=='ITI','trialStart']= dfTemp.trialEnd.copy()
+# #ITIs
+# dfTemp= dfGroup.loc[dfGroup.trialType=='ITI'].copy()
+# dfGroup.loc[dfGroup.trialType=='ITI','trialStart']= dfTemp.trialEnd.copy()
 
-#pre-cue
-dfTemp= dfGroup.loc[dfGroup.trialType=='Pre-Cue'].copy()
-dfGroup.loc[dfGroup.trialType=='Pre-Cue','trialStart']= (dfTemp.nextTrialStart-preCueDur).copy()
+# #pre-cue
+# dfTemp= dfGroup.loc[dfGroup.trialType=='Pre-Cue'].copy()
+# dfGroup.loc[dfGroup.trialType=='Pre-Cue','trialStart']= (dfTemp.nextTrialStart-preCueDur).copy()
 
-#real + trials
-dfTemp= dfGroup.loc[dfGroup.trialID>0].copy()
-dfGroup.loc[dfGroup.trialID>0,'trialStart']= dfTemp.eventTime.copy()
+# #real + trials
+# dfTemp= dfGroup.loc[dfGroup.trialID>0].copy()
+# dfGroup.loc[dfGroup.trialID>0,'trialStart']= dfTemp.eventTime.copy()
 
-#first ITI
-dfGroup.loc[dfGroup.trialID==-999,'trialStart']= 0
-
-# #merge back into dfTidy
-# dfGroup.reset_index(inplace=True) #reset index so eventID index is kept
-# dfGroup.set_index('eventID', inplace=True)
-# #merge back on eventID
-# dfTidy.set_index('eventID',inplace=True,drop=False)
-
-
-dfTidy= dfTidy.merge(dfGroup[['fileID','trialID','trialStart']],'left',on=['fileID','trialID'])
-
-# #index of actual +trial starts
-# dfTemp= dfGroup.loc[dfGroup.trialID>=0]
-
-
-# dfGroup.loc[dfGroup.trialID>=0,'trialStart']= dfTemp.eventTime.copy()
-
-# dfGroup.loc[dfGroup.trialType=='ITI','trialStart']= dfTemp.eventTime+dfGroup.cueDur.copy()
-
+# #first ITI
 # dfGroup.loc[dfGroup.trialID==-999,'trialStart']= 0
 
-# # dfGroup.loc[dfGroup.trialID>=0,'trialStart']= dfGroup.loc[dfGroup.trialID>=0,'eventTime']
+# # #merge back into dfTidy
+# # dfGroup.reset_index(inplace=True) #reset index so eventID index is kept
+# # dfGroup.set_index('eventID', inplace=True)
+# # #merge back on eventID
+# # dfTidy.set_index('eventID',inplace=True,drop=False)
 
-# dfGroup.loc[:,'trialStart']= dfGroup.loc[:,'eventTime']
+
+# dfTidy= dfTidy.merge(dfGroup[['fileID','trialID','trialStart']],'left',on=['fileID','trialID'])
+
+# # #index of actual +trial starts
+# # dfTemp= dfGroup.loc[dfGroup.trialID>=0]
+
+
+# # dfGroup.loc[dfGroup.trialID>=0,'trialStart']= dfTemp.eventTime.copy()
+
+# # dfGroup.loc[dfGroup.trialType=='ITI','trialStart']= dfTemp.eventTime+dfGroup.cueDur.copy()
+
+# # dfGroup.loc[dfGroup.trialID==-999,'trialStart']= 0
+
+# # # dfGroup.loc[dfGroup.trialID>=0,'trialStart']= dfGroup.loc[dfGroup.trialID>=0,'eventTime']
+
+# # dfGroup.loc[:,'trialStart']= dfGroup.loc[:,'eventTime']
 
 
 
-# dfGroup= dfGroup.loc[dfGroup.trialID>=0]
+# # dfGroup= dfGroup.loc[dfGroup.trialID>=0]
 
-# dfTidy.loc[dfGroup,'trialStart']= dfTidy.loc[dfGroup,'eventTime']
+# # dfTidy.loc[dfGroup,'trialStart']= dfTidy.loc[dfGroup,'eventTime']
 
 
 #%% Add trialType for pre-cue period 
@@ -802,39 +963,46 @@ dfTidy.loc[:,idVars]= dfTidy.groupby(['fileID'], as_index=False)[idVars].fillna(
 
 #%% redefine eventID now that we have empty placeholder 'events' 
 
+#dont need to do this if initially sorted by cuttime
+
 #make sure sorted by timestamp within fileID
-dfTidy = dfTidy.sort_values(by=['fileID', 'eventTime'])
+# dfTidy = dfTidy.sort_values(by=['fileID', 'eventTime'])
 
-#drop old eventID and replace with new sorted index
-dfTidy.drop(columns=['eventID'])
-dfTidy.eventID= dfTidy.index.copy()
-
-#%% TODO: add column for 'epoch' this timestamp is in
-# this would include inPort, DS on, NS on, laser on, maybe 'licking' based on bout calculations...
-dfTidy['epoch']= pd.NA
-dfTidy['epochCue']=pd.NA
-dfTidy['epochLaser']= pd.NA
-
-#add cue epoch
-#TODO: consider whether cue terminates early (e.g. due to PE)
-# dfTidy.loc[((dfTidy.eventType=='DStime') | (dfTidy.eventType=='NStime')), 'epochCue']= 'cue on'
-dfTidy.loc[(dfTidy.eventType=='DStime'), 'epochCue']= 'DS on'
-dfTidy.loc[(dfTidy.eventType=='NStime'), 'epochCue']= 'NS on'
+#more efficient?
+# dfTidy.sort_values(by=['fileID', 'eventTime'], inplace=True)
 
 
-dfTidy.loc[(dfTidy.trialType=='ITI'), 'epochCue']= 'ITI'
-dfTidy.loc[(dfTidy.trialType=='Pre-Cue'), 'epochCue']= 'Pre-Cue'
+# #drop old eventID and replace with new sorted index
+# dfTidy.drop(columns=['eventID'])
+# dfTidy.eventID= dfTidy.index.copy()
 
 
-dfTidy.epochCue= dfTidy.groupby('fileID')['epochCue'].fillna(method='ffill')
+# #%% TODO: add column for 'epoch' this timestamp is in
+# # this would include inPort, DS on, NS on, laser on, maybe 'licking' based on bout calculations...
+# dfTidy['epoch']= pd.NA
+# dfTidy['epochCue']=pd.NA
+# dfTidy['epochLaser']= pd.NA
 
-#for now limiting to laser on vs off
-if experimentType.__contains__('Opto'):
-    dfTidy.loc[dfTidy.eventType=='laserTime', 'epochLaser']= 'laser on'
-    dfTidy.loc[dfTidy.eventType=='laserOffTime', 'epochLaser']= 'laser off'
-    dfTidy.epochLaser= dfTidy.groupby('fileID')['epochLaser'].fillna(method='ffill')
+# #add cue epoch
+# #TODO: consider whether cue terminates early (e.g. due to PE)
+# # dfTidy.loc[((dfTidy.eventType=='DStime') | (dfTidy.eventType=='NStime')), 'epochCue']= 'cue on'
+# dfTidy.loc[(dfTidy.eventType=='DStime'), 'epochCue']= 'DS on'
+# dfTidy.loc[(dfTidy.eventType=='NStime'), 'epochCue']= 'NS on'
+
+
+# dfTidy.loc[(dfTidy.trialType=='ITI'), 'epochCue']= 'ITI'
+# dfTidy.loc[(dfTidy.trialType=='Pre-Cue'), 'epochCue']= 'Pre-Cue'
+
+
+# dfTidy.epochCue= dfTidy.groupby('fileID')['epochCue'].fillna(method='ffill')
+
+# #for now limiting to laser on vs off
+# if experimentType.__contains__('Opto'):
+#     dfTidy.loc[dfTidy.eventType=='laserTime', 'epochLaser']= 'laser on'
+#     dfTidy.loc[dfTidy.eventType=='laserOffTime', 'epochLaser']= 'laser off'
+#     dfTidy.epochLaser= dfTidy.groupby('fileID')['epochLaser'].fillna(method='ffill')
     
-dfTidy.epoch= dfTidy.epochCue + '-' + dfTidy.epochLaser
+# dfTidy.epoch= dfTidy.epochCue + '-' + dfTidy.epochLaser
     
 #%%  drop any redundant columns remaining
 if experimentType.__contains__('Opto'):

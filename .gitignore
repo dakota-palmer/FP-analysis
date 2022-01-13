@@ -80,3 +80,8 @@ python/tdt/LICENSE
 *.xlsx
 matlabVPFP/_dp_manuscript/license.txt
 matlabVPFP/_dp_manuscript/struct2tableAll.m
+*.pkl
+*.bak
+*.dat
+*.dir
+*.dat

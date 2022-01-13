@@ -33,7 +33,7 @@ my_shelf.close()
 
 # subset data
 
-dfPlot= dfTidy.loc[dfTidy.stage>=7].copy()
+dfPlot= dfTidy.loc[dfTidy.stage>=5].copy()
 
 
-sns.relplot(data=dfPlot, x=dfPlot.cutTime, y=dfPlot.reblue, col=dfPlot.stage, hue=dfPlot.subject)
+sns.relplot(data=dfPlot, x=dfPlot.cutTime, y=dfPlot.reblue, col=dfPlot.stage, hue=dfPlot.subject, kind='line')
