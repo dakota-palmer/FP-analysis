@@ -85,3 +85,11 @@ matlabVPFP/_dp_manuscript/struct2tableAll.m
 *.dat
 *.dir
 *.dat
+python/_output/dfTidyMeta.dir
+python/_output/dfTidyMeta.dat
+python/_output/dfTidyMeta.bak
+python/_output/dfTidyFP.pkl
+*.pkl
+*.bak
+*.dat
+*.dir
