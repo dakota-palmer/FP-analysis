@@ -61,7 +61,7 @@ stagesToInclude= [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
 df= df.loc[df.stage.isin(stagesToInclude)]
 
 #still hitting, so going to subset even further for debugging
-df= df.iloc[0:1000000]
+# df= df.iloc[0:1000000]
 
 # %% Remove parentheses from variable names 
 
@@ -960,6 +960,10 @@ dfTidy.loc[:,idVars]= dfTidy.groupby(['fileID'], as_index=False)[idVars].fillna(
 
 # test3= dfTidy.set_index(['fileID'],drop=False).copy()
 # test3.loc[:,idVars] = test3[idVars].fillna(method='ffill').copy()
+
+#remove invalid observations
+#(above code may have introduced some empty values e.g. if files were excluded)
+dfTidy= dfTidy.loc[dfTidy.cutTime.notnull()]
 
 #%% redefine eventID now that we have empty placeholder 'events' 
 
