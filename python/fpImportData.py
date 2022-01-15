@@ -108,7 +108,7 @@ df= df.rename(columns={'DS':'DStime', 'NS':'NStime'})
 
 #%% examine memory usage and dtypes
 
-df.memory_usage(deep=True)  # memory usage in bytes 
+# df.memory_usage(deep=True)  # memory usage in bytes 
 
 #%% Define Event variables for your experiment 
 #make a list of all of the Event Types so that we can melt them together into one variable
@@ -1014,6 +1014,24 @@ if experimentType.__contains__('Opto'):
     dfTidy.laserDur= dfTidy.loc[dfTidy.laserDur!='nan'].laserDur.astype(str)+' @ '+dfTidy.laserFreq.astype(str)
 
     dfTidy = dfTidy.drop(columns=['laserType', 'laserState', 'laserFreq']).copy()
+
+
+#%% Preliminary data anlyses
+
+# Add trainDay variable (cumulative count of sessions within each subject)
+dfGroup= dfTidy.loc[dfTidy.groupby(['subject','fileID']).cumcount()==0]
+# test= dfGroup.groupby(['subject','fileID']).transform('cumcount')
+dfTidy.loc[:,'trainDay']= dfGroup.groupby(['subject'])['fileID'].transform('cumcount')
+dfTidy.loc[:,'trainDay']= dfTidy.groupby(['subject','fileID']).fillna(method='ffill')
+
+#Add cumulative count of training day within-stage (so we can normalize between subjects appropriately)
+##very important consideration!! Different subjects can run different programs on same day, which can throw plots/analysis off when aggregating data by date.
+dfGroup= dfTidy.loc[dfTidy.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+dfTidy['trainDayThisStage']=  dfGroup.groupby(['subject', 'stage']).transform('cumcount')
+dfTidy.trainDayThisStage= dfTidy.groupby(['fileID'])['trainDayThisStage'].fillna(method='ffill').copy()
+
+
+#%%TODO:  isolate pre-reward delivery and post reward-delivery licks
 
 
 #%% Save dfTidy so it can be loaded quickly for subesequent analysis

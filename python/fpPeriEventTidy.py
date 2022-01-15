@@ -14,8 +14,7 @@ import matplotlib.pyplot as plt
  
 import shelve
 
-# FOR BINARY CODED EVENT COLUMNS
-
+#FOR TIDY DATA (SINGLE eventType COLUMN)
 
 #%% Load dfTidy.pkl
 
@@ -23,7 +22,7 @@ import shelve
 # #%% Load previously saved dfTidyAnalyzed (and other vars) from pickle
 dataPath= r'./_output/' #'r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python\\'
 
-dfTidy= pd.read_pickle(dataPath+'dfTidyFP.pkl')
+dfTidy= pd.read_pickle(dataPath+'dfTidyAnalyzed.pkl')
 
 #load any other variables saved during the import process ('dfTidymeta' shelf)
 my_shelf = shelve.open(dataPath+'dfTidymeta')

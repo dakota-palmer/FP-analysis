@@ -73,17 +73,47 @@ dfGroup= dfTidy.loc[dfTidy.groupby('fileID').transform('cumcount')==0,:].copy() 
 dfTidy['trainDayThisStage']=  dfGroup.groupby(['subject', 'stage']).transform('cumcount')
 dfTidy.trainDayThisStage= dfTidy.groupby(['fileID'])['trainDayThisStage'].fillna(method='ffill').copy()
 
+#%% melt proof of concept
+ # only makes sense to have a 'latency' column if eventVars are melted()
+# #but prior attempts to melt made huge df with repeated observations.
+# #trying to melt again... could be convenient for analysis but probably inefficient?
 
-# %% Preliminary data analyses (OLD, need to rewrite for binary event coding)
+# #basically would want to 1 row per ts (because of continuous fp signal), with additional row per actual event (event==1 only)
+# #column would be composed of identifier of event corresponding to timestamp
+
+# #subsetting for debugging
+# dfTemp= dfTidy.loc[1:10000].copy()
+
+# dfTidy= dfTidy.loc[1:20000].copy()
+
+# #strategy: melt(), drop 0 values (no event), then remerge back on full df cutTime
+
+# dfTemp = dfTemp.melt(id_vars=idVars, value_vars=eventVars, var_name='eventType', value_name='eventTime').copy()
+
+# dfTemp = dfTemp[dfTemp.eventTime != 0]
+
+# dfTemp= dfTemp.loc[:,['fileID','cutTime','eventType']]
+
+# df2= dfTidy.copy()
+# df2= df2.merge(dfTemp, on=['fileID','cutTime'], how='left')
+
+# #after merging, drop the old binary coded vars
+# df2.drop(eventVars,axis=1, inplace=True)
+
+# # dfTemp = dfTemp[dfTemp.eventTime != ''].sort_values(['VAR1','VAR2']).reset_index(drop=True)
+
+
+
+# %% Preliminary data analyses (for tidy data)
 # Event latency, count, and behavioral outcome for each trial
 
 #TODO: Lick 'cleaning' to eliminate invalid licks (are they in port, is ILI within reasonable range)
 
 
-# #Calculate latency to each event in trial (from cue onset). based on trialEnd to keep it simple
-#   # trialEnd is = cue onset + cueDur. So just subtract cueDur for cue onset time  
-# dfTidy.loc[dfTidy.trialID>=0, 'eventLatency'] = (
-#     (dfTidy.eventTime)-(dfTidy.trialEnd-dfTidy.cueDur)).copy()
+#Calculate latency to each event in trial (from cue onset). based on trialEnd to keep it simple
+  # trialEnd is = cue onset + cueDur. So just subtract cueDur for cue onset time  
+dfTidy.loc[dfTidy.trialID>=0, 'eventLatency'] = (
+    (dfTidy.eventTime)-(dfTidy.trialEnd-dfTidy.cueDur)).copy()
 
 #have trial start now, subtract trialStart from eventTime to get latency per trial
 #no need for -trialID exception
@@ -274,6 +304,21 @@ dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='
 
 dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
 
+
+#%% Save dfTidy so it can be loaded quickly for subesequent analysis
+
+dfTidyAnalyzed= dfTidy.copy()
+
+savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+print('saving dfTidyAnalyzed to file')
+
+#Save as pickel
+dfTidyAnalyzed.to_pickle(savePath+'dfTidyAnalyzed.pkl')
+
+
+# Save as .CSV
+# dfTidyAnalyzed.to_csv('dfTidyAnalyzed.csv')
 
 #%% PLOTS:
     
