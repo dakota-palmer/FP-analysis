@@ -16,6 +16,15 @@ import shelve
 
 #FOR TIDY DATA (SINGLE eventType COLUMN)
 
+#%% define a function to save and close figures
+def saveFigCustom(figure, figName):
+    plt.gcf().set_size_inches((20,10), forward=False) # ~monitor size
+    plt.legend(bbox_to_anchor=(1.01, 1), borderaxespad=0) #creates legend ~right of the last subplot
+    
+    plt.gcf().tight_layout()
+    plt.savefig(r'./_output/_behaviorAnalysis/'+figName+'.png', bbox_inches='tight')
+    plt.close()
+
 #%% Load dfTidy.pkl
 
 
@@ -191,7 +200,7 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
 #%% Define peri-event z scoring parameters
 fs= 40 #sampling frequency= 40hz
 
-preEventTime= 10 *fs # seconds x fs
+preEventTime= 5 *fs # seconds x fs
 postEventTime= 10 *fs
 
 baselineTime= 10*fs
@@ -215,15 +224,94 @@ for name, group in groups:
     dfTidy.loc[group.index,'blue-z-periDS-PEtime']= z
     dfTidy.loc[group.index,'timeLock-z-periDS-PEtime']= timeLock
     
-        #-- peri-DS lick
+    #-- peri-US
+    z, timeLock=  zscoreCustom(group, 'reblue', 'UStime', preEventTime, postEventTime,'DStime', baselineTime)
+    dfTidy.loc[group.index,'blue-z-periDS-UStime']= z
+    dfTidy.loc[group.index,'timeLock-z-periDS-UStime']= timeLock
+    
+    #-- peri-DS lick
     z, timeLock=  zscoreCustom(group, 'reblue', 'lickTime', preEventTime, postEventTime,'DStime', baselineTime)
     dfTidy.loc[group.index,'blue-z-periDS-lickTime']= z
     dfTidy.loc[group.index,'timeLock-z-periDS-lickTime']= timeLock
     
-            #-- peri-DS lickUS (reward lick)
+    #-- peri-DS lickUS (reward lick)
     z, timeLock=  zscoreCustom(group, 'reblue', 'lickUS', preEventTime, postEventTime,'DStime', baselineTime)
     dfTidy.loc[group.index,'blue-z-periDS-lickUS']= z
     dfTidy.loc[group.index,'timeLock-z-periDS-lickUS']= timeLock
+
+
+
+#%% Plot some fp signals!
+
+#subset 
+
+stagesToInclude= [7]
+
+#number of sessions to include, 0 includes final session of this stage+n
+nSessionsToInclude= 0 
+
+#exclude stages
+dfPlot= dfTidy.loc[dfTidy.stage.isin(stagesToInclude),:].copy()
+
+#exclude sessions within-stage
+dfPlot['maxSesThisStage']= dfPlot.groupby(['stage','subject'])['trainDayThisStage'].transform('max')
+
+dfPlot= dfPlot.loc[dfPlot.trainDayThisStage>= dfPlot.maxSesThisStage-nSessionsToInclude]
+
+dfPlot= dfPlot.drop('maxSesThisStage', axis=1)
+
+
+#all peri-event into single Figure, save
+
+subjPalette= 'tab20' #define a palette to use for individual subj hues
+
+f, ax = plt.subplots(5, 1)
+
+g= sns.lineplot(ax=ax[0,], data=dfPlot, x='timeLock-z-periDS',y='blue-z-periDS',hue='subject', palette=subjPalette, legend='full', linewidth=1, alpha=0.5) #Full legend here labels all subjects even if continuous numbers
+g= sns.lineplot(ax=ax[0,], data=dfPlot, x='timeLock-z-periDS',y='blue-z-periDS', linewidth=2.5, color='black')
+g.set(title=('peri-DS'))
+g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+
+g= sns.lineplot(ax=ax[1,], data=dfPlot, x='timeLock-z-periDS-PEtime',y='blue-z-periDS-PEtime',hue='subject', palette=subjPalette, legend='full', linewidth=1, alpha=0.5)
+g= sns.lineplot(ax=ax[1,], data=dfPlot, x='timeLock-z-periDS-PEtime',y='blue-z-periDS-PEtime', linewidth=2.5, color='black')
+g.set(title=('peri-DS-PE'))
+g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+
+g= sns.lineplot(ax=ax[2,], data=dfPlot, x='timeLock-z-periDS-lickTime',y='blue-z-periDS-lickTime',hue='subject',palette=subjPalette, legend='full', linewidth=1, alpha=0.5)
+g= sns.lineplot(ax=ax[2,], data=dfPlot, x='timeLock-z-periDS-lickTime',y='blue-z-periDS-lickTime',linewidth=2.5, color='black')
+g.set(title=('peri-DS-lick'))
+g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+
+g= sns.lineplot(ax=ax[3,], data=dfPlot, x='timeLock-z-periDS-UStime',y='blue-z-periDS-UStime',hue='subject',palette=subjPalette, legend='full', linewidth=1, alpha=0.5)
+g= sns.lineplot(ax=ax[3,], data=dfPlot, x='timeLock-z-periDS-UStime',y='blue-z-periDS-UStime',linewidth=2.5, color='black')
+g.set(title=('peri-DS-PumpOn'))
+g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+
+g= sns.lineplot(ax=ax[4,], data=dfPlot, x='timeLock-z-periDS-lickUS',y='blue-z-periDS-lickUS',hue='subject',palette=subjPalette, legend='full', linewidth=1, alpha=0.5)
+g= sns.lineplot(ax=ax[4,], data=dfPlot, x='timeLock-z-periDS-lickUS',y='blue-z-periDS-lickUS',linewidth=2.5, color='black')
+g.set(title=('peri-DS-lickReward'))
+g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+
+saveFigCustom(f, 'allSubj-'+'-periEvent')
+
+# #test
+# indPlot= dfTidy.stage==7.0
+
+# sns.relplot(data=dfTidy.loc[indPlot,:], x='timeLock-z-periDS', col='stage', col_wrap=4, y='blue-z-periDS', hue='trainDayThisStage', kind='line')
+# sns.relplot(data=dfTidy.loc[indPlot,:], x='timeLock-z-periDS-pox', col='stage', col_wrap=4, y='blue-z-periDS-pox', hue='trainDayThisStage', kind='line')
+
+
+# # # # subset data
+
+# # # dfPlot= dfTidy.loc[dfTidy.stage>=5].copy()
+
+# # # dfPlot= dfPlot.loc[0:10000]
+
+# #subset data for plotting using index instead of making copy of array (less memory used)
+# indPlot= dfTidy.stage==7.0
+
+# ## looks good!
+# sns.relplot(data=dfTidy.loc[indPlot,:], x='timeLock-z-periDS', col='stage', col_wrap=4, y='blue-z-periDS', hue='trainDayThisStage', kind='line')
 
 
 

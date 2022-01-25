@@ -18,6 +18,9 @@ import shelve
 from sklearn.linear_model import LassoCV
 from sklearn.model_selection import RepeatedKFold
 
+import time
+
+
 #%% PREPARING INPUT FOR PARKER ENCODING MODEL
 # want - 
 # x_basic= 148829 x 1803... # timestamps entire session x (# time shifts in peri-Trial window * num events). binary coded
@@ -39,22 +42,27 @@ my_shelf.close()
 
 #%% Subset data
 #for encoding model only need event times + photometry signal + metadata
-colToInclude= idVars+contVars+['trainDayThisStage','eventType']
+colToInclude= idVars+contVars+['trainDayThisStage','trialID','eventType']
 
 dfTidy= dfTidy.loc[:,colToInclude]
 
 # Hitting memory errors when time shifting events; so subsetting or processing in chunks should help
 
-#%% Define which specific stages / sessions to include!
+#%% Define which specific stages / events / sessions to include!
 
 stagesToInclude= [7]
 
-#number of sessions to include, includes final session of this stage-n
-nSessionsToInclude= 2 
+#number of sessions to include, 0 includes final session of this stage+n
+nSessionsToInclude= 0 
 
-#define which eventTypes to include!
-eventsToInclude= ['DStime','NStime','UStime','PEtime','lickTime','lickTimeUS']
+# #define which eventTypes to include!
+# eventsToInclude= ['DStime','NStime','UStime','PEtime','lickTime','lickUS']
+# dfTidy.loc[~dfTidy.eventType.isin(eventsToInclude),'eventType']= pd.NA
+
+#REPLICATE matlab
+eventsToInclude= ['DStime','NStime','PEtime','lickTime']
 dfTidy.loc[~dfTidy.eventType.isin(eventsToInclude),'eventType']= pd.NA
+
 
 #exclude stages
 dfTidy= dfTidy.loc[dfTidy.stage.isin(stagesToInclude),:]
@@ -123,13 +131,46 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
     return dfResult, timeLock
         
 
-#%% Define peri-event z scoring / time shifting parameters
-fs= 40 #sampling frequency= 40hz
+#%% Define peri-event z scoring parameters
+fs= 40
 
-preEventTime= 10 *fs # seconds x fs
+preEventTime= 5 *fs # seconds x fs
 postEventTime= 10 *fs
 
+#time window to normalize against
 baselineTime= 10*fs
+
+#%% NORMALIZE photometry signal
+
+#TODO: may want to add some random trialStart time 'jitter' to add variation to cue onset times for regression (will currently always be t=0)
+
+#Going to 
+#1) Z-score normalize fp signal trial-by-trial relative to pre-cue baseline
+#2) Exclude data and restrict analysis to only DS or NS trial-by-trial (instead of whole FP signal)
+
+#-- Get Z-scored photometry signal
+
+#Iterate through files using groupby() and conduct peri event Z scoring
+#iterating through fileID to gurantee no contamination between sessions
+ 
+groups= dfTidy.groupby('fileID')
+
+#currently fxn will go through and z score surrounding ALL events. Need to restrict to FIRST event per trial 
+    
+for name, group in groups:
+    for signal in contVars: #loop through each signal (465 & 405)
+        #-- peri-DS 
+        z, timeLock=  zscoreCustom(group, signal, 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
+        dfTidy.loc[group.index,signal+'-z-periDS']= z
+        dfTidy.loc[group.index,'timeLock-z-periDS']= timeLock
+
+        
+        #-- peri-NS 
+        z, timeLock=  zscoreCustom(group, signal, 'NStime', preEventTime, postEventTime,'NStime', baselineTime)
+        dfTidy.loc[group.index,signal+'-z-periNS']= z
+        dfTidy.loc[group.index,'timeLock-z-periNS']= timeLock
+    
+test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()]
 
 #%% Peri-event z-scoring 
 # #Iterate through files using groupby() and conduct peri event Z scoring
@@ -219,9 +260,13 @@ dfTidy= dfTidy.drop(['eventType'], axis=1)
 del dfTemp
 
 #%% Define peri-event time shift parameters
-fs= 40
-preEventTime= 5 *fs # seconds x fs
-postEventTime= 10 *fs
+
+#keep same time shift parameters as periEvent
+fs=  fs
+
+preEventTime= preEventTime
+postEventTime= postEventTime
+
 
 #%% Shift event timestamps for encoding model
 
@@ -273,27 +318,47 @@ for eventCol in eventVars.categories:
         #for now perhaps should just avoid preallocation & presetting dtype, only make sparse after filling each col 
         
 
-groups= dfTemp.copy().groupby(['fileID'])
+#I think groupby operations on sparse df  may be inefficient 
+# groups= dfTemp.copy().groupby(['fileID']) #was working
+#restricting columns here may save time
+col= eventsToInclude+['fileID']
+groups= dfTemp[col].copy().groupby(['fileID'])
 
-import time
 
-#attempt 5-- WORKED! (very slow, idk how long)
-#~2s/ iteration so ~10s/shift
+
+# #attempt 5-- WORKED! (very slow, idk how long)
+# #~2s/ iteration so ~10s/shift with 5 events
 for eventCol in eventVars.categories:
     for shiftNum in np.arange(-preEventTime,postEventTime):
         #note fill_value=0 here will fill the beginning and end of session with 0 instead of nan (e.g. spots where there are no valid timestamps to shift())
         dfTemp.loc[:,(eventCol+'+'+(str(shiftNum)))]= groups[eventCol].shift(shiftNum,fill_value=0)
-        startTime = time.time()
+        # startTime = time.time()
         
         #####your python script#####
         dfTemp.loc[:,(eventCol+'+'+(str(shiftNum)))]= groups[eventCol].shift(shiftNum,fill_value=0)
     
     
-        executionTime = (time.time() - startTime)
-        print('Execution time in seconds: ' + str(executionTime))
+        # executionTime = (time.time() - startTime)
+        # print('Execution time in seconds: ' + str(executionTime))
         
 
-#TOTO: try shift entire df then assign to col? also try unsorted groupby?
+#TODO: try shift entire df then assign to col? also try unsorted groupby?
+
+# #attempt 6- failed, MEMORY ERROR @ col 3622
+# #without sparse df preallocation ~9.5s/ 
+# #~9s with sparse preallocation
+# for shiftNum in np.arange(-preEventTime,postEventTime):
+#     startTime = time.time()
+    
+#     #####your python script#####
+#     dfTemp.loc[:,(eventVars.categories+'+'+(str(shiftNum)))]= groups.shift(shiftNum,fill_value=0)[eventVars]
+
+
+#     executionTime = (time.time() - startTime)
+#     print('Execution time in seconds: ' + str(executionTime))
+    
+
+
 #and try scipy matrix. would probably be a lot faster?
 
 #Now that i'm using sparse data maybe I can speed up using older methods below
@@ -348,19 +413,27 @@ for eventCol in eventVars.categories:
 
 dfTemp= dfTemp.drop(eventVars,axis=1)
 
-#%% SAVE the data
-#should save time if there's a crash or something later
+#%% Isolate DS & NS data, SAVE as separate datasets
+#Restrict analysis to specific trialType
+
+#just get index of each and save as separate datasets. this way can load quickly and analyze separately
 
 savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
 print('saving regression input dfTemp to file')
 
-#Save as pickel
-dfTemp.to_pickle(savePath+'dfRegressionInput.pkl')
+ind= dfTemp['timeLock-z-periDS'].notnull()
+dfTemp.loc[ind].to_pickle(savePath+'dfRegressionInputDSonly.pkl')
 
+
+ind= dfTemp['timeLock-z-periNS'].notnull()
+dfTemp.loc[ind].to_pickle(savePath+'dfRegressionInputNSonly.pkl')
+
+#update list of contVars to include normalized fp signals
+contVars= list(dfTemp.columns[(dfTemp.columns.str.contains('reblue') | dfTemp.columns.str.contains('repurple'))])
 
 #also save other variables e.g. variables actually included in regression Input dataset (since we may have excluded specific eventTypes)
-saveVars= ['idVars', 'eventVars', 'trialVars', 'experimentType', 'stagesToInclude', 'nSessionsToInclude', 'preEventTime','postEventTime']
+saveVars= ['idVars', 'eventVars', 'contVars', 'trialVars', 'experimentType', 'stagesToInclude', 'nSessionsToInclude', 'preEventTime','postEventTime', 'fs']
 
 
 #use shelve module to save variables as dict keys
@@ -376,90 +449,117 @@ for key in saveVars:
         print('ERROR shelving: {0}'.format(key))
 my_shelf.close()
 
-#%% NORMALIZE photometry signal
-#TODO
+#%% SAVE the data
+# #should save time if there's a crash or something later
 
-#%% IF needed load 
-dataPath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+# savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
-dfTemp= pd.read_pickle(dataPath+'dfRegressionInput.pkl')
+# print('saving regression input dfTemp to file')
 
-#load any other variables saved during the import process ('dfTidymeta' shelf)
-my_shelf = shelve.open(dataPath+'dfTidymeta')
-for key in my_shelf:
-    globals()[key]=my_shelf[key]
-my_shelf.close()
+# #Save as pickel
+# dfTemp.to_pickle(savePath+'dfRegressionInput.pkl')
 
 
-#%% RUN REGRESSION?
-#TODO: How to handle different subjects? should run separately in loop or use as predictor?
-#unlike matlab version of code this is one big table with everything
+# #also save other variables e.g. variables actually included in regression Input dataset (since we may have excluded specific eventTypes)
+# saveVars= ['idVars', 'eventVars', 'trialVars', 'experimentType', 'stagesToInclude', 'nSessionsToInclude', 'preEventTime','postEventTime', 'fs']
 
-#TESTING with subset
-# dfTemp= dfTemp.loc[dfTemp.fileID==dfTemp.fileID.min()]
 
-# test= dfTemp.iloc[:,20]
-# test2= test.unique()
+# #use shelve module to save variables as dict keys
+# my_shelf= shelve.open(savePath+'dfRegressionInputMeta', 'n') #start new file
 
-#Run separately on each subject
-#finding now that groupby with sparse dtypes may be very slow...
-groups= dfTemp.groupby(['subject'])
+# for key in saveVars:
+#     try:
+#         my_shelf[key]= globals()[key] 
+#     except TypeError:
+#         #
+#         # __builtins__, my_shelf, and imported modules can not be shelved.
+#         #
+#         print('ERROR shelving: {0}'.format(key))
+# my_shelf.close()
 
-for name, group in groups:
-    #define predictor and response variables
-    #predictors will be all remaining columns that are not idVars or contVars
-    col= ~group.columns.isin(idVars+contVars)
-    X = group.loc[:,col]
     
-    #--Remove invalid observations 
-    #pd.shift() timeshift introduced nans at beginning and end of session 
-    #(since there were no observations to fill with); Exclude these timestamps
-    #regression inputs should not have any nan & should be finite; else  will throw error
-    #--shouldn't happen now since fill_values=0
-    # dfTemp= dfTemp.loc[~X.isin([np.nan, np.inf, -np.inf]).any(1),:]
-    
-    X = group.loc[:,col]
-    
-    # #examining input data
-    # np.any(np.isnan(X))
-    # np.all(np.isfinite(X))
-    
-    
-    #regressor is fp signal
-    y = group["reblue"]
-    
-    #define cross-validation method to evaluate model
-    cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=1)
-    
-    #define model
-    model = LassoCV(alphas=np.arange(0, 1, 0.01), cv=cv, n_jobs=-1)
-    
-    #fit model
-    model.fit(X, y)
-    
-    #display lambda that produced the lowest test MSE
-    print(model.alpha_)
+
+# #%% IF needed load 
+# dataPath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+# dfTemp= pd.read_pickle(dataPath+'dfRegressionInput.pkl')
+
+# #load any other variables saved during the import process ('dfTidymeta' shelf)
+# my_shelf = shelve.open(dataPath+'dfTidymeta')
+# for key in my_shelf:
+#     globals()[key]=my_shelf[key]
+# my_shelf.close()
 
 
-#%% Visualize kernels
+# # #%% RUN REGRESSION?
+# # #TODO: How to handle different subjects? should run separately in loop or use as predictor?
+# #unlike matlab version of code this is one big table with everything
 
-#coefficients: 1 col for each shifted version of event timestamps in the range of timeShifts. events ordered sequentially
+# #TESTING with subset
+# # dfTemp= dfTemp.loc[dfTemp.fileID==dfTemp.fileID.min()]
 
-kernels= pd.DataFrame()
+# # test= dfTemp.iloc[:,20]
+# # test2= test.unique()
 
-b= model.coef_
+# #Run separately on each subject
+# #finding now that groupby with sparse dtypes may be very slow...
+# groups= dfTemp.groupby(['subject'])
 
-for eventCol in range(len(eventVars)):
-    if eventCol==0:
-        ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
-    else:
-        ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
+# for name, group in groups:
+#     #define predictor and response variables
+#     #predictors will be all remaining columns that are not idVars or contVars
+#     col= ~group.columns.isin(idVars+contVars)
+#     X = group.loc[:,col]
+    
+#     #--Remove invalid observations 
+#     #pd.shift() timeshift introduced nans at beginning and end of session 
+#     #(since there were no observations to fill with); Exclude these timestamps
+#     #regression inputs should not have any nan & should be finite; else  will throw error
+#     #--shouldn't happen now since fill_values=0
+#     # dfTemp= dfTemp.loc[~X.isin([np.nan, np.inf, -np.inf]).any(1),:]
+    
+#     X = group.loc[:,col]
+    
+#     # #examining input data
+#     # np.any(np.isnan(X))
+#     # np.all(np.isfinite(X))
+    
+    
+#     #regressor is fp signal
+#     y = group["reblue"]
+    
+#     #define cross-validation method to evaluate model
+#     cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=1)
+    
+#     #define model
+#     model = LassoCV(alphas=np.arange(0, 1, 0.01), cv=cv, n_jobs=-1)
+    
+#     #fit model
+#     model.fit(X, y)
+    
+#     #display lambda that produced the lowest test MSE
+#     print(model.alpha_)
+
+
+# #%% Visualize kernels
+
+# #coefficients: 1 col for each shifted version of event timestamps in the range of timeShifts. events ordered sequentially
+
+# kernels= pd.DataFrame()
+
+# b= model.coef_
+
+# for eventCol in range(len(eventVars)):
+#     if eventCol==0:
+#         ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
+#     else:
+#         ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
    
-    kernels[(eventVars[eventCol]+'-coef')]= b[ind]
+#     kernels[(eventVars[eventCol]+'-coef')]= b[ind]
 
 
-#%% 
+# #%% 
 
-#Establish hierarchical grouping for analysis
-#want to be able to aggregate data appropriately for similar conditions, so make sure group operations are done correctly
-groupers= ['subject', 'trainDayThisStage', 'fileID']
+# #Establish hierarchical grouping for analysis
+# #want to be able to aggregate data appropriately for similar conditions, so make sure group operations are done correctly
+# groupers= ['subject', 'trainDayThisStage', 'fileID']

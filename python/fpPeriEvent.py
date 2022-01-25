@@ -105,7 +105,7 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
 #%% Define peri-event z scoring parameters
 fs= 40 #sampling frequency= 40hz
 
-preEventTime= 10 *fs # seconds x fs
+preEventTime= 5 *fs # seconds x fs
 postEventTime= 10 *fs
 
 baselineTime= 10*fs
