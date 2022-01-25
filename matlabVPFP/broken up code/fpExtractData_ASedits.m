@@ -244,31 +244,62 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
 
     cutTime = reTime(numStartExclude:end-numEndExclude);        % define cutTime as a new time axis w/o removed points- remember each intensity value should have a corresponding timestamp
     
-       
     
+    %% Artifact removal goes here
+
+    %adapted from https://www.mathworks.com/matlabcentral/answers/358022-how-to-remove-artifacts-from-a-signal
+    %ImageAnalyst: You can detect "bad" elements either by computing the MAD and then thresholding to identify them, and then replacing them with zero or NAN (whichever you want)    
+
+    %-Define artifact identification parameters (use artifactParameterTest.mlapp on some sessions to find good values)
+    %e.g. run- artifactParameterTest(reblueB, repurpleB)
+
+    %some notes in selecting params:
+    %High MADwindow, low thresholdFactor, high threshholdWindow = good for noisy sessions with frequent small artifacts?
+    %e.g. 30, 2, 600
+    %Low MADwindow, high thresholdFactor, low threshWindow= good for huge artifact rise and fall period only?
+    %e.g. 2, 10, 10
+    %Seems good: Mid MADwindow, high thresholdFactor, mid threshWindow= good for eliminating entire huge artifacts including flat period between rise and fall?    
+    %e.g. 15, 5, 600
+
+    %TODO: could consider going through with 2 passes: one for big artifacts and
+    %second for smaller, more transient
+
+    refConvWindow= 5; %old alternative method uses this instead of movMAD(), creates blurredReference
+    MADwindow= 10; %longer window= less sensitive to transient peaks, captures more persistent shifts
+    thresholdWindow= 600; %longer window = flatter threshold, stricter. shorter window= more permissive of transient baseline shifts
+    thresholdFactor= 4; 
+
+    %-Run artifact elimination function
+    %plots are in the function itself commented out if you want to examine
+    [fixedBlueA, fixedPurpleA] = fpArtifactElimination_DynamicMAD(reblueA, repurpleA, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);
+
+    [fixedBlueB, fixedPurpleB] = fpArtifactElimination_DynamicMAD(reblueB, repurpleB, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);    
+
+
+
     %% Save all data for a given session to struct for easy access
-    
-        %Events
+
+            %Events
     sesData(file).DS = DS;
 
     sesData(file).poxA= poxA;
     sesData(file).loxA= loxA;
     sesData(file).outA= outA;
-    
+
     sesData(file).poxB= poxB;
     sesData(file).loxB= loxB;
     sesData(file).outB= outB;
-    
+
         %Photometry signals
     sesData(file).cutTime= cutTime;
-    sesData(file).reblueA = reblueA;
-    sesData(file).reblueB = reblueB;
-    sesData(file).repurpleA = repurpleA;
-    sesData(file).repurpleB = repurpleB;
+    sesData(file).reblueA = fixedBlueA; %reblueA;
+    sesData(file).reblueB = fixedBlueB; %reblueB;
+    sesData(file).repurpleA = fixedPurpleA; %repurpleA;
+    sesData(file).repurpleB = fixedPurpleB; %repurpleB;
 
     sesData(file).NS= NS; %will just populate with Nan if not present
-    
-toc
+
+    toc
 
 end %End file loop
 

@@ -18,6 +18,9 @@ import shelve
 from sklearn.linear_model import LassoCV
 from sklearn.model_selection import RepeatedKFold
 
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
 #%% PREPARING INPUT FOR PARKER ENCODING MODEL
 # want - 
 # x_basic= 148829 x 1803... # timestamps entire session x (# time shifts in peri-Trial window * num events). binary coded
@@ -188,6 +191,25 @@ for subj in subjects:
     #display lambda that produced the lowest test MSE
     print(model.alpha_)
     
+    
+    #skitlearn mainly used for machine learning, For a more classic statistical approach, take a look at statsmodels:
+    #--statsmodels
+    #caveat i think is statsmodels won't directly implement cross validation
+    
+    #endogenous= response/dependent variable, exogenous= regressors/predictors
+    model2= sm.OLS()
+    
+    testModel= sm.OLS(group.loc[:,y], group.loc[:,X])
+    
+    #L1_wt=1 for LASSO 
+    fit= testModel.fit_regularized(L1_wt=1)
+
+    print(fit.summary())
+    
+    #create wrapper so that we can use sklearn cross validation on statsmodels model
+    #https://stackoverflow.com/questions/41045752/using-statsmodel-estimations-with-scikit-learn-cross-validation-is-it-possible/48949667
+
+    
     #save model output?
     savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
@@ -284,6 +306,9 @@ for subj in subjects:
     g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
     
     saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal)
+    
+    
+    #%% TODO: should apply kernels on trial-by-trial basis like in matlab code after calculating? or maybe the model prediction accomplishes fine
     
     #%% TODO: getting regression convergence warning
     # ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Duality gap: 408597.86992538127, tolerance: 101.5919394459587
