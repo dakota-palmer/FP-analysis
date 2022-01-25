@@ -93,3 +93,4 @@ python/_output/dfTidyFP.pkl
 *.bak
 *.dat
 *.dir
+matlabVPFP/_dp_manuscript/_trash/struct2tableAll.m
