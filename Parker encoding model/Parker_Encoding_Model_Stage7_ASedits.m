@@ -839,6 +839,7 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
     gcamp_y=gcamp_temp;
     
     %TODO: better name for 'stats.p' here is 'stats.fitinfo'
+%     test= lasso(x_all,gcamp_y','cv',5)
     [stats.beta,stats.p]=lasso(x_all,gcamp_y','cv',5);    %Lasso with cross-validation % Nathan says we can use glmfit instead
     sum_betas=max(stats.beta(:,stats.p.IndexMinMSE));    %Selects betas that minimize MSE
     if sum_betas==0; stats.p.IndexMinMSE=max(find(max(stats.beta)>0.0001)); end  %Makes sure there are no all zero betas

@@ -390,29 +390,29 @@ for rat = 1:numel(rats)
     end  
 end %end subject loop
 
-%% quick visualization here
-subjects= fieldnames(subjData);
-for subj= 1:numel(subjects)
-    currentSubj= subjData.(subjects{subj})
-    for session= 1:numel(currentSubj)
-        fitPurple= controlFit(currentSubj(session).reblue, currentSubj(session).repurple);
-        figure; title(strcat(subjects{subj},'-box-',num2str(currentSubj(session).box),'-',currentSubj(session).fileName));
-        hold on
-        plot(currentSubj(session).cutTime', currentSubj(session).reblue, 'b'); %plot 465nm trace
-        plot(currentSubj(session).cutTime', fitPurple,'m'); %plot 405nm trace
-        xlabel('time (s)');
-        ylabel('mV');
-        legend('blue (465)',' fitted purple (405)');
-       
-        figure; subplot(3,1,1); hold on; title('diff(reblue)');
-        plot(diff(currentSubj(session).reblue),'b');
-        subplot(3,1,2); hold on; title('diff(repurple)');
-        plot(diff(currentSubj(session).repurple),'m');
-        subplot(3,1,3); hold on; title('diff(reblue)-diff(repurple)');
-        plot(diff(currentSubj(session).reblue)-diff(currentSubj(session).repurple),'g');
-        linkaxes();
-    end
-end
+% %% quick visualization here
+% subjects= fieldnames(subjData);
+% for subj= 1:numel(subjects)
+%     currentSubj= subjData.(subjects{subj})
+%     for session= 1:numel(currentSubj)
+%         fitPurple= controlFit(currentSubj(session).reblue, currentSubj(session).repurple);
+%         figure; title(strcat(subjects{subj},'-box-',num2str(currentSubj(session).box),'-',currentSubj(session).fileName));
+%         hold on
+%         plot(currentSubj(session).cutTime', currentSubj(session).reblue, 'b'); %plot 465nm trace
+%         plot(currentSubj(session).cutTime', fitPurple,'m'); %plot 405nm trace
+%         xlabel('time (s)');
+%         ylabel('mV');
+%         legend('blue (465)',' fitted purple (405)');
+%        
+%         figure; subplot(3,1,1); hold on; title('diff(reblue)');
+%         plot(diff(currentSubj(session).reblue),'b');
+%         subplot(3,1,2); hold on; title('diff(repurple)');
+%         plot(diff(currentSubj(session).repurple),'m');
+%         subplot(3,1,3); hold on; title('diff(reblue)-diff(repurple)');
+%         plot(diff(currentSubj(session).reblue)-diff(currentSubj(session).repurple),'g');
+%         linkaxes();
+%     end
+% end
 %% Sort struct by training day for each subject before saving
 %at times files are loaded out of order, this will organize everything by training day (each row in the struct = 1 session) 
 
