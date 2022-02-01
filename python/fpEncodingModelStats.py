@@ -22,24 +22,23 @@ from sklearn.model_selection import cross_val_score
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
+from customFunctions import saveFigCustom
+
+from plot_lasso_model_selection import plot_lasso_model_selection
+
 #%% PREPARING INPUT FOR PARKER ENCODING MODEL
 # want - 
 # x_basic= 148829 x 1803... # timestamps entire session x (# time shifts in peri-Trial window * num events). binary coded
 # gcamp_y = 148829 x 1 ; entire session signal predicted by regression . z scored photometry signal currently nan during ITI & only valid values during peri-DS
 
     
- #%% define a function to save and close figures
-def saveFigCustom(figure, figName):
-    plt.gcf().set_size_inches((20,10), forward=False) # ~monitor size
-    plt.legend(bbox_to_anchor=(1.01, 1), borderaxespad=0) #creates legend ~right of the last subplot
-    
-    plt.gcf().tight_layout()
-    plt.savefig(r'./_output/_behaviorAnalysis/'+figName+'.png', bbox_inches='tight')
-    plt.close()
     
 #%% Plot settings
 sns.set_style("darkgrid")
 sns.set_context('notebook')
+
+savePath= r'./_output/fpEncodingModelStats/'
+
     
 #%% Run DS or NS?
 modeCue= 'DS'
@@ -129,16 +128,33 @@ elif modeSignal=='repurple':
 #pd.shift() timeshift introduced nans at beginning and end of session 
 #(since there were no observations to fill with); Exclude these timestamps
 #regression inputs should not have any nan & should be finite; else  will throw error
-#--shouldn't happen now since fill_values=0
+# --shouldn't happen now since fill_values=0
 # dfTemp= dfTemp.loc[~dfTemp.isin([np.nan, np.inf, -np.inf]).any(1),:]
     
+#define predictor and response variables:
+    
+#will save X and y as index instead of copying data to save mem
+    
+#regressors/predictors will be all remaining columns that are not idVars or contVars
+col= ~dfTemp.columns.isin(idVars+contVars+['trainDayThisStage','trialID','timeLock-z-periDS','timeLock-z-periNS'])
+
+#regressand/response variable is fp signal
+y= 'reblue-z-periDS'
+
+
+# Remove invalid observations (nan, inf) in these columns
+# shouldn't be any. at this point not sure where they come from?
+dfTemp= dfTemp.loc[~dfTemp.loc[:,col].isin([np.nan, np.inf, -np.inf]).any(1),:]
+
+
 subjects= dfTemp.subject.unique()
+
+#run only specific subjects
+# subjects= [14,15,17,19]
+
 for subj in subjects:
     group= dfTemp.loc[dfTemp.subject==subj]
-    #define predictor and response variables
-    #regressors/predictors will be all remaining columns that are not idVars or contVars
-    col= ~group.columns.isin(idVars+contVars+['trainDayThisStage','trialID','timeLock-z-periDS','timeLock-z-periNS'])
-    
+       
     # #visualizing test here
     # test= dfTemp.loc[dfTemp.fileID==dfTemp.fileID.min()]
     # test= test.iloc[:,col]
@@ -192,8 +208,18 @@ for subj in subjects:
     #define model
     #testing range of alphas between 0=OLS, elastic net, and 1=lasso? 
     # 'alpha' = 'lambda' ?
-    alphas=np.arange(0, 1, 0.01)
-    model = LassoCV(alphas=alphas, cv=cv, n_jobs=-1)
+    #-manually define alphas- gives convergence warning
+    # alphas=np.arange(0, 1, 0.01)
+    # model = LassoCV(alphas=alphas, cv=cv, n_jobs=-1)
+    #-automatically define alphas
+    # auto selection of alphas doesn't give convergence warning?
+    #did get convergence warning with more predictors: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Duality gap: 2.8917507487130933, tolerance: 2.4854334923226147
+    # model = LassoCV(cv=cv, n_jobs=-1)
+    
+    #try with more iterations or greater tol? (for convergencewarning)
+    model = LassoCV(cv=cv, n_jobs=-1, max_iter=20000)
+
+# https://stats.stackexchange.com/questions/445831/how-is-tol-used-in-scikit-learns-lasso-and-elasticnethttps://stats.stackexchange.com/questions/445831/how-is-tol-used-in-scikit-learns-lasso-and-elasticnet
 
     
     #fit model
@@ -214,16 +240,19 @@ for subj in subjects:
     #Model.MSE_path_? 25 col like matlab but 100 rows. Plotting
     msePath= pd.DataFrame(model.mse_path_)
     msePath= msePath.reset_index().melt(id_vars= 'index', value_vars=msePath.columns, var_name='cvIteration', value_name='MSE')
-    msePath= msePath.rename(columns={"index": "lambda"})
+    msePath= msePath.rename(columns={"index": "alphaCount"})
     
-    fig, ax = plt.subplots()
-    sns.scatterplot(ax=ax, data=msePath, x='lambda', y='MSE', hue='cvIteration', palette='Blues')
-    sns.lineplot(ax=ax, data=msePath, x='lambda', y='MSE', color='black')
+    msePath['alpha']= np.nan
     
-    ax.set_xlabel('alpha')
-    ax.set_ylabel('MSE')
-    ax.set_title('MSE across CV folds?')
-    #suggests lambda close to 1 had lowest MSE consistently? of ~ MSE= 4.5
+    msePath['alpha']= model.alphas_[msePath.alphaCount]
+    
+    # fig, ax = plt.subplots()
+    # sns.scatterplot(ax=ax, data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
+    # sns.lineplot(ax=ax, data=msePath, x='alpha', y='MSE', color='black')
+    
+    # ax.set_xlabel('alpha')
+    # ax.set_ylabel('MSE')
+    # ax.set_title('MSE across CV folds')
    
     # #Show coefficients as fxn of alpha regularization
     #hitting error
@@ -265,35 +294,32 @@ for subj in subjects:
 
     # pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y], alphas=alphas)
     
+    #doesn't seem to be giving the full path across all cv's just a mean I guess?
+    #these two give identical results:
     pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y])
+    # pathAlphas, pathCoefs, pathDualGaps= model.path(group.loc[:,X],group.loc[:,y], cv=cv)
+    
+    #???? Why are alphas in this 'path' so different than the model.alphas?
+    #try manually choosing same as model alphas. #convergencewarning
+    #this basically makes everything zero except very small alpha. maybe a sign to look specifically at smaller alphas?
+    # pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y], alphas= model.alphas_)
 
     
+    #initialize df to store path
     modelPath= pd.DataFrame()
-    # modelPath['pathAlphas']= np.empty(len(model.coef_))
-    # modelPath['pathCoefs']= np.empty(len(model.coef_))
-    # modelPath['dual_gaps']= np.empty(len(model.coef_))
-    
     modelPath['alpha']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
     modelPath['coef']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
     modelPath['dualGap']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
     modelPath['modelCount']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
     modelPath['predictor']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
     modelPath['eventType']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-
-    
     modelPath[:]= np.nan
     
-    
-    
+   
     #fill df with data from each iteration along the path
     ind= np.arange(0,(pathCoefs.shape[0]))
     for thisModel in range(0,len(pathAlphas)):
-     
-        # pathAlphas_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
-        # pathAlphas_lasso[:]= pathAlphas[thisModel]
     
-        # pathCoefs_lasso= pathCoefs[:,thisModel]
-        
         pathAlphas_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
         pathAlphas_lasso[:]= pathAlphas[thisModel]
     
@@ -305,11 +331,10 @@ for subj in subjects:
         
         predictor_lasso= group.columns[X] #np.arange(0,len(pathCoefs[:,thisModel]))
         
-        
+    
         pathCoefs_lasso= pathCoefs[:,thisModel]
         
 
-        
         modelPath.loc[ind,'alpha']= pathAlphas_lasso
         modelPath.loc[ind,'coef']= pathCoefs_lasso
         modelPath.loc[ind,'dualGap']= pathDualGaps_lasso
@@ -326,14 +351,6 @@ for subj in subjects:
 
             eventType_lasso[indEvent]= eventVars[eventCol]
 
-        # for eventCol in range(len(eventVars)):
-        #     if eventCol==0:
-        #         indEvent= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
-        #     else:
-        #         indEvent= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
-            
-        #     eventType_lasso[indEvent]= eventVars[eventCol]
-       
             #assigning .values since i made this a series and index doesn't align
         modelPath.loc[ind, 'eventType']= eventType_lasso.values
 
@@ -341,63 +358,67 @@ for subj in subjects:
 
          
 
-      #viz path
+    #   # viz path
     # fig, ax = plt.subplots()
     # sns.lineplot(ax= ax, data=modelPath, x='alpha', y='coef', hue='eventType')
+    # ax.set_title('regularization path: coefficients for each alpha')
     # ax.set_xlabel('alpha')
     
-    fig, ax = plt.subplots()
-    sns.lineplot(ax= ax, data=modelPath, x='alpha', y='coef', hue='eventType')
-    ax.set_title('regularization path: coefficients for each alpha')
-    ax.set_xscale('log')
-    ax.set_xlabel('log alpha')
+    # fig, ax = plt.subplots()
+    # sns.lineplot(ax= ax, data=modelPath, x='alpha', y='coef', hue='eventType')
+    # ax.set_title('regularization path: coefficients for each log alpha')
+    # ax.set_xscale('log')
+    # ax.set_xlabel('log alpha')
     
     
     # fig, ax = plt.subplots()
     # sns.lineplot(ax= ax, data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType')
+    # ax.set_title('regularization path: coefficients for each alpha')
     # ax.set_xlabel('alpha')
 
-    fig, ax = plt.subplots()
-    sns.lineplot(ax= ax, data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType')
-    ax.set_xscale('log')
-    ax.set_xlabel('log alpha')
+    # fig, ax = plt.subplots()
+    # sns.lineplot(ax= ax, data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType')
+    # ax.set_title('regularization path: coefficients for each log alpha')
+    # ax.set_xscale('log')
+    # ax.set_xlabel('log alpha')
 
 
+    #COMBINE above into single figure for model validation
+    #MSE path + coefficient path
+    f, ax = plt.subplots(2,1)
     
-    # for eventCol in range(len(eventVars)):
-    # if eventCol==0:
-    #     ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
-    # else:
-    #     ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
-   
-
-
-    # import pylab as pl    
-    # pl.figure(1)
-    # ax = pl.gca()
-    # # ax.set_color_cycle(2 * ['b', 'r', 'g', 'c', 'k'])
-    # l1 = pl.semilogx(modelPath.alpha,modelPath.coef)
-    # pl.gca().invert_xaxis()
-    # pl.xlabel('alpha')
-    # pl.show()
-        
-    # #viz
-    # #testing 
-    # from sklearn.linear_model import lasso_path
-    # modelsTest = lasso_path(group.loc[:,X], group.loc[:,y])#, eps=eps)
-
+    #mse
+    g=sns.scatterplot(ax=ax[0], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
+    g=sns.lineplot(ax=ax[0], data=msePath, x='alpha', y='MSE', color='black')
+    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
     
-    # alphas_lasso = np.array([model.alpha for model in models])
-    # coefs_lasso = np.array([model.coef_ for model in models])
+    g.set_xlabel('alpha')
+    g.set_ylabel('MSE')
+    g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
+    g.set(xlabel='alpha', ylabel='MSE')
     
-    # pl.figure(1)
-    # ax = pl.gca()
-    # ax.set_color_cycle(2 * ['b', 'r', 'g', 'c', 'k'])
-    # l1 = pl.semilogx(alphas_lasso,coefs_lasso)
-    # pl.gca().invert_xaxis()
-    # pl.xlabel('alpha')
-    # pl.show()
+    #coef path
+    g=sns.lineplot(ax= ax[1], data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
+    g=sns.lineplot(ax= ax[1], data=modelPath,  x='alpha', y='coef', hue='eventType', palette='dark')
+    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    ax[1].set_xscale('log')
+    ax[1].set_xlabel('log alpha')
     
+    g.set(title=('subj-'+str(subj)+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
+    g.set(ylabel='coef')
+    # ax.set_xscale('log') #log scale if wanted
+    
+    saveFigCustom(f, 'subj-'+str(subj)+'-lassoValidation-'+modeCue+'-trials-'+modeSignal, savePath)
+
+  
+    
+    #--COMPARE regularization methods: AIC/BIC vs CV-coordinate descent vs CV-LARS
+    modelName= 'subj-'+str(subj)+'-'+modeCue+'-trials-'+modeSignal
+    
+    plot_lasso_model_selection(group.loc[:,X].copy(), group.loc[:,y].copy(), cv, modelName, r'./_output/fpEncodingModelStats/regularizationComparison/')
+    
+    
+    #TODO: https://scikit-learn.org/stable/auto_examples/exercises/plot_cv_diabetes.html
     
     #matlab gives stats.fitInfo.MSE: 1 val per each 100 iterations (lambda reg coefs)
     #finds the betas corresponding to lambda with lowest MSE
@@ -433,7 +454,7 @@ for subj in subjects:
 
     
     #save model output?
-    savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+    # savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
     print('saving model to file')
     
@@ -447,31 +468,44 @@ for subj in subjects:
     #coefficients: 1 col for each shifted version of event timestamps in the range of timeShifts. events ordered sequentially
      
     #alt method of lining up coef with feature names:
-    #list(zip(model.coef_, group.columns[X])
+        # for eventCol in range(len(eventVars)):
+        #     indEvent= group.columns[X].str.contains(eventVars[eventCol])
 
+        #     eventType_lasso[indEvent]= eventVars[eventCol]
     
     b= model.coef_
 
     kernels= pd.DataFrame()
     kernels['beta']= np.empty(len(b))
+    kernels['predictor']= np.empty(len(b))
     kernels['eventType']= np.empty(len(b))
     kernels['timeShift']= np.empty(len(b))
     
     #adding statsmodels output
     # kernels['betaStatsModels']= np.empty(len(b))
-
-    
+     
+    kernels.loc[:,'beta']= b
+    kernels.loc[:,'predictor']= group.columns[X]
+            
+    #assign eventType specific info
     for eventCol in range(len(eventVars)):
-        if eventCol==0:
-            ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
-        else:
-            ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
+        indEvent= group.columns[X].str.contains(eventVars[eventCol])
+        
+        kernels.loc[indEvent,'eventType']= eventVars[eventCol]
+        kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
+            
+    
+    # for eventCol in range(len(eventVars)):
+    #     if eventCol==0:
+    #         ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
+    #     else:
+    #         ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
        
-        # kernels[(eventVars[eventCol]+'-coef')]= b[ind]
-        kernels.loc[ind,'beta']= b[ind]
-        kernels.loc[ind,'eventType']= eventVars[eventCol]
-        kernels.loc[ind, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
-        # kernels.loc[ind,'betaStatsModels']= fit.params[ind].values
+    #     # kernels[(eventVars[eventCol]+'-coef')]= b[ind]
+    #     kernels.loc[ind,'beta']= b[ind]
+    #     kernels.loc[ind,'eventType']= eventVars[eventCol]
+    #     kernels.loc[ind, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
+    #     # kernels.loc[ind,'betaStatsModels']= fit.params[ind].values
         
         
     # #compare scikitlearn vs statsmodels output
@@ -539,13 +573,13 @@ for subj in subjects:
     g.text(0.05, 0.3, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
 
 
-    g= sns.lineplot(ax=ax[1,],data=dfTemp.loc[group.index,:],y=predicted, x='timeLock-z-periDS', color='blue')
-    g= sns.lineplot(ax=ax[1,], data=dfTemp.loc[group.index,:], x='timeLock-z-periDS', y=y, color='black')
+    g= sns.lineplot(ax=ax[1,],data=dfTemp.loc[group.index,:], x='timeLock-z-periDS', y=predicted, color='black')
+    g= sns.lineplot(ax=ax[1,], data=dfTemp.loc[group.index,:], x='timeLock-z-periDS', y=y, color='blue')
     g.legend(['predicted??','actual'])
     g.set(title=('subj-'+str(subj)+'-periCueModelPrediction-'+modeCue+'-trials-'+modeSignal))
     g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
     
-    saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal)
+    saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal, savePath)
     
     
     #%% TODO: should apply kernels on trial-by-trial basis like in matlab code after calculating? or maybe the model prediction accomplishes fine

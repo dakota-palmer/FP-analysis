@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jan 26 15:27:18 2022
+
+@author: Dakota
+"""
+
 """
 ===================================================
 Lasso model selection: Cross-Validation / AIC / BIC
@@ -41,111 +48,177 @@ evaluate the performance of a method for which a parameter is chosen by
 cross-validation: this choice of parameter may not be optimal for unseen
 data.
 """
-print(__doc__)
 
-# Author: Olivier Grisel, Gael Varoquaux, Alexandre Gramfort
-# License: BSD 3 clause
+def plot_lasso_model_selection(X, y, cv, modelName, savePath):
+    print(__doc__)
+    
+    # Author: Olivier Grisel, Gael Varoquaux, Alexandre Gramfort
+    # License: BSD 3 clause
+    
+    import time
+    
+    import numpy as np
+    import matplotlib.pyplot as plt
+    
+    from sklearn.linear_model import LassoCV, LassoLarsCV, LassoLarsIC
+    from sklearn import datasets
+    
+    from customFunctions import saveFigCustom
+    
+    # This is to avoid division by zero while doing np.log10
+    EPSILON = 1e-4
+    
+    # Xx, yY = datasets.load_diabetes(return_Xx_y=True)
+    #changed from X, y just so can run in middle of encodingModel without redefining
+    
+    # Xx= group.loc[:,X].copy()
+    # yY= group.loc[:,y].copy()
+    
+    Xx= X
+    yY= y
 
-import time
+    #REMOVE COLUMNS WITH ALL ZERO (e.g. UStime wil never occur with a late enough time shift, fixed time relative to DS)
+    col= Xx.columns[Xx.sum(axis=0)==0]
+    
+    Xx= Xx.drop(col,axis=1)
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-from sklearn.linear_model import LassoCV, LassoLarsCV, LassoLarsIC
-from sklearn import datasets
-
-# This is to avoid division by zero while doing np.log10
-EPSILON = 1e-4
-
-X, y = datasets.load_diabetes(return_X_y=True)
-
-rng = np.random.RandomState(42)
-X = np.c_[X, rng.randn(X.shape[0], 14)]  # add some bad features
-
-# normalize data as done by Lars to allow for comparison
-X /= np.sqrt(np.sum(X ** 2, axis=0))
-
-# #############################################################################
-# LassoLarsIC: least angle regression with BIC/AIC criterion
-
-model_bic = LassoLarsIC(criterion='bic')
-t1 = time.time()
-model_bic.fit(X, y)
-t_bic = time.time() - t1
-alpha_bic_ = model_bic.alpha_
-
-model_aic = LassoLarsIC(criterion='aic')
-model_aic.fit(X, y)
-alpha_aic_ = model_aic.alpha_
-
-
-def plot_ic_criterion(model, name, color):
-    criterion_ = model.criterion_
-    plt.semilogx(model.alphas_ + EPSILON, criterion_, '--', color=color,
-                 linewidth=3, label='%s criterion' % name)
-    plt.axvline(model.alpha_ + EPSILON, color=color, linewidth=3,
-                label='alpha: %s estimate' % name)
-    plt.xlabel(r'$\alpha$')
-    plt.ylabel('criterion')
+    #maybe conversion from sparse to dense?
+    #where are nans coming from?? not an issue until this script?
+    # test= np.isnan(Xx) #gives some true values
+    # test= pd.isnull(Xx)
+        
+    # #add bad features, necessary?
+    rng = np.random.RandomState(42)
+    Xx = np.c_[Xx, rng.randn(Xx.shape[0], 14)]  # add some bad features
+    # Xx2 = np.c_[Xx, rng.randn(Xx.shape[0], 14)]  # add some bad features
 
 
-plt.figure()
-plot_ic_criterion(model_aic, 'AIC', 'b')
-plot_ic_criterion(model_bic, 'BIC', 'r')
-plt.legend()
-plt.title('Information-criterion for model selection (training time %.3fs)'
-          % t_bic)
+    # normalize data as done by Lars to allow for comparison
+    #--! Debugging notes This step adds nans for some reason? Likely comes from:
+    # 93: RuntimeWarning: invalid value encountered in true_divide
+    #guessing from zeros/binary coding?
+    # test= np.sum(Xx ** 2, axis=0)
+    # test2= np.sqrt(test)
+    #sqrt of some of test ==0, thus as divisor would be leading to nan
+    #issue is @ col 2361:2399
+    #check original values
+    #Correspond to late US shifts. Makes sense- these will never have timestamps past a certain point.
+    #So, should just remove these columns!
+    # test3= group.iloc[:,2361:2399]
+    
+    Xx /= np.sqrt(np.sum(Xx ** 2, axis=0))
+    # Xx2 /= np.sqrt(np.sum(Xx2 ** 2, axis=0))
+    
+    #try just removing rows with nans?
+    # Xx= Xx[~np.isnan(Xx).any(axis=1),:] #returns nothing, is a whole column nan?
+    #80 columns w all nan?
+    # test= Xx[:,np.isnan(Xx).any(axis=0)]
+    # Xx= Xx[:,~np.isnan(Xx).any(axis=0)]
+    
+    #original df is clearly fine, none of these return any nans:
+    # test= group.loc[:,X]
+    # test2= test.loc[:,np.isnan(test).any(axis=0)]
+    # test3= test.loc[np.isnan(test).any(axis=1),:]
 
-# #############################################################################
-# LassoCV: coordinate descent
+    
+    # #############################################################################
+    # LassoLarsIC: least angle regression with BIC/AIC criterion
+    
+    model_bic = LassoLarsIC(criterion='bic')
+    t1 = time.time()
+    model_bic.fit(Xx, yY)
+    ##?getting error here for some reason due to nan/inf values? idk where they come from
+    # test= Xx[np.isnan(Xx)]
+    # test= yY[np.isnan(yY)]
+    # test= Xx[np.isinf(Xx)]
+    # test= yY[np.isinf(yY)]
 
-# Compute paths
-print("Computing regularization path using the coordinate descent lasso...")
-t1 = time.time()
-model = LassoCV(cv=20).fit(X, y)
-t_lasso_cv = time.time() - t1
-
-# Display results
-plt.figure()
-ymin, ymax = 2300, 3800
-plt.semilogx(model.alphas_ + EPSILON, model.mse_path_, ':')
-plt.plot(model.alphas_ + EPSILON, model.mse_path_.mean(axis=-1), 'k',
-         label='Average across the folds', linewidth=2)
-plt.axvline(model.alpha_ + EPSILON, linestyle='--', color='k',
-            label='alpha: CV estimate')
-
-plt.legend()
-
-plt.xlabel(r'$\alpha$')
-plt.ylabel('Mean square error')
-plt.title('Mean square error on each fold: coordinate descent '
-          '(train time: %.2fs)' % t_lasso_cv)
-plt.axis('tight')
-plt.ylim(ymin, ymax)
-
-# #############################################################################
-# LassoLarsCV: least angle regression
-
-# Compute paths
-print("Computing regularization path using the Lars lasso...")
-t1 = time.time()
-model = LassoLarsCV(cv=20).fit(X, y)
-t_lasso_lars_cv = time.time() - t1
-
-# Display results
-plt.figure()
-plt.semilogx(model.cv_alphas_ + EPSILON, model.mse_path_, ':')
-plt.semilogx(model.cv_alphas_ + EPSILON, model.mse_path_.mean(axis=-1), 'k',
+    
+    t_bic = time.time() - t1
+    alpha_bic_ = model_bic.alpha_
+    
+    model_aic = LassoLarsIC(criterion='aic')
+    model_aic.fit(Xx, yY)
+    alpha_aic_ = model_aic.alpha_
+    
+    
+    def plot_ic_criterion(model, name, color):
+        criterion_ = model.criterion_
+        plt.semilogx(model.alphas_ + EPSILON, criterion_, '--', color=color,
+                     linewidth=3, label=('%s criterion' % name+str(model.alpha_)))
+        plt.axvline(model.alpha_ + EPSILON, color=color, linewidth=3,
+                    label='alpha: %s estimate' % name)
+        plt.xlabel(r'$\alpha$')
+        plt.ylabel('criterion')
+    
+    
+    plt.figure()
+    plot_ic_criterion(model_aic, 'AIC', 'b')
+    plot_ic_criterion(model_bic, 'BIC', 'r')
+    plt.legend()
+    plt.title('Information-criterion for model selection (training time %.3fs)'
+              % t_bic)
+    
+    saveFigCustom(plt.gcf, modelName+'-modelSelection_AIC-BIC', savePath)
+    
+    
+    # #############################################################################
+    # LassoCV: coordinate descent
+    
+    # Compute paths
+    print("Computing regularization path using the coordinate descent lasso...")
+    t1 = time.time()
+    model = LassoCV(cv=cv).fit(Xx, yY)
+    t_lasso_cv = time.time() - t1
+    
+    # Display results
+    plt.figure()
+    # ymin, ymax = 2300, 3800
+    plt.semilogx(model.alphas_ + EPSILON, model.mse_path_, ':')
+    plt.plot(model.alphas_ + EPSILON, model.mse_path_.mean(axis=-1), 'k',
              label='Average across the folds', linewidth=2)
-plt.axvline(model.alpha_, linestyle='--', color='k',
-            label='alpha CV')
-plt.legend()
+    plt.axvline(model.alpha_ + EPSILON, linestyle='--', color='k',
+                label='alpha: CV estimate-'+str(model.alpha_))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: coordinate descent '
+              '(train time: %.2fs)' % t_lasso_cv)
+    plt.axis('tight')
+    # plt.ylim(ymin, ymax)
+    
+    saveFigCustom(plt.gcf, modelName+'-modelSelection_CV-coordinate-descent', savePath)
+    
+    
+    # #############################################################################
+    # LassoLarsCV: least angle regression
+    
+    # Compute paths
+    print("Computing regularization path using the Lars lasso...")
+    t1 = time.time()
+    model = LassoLarsCV(cv=cv).fit(Xx, yY)
+    t_lasso_lars_cv = time.time() - t1
+    
+    # Display results
+    plt.figure()
+    plt.semilogx(model.cv_alphas_ + EPSILON, model.mse_path_, ':')
+    plt.semilogx(model.cv_alphas_ + EPSILON, model.mse_path_.mean(axis=-1), 'k',
+                 label='Average across the folds', linewidth=2)
+    plt.axvline(model.alpha_, linestyle='--', color='k',
+                label='alpha CV-'+str(model.alpha_))
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+              % t_lasso_lars_cv)
+    plt.axis('tight')
+    # plt.ylim(ymin, ymax)
+    
+    plt.show()
+    
+    saveFigCustom(plt.gcf, modelName+'-modelSelection_CV-LARS', savePath)
 
-plt.xlabel(r'$\alpha$')
-plt.ylabel('Mean square error')
-plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
-          % t_lasso_lars_cv)
-plt.axis('tight')
-plt.ylim(ymin, ymax)
 
-plt.show()
