@@ -11,14 +11,13 @@ import matplotlib.pyplot as plt
  #%% define a function to save and close figures
 def saveFigCustom(figure, figName,savePath, close=True):
     plt.gcf().set_size_inches((20,10), forward=False) # ~monitor size
-    plt.legend(bbox_to_anchor=(1.01, 1), borderaxespad=0) #creates legend ~right of the last subplot
+    # plt.legend(bbox_to_anchor=(1.01, 1), borderaxespad=0) #creates legend ~right of the last subplot
     
     plt.gcf().tight_layout()
     plt.savefig(savePath+figName+'.png', bbox_inches='tight')
     
     if close==True:
         plt.close()
-    
     
     
 #%% define a function to calculate PE probability

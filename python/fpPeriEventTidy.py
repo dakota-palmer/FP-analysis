@@ -11,7 +11,16 @@ import scipy.io as sio
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+
  
+import plotly.express as px #plotly is good for interactive plots (& can export as nice interactive html)
+import plotly.io as pio
+
+#unfortunately doesn't seem plotly has built in easy support for stats things like SEM
+#you can plot it all, but requires separate calculation and more code
+
+#May be able to combine with ggplot?
+
 import shelve
 
 from customFunctions import saveFigCustom
@@ -36,6 +45,10 @@ my_shelf.close()
 #%% Plot settings
 
 savePath= r'./_output/_fpPeriEvent/'
+
+#render plotly figs in browser so they are interactive (jupyter notebook supports interactive plots tho)
+pio.renderers.default='browser'
+
 
 #%% data prep for encoding model
 # want - 
@@ -163,6 +176,11 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
     timeLock.loc[:]= None
     timeLock.index= df.index
     
+    #save label col for easy faceting
+    dfLabel= np.empty(df.shape[0])
+    dfResult.loc[:]= None
+
+    
     #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
     #RESTRICTING to 1st event in trial
     for event in range(preIndBaseline.size):
@@ -187,6 +205,8 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
             dfResult.loc[preInd:postInd]= z
             
             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
+    
+            dfLabel[preInd:postInd]= eventCol
     
         except:
             continue
@@ -342,7 +362,7 @@ for subject in dfPlot.subject.unique():
     g.set(title=('peri-DS-lick'))
     g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
     
-    g= sns.lineplot(ax=ax[3,], data=dfPlot2, x='timeLock-z-periDS-UStime',y='blue-z-periDS-UStime',hue='trainDayThisStage',palette=subjPalette, linewidth=1, alpha=0.5)
+    g= sns.lineplot(ax=ax[3,], data=dfPlot2, x='timeLock-z-periDS-UStime',y='blue-z-periDS-UStime',hue='trainDayThisStage', linewidth=1, alpha=0.5)
     g= sns.lineplot(ax=ax[3,], data=dfPlot2, x='timeLock-z-periDS-UStime',y='blue-z-periDS-UStime',linewidth=2.5, color='black')
     g.set(title=('peri-DS-PumpOn'))
     g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
@@ -354,6 +374,37 @@ for subject in dfPlot.subject.unique():
         
     f.suptitle('subject-'+str(subject)+'-stage-'+str(stagesToPlot)+'-periEvent')
     saveFigCustom(g, 'subject-'+str(subject)+'-stage-'+str(stagesToPlot)+'-periEvent',savePath)
+
+#%% Plotly package
+
+# df = px.data.gapminder().query("continent=='Oceania'")
+# fig = px.line(df, x="year", y="lifeExp", color='country')
+# fig.show()
+
+
+for subject in dfPlot.subject.unique():
+    
+    dfPlot2= dfPlot.loc[dfPlot.subject==subject,:]
+        
+    # fig = px.line(dfPlot2, x="timeLock-z-periDS", y="blue-z-periDS", color= 'trainDayThisStage')
+
+    groupHierarchy= ['stage','subject','trainDayThisStage', 'timeLock-z-periDS']
+    
+    y= 'blue-z-periDS'
+    
+    dfPlot2.loc[:,'yMean']= dfPlot2.groupby(groupHierarchy)[y].transform('mean').copy()
+    
+    
+    yMean= dfPlot2.groupby(groupHierarchy)[y].mean()
+
+    ySEM= dfPlot2.groupby(groupHierarchy)[y].sem()
+
+    fig= px.line(dfPlot2, x= 'timeLock-z-periDS', y='yMean', color='trainDayThisStage')
+
+    fig.show() 
+    #export as interactive html
+    figName= 'subject-'+str(subject)+'-stage-'+str(stagesToPlot)+'-periEvent' 
+    fig.write_html(savePath+figName+'.html')
 
 
 #%% Plot some fp signals!
