@@ -107,8 +107,6 @@ if modeSignal=='reblue':
 elif modeSignal=='repurple':
     dfTemp= dfTemp.drop(['reblue-z-periDS'],axis=1)
 
-
-
 #%% Run regression model & save output
 #TODO: How to handle different subjects? should run separately in loop or use as predictor?
 #unlike matlab version of code this is one big table with everything
@@ -136,7 +134,7 @@ elif modeSignal=='repurple':
 #will save X and y as index instead of copying data to save mem
     
 #regressors/predictors will be all remaining columns that are not idVars or contVars
-col= ~dfTemp.columns.isin(idVars+contVars+['trainDayThisStage','trialID','timeLock-z-periDS','timeLock-z-periNS'])
+# col= ~dfTemp.columns.isin(idVars+contVars+['trainDayThisStage','trialID','timeLock-z-periDS','timeLock-z-periNS'])
 
 #regressand/response variable is fp signal
 y= 'reblue-z-periDS'
@@ -144,7 +142,7 @@ y= 'reblue-z-periDS'
 
 # Remove invalid observations (nan, inf) in these columns
 # shouldn't be any. at this point not sure where they come from?
-dfTemp= dfTemp.loc[~dfTemp.loc[:,col].isin([np.nan, np.inf, -np.inf]).any(1),:]
+# dfTemp= dfTemp.loc[~dfTemp.loc[:,col].isin([np.nan, np.inf, -np.inf]).any(1),:]
 
 
 subjects= dfTemp.subject.unique()
@@ -169,6 +167,23 @@ for subj in subjects:
     # dfTemp= dfTemp.loc[~dfTemp.isin([np.nan, np.inf, -np.inf]).any(1),:]
     
     # X = group.loc[:,col]
+    
+
+    #define which eventTypes to include!
+    eventsToInclude= ['DStime','NStime','UStime','PEtime','lickTime','lickUS']
+    # dfTemp.loc[~dfTemp.eventType.isin(eventsToInclude),'eventType']= pd.NA
+    
+    #only keep cols that match events
+    #col will be used as boolean index for columns, start False then switch to True if event is in name
+    #regressors/predictors will be all remaining columns
+    col= np.array(range(len(group.columns)), dtype= bool)
+    col[:]= False
+    
+    for eventCol in range(len(eventsToInclude)):
+        indEvent= group.columns.str.contains(eventsToInclude[eventCol])
+        
+        col[indEvent]= True
+
     
     #use index instead of copying data (save memory)
     X= col
@@ -228,6 +243,17 @@ for subj in subjects:
     
     #display alpha that produced the lowest test MSE
     print('best alpha model='+str(model.alpha_))
+    
+        
+    #TODO: Feature selection /test specific combos of eventTypes
+    #starting with 'full model' of all eventTypes, pare down successively based on criteria e.g. forward/backward selection:
+#Backward elimination begins with the model having the largest number of predictors and eliminates variables one-by-one until we are satisfied that all remaining variables are important to the model. Forward selection starts with no variables included in the model, then it adds in variables according to their importance until no other important variables are found. Notice that, for both methods, we have always chosen to retain the model with the largest adjusted R2
+# It is highly advised that before you begin the model selection process, you decide what a “meaningful” difference in adjusted R2 is for the context of your data. Maybe this difference is 1% or maybe it is 5%. This “threshold” is what you will then use to decide if one model is “better” than another model. 
+        # https://scikit-learn.org/stable/modules/feature_selection.html -- fxns here could be used
+    
+    from sklearn.feature_selection import SelectFromModel
+
+    model2= SelectFromModel(model)
     
     #Seems LassoCV is using ~coordinate descent~ as the criteria to select the optimal alpha 
     #(minimizes mean MSE across all CV folds) https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_model_selection.html#sphx-glr-auto-examples-linear-model-plot-lasso-model-selection-py

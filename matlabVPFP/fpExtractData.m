@@ -512,15 +512,20 @@ end %end subj loop
     %skip over atypical DS training files (stage=0)... (e.g. magazine training session where stage =0)
 for subj= 1:numel(subjects)
     currentSubj= subjData.(subjects{subj});
-    for session=1:numel(currentSubj)
-        if currentSubj(session).trainStage==0
-            currentSubj(session)=[]; %if stage 0, delete data
-        end
-    end
+
+    ind= [currentSubj.trainStage]==0
+    
+    currentSubj(ind)= []
+    
+%     for session=1:numel(currentSubj)
+%         if currentSubj(session).trainStage==0
+%             currentSubj(session)=[]; %if stage 0, delete data
+%         end
+%     end
 end
 %% Save .mat
 %save the subjData struct for later analysis
-save(strcat(experimentName,'-', date, 'subjDataRaw'), 'subjData'); %the second argument here is the variable saved, the first is the filename
+save(strcat(experimentName,'-', date, 'subjDataRawNoArtifacts'), 'subjData'); %the second argument here is the variable saved, the first is the filename
 
 
 disp('all done')

@@ -10933,7 +10933,7 @@ end %end subject loop
 %save the subjDataAnalyzed struct for later analysis
  
 %saving as v7.3 takes longer, but necessary if >2gb
-save(strcat(experimentName,'-', date, 'subjDataAnalyzed.mat'), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 .mat for files >2gb
+save(strcat(experimentName,'-', date, 'subjDataAnalyzedNoArtifacts.mat'), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 .mat for files >2gb
 
 allRats.preCueFrames= preCueFrames;
 allRats.postCueFrames= postCueFrames;

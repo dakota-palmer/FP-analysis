@@ -50,18 +50,24 @@ dfTidy= dfTidy.loc[:,colToInclude]
 
 #%% Define which specific stages / events / sessions to include!
 
+#% #TODO: collect all events, save, and move event exclusion to regression script
+
 stagesToInclude= [7]
 
 #number of sessions to include, 0 includes final session of this stage+n
 nSessionsToInclude= 0 
+
+#no exclusion (except null/nan)
+eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
+
 
 # #define which eventTypes to include!
 # eventsToInclude= ['DStime','NStime','UStime','PEtime','lickTime','lickUS']
 # dfTidy.loc[~dfTidy.eventType.isin(eventsToInclude),'eventType']= pd.NA
 
 #REPLICATE matlab
-eventsToInclude= ['DStime','NStime','PEtime','lickTime']
-dfTidy.loc[~dfTidy.eventType.isin(eventsToInclude),'eventType']= pd.NA
+# eventsToInclude= ['DStime','NStime','PEtime','lickTime']
+# dfTidy.loc[~dfTidy.eventType.isin(eventsToInclude),'eventType']= pd.NA
 
 
 #exclude stages
