@@ -14,20 +14,18 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+# script ('module') containing custom fxns
+from customFunctions import saveFigCustom
+from customFunctions import subsetData
+from customFunctions import subsetLevelObs
+from customFunctions import percentPortEntryCalc
+from customFunctions import groupPercentCalc
+
 #%$ Things to change manually for your data:
     
 #plot settings in section below
 
 
- #%% define a function to save and close figures
-def saveFigCustom(figure, figName):
-    plt.gcf().set_size_inches((20,10), forward=False) # ~monitor size
-    plt.legend(bbox_to_anchor=(1.01, 1), borderaxespad=0) #creates legend ~right of the last subplot
-    
-    plt.gcf().tight_layout()
-    plt.savefig(r'./_output/_behaviorAnalysis/'+figName+'.png', bbox_inches='tight')
-    plt.close()
-         
          
 
 #%% Load previously saved dfTidy (and other vars) from pickle
@@ -58,6 +56,31 @@ if experimentType.__contains__('Opto'):
     # trialOrder= [trialOrder, 'laserDStrial_0', 'laserDStrial_1', 'laserNStrial_0', 'laserNStrial_1']
     trialOrder= (['DStime', 'DStime_laser', 'NStime', 'NStime_laser', 'Pre-Cue','ITI'])
 
+# %% Declare hierarchical grouping variables for analysis
+# e.g. for aggregated measures, how should things be calculated and grouped?
+
+# examples of different measures @ different levels:
+# consider within-file (e.g. total PEs per session)
+# within-trialType (e.g. Probability of PEs during all DS vs. all NS)
+# within-trialID measures (e.g. Latency to enter port all individual trials)
+# within virus, cue identity, subject, stage, etc.
+
+groupHierarchySubject = ['stage',
+                          'subject']
+ 
+groupHierarchyFileID = ['stage',
+                        'subject', 'trainDayThisStage', 'fileID']
+
+groupHierarchyTrialType = ['stage',
+                           'subject', 'trainDayThisStage', 'fileID', 'trialType']
+
+groupHierarchyTrialID = ['stage',
+                         'subject', 'trainDayThisStage', 'trialType', 'fileID', 'trialID']
+
+groupHierarchyEventType = ['stage',
+                           'subject', 'trainDayThisStage', 'trialType', 'fileID', 'trialID', 'eventType']
+
+
 #%% Preliminary data anlyses
 
 # Add trainDay variable (cumulative count of sessions within each subject)
@@ -71,6 +94,23 @@ dfTidy.loc[:,'trainDay']= dfTidy.groupby(['subject','fileID']).fillna(method='ff
 dfGroup= dfTidy.loc[dfTidy.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
 dfTidy['trainDayThisStage']=  dfGroup.groupby(['subject', 'stage']).transform('cumcount')
 dfTidy.trainDayThisStage= dfTidy.groupby(['fileID'])['trainDayThisStage'].fillna(method='ffill').copy()
+
+
+#%-- Add cumulative count of trials within- and between-stage (could be useful for viz of raw training data e.g. latency including every trial)
+
+#subset to 1 obs per trial for counting
+dfTemp= subsetLevelObs(dfTidy, groupHierarchyTrialID).copy()
+
+#cumulative between-stage trialCount
+dfTemp.loc[:,'trialCountThisSubj']= dfTemp.groupby(['subject']).transform('cumcount').copy()
+
+#within-stage trialCount
+dfTemp.loc[:,'trialCountThisStage']= dfTemp.groupby(['subject','stage']).transform('cumcount').copy()
+            
+#merge to save as new column in dfTidy
+dfTemp= dfTemp.loc[:,groupHierarchyTrialID+['trialCountThisSubj']+['trialCountThisStage']]
+
+dfTidy = dfTidy.merge(dfTemp, how='left', on=groupHierarchyTrialID).copy()
 
 
 #%% 
@@ -102,7 +142,7 @@ dfTidy.trialType= dfTidy.copy().groupby(['fileID','trialID'])['trialType'].trans
 
 # dfTidy.trialType= dfTidy.groupby(['fileID','trialID'])['trialType'].cumcount()==0
 
-#%% add reward epoch
+#%% add reward epochs
 
 #add reward epoch (for now some time between pump onset and next pre-cue period?)
 #within some window of time e.g. a few seconds after pump on, could be based on actual lick distribution
@@ -128,6 +168,8 @@ preEventTime= 0*fs #x seconds before refEvent; don't count any before refEvent
 postEventTime= 2*fs # x seconds after refEvent  
 
 #ffill will only fill null values!
+# !! not restricting to within trialID since a late PE could lead to bleed into next ITI
+#so for now treating these epochs somewhat independently from trialID. 
 dfTemp.epoch= dfTemp.groupby(['fileID'])['epoch'].ffill(limit=postEventTime).copy()
 
 #assign back to df
@@ -135,12 +177,125 @@ dfTidy.loc[dfTemp.epoch.notnull(),'epoch']= dfTemp.epoch.copy()
 
 del dfTemp
 
+#%% Add Post-Cue (post-PE) epoch
+
+#post-cue epoc = post-PE
+
+#-- set epoch at pump on times, then fillna() within certain time window surrounding epoch
+
+refEvent= 'PEtime' #reference event surrounding which we'll define epochs
+
+epocName= 'postPE'
+
+dfTidy.epoch.cat.add_categories([epocName], inplace=True)
+
+
+#prefill with na so we can just use ffill() method to fill nulls in time window
+dfTemp= dfTidy.copy()
+dfTemp.loc[:,'epoch']= pd.NA
+
+
+#Assign Post-Cue epoch between PE timestamp and Pre-Cue -1
+
+#in sum, want epoch between PE DURING CUE (rewarded PE) and PreCue for next trial
+# TODO: could specify postPErewarded; postPEunrewarded but not necessary
+
+#starting with these epochs: DStime (cue onset:cue onset+cueDur), ITI (trialEnd:nextTrialStart-10), Pre-Cue (nextTrialStart-10)
+# UStime (UStime:UStime+postEventTime)
+
+# 
+
+#subset- dont include first trial
+# dfTemp= dfTemp.loc[dfTemp.trialID!=999]
+
+
+dfTemp.loc[dfTemp.eventType==refEvent,'epoch']= epocName
+
+
+dfTemp.loc[dfTemp.trialType!='Pre-Cue', 'epoch']= epocName
+
+
+
+fs= 40 #40hz = sampling frequency
+preEventTime= 0*fs #x seconds before refEvent; don't count any before refEvent
+# postEventTime= 2*fs # x seconds after refEvent  
+
+#ffill will only fill null values!
+# restricting to trialID 
+dfTemp.epoch= dfTemp.groupby(['fileID', 'trialID'])['epoch'].ffill().copy()
+
+test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
+test.loc[dfTemp.epoch.notnull(),'epoch']= dfTemp.epoch.copy()
+
+#assign back to df
+dfTidy.loc[dfTemp.epoch.notnull(),'epoch']= dfTemp.epoch.copy()
+
+del dfTemp
+
+
+#%% TODO: Refine Cue epoch (time between cue onset and cue duration OR US)
+# #we want cue epoc limited to cueDur. and Post-Cue epoc between cue end (or reward end) and next Pre-Trial
+# dfTemp= dfTidy.copy()
+
+
+# #if epoc is not UStime
+# dfTemp= dfTemp.loc[dfTemp.epoch!='UStime'].copy()
+
+
+# #if timestamp is between trial start and trial end, label as Cue epoch
+# dfTemp.loc[((dfTemp.cutTime>=dfTemp.trialStart) & (dfTemp.cutTime<=dfTemp.trialEnd)), 'epoch']= 'cue'
+
+
+
+# # dfTemp.groupby(groupHierarchyTrialID)
+
+
+#%% TODO: Add post-Cue epoch (time between cue end and next pre-cue?)
+
+#not necessary (remaining DStime & NStime should be this?)
+
+# dfTemp= dfTidy.copy()
+
+# #if event between trialEnd and preTrialStart, 
+
+# # #prefill with na so we can just use ffill() method to fill nulls in time window
+# # dfTemp.loc[:,'epoch']= pd.NA
+
+
+# # dfTemp.loc[dfTemp.eventType==refEvent,'epoch']= refEvent
+
+
+# dfTemp.epoch= dfTemp.groupby(['fileID'])['epoch'].ffill(limit=postEventTime).copy()
+
+
+
 #%% Want to separate anticipatory/non-reward from reward/consumption licks
 
 #isolate licks occuring during 'reward' epoch, redefine as new eventType
 dfTidy.eventType.cat.add_categories(['lickUS'], inplace=True)
 
 dfTidy.loc[((dfTidy.eventType=='lickTime')&(dfTidy.epoch=='UStime')),'eventType']= 'lickUS'
+
+
+#isolate licks occuring before reward epoch
+dfTidy.eventType.cat.add_categories(['lickPreUS'], inplace=True)
+
+
+#keep simple- just get licks between trialStart and trialEnd (that are not in reward epoch)
+dfTemp= dfTidy.loc[dfTidy.eventType=='lickTime'].copy()
+
+dfTemp= dfTemp.loc[dfTemp.epoch!= 'UStime'].copy()
+
+
+ind= ((dfTemp.cutTime>= dfTemp.trialStart) & (dfTemp.cutTime<=dfTemp.trialEnd)).index
+
+#redefine as pre-reward lick
+# dfTemp.loc[ind, 'eventType']= 'lickPreUS'
+
+dfTidy.loc[ind, 'eventType']= 'lickPreUS'
+
+#viz
+test= dfTidy.loc[(dfTidy.fileID==dfTidy.fileID.min())].copy()
 
 #%% DP 1/18/22 redo Preliminary data analyses (for tidy data) for refactored TRIALIDs
 # Event latency, count, and behavioral outcome for each TRIALID

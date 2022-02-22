@@ -4,8 +4,12 @@ figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 
 %% Load fpAnalyzedData struct
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
+
+% with artifacts
 load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jan-2022subjDataAnalyzed.mat")
 
+% no artifact version
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-14-Feb-2022subjDataAnalyzedNoArtifacts.mat")
 
 
 %% Create periEventTable and make peri-event 465nm plots

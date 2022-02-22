@@ -119,20 +119,20 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
          stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
 
-         topDSzbluePump1= stdFactor*abs(mean((std(currentSubj(1).DSzbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         topDSzbluePump2= stdFactor*abs(mean((std(currentSubj(1).DSzbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         topDSzbluePump3= stdFactor*abs(mean((std(currentSubj(1).DSzbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzbluePump1= stdFactor*abs(nanmean((std(currentSubj(1).DSzbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzbluePump2= stdFactor*abs(nanmean((std(currentSubj(1).DSzbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzbluePump3= stdFactor*abs(nanmean((std(currentSubj(1).DSzbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
          
          
-%          topDSzpurple= stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%          topDSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-         bottomDSzbluePump1 = -stdFactor*abs(mean((std(currentSubj(1).DSzbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         bottomDSzbluePump2 = -stdFactor*abs(mean((std(currentSubj(1).DSzbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         bottomDSzbluePump3 = -stdFactor*abs(mean((std(currentSubj(1).DSzbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzbluePump1 = -stdFactor*abs(nanmean((std(currentSubj(1).DSzbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzbluePump2 = -stdFactor*abs(nanmean((std(currentSubj(1).DSzbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzbluePump3 = -stdFactor*abs(nanmean((std(currentSubj(1).DSzbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
          
-%          bottomDSzpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));
+%          bottomDSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));
 
          %now choose the most extreme of these two (between blue and
          %purple)to represent the color axis 
@@ -141,11 +141,11 @@ currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj}); %use this for easy index
 
 %         %same, but defining color axes for NS
 %         if ~isempty(currentSubj(1).NSzblueAllTrials) %only run this if there's NS data
-%             topNSzblue= stdFactor*abs(mean((std(currentSubj(1).NSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-%             topNSzpurple= stdFactor*abs(mean((std(currentSubj(1).NSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%             topNSzblue= stdFactor*abs(nanmean((std(currentSubj(1).NSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%             topNSzpurple= stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 % 
-%             bottomNSzblue= -stdFactor*abs(mean((std(currentSubj(1).NSzblueAllTrials, 0, 2))));
-%             bottomNSzpurple= -stdFactor*abs(mean((std(currentSubj(1).NSzpurpleAllTrials, 0, 2))));
+%             bottomNSzblue= -stdFactor*abs(nanmean((std(currentSubj(1).NSzblueAllTrials, 0, 2))));
+%             bottomNSzpurple= -stdFactor*abs(nanmean((std(currentSubj(1).NSzpurpleAllTrials, 0, 2))));
 % 
 %             bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
 %             topAllNS= max(topNSzblue, topNSzpurple);

@@ -22,6 +22,7 @@ from sklearn.model_selection import cross_val_score
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
+
 from customFunctions import saveFigCustom
 
 from plot_lasso_model_selection import plot_lasso_model_selection
@@ -251,9 +252,9 @@ for subj in subjects:
 # It is highly advised that before you begin the model selection process, you decide what a “meaningful” difference in adjusted R2 is for the context of your data. Maybe this difference is 1% or maybe it is 5%. This “threshold” is what you will then use to decide if one model is “better” than another model. 
         # https://scikit-learn.org/stable/modules/feature_selection.html -- fxns here could be used
     
-    from sklearn.feature_selection import SelectFromModel
+    # from sklearn.feature_selection import SelectFromModel
 
-    model2= SelectFromModel(model)
+    # model2= SelectFromModel(model)
     
     #Seems LassoCV is using ~coordinate descent~ as the criteria to select the optimal alpha 
     #(minimizes mean MSE across all CV folds) https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_model_selection.html#sphx-glr-auto-examples-linear-model-plot-lasso-model-selection-py
@@ -417,6 +418,9 @@ for subj in subjects:
     g=sns.scatterplot(ax=ax[0], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
     g=sns.lineplot(ax=ax[0], data=msePath, x='alpha', y='MSE', color='black')
     plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    ax[0].set_xscale('log')
+    ax[0].set_xlabel('log alpha')
+    
     
     g.set_xlabel('alpha')
     g.set_ylabel('MSE')
@@ -454,7 +458,8 @@ for subj in subjects:
     # if sum_betas==0; stats.p.IndexMinMSE=max(find(max(stats.beta)>0.0001)); end  %Makes sure there are no all zero betas
     # b=[stats.p.Intercept(stats.p.IndexMinMSE) ; stats.beta(:,stats.p.IndexMinMSE)];  %selects betas based on lambda
     
-    # #cv score (R2?)
+    # #cv score (R2?) -- surprisingly slow
+    # score can be changed to ROC AUC-- https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
     # scores= cross_val_score(model, group.loc[:,X], group.loc[:,y], cv=cv)
     # print("%0.2f accuracy with a standard deviation of %0.2f" % (scores.mean(), scores.std()))
     #result is 25 values-maybe 1 per fold per split (5x5)?

@@ -517,6 +517,8 @@ for subj= 1:numel(subjects)
     
     currentSubj(ind)= []
     
+    subjData.(subjects{subj})= currentSubj;
+    
 %     for session=1:numel(currentSubj)
 %         if currentSubj(session).trainStage==0
 %             currentSubj(session)=[]; %if stage 0, delete data

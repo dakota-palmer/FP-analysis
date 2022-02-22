@@ -2,6 +2,11 @@
 %save data into table for later subplotting 
 % events= {'DS','NS','pox','lox'}
 
+%% Fig settings
+% figPath= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\';
+% figFormats= {'.fig','.png'}; %list of formats to save figures as (for saveFig.m)
+
+
 
 %% Preallocate table with #rows equal to observations per session
 subjects= fieldnames(subjDataAnalyzed);
@@ -227,6 +232,7 @@ i.axe_property('YLim',[-1,4]);
 %draw the actual plot
 i.draw();
 
+saveFig(gcf, figPath, 'allSubj-periDS-allStages', figFormats)
 
 %% Stage 7 peri-Cue vs peri-Pox vs peri-Lox
 figure();
@@ -255,33 +261,169 @@ i.axe_property('YLim',[-1,4]);
 i.set_title('stage 7');
 
 i.draw();
+saveFig(gcf, figPath, 'allSubj-periEvent-stage7', figFormats)
+
+%% individual subj all stages: peri-Cue vs peri-Pox vs peri-Lox
+
+for subj= 1:numel(subjects)
+    clear i;
+    figure();
+    %subset data
+    data=[];
+    data= periEventTable(strcmp(periEventTable.subject, subjects{subj})==1,:);
+    
+    %transform to have eventType variable
+    %ideally want to melt() from wide to long 3 eventTypes into single col
+    %matlab lacks good tidying functions like melt() but we have stack
+    %which is quite helpful!
+    data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
+    
+%     %keep track of a new variable for eventType color
+%     %doing this just so I don't have to manipulate orignal dataframe
+%     %just make 3 columns and subset separately to map color for each
+%     eventType= cell(size(data,1),3); %3 events, 1 type per observation
+%     eventType(:,1)= {'DS'};
+%     eventType(:,2)= {'PE DS'};
+%     eventType(:,3)= {'Lick DS'};
+    
+    %define variables to plot and grouping 
+%     figure();
+%     i=gramm('x',data.timeLock,'y',data.DSblue, 'color', 'eventType');
+    i=gramm('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType);
+
+    
+    %facet by stage
+    i.facet_wrap(data.stage);
+
+    %means
+    i.stat_summary('type','sem','geom','area');
+    i.geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
+    
+    %label and draw
+    i.axe_property('YLim',[-5, 10]);
+    i.set_names('x','time from event (s)','y','z-score','color','eventType', 'column', 'stage');
+    i.set_title(strcat(subjects{subj},'peri-event-allStages'));
+
+    i.draw();
+
+    
+%     i.set_color_options('map','brewer1'); %hacky way to get one color per dataset plotted w/o different column, use 3 distinct maps
+
+%     %periDS pox
+% %     i.update('x',data.timeLock,'y',data.DSbluePox);
+%     i.stat_summary('type','sem','geom','area'); 
+% %     i.set_color_options('map','brewer_dark');
+%     i.draw()
+% 
+%     %periDS lox
+%     i.update('x',data.timeLock,'y',data.DSblueLox);
+%     i.stat_summary('type','sem','geom','area'); 
+%     
+%     %label and draw
+% %     i.set_color_options('map','matlab');
+% 
+%     i.set_names('x','Time from Initial Event(sec)','y','GCaMP (z-score)');
+% %     i.set_names('color', {'DS','Port Entry DS','Lick DS'});
+% 
+
+%     i.draw();
+
+
+    
+% 
+%     i(1,1)=gramm('x',data.timeLock,'y',data.DSblue, 'color',data.subject);
+%     i(1,1).stat_summary('type','sem','geom','area');
+%     i(1,1).set_names('x','time from event (s)','y','z-score','color','subject');
+%     i(1,1).set_title('Peri-DS');
+% 
+% 
+%     i(2,1)=gramm('x',data.timeLock,'y',data.DSbluePox, 'color',data.subject);
+%     i(2,1).stat_summary('type','sem','geom','area');
+%     i(2,1).set_names('x','time from event (s)','y','z-score','color','subject');
+%     i(2,1).set_title('Peri-First PE DS');
+% 
+%     i(3,1)=gramm('x',data.timeLock,'y',data.DSblueLox, 'color',data.subject);
+%     i(3,1).stat_summary('type','sem','geom','area');
+%     i(3,1).set_names('x','time from event (s)','y','z-score','color','subject');
+%     i(3,1).set_title('Peri-First Lick DS');
+% 
+%     i.axe_property('YLim',[-1,4]);
+%     i.set_title('stage 7');
+
+%     i.draw();
+    saveFig(gcf, figPath, strcat(subjects{subj},'-periEvent-allStages'), figFormats)
+end
+
+
 
 %% Plotting specific subj to compare with kernels
-figure();
+% figure();
+% 
+% clear i
+% %subset data
+% data= periEventTable(periEventTable.stage==7,:);
+% data= data(strcmp(data.subject,'rat8')==1,:);
+% 
+% 
+% i(1,1)=gramm('x',data.timeLock,'y',data.DSblue, 'color',data.subject);
+% i(1,1).stat_summary('type','sem','geom','area');
+% i(1,1).set_names('x','time from event (s)','y','z-score','color','subject');
+% i(1,1).set_title('Peri-DS');
+% 
+% 
+% i(2,1)=gramm('x',data.timeLock,'y',data.DSbluePox, 'color',data.subject);
+% i(2,1).stat_summary('type','sem','geom','area');
+% i(2,1).set_names('x','time from event (s)','y','z-score','color','subject');
+% i(2,1).set_title('Peri-First PE DS');
+% 
+% i(3,1)=gramm('x',data.timeLock,'y',data.DSblueLox, 'color',data.subject);
+% i(3,1).stat_summary('type','sem','geom','area');
+% i(3,1).set_names('x','time from event (s)','y','z-score','color','subject');
+% i(3,1).set_title('Peri-First Lick DS');
+% 
+% i.axe_property('YLim',[-1,4]);
+% i.set_title('stage 7');
+% 
+% i.draw();
+% 
+% saveFig(gcf, figPath, 'rat8-periEvent-stage7', figFormats)
 
-clear i
-%subset data
-data= periEventTable(periEventTable.stage==7,:);
-data= data(strcmp(data.subject,'rat8')==1,:);
+%% TODO: Plot ALL Sessions 
 
-
-i(1,1)=gramm('x',data.timeLock,'y',data.DSblue, 'color',data.subject);
-i(1,1).stat_summary('type','sem','geom','area');
-i(1,1).set_names('x','time from event (s)','y','z-score','color','subject');
-i(1,1).set_title('Peri-DS');
-
-
-i(2,1)=gramm('x',data.timeLock,'y',data.DSbluePox, 'color',data.subject);
-i(2,1).stat_summary('type','sem','geom','area');
-i(2,1).set_names('x','time from event (s)','y','z-score','color','subject');
-i(2,1).set_title('Peri-First PE DS');
-
-i(3,1)=gramm('x',data.timeLock,'y',data.DSblueLox, 'color',data.subject);
-i(3,1).stat_summary('type','sem','geom','area');
-i(3,1).set_names('x','time from event (s)','y','z-score','color','subject');
-i(3,1).set_title('Peri-First Lick DS');
-
-i.axe_property('YLim',[-1,4]);
-i.set_title('stage 7');
-
-i.draw();
+% 
+% 
+% for subj= 1:numel(subjects)
+%     clear i;
+%     figure();
+%     %subset data
+%     data=[];
+%     data= periEventTable(strcmp(periEventTable.subject, subjects{subj})==1,:);
+%     
+%     %transform to have eventType variable
+%     %ideally want to melt() from wide to long 3 eventTypes into single col
+%     %matlab lacks good tidying functions like melt() but we have stack
+%     %which is quite helpful!
+%    
+% %     data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
+%     
+% 
+%     i=gramm('x',data.timeLock,'y',data.DSblue, 'color', data.DStrialID);
+% 
+%     
+%     %facet by stage
+%     i.facet_wrap(data.stage);
+% 
+%     %means
+%     i.stat_summary('type','sem','geom','area');
+%     i.geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
+%     
+%     %label and draw
+%     i.axe_property('YLim',[-5, 10]);
+%     i.set_names('x','time from event (s)','y','z-score','color','eventType', 'column', 'stage');
+%     i.set_title(strcat(subjects{subj},'peri-event-allStages'));
+% 
+%     i.draw();
+% 
+%     
+%     
+% end

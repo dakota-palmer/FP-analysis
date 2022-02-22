@@ -24,6 +24,7 @@ import plotly.io as pio
 import shelve
 
 from customFunctions import saveFigCustom
+from customFunctions import subsetData
 
 #FOR TIDY DATA (SINGLE eventType COLUMN)
 
@@ -42,13 +43,14 @@ for key in my_shelf:
 my_shelf.close()
 
 
-#%% Plot settings
+d#%% Plot settings
 
 savePath= r'./_output/_fpPeriEvent/'
 
 #render plotly figs in browser so they are interactive (jupyter notebook supports interactive plots tho)
 pio.renderers.default='browser'
 
+trialOrder= 'DStime', 'NStime'
 
 #%% data prep for encoding model
 # want - 
@@ -218,7 +220,7 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
 fs= 40 #sampling frequency= 40hz
 
 preEventTime= 5 *fs # seconds x fs
-postEventTime= 10 *fs
+postEventTime= 15 *fs
 
 baselineTime= 10*fs
 
@@ -255,6 +257,28 @@ for name, group in groups:
     z, timeLock=  zscoreCustom(group, 'reblue', 'lickUS', preEventTime, postEventTime,'DStime', baselineTime)
     dfTidy.loc[group.index,'blue-z-periDS-lickUS']= z
     dfTidy.loc[group.index,'timeLock-z-periDS-lickUS']= timeLock
+
+#--NS
+    #-- peri-NS
+    z, timeLock=  zscoreCustom(group, 'reblue', 'NStime', preEventTime, postEventTime,'NStime', baselineTime)
+    dfTidy.loc[group.index,'blue-z-periNS']= z
+    dfTidy.loc[group.index,'timeLock-z-periNS']= timeLock
+
+    #-- peri-NS Port Entry
+    z, timeLock=  zscoreCustom(group, 'reblue', 'PEtime', preEventTime, postEventTime,'NStime', baselineTime)
+    dfTidy.loc[group.index,'blue-z-periNS-PEtime']= z
+    dfTidy.loc[group.index,'timeLock-z-periNS-PEtime']= timeLock
+    
+    #-- peri-US
+    z, timeLock=  zscoreCustom(group, 'reblue', 'UStime', preEventTime, postEventTime,'NStime', baselineTime)
+    dfTidy.loc[group.index,'blue-z-periNS-UStime']= z
+    dfTidy.loc[group.index,'timeLock-z-periNS-UStime']= timeLock
+    
+    #-- peri-NS lick
+    z, timeLock=  zscoreCustom(group, 'reblue', 'lickTime', preEventTime, postEventTime,'NStime', baselineTime)
+    dfTidy.loc[group.index,'blue-z-periNS-lickTime']= z
+    dfTidy.loc[group.index,'timeLock-z-periNS-lickTime']= timeLock
+
 
 
 
@@ -372,8 +396,134 @@ for subject in dfPlot.subject.unique():
     g.set(title=('peri-DS-lickReward'))
     g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
         
+    g.set(ylim=(-4,10))
+    
     f.suptitle('subject-'+str(subject)+'-stage-'+str(stagesToPlot)+'-periEvent')
     saveFigCustom(g, 'subject-'+str(subject)+'-stage-'+str(stagesToPlot)+'-periEvent',savePath)
+
+#%% Presentation 2022-02-21: periDS vs periNS by stage
+
+#exclude variable reward and extinction
+# stagesToPlot=  [1,2,3,4,5,6,7]
+stagesToPlot=  [1,2,3,4,5]
+
+
+#subset with customFunction
+stagesToPlot= dfTidy.stage.unique()
+trialTypesToPlot= ['DStime', 'NStime']
+eventsToPlot= dfTidy.eventType.unique()
+
+dfPlot= subsetData(dfTidy, stagesToPlot, trialTypesToPlot, eventsToPlot).copy()
+
+    
+#all between-subj plot
+g= sns.FacetGrid(col='stage', col_wrap=4, data=dfPlot)
+
+g.map_dataframe(sns.lineplot, data=dfPlot, x='timeLock-z-periDS',y='blue-z-periDS', hue='subject', palette='crest', linewidth=1, alpha=0.5)
+
+# g.map_dataframe(sns.lineplot, data=dfPlot, x='timeLock-z-periDS',y='blue-z-periDS', hue='trialType', hue_order=trialOrder, linewidth=1, alpha=0.5)
+
+# g.map_dataframe(sns.lineplot, data=dfPlot, x='timeLock-z-periNS',y='blue-z-periNS', hue='trialType', hue_order=trialOrder, linewidth=1, alpha=0.5)
+
+
+# g.map_dataframe(sns.lineplot, data=dfPlot, x='timeLock-z-periDS',y='blue-z-periDS', hue='subject', linewidth=1, alpha=0.5)
+# g.map_dataframe(sns.lineplot, data=dfPlot, x='timeLock-z-periDS',y='blue-z-periDS', linewidth=2.5, color='black')
+# g.set(title=('peri-DS'))
+g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+ 
+g.set(ylim=(-4,10))
+
+g.add_legend()
+
+g.fig.suptitle('allSubjects'+'allStages'+'-periCue')
+saveFigCustom(g, 'allSubjects'+'allStages'+'-periCue',savePath)
+
+#%% Presentation 2022-02-21: peri first rewarded lick (LickUS) vs unspecified lick
+stagesToPlot=  [1,2,3,4,5,6,7]
+
+dfPlot= dfTidy.loc[dfTidy.stage.isin(stagesToPlot),:].copy()
+
+#all between-subj plot
+g= sns.FacetGrid(col='stage', col_wrap=4, data=dfPlot)
+
+g.map_dataframe(sns.lineplot, units='subject', data=dfPlot, x='timeLock-z-periDS-lickUS',y='blue-z-periDS-lickUS', hue='trialType', hue_order=trialOrder, linewidth=1, alpha=0.5)
+
+g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')    
+
+g.set(title=('peri-DS-lickReward'))
+g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+
+
+#%% TODO: ALL sessions peri-DS (looking for bad sessions to exclude)
+stagesToPlot= dfTidy.stage.unique()
+
+dfPlot= dfTidy.loc[dfTidy.stage.isin(stagesToPlot),:].copy()
+
+    
+#all between-subj plot
+g= sns.FacetGrid(col='stage', col_wrap=4, data=dfPlot)
+g.map_dataframe(sns.lineplot, data=dfPlot, x='timeLock-z-periDS',y='blue-z-periDS', hue='subject', linewidth=1, alpha=0.5)
+g.map_dataframe(sns.lineplot, data=dfPlot, x='timeLock-z-periDS',y='blue-z-periDS', linewidth=2.5, color='black')
+# g.set(title=('peri-DS'))
+g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+ 
+g.set(ylim=(-4,10))
+
+g.add_legend()
+
+g.fig.suptitle('allSubjects'+'allStages'+'-periDS')
+saveFigCustom(g, 'allSubjects'+'allStages'+'-periDS',savePath)
+
+
+#individual subj plots
+for subject in dfPlot.subject.unique():
+    
+    dfPlot2= dfPlot.loc[dfPlot.subject==subject,:]
+    
+    g= sns.FacetGrid(col='stage', col_wrap=4, data=dfPlot2)
+    g.map_dataframe(sns.lineplot, data=dfPlot2, x='timeLock-z-periDS',y='blue-z-periDS',hue='trainDayThisStage', palette='Blues', linewidth=1, alpha=0.5)
+    # g.map_dataframe(sns.lineplot, data=dfPlot2, x='timeLock-z-periDS',y='blue-z-periDS', linewidth=2.5, color='black')
+    # g.set(title=('peri-DS'))
+    g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+ 
+    g.set(ylim=(-4,10))
+    
+    g.add_legend()
+    
+    g.fig.suptitle('subject-'+str(subject)+'allStages'+'-periDS')
+    saveFigCustom(g, 'subject-'+str(subject)+'allStages'+'-periDS',savePath)
+
+    
+#%% IDEA: Exclude trials by: 
+
+    ## 1) compute cumulative trialID
+    ## 2) plot all trials
+    ## 3) exclude outliers
+    
+    #using this approach should be very easy to select and exclude specific trials
+
+    #viz all trials
+    stagesToPlot= dfTidy.stage.unique()
+    
+    dfPlot= dfTidy.loc[dfTidy.stage.isin(stagesToPlot),:].copy()
+    
+    for subject in dfPlot.subject.unique():
+    
+        dfPlot2= dfPlot.loc[dfPlot.subject==subject,:]
+        
+        g= sns.FacetGrid(col='stage', col_wrap=4, data=dfPlot2)
+        g.map_dataframe(sns.lineplot, data=dfPlot2, x='timeLock-z-periDS',y='blue-z-periDS',hue='trialCountThisStage', palette='Blues', linewidth=1, alpha=0.5)
+        # g.map_dataframe(sns.lineplot, data=dfPlot2, x='timeLock-z-periDS',y='blue-z-periDS', linewidth=2.5, color='black')
+        # g.set(title=('peri-DS'))
+        g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+     
+        g.set(ylim=(-4,10))
+        
+        g.add_legend()
+        
+        g.fig.suptitle('subject-'+str(subject)+'allStagesAllTrials'+'-periEvent')
+        saveFigCustom(g, 'subject-'+str(subject)+'allStagesAllTrials'+'-periEvent',savePath)
+        
 
 #%% Plotly package
 
