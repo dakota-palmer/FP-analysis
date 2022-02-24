@@ -42,7 +42,7 @@ my_shelf.close()
 
 #%% Subset data
 #for encoding model only need event times + photometry signal + metadata
-colToInclude= idVars+contVars+['trainDayThisStage','trialID','eventType']
+colToInclude= idVars+contVars+['trainDayThisStage','trialID','trialType','eventType']
 
 dfTidy= dfTidy.loc[:,colToInclude]
 
@@ -207,6 +207,131 @@ test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()]
 #     dfTidy.loc[group.index,'blue-z-periDS-lickUS']= z
 #     dfTidy.loc[group.index,'timeLock-z-periDS-lickUS']= timeLock
 
+
+#%% Retain only First event per trial ??
+#Exclude all others (make nan)... TODO: consider renaming column so we know difference  name + 'First'
+
+dfTemp= dfTidy.copy()
+
+# dfTemp= dfTemp.pivot(columns='eventType')['cutTime'].copy()
+
+    
+# test= dfTemp.groupby(['fileID','trialID','eventType'], as_index=False)['eventType'].cumcount()
+
+# test= dfTemp.groupby(['fileID','trialID','eventType']).cumcount()
+
+# # ind= dfTemp.groupby(['fileID','trialID','eventType'], observed=True).cumcount()==0
+
+# # test= dfTemp.loc[ind]
+
+# #get ind of all events after First for each trial, then replace times w nan
+
+ind= dfTemp.groupby(['fileID','trialID','eventType'], observed=True).cumcount()!=0
+
+count= dfTemp.groupby(['fileID','trialID','eventType'], observed=True).cumcount()
+
+#%TODO ----------------------Replace these with clearer eventType instead of erasing
+
+# dfTemp.loc[ind, 'eventType']= dfTemp.eventType+'notFirst'
+
+
+#simply make eventType nan
+dfTemp.loc[ind, 'eventType']= None
+
+# #Or- this works:
+# #label cumcount?
+# #eventType= eventType + cumcount
+# dfTemp.eventType= dfTemp.eventType.astype(str)
+# dfTemp.loc[ind, 'eventType']= dfTemp.eventType + count.astype(str)
+
+# dfTemp.eventType= dfTemp.eventType.astype('category')
+
+
+    
+dfTidy.eventType= dfTemp.eventType.copy()
+#%% CORRELATION between eventTypes
+
+# how correlated are events going into our model?
+#should run on eventTime before converting to binary coded?
+
+dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
+
+dfTemp= dfTemp[eventVars]
+
+#need to groupby or set index to get each time per trial
+
+#subset DS trials
+dfTemp= dfTidy.loc[dfTidy.trialType=='DStime']
+
+#try corr with set ind ?
+
+# dfTemp= dfTidy.copy()
+
+# dfTemp= dfTemp.set_index(['stage','subject','fileID','trialType','trialID'])
+
+# dfTemp2= dfTemp.pivot(columns='eventType')['cutTime'].copy()
+
+# #doesn't seem to matter if set_index()
+
+#try groupby
+#pivot eventType into columns, append, drop old col
+dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
+#index matches so simple join
+dfTemp= dfTidy.join(dfTemp.loc[:,eventVars]).copy()
+dfTemp= dfTemp.drop(['eventType'], axis=1)
+
+#get all of the first events for each trial, grouped by trialType
+
+#will need to isolate eventTypes by trialType for this to work (na observations for events that don't occur)
+#limited to trials where all events are recorded
+
+
+#TODO: could be embedded in a groupby trialType.groups loop
+
+# groupers= ['stage','subject','fileID','trialType','trialID']
+
+groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType']
+groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialID']
+
+#--DS trials correlation
+corrInput= dfTemp.groupby(groupHierarchyTrialID, observed=True, as_index=False)[eventVars].first()    
+
+#subset DS trials and drop events that don't occur (NStime)
+corrInput= corrInput.loc[corrInput.DStime.notnull()]
+corrInput= corrInput.dropna(axis=1, how='all')
+corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+
+#drop trials without all events? corr should handle this
+# corrInput= corrInput.dropna(axis=0, how='any')
+
+corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
+
+# corr= corr.reset_index()
+
+# dfPlot= corr[corrEvents+'subject']
+
+# sns.pairplot(data= corr, hue='subject')
+
+g= sns.pairplot(data=corr)
+g.fig.suptitle('DS trial event correlations')
+g.set(ylim= [0,1])
+
+#-- NS trials correlation
+
+corrInput= dfTemp.groupby(groupHierarchyTrialID, observed=True, as_index=False)[eventVars].first()    
+
+#subset NS trials and drop events that don't occur (NStime)
+corrInput= corrInput.loc[corrInput.NStime.notnull()]
+corrInput= corrInput.dropna(axis=1, how='all')
+corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+
+
+corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
+
+sns.pairplot(data=corr)
+sns.suptitle('NS trial event correlations')
+
+
 #%% Reverse melt() of eventTypes by pivot() into separate columns
 
 #memory intensive! should probably either 1) do at end or 2) subset before pivot
@@ -264,6 +389,8 @@ dfTidy= dfTidy.drop(['eventType'], axis=1)
 # eventVars[eventVars.isin(eventsToExclude)]
 
 del dfTemp
+
+
 
 #%% Define peri-event time shift parameters
 

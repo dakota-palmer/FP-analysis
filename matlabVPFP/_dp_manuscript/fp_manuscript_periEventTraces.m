@@ -234,6 +234,52 @@ i.draw();
 
 saveFig(gcf, figPath, 'allSubj-periDS-allStages', figFormats)
 
+%% Mean DS vs NS by stage
+%subset specific data to plot
+data= periEventTable;
+
+   
+%transform to have trialType variable
+%ideally want to melt() from wide to long 3 eventTypes into single col
+%matlab lacks good tidying functions like melt() but we have stack
+%which is quite helpful!
+data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
+
+
+%define variables to plot and grouping 
+%ind subjects
+i=gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'lightness', data.subject);
+
+% i.geom_line();
+
+i.facet_wrap(data.stage);
+
+%define stats to show
+i.stat_summary('type','sem','geom','area');
+
+
+%define labels for plot axes
+i.set_names('x','time from event (s)','y','z-score','color','subject');
+i.set_title('Peri-Cue');
+
+%set y axes limits manually
+i.axe_property('YLim',[-2,5]);
+
+%draw the actual plot
+i.draw();
+
+%mean between subj
+i.update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType);
+
+i.draw();
+% 
+% i.update('x',data.timeLock,'y',data.NSblue);
+% i.stat_summary('type','sem','geom','area');
+% i.draw();
+
+saveFig(gcf, figPath, 'allSubj-periDSvsNS-allStages', figFormats)
+
+
 %% Stage 7 peri-Cue vs peri-Pox vs peri-Lox
 figure();
 
