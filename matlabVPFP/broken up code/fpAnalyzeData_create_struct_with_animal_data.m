@@ -25,8 +25,8 @@ figureCount= 1 ; %keep track of figure # throughout to prevent overwriting
 
 fs= 40; %This is important- if you change sampling frequency of photometry recordings for some reason, change this too! TODO: just save this in subjData as more metadata
 %% Remove excluded subjects
-
-excludedSubjs= {'rat16','rat10','rat20'}; 
+excludedSubjs= {};
+% excludedSubjs= {'rat16','rat10','rat20'}; 
 % excludedSubjs= {'rat19','rat17','rat15','rat14','rat13','rat12','rat11','rat9','rat8'} %cell array with strings of excluded subj fieldnames
 
 subjData= rmfield(subjData,excludedSubjs);

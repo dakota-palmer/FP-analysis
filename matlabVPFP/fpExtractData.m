@@ -24,8 +24,8 @@ profile on; %For optimization/trackin g performance of the code- this starts the
 
 %Dakota VP-VTA-FP
 experimentName= 'VP-VTA-FP'; %change experiment name for automatic naming of figures
-metaDataAddress = "J:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx"; % excel file location 
-nexAddress =  'J:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2'; % nex file location 
+metaDataAddress = "F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2\VP-VTA-FP_round2_Metadata.xlsx"; % excel file location 
+nexAddress =  'F:\Photometry nex files\VP-VTA-FP\round2\DS training\nexFilesVP-VTA-FP-round2'; % nex file location 
 
 
 nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address

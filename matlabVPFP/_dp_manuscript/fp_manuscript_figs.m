@@ -6,25 +6,41 @@ figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
 
 % with artifacts
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jan-2022subjDataAnalyzed.mat")
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jan-2022subjDataAnalyzed.mat")
 
 % no artifact version
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-14-Feb-2022subjDataAnalyzedNoArtifacts.mat")
 
 
+%ally no artifacts (bu"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat"t all trials)
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat")
+
 %% Create periEventTable and make peri-event 465nm plots
 fp_manuscript_periEventTraces();
 
 %% load encoding model output 
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\_control\stage7\465\allSubjResultskernel_Shifted_all.mat")
 
+
+%dp paths
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\_control\stage7\465\allSubjResultskernel_Shifted_all.mat")
+
+%ASSUME only mats with individual stats.b in this folder
 %path to .mat Mean Actual LASSO output for each subj (correlations coefficients)
-pathLasso= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\stage7\465';
+% pathLasso= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\stage7\465';
+
+%workstation for ally's data
+%ASSUME only mats with individual stats.b in this folder
+pathLasso= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\_control\stage7\465'
+
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\encoding_results\_control\stage7\allSubjResultskernel_Shifted_all.mat")
 
 %loop through files and extract data
 cd(pathLasso);
 mat = dir('*.mat');
 
+% %initialize structure (will collect individual file's (subj) kernels)
+% lassoOutput=struct(length(mat)); 
+% lassoOutput.b= [];
 %% Save kernels into table
 % easy for plotting later
 kernelTable= table();
@@ -195,7 +211,7 @@ i(2,3).set_line_options('base_size',0.5);
 % i.set_title('all subj');
 
 %manually set axes limits before drawing
-i(1,:).axe_property('YLim',[-1, 2]);
+i(1,:).axe_property('YLim',[-2, 5]);
 i(2,:).axe_property('YLim',[-2, 5]);
 
 i.draw();
@@ -323,7 +339,7 @@ for file=1:length(mat)
     i.set_title(subject);
 
     %manually set axes limits before drawing
-    i(1,:).axe_property('YLim',[-1, 2]);
+    i(1,:).axe_property('YLim',[-2, 5]);
     i(2,:).axe_property('YLim',[-2, 5]);
 
     i.draw();
