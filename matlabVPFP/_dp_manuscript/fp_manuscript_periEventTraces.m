@@ -255,8 +255,8 @@ i=gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'lightn
 i.facet_wrap(data.stage);
 
 %define stats to show
-i.stat_summary('type','sem','geom','area');
-
+% Mean line for individual subj w/o SEM
+% i.stat_summary('type','sem','geom','area');
 
 %define labels for plot axes
 i.set_names('x','time from event (s)','y','z-score','color','subject');
@@ -287,26 +287,39 @@ clear i
 %subset data
 data= periEventTable(periEventTable.stage==7,:);
 
-i(1,1)=gramm('x',data.timeLock,'y',data.DSblue, 'color',data.subject);
-i(1,1).stat_summary('type','sem','geom','area');
-i(1,1).set_names('x','time from event (s)','y','z-score','color','subject');
-i(1,1).set_title('Peri-DS');
+
+%transform to have eventType variable, refined to 3 events x 2 cues
+%ideally want to melt() from wide to long 3 eventTypes into single col
+%matlab lacks good tidying functions like melt() but we have stack
+%which is quite helpful!
+data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox', 'NSblue', 'NSbluePox','NSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periCueBlue');
+
+i=gramm('x',data.timeLock,'y',data.DSblue, 'color', data.EventType, 'lightness',data.subject);
 
 
-i(2,1)=gramm('x',data.timeLock,'y',data.DSbluePox, 'color',data.subject);
-i(2,1).stat_summary('type','sem','geom','area');
-i(2,1).set_names('x','time from event (s)','y','z-score','color','subject');
-i(2,1).set_title('Peri-First PE DS');
 
-i(3,1)=gramm('x',data.timeLock,'y',data.DSblueLox, 'color',data.subject);
-i(3,1).stat_summary('type','sem','geom','area');
-i(3,1).set_names('x','time from event (s)','y','z-score','color','subject');
-i(3,1).set_title('Peri-First Lick DS');
+% i(1,1)=gramm('x',data.timeLock,'y',data.DSblue, 'color', data.EventType, 'lightness',data.subject);
+% i(1,1).stat_summary('type','sem','geom','area');
+% i(1,1).set_names('x','time from event (s)','y','z-score','color','subject');
+% i(1,1).set_title('Peri-DS');
+% 
+% 
+% i(2,1)=gramm('x',data.timeLock,'y',data.DSbluePox, 'color',data.subject);
+% i(2,1).stat_summary('type','sem','geom','area');
+% i(2,1).set_names('x','time from event (s)','y','z-score','color','subject');
+% i(2,1).set_title('Peri-First PE DS');
+% 
+% i(3,1)=gramm('x',data.timeLock,'y',data.DSblueLox, 'color',data.subject);
+% i(3,1).stat_summary('type','sem','geom','area');
+% i(3,1).set_names('x','time from event (s)','y','z-score','color','subject');
+% i(3,1).set_title('Peri-First Lick DS');
 
-i.axe_property('YLim',[-1,4]);
+i.axe_property('YLim',[-3,8]);
 i.set_title('stage 7');
 
 i.draw();
+
+
 saveFig(gcf, figPath, 'allSubj-periEvent-stage7', figFormats)
 
 %% individual subj all stages: peri-Cue vs peri-Pox vs peri-Lox

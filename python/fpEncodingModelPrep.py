@@ -251,6 +251,8 @@ dfTemp.loc[ind, 'eventType']= None
 dfTidy.eventType= dfTemp.eventType.copy()
 #%% CORRELATION between eventTypes
 
+# should run on periEventTimeLock (time relative to trialStart)
+
 # how correlated are events going into our model?
 #should run on eventTime before converting to binary coded?
 
@@ -273,12 +275,69 @@ dfTemp= dfTidy.loc[dfTidy.trialType=='DStime']
 
 # #doesn't seem to matter if set_index()
 
+#-----Timelock-sensitive (relative timestamp correlation- good):
+
+    #--DS
+
+#pivot eventType into columns, append, drop old col
+dfTemp= dfTidy.pivot(columns='eventType')['timeLock-z-periDS'].copy()
+#index matches so simple join
+dfTemp= dfTidy.join(dfTemp.loc[:,eventVars]).copy()
+dfTemp= dfTemp.drop(['eventType'], axis=1)
+
+#get all of the first events for each trial, grouped by trialType
+
+#will need to isolate eventTypes by trialType for this to work (na observations for events that don't occur)
+#limited to trials where all events are recorded
+
+
+#TODO: could be embedded in a groupby trialType.groups loop
+
+# groupers= ['stage','subject','fileID','trialType','trialID']
+
+groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType']
+groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialID']
+
+#--DS trials correlation
+corrInput= dfTemp.groupby(groupHierarchyTrialID, observed=True, as_index=False)[eventVars].first()    
+
+#subset DS trials and drop events that don't occur (NStime)
+corrInput= corrInput.loc[corrInput.DStime.notnull()]
+corrInput= corrInput.dropna(axis=1, how='all')
+corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+
+corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
+g= sns.pairplot(data=corr)
+g.fig.suptitle('DS trial event correlations')
+
+
+corr= corrInput.groupby(['stage','subject','trialType'])[corrEvents].corr()
+
+g= sns.pairplot(data=corr)
+g.fig.suptitle('DS trial event correlations')
+
+#pairplot of just time(not coef)
+dfPlot= corrInput[corrEvents]
+g= sns.pairplot(data=dfPlot)
+
+#pairplot of just time(not coef)
+dfPlot= corrInput[corrEvents]
+g= sns.lmplot(data=dfPlot)
+
+#want to viz better, reorganize
+dfPlot= corr.reset_index().melt(id_vars= groupHierarchyTrialType, value_vars= corrEvents, value_name= 'eventType')
+
+corr= corrInput.groupby(['stage','subject','trialType'])[corrEvents].corr()
+
+
+#------Timelock-agnostic (absolute timestamp correlation version) :
 #try groupby
 #pivot eventType into columns, append, drop old col
 dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
 #index matches so simple join
 dfTemp= dfTidy.join(dfTemp.loc[:,eventVars]).copy()
 dfTemp= dfTemp.drop(['eventType'], axis=1)
+
 
 #get all of the first events for each trial, grouped by trialType
 
@@ -314,7 +373,7 @@ corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
 
 g= sns.pairplot(data=corr)
 g.fig.suptitle('DS trial event correlations')
-g.set(ylim= [0,1])
+g.set(ylim= [0,1.1])
 
 #-- NS trials correlation
 
