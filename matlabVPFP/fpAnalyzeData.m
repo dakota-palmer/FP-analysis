@@ -142,7 +142,8 @@ subjects= fieldnames(subjData); %keep subj list up to date
           
                   
                %for simplicity let's overwrite the original DS trial record with
-               %the updated one %~~~FLAG: Important REVIEW here
+               %the updated one %~~~FLAG: Important REVIEW here overwriting
+               %original DS times
                subjData.(subjects{subj})(session).DS= subjDataAnalyzed.(subjects{subj})(session).reward.DS;
                subjData.(subjects{subj})(session).DSreward= subjDataAnalyzed.(subjects{subj})(session).reward.DSreward;
 %                subjData.(subjects{subj})(session).DSshifted= subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted;
@@ -188,10 +189,13 @@ end %end subject loop
                 end
             end
             
-        end%end session loop
+                    
+            %save back to struct~~~%FLAG: Important REVIEW here,
+            %overwriting original data
+            subjData.(subjects{subj})(session).DS= currentSubj(session).DS;            
         
-        %save back to struct~~~%FLAG: Important REVIEW here
-        subjDataAnalyzed.(subjects{subj})= currentSubjAnalyzed
+        end%end session loop
+
         
     end % end subj loop
 
@@ -741,7 +745,12 @@ for subj= 1:numel(subjects) %for each subject
             %each entry in DS is a timestamp of the DS onset, let's get its
             %corresponding index from cutTime and use that to pull
             %surrounding data
+           
+            %%FLAG~~~~~DSshifted here may be incorrectly IDing events and calculating outcome!!!
+            
             DSonset = find(cutTime==currentSubj(session).DSshifted(cue,1));
+%             DSonset = find(cutTime==currentSubj(session).DS(cue,1));
+
                      
           if DSonset + cueLength < numel(cutTime) %make sure cue isn't too close to the end of session  
                 %find an save pox during the cue duration
@@ -866,6 +875,7 @@ for subj= 1:numel(subjects) %for each subject
                 %each entry in NS is a timestamp of the NS onset, let's get its
                 %corresponding index from cutTime and use that to pull
                 %surrounding data
+                        %~~FLAG NSshifted
                 NSonset = find(cutTime==currentSubj(session).NSshifted(cue,1));
 
 
@@ -1461,8 +1471,12 @@ for subj= 1:numel(subjects) %for each subject
 
         for cue=1:length(currentSubj(session).DS) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
 
-            %each entry in DS is a timestamp of the DS onset 
+            %each entry in DS is a timestamp of the DS onset
+            %~~~ FLAG: DSshifted here may be incorrectly getting events and
+            %outcomes
             DSonset = find(cutTime==currentSubj(session).DSshifted(cue,1));
+%             DSonset = find(cutTime==currentSubj(session).DS(cue,1));
+
 
             %define the frames (datapoints) around each cue to analyze
             preEventTimeDS = DSonset-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
@@ -1598,7 +1612,7 @@ for subj= 1:numel(subjects) %for each subject
       else %if the NS is present on this session, do the analysis and save results
 
             for cue=1:length(currentSubj(session).NS) %NS CUES %For each NS cue, conduct event-triggered analysis of data surrounding that cue's onset
-                
+                %~~FLAG NSshifted
                 NSonset = find(cutTime==currentSubj(session).NSshifted(cue,1)); %get the corresponding cutTime index of the NS timestamp
 
 
