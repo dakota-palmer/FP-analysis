@@ -10,12 +10,15 @@ close all
 %Make sure experiment name is correct!
 
 
-profile on; %For optimization/trackin g performance of the code- this starts the Matlab profiler
+% profile on; %For optimization/trackin g performance of the code- this starts the Matlab profiler
 
 %% Use excel spreadsheet as index to load all .NEXs along with subject # and experiment details etc.
 
 % TODO: read whole index and analyze >2 rats at a time
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
+
+%choose to remove artifact (true 1) or not (false 0)
+removeArtifact= 0
 
 % %Ally GADVPFP
 % experimentName= 'GAD-VPFP'; %change experiment name for automatic naming of figures
@@ -35,7 +38,12 @@ nexFiles=dir([nexAddress,'//*.nex']); %find all .nex files within this address
 
 % figPath= 'C:\Users\Dakota\Desktop\testFigs\'; %location for output figures to be saved
 
-% 
+if artifactRemove==true
+   experimentName=strcat(experimentName,'-noArtifact')
+elseif artifactRemove==false
+    experimentName=experimentName
+end
+
 %% Loop through each nex file, extracting data
 
 sesNum= 0;
@@ -44,7 +52,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
           
     tic;
     
-    clearvars -except fs file nexFiles metaDataAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
+    clearvars -except removeArtifact fs file nexFiles metaDataAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
     
     fName = nexFiles(file).name; %define the nex file name to load
     data = readNexFile([nexAddress,'//',fName]); %load the nex file data
@@ -265,10 +273,18 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
 
     %-Run artifact elimination function
     %plots are in the function itself commented out if you want to examine
-    [fixedBlueA, fixedPurpleA] = fpArtifactElimination_DynamicMAD(reblueA, repurpleA, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);
+    
+    if removeArtifact==true
+        [fixedBlueA, fixedPurpleA] = fpArtifactElimination_DynamicMAD(reblueA, repurpleA, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);
 
-    [fixedBlueB, fixedPurpleB] = fpArtifactElimination_DynamicMAD(reblueB, repurpleB, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);    
-
+        [fixedBlueB, fixedPurpleB] = fpArtifactElimination_DynamicMAD(reblueB, repurpleB, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);    
+    elseif removeArtifact==false
+        fixedBlueA= reblueA;
+        fixedPurpleA= repurpleA;
+        fixedBlueB= reblueB;
+        fixedPurpleB= repurpleB;
+    end
+    
     %% Save all data for a given session to struct for easy access
     
         %Events
@@ -527,18 +543,21 @@ for subj= 1:numel(subjects)
 end
 %% Save .mat
 %save the subjData struct for later analysis
-save(strcat(experimentName,'-', date, 'subjDataRawNoArtifacts'), 'subjData'); %the second argument here is the variable saved, the first is the filename
-
+if removeArtifact==true
+    save(strcat(experimentName,'-', date, 'subjDataRaw-artifactRemoved'), 'subjData'); %the second argument here is the variable saved, the first is the filename
+elseif removeArtifact==false
+        save(strcat(experimentName,'-', date, 'subjDataRaw'), 'subjData'); %the second argument here is the variable saved, the first is the filename
+end
 
 disp('all done')
 
 
 %%  Speed test /optimizing
 
-profile viewer;
-% %things that should be optimized: cleavars takes awhile ; timeDifflox
-% takes awhile (prob bc lots of licks happen) took like 7/20min for 42
-% sessions
+% profile viewer;
+% % %things that should be optimized: cleavars takes awhile ; timeDifflox
+% % takes awhile (prob bc lots of licks happen) took like 7/20min for 42
+% % sessions
 
    
 %%  code here for quickly examining traces to check for dynamic signal

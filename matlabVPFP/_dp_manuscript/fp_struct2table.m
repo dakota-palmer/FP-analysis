@@ -38,6 +38,14 @@ for session= 1:size(T,1)
     fpTable.cutTime(sesInd)= T.raw(session).cutTime;
     fpTable.reblue(sesInd)= T.raw(session).reblue;
     fpTable.repurple(sesInd)= T.raw(session).repurple;
+     
+%         %variable reward info
+%     fpTable.pumpID= T(session).reward.DSreward(cue) %get pumpID
+% 
+%     fpTable.rewardID(find(fpTable.pumpID==1))=  {currentSubj(includedSession).reward.pump1};
+%     fpTable.rewardID(find(fpTable.pumpID==2))=  {currentSubj(includedSession).reward.pump2};
+%     fpTable.rewardID(find(fpTable.pumpID==3))=  {currentSubj(includedSession).reward.pump3};
+
     
     %now find timestamps corresponding to event times in this fileID and mark these
     %simple binary coding 1 at timestamp where event occurred
