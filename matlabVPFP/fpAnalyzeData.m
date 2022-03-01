@@ -21,7 +21,6 @@ figureCount= 1 ; %keep track of figure # throughout to prevent overwriting
 
 fs= 40; %This is important- if you change sampling frequency of photometry recordings for some reason, change this too! TODO: just save this in subjData as more metadata
 
-
 %% Remove excluded subjects
 %cell array with strings of excluded subj fieldnames
 
@@ -115,24 +114,21 @@ subjects= fieldnames(subjData); %keep subj list up to date
                        subjDataAnalyzed.(subjects{subj})(session).reward.DS(DScount,1)= min(ttlPump); 
                        
                        %get this shifted timestamp too (because its used in timelocking)
-%                        subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted(DScount,1)= subjData.(subjects{subj})(session).DSshifted(ttlCount);
+                       subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted(DScount,1)= subjData.(subjects{subj})(session).DSshifted(ttlCount);
 
 
                        %save the pump identity based on the # of TTL pulses in this window (numel)
 
                         if numel(ttlPump) == 1
-                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 1; 
-                            subjDataAnalyzed.(subjects{subj})(session).reward.rewardID(DScount,1)= {currentSubj(session).pump1};
+                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 1;                                                       
                             DScount= DScount+1;
                             ttlCount= ttlCount+1;
                         elseif numel(ttlPump) ==2
                             subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 2;
-                            subjDataAnalyzed.(subjects{subj})(session).reward.rewardID(DScount,1)= {currentSubj(session).pump2};
                             DScount= DScount+1;
                             ttlCount = ttlCount+2; %skip over the next cue ttl pulse because it is in the same trial
                         elseif numel(ttlPump) ==3
                             subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 3;
-                            subjDataAnalyzed.(subjects{subj})(session).reward.rewardID(DScount,1)= {currentSubj(session).pump3};
                             DScount= DScount+1;
                             ttlCount = ttlCount+3; %skip over the next two cue ttl pulses because these are in the same trial 
                         end
@@ -142,11 +138,10 @@ subjects= fieldnames(subjData); %keep subj list up to date
           
                   
                %for simplicity let's overwrite the original DS trial record with
-               %the updated one %~~~FLAG: Important REVIEW here overwriting
-               %original DS times
+               %the updated one
                subjData.(subjects{subj})(session).DS= subjDataAnalyzed.(subjects{subj})(session).reward.DS;
                subjData.(subjects{subj})(session).DSreward= subjDataAnalyzed.(subjects{subj})(session).reward.DSreward;
-%                subjData.(subjects{subj})(session).DSshifted= subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted;
+               subjData.(subjects{subj})(session).DSshifted= subjDataAnalyzed.(subjects{subj})(session).reward.DSshifted;
                
             else %if there's no variable reward in this session, make empty
                        
@@ -189,13 +184,7 @@ end %end subject loop
                 end
             end
             
-                    
-            %save back to struct~~~%FLAG: Important REVIEW here,
-            %overwriting original data
-            subjData.(subjects{subj})(session).DS= currentSubj(session).DS;            
-        
         end%end session loop
-
         
     end % end subj loop
 
@@ -745,12 +734,7 @@ for subj= 1:numel(subjects) %for each subject
             %each entry in DS is a timestamp of the DS onset, let's get its
             %corresponding index from cutTime and use that to pull
             %surrounding data
-           
-            %%FLAG~~~~~DSshifted here may be incorrectly IDing events and calculating outcome!!!
-            
             DSonset = find(cutTime==currentSubj(session).DSshifted(cue,1));
-%             DSonset = find(cutTime==currentSubj(session).DS(cue,1));
-
                      
           if DSonset + cueLength < numel(cutTime) %make sure cue isn't too close to the end of session  
                 %find an save pox during the cue duration
@@ -875,7 +859,6 @@ for subj= 1:numel(subjects) %for each subject
                 %each entry in NS is a timestamp of the NS onset, let's get its
                 %corresponding index from cutTime and use that to pull
                 %surrounding data
-                        %~~FLAG NSshifted
                 NSonset = find(cutTime==currentSubj(session).NSshifted(cue,1));
 
 
@@ -1471,12 +1454,8 @@ for subj= 1:numel(subjects) %for each subject
 
         for cue=1:length(currentSubj(session).DS) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
 
-            %each entry in DS is a timestamp of the DS onset
-            %~~~ FLAG: DSshifted here may be incorrectly getting events and
-            %outcomes
+            %each entry in DS is a timestamp of the DS onset 
             DSonset = find(cutTime==currentSubj(session).DSshifted(cue,1));
-%             DSonset = find(cutTime==currentSubj(session).DS(cue,1));
-
 
             %define the frames (datapoints) around each cue to analyze
             preEventTimeDS = DSonset-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
@@ -1612,7 +1591,7 @@ for subj= 1:numel(subjects) %for each subject
       else %if the NS is present on this session, do the analysis and save results
 
             for cue=1:length(currentSubj(session).NS) %NS CUES %For each NS cue, conduct event-triggered analysis of data surrounding that cue's onset
-                %~~FLAG NSshifted
+                
                 NSonset = find(cutTime==currentSubj(session).NSshifted(cue,1)); %get the corresponding cutTime index of the NS timestamp
 
 
@@ -10954,12 +10933,7 @@ end %end subject loop
 %save the subjDataAnalyzed struct for later analysis
  
 %saving as v7.3 takes longer, but necessary if >2gb
-
-if contains(experimentName, 'noArtifact')==true
-    save(strcat(experimentName,'-', date, 'subjDataAnalyzed-noArtifact.mat'), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 .mat for files >2gb
-elseif contains(experimentName, 'noArtifact')==false
-    save(strcat(experimentName,'-', date, 'subjDataAnalyzed.mat'), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 .mat for files >2gb
-end
+save(strcat(experimentName,'-', date, 'subjDataAnalyzedNoArtifacts.mat'), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 .mat for files >2gb
 
 allRats.preCueFrames= preCueFrames;
 allRats.postCueFrames= postCueFrames;
@@ -10981,5 +10955,4 @@ profile viewer;
 %    for session = 1:numel(currentSubj) %for each training session this subject completed
 %    end %end session loop
 % end %end subject loop
-
 

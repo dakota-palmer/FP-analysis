@@ -11,12 +11,20 @@ figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 % no artifact version
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-14-Feb-2022subjDataAnalyzedNoArtifacts.mat")
 
+% dp workstation
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\VP-VTA-FP-01-Mar-2022subjDataAnalyzed.mat")
 
-%ally no artifacts (bu"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat"t all trials)
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat")
+% %ally no artifacts (bu"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat"t all trials)
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat")
 
-%% Create periEventTable and make peri-event 465nm plots
+%% Create periEventTable
+fp_manuscript_tidyTable();
+
+%% make peri-event 465nm plots
 fp_manuscript_periEventTraces();
+
+%% make variable reward plots
+fp_manuscript_variableReward();
 
 %% load encoding model output 
 
