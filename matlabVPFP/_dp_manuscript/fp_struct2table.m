@@ -29,7 +29,7 @@ for session= 1:size(T,1)
     else
         sesInd= sesInd(end)+1:sesInd(end)+ numel(T.raw(session).cutTime);
     end
-    
+        
     fpTable.fileID(sesInd)= fileID;
     fpTable.subject(sesInd)= T.rat(session);
     fpTable.stage(sesInd)= T.trainStage(session);
@@ -50,38 +50,46 @@ for session= 1:size(T,1)
     %now find timestamps corresponding to event times in this fileID and mark these
     %simple binary coding 1 at timestamp where event occurred
    
+    %~~FLAG: interp() here to cutTime, ideally shouldnt do this...
+    
     %port entry (pox)
     eventTime=[]; eventInd= [];
-    eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.raw(session).pox, 'nearest');   
+%     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.raw(session).pox, 'nearest');    
+    eventTime= T.raw(session).pox;
     eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.pox(eventInd)= 1; 
     
     %lox
     eventTime=[]; eventInd= [];
-    eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.raw(session).lox, 'nearest');   
+    eventTime= T.raw(session).lox;
+%     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.raw(session).lox, 'nearest');   
     eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.lox(eventInd)= 1;     
     %port exit (out)
     eventTime=[]; eventInd= [];
-    eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.raw(session).out, 'nearest');   
+    eventTime= T.raw(session).out;
+%     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.raw(session).out, 'nearest');   
     eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.out(eventInd)= 1; 
     
     %pump on (reward)
     eventTime=[]; eventInd= [];
-    eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.reward{session}.pumpOnTime, 'nearest');   
+    eventTime= T.reward{session}.pumpOnTime;
+%     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.reward{session}.pumpOnTime, 'nearest');   
     eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.pumpTime(eventInd)= 1; 
     
     %DS cue
     eventTime=[]; eventInd= [];
-    eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.periDS{session}.DS, 'nearest');   
+    eventTime= T.periDS{session}.DS;
+%     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.periDS{session}.DS, 'nearest');   
     eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.DS(eventInd)= 1; 
     
     %NS cue
     eventTime=[]; eventInd= [];
-    eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.periNS{session}.NS, 'nearest');   
+    eventTime= T.periNS{session}.NS;
+%     eventTime= interp1(T.raw(session).cutTime, T.raw(session).cutTime, T.periNS{session}.NS, 'nearest');   
     eventInd= find(ismember(fpTable.cutTime,eventTime)&(fpTable.fileID==fileID)==1);
     fpTable.NS(eventInd)= 1; 
     

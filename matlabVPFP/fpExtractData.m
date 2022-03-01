@@ -18,7 +18,7 @@ close all
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
 %choose to remove artifact (true 1) or not (false 0)
-removeArtifact= 0
+artifactRemove= 0
 
 % %Ally GADVPFP
 % experimentName= 'GAD-VPFP'; %change experiment name for automatic naming of figures
@@ -52,7 +52,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
           
     tic;
     
-    clearvars -except removeArtifact fs file nexFiles metaDataAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
+    clearvars -except artifactRemove fs file nexFiles metaDataAddress nexAddress sesNum sesData subjData figPath runAnalysis experimentName; %% CLEAR ALL VARIABLES between sessions (except a few)- this way we ensure there isn't any data contamination between sessions
     
     fName = nexFiles(file).name; %define the nex file name to load
     data = readNexFile([nexAddress,'//',fName]); %load the nex file data
@@ -232,7 +232,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     repurpleB=resample(purpleB,40,round(fs));
     
     fs=40;    
-    
+           
     reTime= linspace(data.tbeg, data.tend, length(reblueA));     %Create time axis in seconds based on this resampling- so that each intensity value has a corresponding timestamp
 
     % remove several initial and final data points to eliminate artifacts
@@ -246,6 +246,112 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
 
     cutTime = reTime(numStartExclude:end-numEndExclude);        % define cutTime as a new time axis w/o removed points- remember each intensity value should have a corresponding timestamp
     
+    %% Correct cutTime
+    %make sure every unique event timestamp is present in cutTime, so we
+    %don't have to do any shifting and can use the correct original
+    %timestamps for calculations without worrying about indexing errors
+    allTS= [];
+    for event=1:numel(data.events)
+        allTS= [allTS; data.events{event}.timestamps];
+    end
+    
+    allTS= unique(allTS)';
+    
+    %Initial vizualization/proof of concept
+%     vq = interp1(x,v,xq) returns interpolated values of a 1-D function at specific query points using linear interpolation. Vector x contains the sample points, and v contains the corresponding values, v(x). Vector xq contains the coordinates of the query points.
+% 
+% If you have multiple sets of data that are sampled at the same point coordinates, then you can pass v as an array. Each column of array v contains a different set of 1-D sample values.
+%     x are the x values and y are the y values for the control points. xp are the points you want to evaluate the function at.
+    
+    %first create a full time axis for the photometry signal (we'll use
+    %this to index)
+    
+    origTime= linspace(data.tbeg, data.tend, length(blueA));
+    
+    %add in any missing timestamps, get fp values using interp
+    blueAinterp= interp1(origTime, blueA, allTS)';
+
+    %combine both (and sort by fullTime)
+    fullTime= ([origTime,allTS]);
+    
+    [fullTime, indSort]= sort(fullTime);
+    
+    blueAfull= [blueA; blueAinterp];
+    blueAfull= blueAfull(indSort);
+    
+    %downsampling will likely get rid of some event timestamps and lead to indexing errors no matter
+    %what we do... analyses should operate on raw timestamps regardless of
+    %any time 'axis' & independent of resampling.
+    
+    fs= data.contvars{i,1}.ADFrequency;
+    
+    reFullTime= resample(fullTime,40,round(fs));
+        
+    test= ismember(allTS, reFullTime);
+
+    reblueAfull= resample(blueAfull,40,round(fs));
+    
+%     figure(); hold on;
+%     subplot(3,1,1)
+%     plot(origTime, blueA);
+%     legend('blueA')
+%     subplot(3,1,2)
+%     plot(allTS, blueAinterp);
+%     legend('blueA, interpolated from unique eventTimestamps')
+%     subplot(3,1,3); hold on;
+%     plot(fullTime, blueAfull);
+%     scatter(allTS, blueAinterp, 'rx');
+%     legend('blueA full', 'interpolated values')
+% 
+%     linkaxes()
+    
+    %Instead of downsampling to fixed rate, correct cutTime and signal by
+    %adding orignal interpolated values and timestamps, sorting
+    %appropriately
+
+    %get interp() values
+    
+    %add in any missing timestamps, get fp values using interp
+    blueAinterp= interp1(origTime, blueA, allTS)';
+    blueBinterp= interp1(origTime, blueB, allTS)';
+    purpleAinterp= interp1(origTime, purpleA, allTS)';
+    purpleBinterp= interp1(origTime, purpleB, allTS)';
+
+    
+    %combine both (and sort by fullTime)
+    cutTime2= ([cutTime, allTS]);
+   
+    [cutTime2, indSort]= sort(cutTime2);
+    
+    %add and sort fp signals
+    reblueA2= [reblueA; blueAinterp];
+    reblueA2= reblueA2(indSort);
+    
+    reblueB2= [reblueB; blueBinterp];
+    reblueB2= reblueB2(indSort);
+  
+    repurpleA2= [repurpleA; purpleAinterp];
+    repurpleA2= repurpleA2(indSort);
+    
+    repurpleB2= [repurpleB; purpleBinterp];
+    repurpleB2= repurpleB2(indSort);
+     
+     
+%     figure(); hold on;
+%     subplot(2,1,1)
+%     plot(cutTime, reblueA);
+%     legend('reblueA')
+%     subplot(2,1,2); hold on;
+%     plot(cutTime2, reblueA2);
+%     scatter(allTS, blueAinterp, 'rx');
+%     legend('reblueA2', 'interpolated values')
+%     linkaxes();
+%     
+    
+    
+    
+    %be sure to get actual photometry signal for all of these timestamps
+%     blueA2= blueA
            
     %% Artifact removal goes here
 
@@ -274,15 +380,15 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     %-Run artifact elimination function
     %plots are in the function itself commented out if you want to examine
     
-    if removeArtifact==true
-        [fixedBlueA, fixedPurpleA] = fpArtifactElimination_DynamicMAD(reblueA, repurpleA, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);
+    if artifactRemove==true
+        [fixedBlueA, fixedPurpleA] = fpArtifactElimination_DynamicMAD(reblueA2, repurpleA2, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);
 
-        [fixedBlueB, fixedPurpleB] = fpArtifactElimination_DynamicMAD(reblueB, repurpleB, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);    
-    elseif removeArtifact==false
-        fixedBlueA= reblueA;
-        fixedPurpleA= repurpleA;
-        fixedBlueB= reblueB;
-        fixedPurpleB= repurpleB;
+        [fixedBlueB, fixedPurpleB] = fpArtifactElimination_DynamicMAD(reblueB2, repurpleB2, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);    
+    elseif artifactRemove==false
+        fixedBlueA= reblueA2;
+        fixedPurpleA= repurpleA2;
+        fixedBlueB= reblueB2;
+        fixedPurpleB= repurpleB2;
     end
     
     %% Save all data for a given session to struct for easy access
@@ -299,7 +405,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     sesData(file).outB= outB;
     
         %Photometry signals
-    sesData(file).cutTime= cutTime;
+    sesData(file).cutTime= cutTime2; %now cutTime should have corresponding value for every eventTime (though fs won't be quite 40hz)
     sesData(file).reblueA = fixedBlueA; %reblueA;
     sesData(file).reblueB = fixedBlueB; %reblueB;
     sesData(file).repurpleA = fixedPurpleA; %repurpleA;
@@ -448,6 +554,11 @@ end
 
 %% Match raw timestamps with closest downsampled timestamps
 
+%DP 2022-02-28 SHOULD NOT BE USED, Any calculations performed should occur
+%on the raw timestamps. Shifts however small may result in incorrect
+%calculations (e.g. PE shifted just beyond cueDur will not be counted for
+%that trial and entire trial will be misclassified)
+
 %we downsampled to 40hz, but our behavioral timestamps don't correspond
 %cleanly to our cutTime axis. Here, we shift these timestamps to fit the
 %40hz sampling rate. To do so, we'll use the interp() function which is very efficient
@@ -543,9 +654,9 @@ for subj= 1:numel(subjects)
 end
 %% Save .mat
 %save the subjData struct for later analysis
-if removeArtifact==true
+if artifactRemove==true
     save(strcat(experimentName,'-', date, 'subjDataRaw-artifactRemoved'), 'subjData'); %the second argument here is the variable saved, the first is the filename
-elseif removeArtifact==false
+elseif artifactRemove==false
         save(strcat(experimentName,'-', date, 'subjDataRaw'), 'subjData'); %the second argument here is the variable saved, the first is the filename
 end
 
