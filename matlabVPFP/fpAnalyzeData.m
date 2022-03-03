@@ -120,19 +120,22 @@ subjects= fieldnames(subjData); %keep subj list up to date
                        %save the pump identity based on the # of TTL pulses in this window (numel)
 
                         if numel(ttlPump) == 1
-                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 1;                                                       
+                            subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 1; 
+                            subjDataAnalyzed.(subjects{subj})(session).reward.rewardID(DScount,1)= {currentSubj(session).pump1};
                             DScount= DScount+1;
                             ttlCount= ttlCount+1;
                         elseif numel(ttlPump) ==2
                             subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 2;
+                            subjDataAnalyzed.(subjects{subj})(session).reward.rewardID(DScount,1)= {currentSubj(session).pump2};
                             DScount= DScount+1;
                             ttlCount = ttlCount+2; %skip over the next cue ttl pulse because it is in the same trial
                         elseif numel(ttlPump) ==3
                             subjDataAnalyzed.(subjects{subj})(session).reward.DSreward(DScount,1)= 3;
+                            subjDataAnalyzed.(subjects{subj})(session).reward.rewardID(DScount,1)= {currentSubj(session).pump3};
                             DScount= DScount+1;
                             ttlCount = ttlCount+3; %skip over the next two cue ttl pulses because these are in the same trial 
                         end
-                                               
+                                             
                    end %end ttlCount conditional
                end %end cue loop
           
@@ -4806,11 +4809,16 @@ for thisStage= [allRewardStages]
              semPatchNeg= PEDSbluePump3(:,thisStage)-semPEDSbluePump3(:,find(allRewardStages==thisStage)); %need to save intermediate for indexing
              patch([timeLock,timeLock(end:-1:1)],[semPatchPos',semPatchNeg(end:-1:1)'],'b','EdgeColor','None');alpha(0.3); %overlay SEM patch
              
+           
              xlabel('time from PE (s)');
              ylabel('z score relative to pre-cue baseline)');
-             legend('465nm','pump on','port entry', 'first lick');
+             legend('465nm', 'pump on', 'port entry', 'first lick');
              
              linkaxes();
+
+             xlim([-2,4]);
+             ylim([-1,4]);
+             
 
 end
 
@@ -4869,6 +4877,8 @@ for thisStage= [allRewardStages]
 
              
              linkaxes();
+             ylim([-1,4]);
+             xlim([-2,5]);
 
 end
 
@@ -6672,16 +6682,19 @@ allSubjPEDSblue= []; allSubjPEDSpurple= []; allSubjPENSblue= []; allSubjPENSpurp
 allSubjNoPEDSblue= []; allSubjNoPEDSpurple= []; allSubjNoPENSblue= []; allSubjNoPENSpurple= [];
 allSubjInPortDSblue= []; allSubjInPortDSpurple= []; allSubjInPortNSblue= []; allSubjInPortNSpurple= [];
 allSubjFirstPoxDS= []; allSubjFirstPoxNS= [];
+    
+allSubjPumpOnTimeRel= nan(([numel(allStages), numel(subjects)]));
 
 for subj= 1:numel(subjects)
     currentSubj= subjDataAnalyzed.(subjects{subj});
     allStages= unique([currentSubj.trainStage]);
    
+    
     for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
         includedSessions= []; %excluded sessions will reset between unique stages
         inPortDSblue= []; inPortDSpurple= []; noPEDSblue= []; noPEDSpurple= []; PEDSblue= []; PEDSpurple= []; %reset between sessions
         inPortNSblue= []; inPortNSpurple= []; noPENSblue= []; noPENSpurple= []; PENSblue= []; PENSpurple= []; %reset between sessions
-        firstPoxDS=[]; firstPoxNS= [];
+        firstPoxDS=[]; firstPoxNS= []; pumpOnTimeRel= []; 
         
         %loop through all sessions and record index of sessions that correspond only to this stage
         for session= 1:numel(currentSubj)
@@ -6693,6 +6706,7 @@ for subj= 1:numel(subjects)
          for includedSession= includedSessions %loop through only sessions that match this stage
             DSinPort= []; DSnoPE= []; DSPE= []; %reset between sessions
             NSinPort= []; NSnoPE= []; NSPE= [];
+            PEtrial= []; noPEtrial=[]; inPortTrial=[];
              %Extract data based on trial outcome
              
          %loop through each trial type (1= PE, 2= noPE, 3= inPort) and get
@@ -6710,7 +6724,9 @@ for subj= 1:numel(subjects)
                 %make PEtrials empty? just skipping over empty cells here
                 %(checking to make sure PEtrial==1)
                 
+                %WORKING HEREE
                 firstPoxDS(includedSessions==includedSession)= nanmean((cellfun(@(v)v(1),currentSubj(includedSession).behavior.poxDSrel(PEtrial==1))));
+                pumpOnTimeRel= [pumpOnTimeRel; currentSubj(includedSession).reward.pumpOnDSrel(PEtrial)];
 
             end
             
@@ -6756,7 +6772,9 @@ for subj= 1:numel(subjects)
         allSubjInPortDSblue(:,thisStage, subj)= nanmean(inPortDSblue, 2);
         allSubjInPortDSpurple(:,thisStage, subj)= nanmean(inPortDSpurple,2);
        
-                
+        
+        allSubjPumpOnTimeRel(thisStage,subj)= nanmean(pumpOnTimeRel);
+
 
     
         if ~isempty(PENSblue)
@@ -6788,6 +6806,9 @@ for subj= 1:numel(subjects)
 %         plot(timeLock, PEDSpurple, 'm'); %plot individual session means
         plot(timeLock, mean(PEDSblue,2),'k','LineWidth',2); %plot mean between all sessions of this stage
         plot(timeLock, mean(PEDSpurple, 2), 'r', 'LineWidth', 2); %plot mean between all sessions of this stage
+
+        plot([nanmean(pumpOnTimeRel),  nanmean(pumpOnTimeRel)], eventLineLimits, 'm--', 'LineWidth',2) %ovelay line at mean pump onset
+        
         
         subplot(3, allStages(end),  allStages(end)+allStages(end)+thisStage); hold on; title(strcat('inPort DS stage-',num2str(thisStage)));
 %         plot(timeLock, inPortDSblue, 'b'); %plot individual session means
@@ -6860,7 +6881,7 @@ for subj= 1:numel(subjects)
 
 end
 
-% Now make a between-subj plot of mean across all animals
+%% Now make a between-subj plot of mean across all animals
     %DS
 figure;
 figureCount=figureCount+1; sgtitle('peri-DS response by PE outcome: mean between subjects ');
@@ -6908,6 +6929,7 @@ for subj= 1:numel(subjects)
 %         plot(timeLock, (allSubjNoPEDSpurple(:,thisStage, subj)), 'm--'); %plot each individual subject mean purple
         plot(timeLock, thisStageNoPEDSblue,'k','LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStageNoPEDSpurple,'r','LineWidth',2); %plot between-subjects mean purple
+
                     %sem overlay
         semLinePosAllSubj= thisStageNoPEDSblue+semNoPEDSblueAllSubj;
         semLineNegAllSubj= thisStageNoPEDSblue-semNoPEDSblueAllSubj;
@@ -7021,8 +7043,11 @@ linkaxes();
 
 % Now let's do a between subj with DS and NS 465 overlaid
 
-stagesToPlot= [4,5,7,12] %easy way to plot specific stages
-eventLineLimits= [-1,4]; %range of ylim for vertical line overlays @ events
+% stagesToPlot= [4,5,7,12] %easy way to plot specific stages
+stagesToPlot= [5,7] %easy way to plot specific stages
+
+
+eventLineLimits= [-2,5]; %range of ylim for vertical line overlays @ events
 
 figure;
 figureCount=figureCount+1; sgtitle('peri-cue response by PE outcome: mean between subjects ');
@@ -7072,6 +7097,7 @@ for subj= 1:numel(subjects)
         subplot(subplot(3, numel(stagesToPlot), find(stagesToPlot==thisStage))); hold on; title(strcat('stage-',num2str(thisStage),'PEtrial')) 
         plot(timeLock, thisStagePEDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
         plot(timeLock, thisStagePENSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
+
             %sem overlay
         semLinePosAllSubj= thisStagePEDSblue+semPEDSblueAllSubj;
         semLineNegAllSubj= thisStagePEDSblue-semPEDSblueAllSubj;
@@ -7086,6 +7112,9 @@ for subj= 1:numel(subjects)
 %         xline(0, 'k--');
             %overlay line at mean first PE
         plot([thisStageFirstPoxDS, thisStageFirstPoxDS], eventLineLimits,'m-.');
+            %overlay line at mean pump on
+        plot([nanmean(allSubjPumpOnTimeRel(thisStage,:)),  nanmean(allSubjPumpOnTimeRel(thisStage,:))], eventLineLimits, 'g--', 'LineWidth',2) %ovelay line at mean pump onset
+
 %         xline(thisStageFirstPoxDS, 'm--');
        
 %         if ~isnan(thisStageFirstPoxNS)
@@ -7131,12 +7160,130 @@ for subj= 1:numel(subjects)
         
         
 %         if find(stagesToPlot==thisStage)==1 
-subplot(3,4,1)
-           legend('DS 465','NS 465','sem','sem','cue onset','mean port entry latency');
+           subplot(3,numel(stagesToPlot),1)
+           legend('DS 465','NS 465','sem','sem', 'cue onset','mean port entry latency', 'mean pump on');
 %         end
     end
 end
 linkaxes();
+ylim([-2,5]);
+
+%% 2022-03-02 colloquium presentation
+% Now let's do a between subj with DS and NS 465 overlaid
+
+% stagesToPlot= [4,5,7,12] %easy way to plot specific stages
+stagesToPlot= [5,7] %easy way to plot specific stages
+
+
+eventLineLimits= [-2,5]; %range of ylim for vertical line overlays @ events
+
+figure;
+figureCount=figureCount+1; sgtitle('peri-cue response by PE outcome: mean between subjects ');
+for subj= 1:numel(subjects)
+    for thisStage= stagesToPlot 
+        thisStagePEDSblue= nanmean(allSubjPEDSblue(:,thisStage,:),3);
+        thisStagePEDSpurple= nanmean(allSubjPEDSpurple(:,thisStage,:),3);
+        
+        thisStageNoPEDSblue= nanmean(allSubjNoPEDSblue(:,thisStage,:),3);
+        thisStageNoPEDSpurple= nanmean(allSubjNoPEDSpurple(:,thisStage,:),3);
+
+        thisStageInPortDSblue= nanmean(allSubjInPortDSblue(:,thisStage,:),3);
+        thisStageInPortDSpurple= nanmean(allSubjInPortDSpurple(:,thisStage,:),3);
+        
+        thisStagePENSblue= nanmean(allSubjPENSblue(:,thisStage,:),3);
+        thisStagePENSpurple= nanmean(allSubjPENSpurple(:,thisStage,:),3);
+        
+        thisStageNoPENSblue= nanmean(allSubjNoPENSblue(:,thisStage,:),3);
+        thisStageNoPENSpurple= nanmean(allSubjNoPENSpurple(:,thisStage,:),3);
+
+        thisStageInPortNSblue= nanmean(allSubjInPortNSblue(:,thisStage,:),3);
+        thisStageInPortNSpurple= nanmean(allSubjInPortNSpurple(:,thisStage,:),3);
+        
+        thisStageFirstPoxDS= nanmean(allSubjFirstPoxDS(:,thisStage,:),3);
+        thisStageFirstPoxNS= nanmean(allSubjFirstPoxNS(:,thisStage,:),3);
+        
+              %calculate SEM between subjects
+        semPEDSblueAllSubj= []; semPEDSpurpleAllSubj=[]; semPENSblueAllSubj= []; semPENSpurpleAllSubj=[]; %reset btwn stages
+        semNoPEDSblueAllSubj= []; semNoPEDSpurpleAllSubj= []; semNoPENSblueAllSubj= []; semNoPENSpurpleAllSubj= [];
+        semInPortDSblueAllSubj= []; semInPortDSpurpleAllSubj= []; semInPortNSblueALlSubj= []; semInPortNSpurpleAllSubj=[];
+        
+        semPEDSblueAllSubj= nanstd(allSubjPEDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semPEDSpurpleAllSubj= nanstd(allSubjPEDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPEDSblueAllSubj= nanstd(allSubjNoPEDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPEDSpurpleAllSubj= nanstd(allSubjNoPEDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortDSblueAllSubj= nanstd(allSubjInPortDSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortDSpurpleAllSubj= nanstd(allSubjInPortDSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semPENSblueAllSubj= nanstd(allSubjPENSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semPENSpurpleAllSubj= nanstd(allSubjPENSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPENSblueAllSubj= nanstd(allSubjNoPENSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semNoPENSpurpleAllSubj= nanstd(allSubjNoPENSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortNSblueAllSubj= nanstd(allSubjInPortNSblue(:,thisStage,:),0,3)/sqrt(numel(subjects));
+        semInPortNSpurpleAllSubj= nanstd(allSubjInPortNSpurple(:,thisStage,:),0,3)/sqrt(numel(subjects));
+
+
+                %DS
+        subplot(subplot(2, numel(stagesToPlot), find(stagesToPlot==thisStage))); hold on; title(strcat('stage-',num2str(thisStage),'PEtrial')) 
+        plot(timeLock, thisStagePEDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStagePENSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
+
+            %sem overlay
+        semLinePosAllSubj= thisStagePEDSblue+semPEDSblueAllSubj;
+        semLineNegAllSubj= thisStagePEDSblue-semPEDSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.15);
+        
+        semLinePosAllSubj= thisStagePENSblue+semPENSblueAllSubj;
+        semLineNegAllSubj= thisStagePENSblue-semPENSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
+        
+            %overlay line at cue onset
+        plot([0,0],eventLineLimits,'k--');
+%         xline(0, 'k--');
+            %overlay line at mean first PE
+        plot([thisStageFirstPoxDS, thisStageFirstPoxDS], eventLineLimits,'m-.');
+            %overlay line at mean pump on
+        plot([nanmean(allSubjPumpOnTimeRel(thisStage,:)),  nanmean(allSubjPumpOnTimeRel(thisStage,:))], eventLineLimits, 'g--', 'LineWidth',2) %ovelay line at mean pump onset
+
+%         xline(thisStageFirstPoxDS, 'm--');
+       
+%         if ~isnan(thisStageFirstPoxNS)
+% %             xline(thisStageFirstPoxNS, 'g--');
+%             plot([thisStageFirstPoxNS, thisStageFirstPoxNS], eventLineLimits,'g--');
+%         end
+%         
+        xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
+        
+        subplot(subplot(2, numel(stagesToPlot), numel(stagesToPlot)+find(stagesToPlot==thisStage))); hold on; title(strcat('stage-',num2str(thisStage),'noPE trial')) 
+        plot(timeLock, thisStageNoPEDSblue,'Color',colors(1,:),'LineWidth',2); %plot between-subjects mean blue
+        plot(timeLock, thisStageNoPENSblue,'Color',colors(2,:),'LineWidth',2); %plot between-subjects mean purple
+            %sem overlay
+        semLinePosAllSubj= thisStageNoPEDSblue+semNoPEDSblueAllSubj;
+        semLineNegAllSubj= thisStageNoPEDSblue-semNoPEDSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(1,:),'EdgeColor','None');alpha(0.15);
+        
+        semLinePosAllSubj= thisStageNoPENSblue+semNoPENSblueAllSubj;
+        semLineNegAllSubj= thisStageNoPENSblue-semNoPENSblueAllSubj;
+        patch([timeLock,timeLock(end:-1:1)],[semLinePosAllSubj',semLineNegAllSubj(end:-1:1)'],colors(2,:),'EdgeColor','None');alpha(0.15);
+        xlabel('time from cue onset (s)'); ylabel('z-score relative to pre-cue baseline');
+
+           %overlay line at cue onset
+        plot([0,0],eventLineLimits,'k--');
+%         xline(0,'k--');
+   
+        
+%         if find(stagesToPlot==thisStage)==1 
+           subplot(2,numel(stagesToPlot),1)
+           legend('DS 465','NS 465','sem','sem', 'cue onset','mean port entry latency', 'mean pump on');
+%         end
+    end
+end
+linkaxes();
+ylim([-2,5]);
+
+%manual saving default override? size issue
+set(groot,'defaultFigurePaperPositionMode','manual')
+
+
+%%
 
 %~~~~making big pretty figures for presentation
 %     for thisStage= 1:size(allSubjDSblue,2) 

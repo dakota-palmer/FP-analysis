@@ -4881,10 +4881,13 @@ for thisStage= [allRewardStages]
              
              xlabel('time from PE (s)');
              ylabel('z score relative to pre-cue baseline)');
-             legend('465nm','pump on','port entry', 'first lick');
+             legend('465nm', 'pump on', 'port entry', 'first lick');
              
              linkaxes();
 
+             xlim([-2,4]);
+             ylim([-1,4]);
+             
 end
 
 
