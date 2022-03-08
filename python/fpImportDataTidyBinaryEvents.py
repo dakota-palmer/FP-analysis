@@ -44,7 +44,7 @@ import dask.dataframe as dd
 experimentType= 'photometry'
 
 # datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp-07-Jan-2022.parquet"
-datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_input\vp-vta-fp-03-Mar-2022.parquet"
+datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_input\vp-vta-fp-28-Feb-2022.parquet"
 #%% ID and import Parquet file 
 df= pd.read_parquet(datapath)
 
@@ -81,15 +81,11 @@ df.columns= labels
 # %% Add other variables if necessary before tidying
 
 #add cue duration variable by stage (using dict here)
-stages= [4,5,7]
-cueDur= [10,10,10]
 # stages= [1,2,3,4,5]
 # cueDur= [60,30,20,10,10]
-# stages= [1,2,3,4,5,6,7,8,9,10,11,12]
-# cueDur= [60,30,20,10,10,10,10,10,10,10,10,10]
+stages= [1,2,3,4,5,6,7,8,9,10,11,12]
+cueDur= [60,30,20,10,10,10,10,10,10,10,10,10]
 
-
-fs= 40 #fp 40hz
 
 for thisStage in range(len(stages)):
     df.loc[df.stage==stages[thisStage],'cueDur']= cueDur[thisStage]
@@ -116,7 +112,6 @@ df.dtypes
 
 #change dtypes if needed
 # df.cutTime=df.cutTime.astype('float64')
-df.fileID= df.fileID.astype('int')
 
 #%% Define Event variables for your experiment 
 #make a list of all of the Event Types so that we can melt them together into one variable
@@ -202,219 +197,27 @@ if experimentType.__contains__('Opto'):
 
 #subsetting for debugging
 
-#!!!!!TODO: update here for non binary timestamps
-
-
 #--strategy: melt(), drop 0 values (no event), then remerge back on full df cutTime
 
 dfTemp = df.melt(id_vars=idVars, value_vars=eventVars, var_name='eventType', value_name='eventTime').copy()
 
 dfTemp = dfTemp[dfTemp.eventTime != 0]
 
-dfTemp= dfTemp.loc[:,['fileID','cutTime','eventType', 'eventTime']]
+dfTemp= dfTemp.loc[:,['fileID','cutTime','eventType']]
 
-#add new cutTime values corresponding to eventTime prior to merge
-# dfTemp.cutTime= dfTemp.eventTime
- 
-#instead of matching values exactly, find the *closest* time bin in cutTime. Keep the RAW eventTime but place it in this bin
-# dfTemp.cutTime= dfTemp.groupby(['fileID'])
-
-#sharing index with cutTime would save on memory...could just have non matching index but would like alignment)
-
-
-#wayy too slow
-# dfTemp= dfTemp.set_index('fileID')
-
-# for ts in dfTemp.eventTime.unique():
-#     result_index = dfTemp['cutTime'].sub(ts).abs().idxmin()
-
-    
-# result_index = dfTemp['cutTime'].sub(dfTemp.eventTime.unique()).abs().idxmin()
-
-# params = df.iloc[(df['cutTime']-dfTemp.eventTime.unique()).abs().argsort()[:1]]
-
-
-#try combining the two columns- this gets everything into one col at least
-# dfTemp= dfTemp.set_index('fileID')
-
-# test= pd.concat([dfTemp.cutTime,dfTemp.eventTime])
-
-# dfTemp['time2']= pd.concat([dfTemp.cutTime,dfTemp.eventTime]) #memory error
-
-#could try merging(), labelling as cuttime or eventTime, then groubpy and diff() to find nearest bin?
-#memory error
-# dfTemp= dfTemp.melt(id_vars='fileID', value_vars=['cutTime','eventTime'], value_name='time2')
- 
-#could try simply filling eventTime with cutTime, then sorting, then getting diff? real event times will have non-null eventTypes
-# dfTemp.loc[:,'eventTime']= dfTemp.groupby(['fileID'])['']
-
-# #try setting index on both and merging? #memory error
-# dfTemp2= dfTemp.set_index('cutTime')
-# dfTemp3= dfTemp.set_index('eventTime')
-# dfTemp4= dfTemp2.merge(dfTemp3, how='outer')
-
-
-# #drop the old binary coded vars prior to merge (save memory)
-df.drop(eventVars,axis=1, inplace=True)
-
-#try merge_asof to merge on closest timestamp https://towardsdatascience.com/how-to-merge-not-matching-time-series-with-pandas-7993fcbce063
-
-#overwrite melted() cutTime with eventTime (we'll use this to merge)
-dfTemp.cutTime= dfTemp.eventTime
-
-dfTemp= dfTemp.sort_values(['fileID','cutTime'])
-
-# test= pd.merge_asof(dfTemp.cutTime, dfTemp.eventTime) #, tolerance= 1/fs) #dont use tolerance, might remove eventTimes and shouldn't be a big deal
-# test= pd.merge_asof(df, dfTemp, on=['fileID','cutTime'], direction='nearest') #, tolerance= 1/fs) #dont use tolerance, might remove eventTimes and shouldn't be a big deal
-
-
-test= df.loc[df.fileID.isin([1,2])]
-test2= dfTemp.loc[dfTemp.fileID==dfTemp.fileID.isin([1,2])]
-
-#sort prior to merge
-test= test.sort_values(['fileID','cutTime'])
-test2= test2.sort_values(['fileID','cutTime'])
-
-
-# #try multiindex?
-# df_merged = pd.merge_asof(test, test2,
-#                      left_on=['cutTime'], right_on=['cutTime'],by='fileID',
-#                      suffixes=('', '_2')
-#                      )
-
-# df_merged = pd.merge_asof(left=df1.reset_index(), right=df2.reset_index(),
-#                      left_on=['timestamps_df1'], right_on=['timestamps_df2'],by='some_keys',
-#                      suffixes=('', '_2')
-#                      )
-
-
-# #remove null eventTimes prior to merge
-test2= test2.loc[test2.eventTime.notnull()]
-
-# test3= pd.merge_asof(test, test2, on=['cutTime'], direction='backward') #, tolerance= 1/fs) #dont use tolerance, might remove eventTimes and shouldn't be a big deal
-
-# #getting weird errors.... try on groups?
-# for name, group in df.groupby(['fileID']):
-#     test= group
-#     test2= dfTemp.loc[name]
-
-
-#works?? #why creating duplicate events though?????
-test4= pd.merge_asof(test.sort_values(['cutTime']),test2.sort_values(['cutTime']),on=['cutTime'], by=['fileID'], direction='nearest')
-
-
-test5= pd.merge_asof(test2.sort_values(['cutTime']),test.sort_values(['cutTime']),on=['cutTime'], by=['fileID'], direction='nearest')
-
-# #nope?? https://stackoverflow.com/questions/57919854/pandas-merge-asof-giving-duplicate-matches
-# # The actual output is the expected behavior: merge_asof(left, right) finds for every row in left the nearest row in right (within the tolerance limits). What you want is slightly different: you want to find the one row in left that is nearest to right. I'm afraid there's no built-in function for this in pandas.
-
-# #so try 
-# x = pd.merge_asof(test, test2.reset_index(), left_on='cutTime', right_on='cutTime',by=['fileID']
-#               direction='nearest')
-
-# x= pd.merge_asof(test.sort_values(['cutTime']),test2.reset_index().sort_values(['cutTime']),on=['cutTime'], by=['fileID'], direction='nearest')
-
-#this seems to work!!!
-x= pd.merge_asof(test2.sort_values(['cutTime']),test.reset_index().sort_values(['cutTime']),on=['cutTime'], by=['fileID'], direction='nearest')
-
-
-merged_df=  test.merge(x[['index','eventType','eventTime']], how='left', left_index=True, right_on='index').set_index('index')
-
-# merged_df = df1.merge(x[['df2_col','index']], how='left', left_index=True, right_on='index').set_index('index')
-
-
-# test3= pd.merge_asof(test, test2, on=['cutTime'], by=['fileID'])
-
-# test= test.dropna()
-# test2= test2.dropna()
-# test3= pd.merge_asof(test, test2, on=['cutTime'], by=['fileID'])
-
-
-
-# #got result but want to merge on fileID too so set index
-# test= test.set_index(['fileID','cutTime'])
-# test2= test2.set_index(['fileID','cutTime'])
-
-
-# # test3= pd.merge_asof(test, test2, left_index=True, right_on=['fileID','cutTime'], direction='backward') #, tolerance= 1/fs) #dont use tolerance, might remove eventTimes and shouldn't be a big deal
-# # test3= pd.merge_asof(test, test2, left_on=['fileID','cutTime'], right_index=True, direction='backward') #, tolerance= 1/fs) #dont use tolerance, might remove eventTimes and shouldn't be a big deal
-# # test3= pd.merge_asof(test2, test, left_on=['fileID','cutTime'], right_index=True, direction='backward') #, tolerance= 1/fs) #dont use tolerance, might remove eventTimes and shouldn't be a big deal
-
-# test3= pd.merge_asof(test, test2, on=['cutTime'], by=['fileID'])
-
-# # test= pd.merge_asof(df, dfTemp, on=['cutTime'], direction='backward') #, tolerance= 1/fs) #dont use tolerance, might remove eventTimes and shouldn't be a big deal
-
-# #merge ordered?
-# # https://pandas.pydata.org/docs/reference/api/pandas.merge_ordered.html#pandas.merge_ordered
-
-# test= df.loc[df.fileID==df.fileID.min()]
-# test2= dfTemp.loc[dfTemp.fileID==dfTemp.fileID.min()]
-# # test3= pd.merge_ordered(test, test2, on='cutTime', left_by=['fileID'])
-# test3= pd.merge_ordered(test, test2, on=['fileID','cutTime'])
-
-
-
-
-# #inspecting
-# test= dfTemp.loc[dfTemp.fileID==dfTemp.fileID.min()]
-
-
-# test2= df.merge(test, on=['fileID','cutTime'], how='outer')
-
-# test3= test2.loc[test2.fileID==test2.fileID.min()]
-
-#merge back into df on cutTime, but outer join since some eventTimes won't be in cutTime?
-#seems ok but probably would be best to minimize new rows
-# df= df.merge(dfTemp, on=['fileID','cutTime'], how='left')
-# df= df.merge(dfTemp, on=['fileID','cutTime'], how='outer')
-
-#MERGE- find the nearest matching index for each eventTime and merge back on this
- # https://stackoverflow.com/questions/57919854/pandas-merge-asof-giving-duplicate-matches
-# # The actual output is the expected behavior: merge_asof(left, right) finds for every row in left the nearest row in right (within the tolerance limits). What you want is slightly different: you want to find the one row in left that is nearest to right. I'm afraid there's no built-in function for this in pandas.
-
-#so try 
-#merge_asof needs 1) no nans, 2) sorted
-dfTemp= dfTemp.loc[dfTemp.eventTime.notnull()]
-
-dfTemp= pd.merge_asof(dfTemp.sort_values(['cutTime']),df.reset_index().sort_values(['cutTime']),on=['cutTime'], by=['fileID'], direction='nearest')
-
-df=  df.merge(dfTemp[['index','eventType','eventTime']], how='left', left_index=True, right_on='index').set_index('index')
-
-#reset index now (there are duplicates if events happened at same cutTime, so make unique index
-df= df.reset_index(drop=True) 
+df= df.copy()
+df= df.merge(dfTemp, on=['fileID','cutTime'], how='left')
 
 del dfTemp
 
-# # #after merging, drop the old binary coded vars
-# df.drop(eventVars,axis=1, inplace=True)
-
-#inspecting
-test= df.loc[df.fileID==df.fileID.min()]
-
-
-# df= df.merge(dfTemp, on=['fileID'], how='left')
-
-
-
-#examining
-
-test= df.loc[df.fileID==df.fileID.min()]
-
-#instead of merging, simple reassignment
-# df = df.melt(id_vars=idVars, value_vars=eventVars, var_name='eventType', value_name='eventTime').copy()
-
-
-
 #create eventTime column (redundant with cutTime, but should allow DStrain code to work easily)
 # df.loc[df.eventType.notnull(),'eventTime']= df.
-# df.loc[df.eventType.notnull(),'eventTime']= df.cutTime
+df.loc[df.eventType.notnull(),'eventTime']= df.cutTime
 
 
 
-
-
-#copy eventTimes to cutTime (event timestamps that aren't already in cutTime)
-# df.loc[df.cutTime.isnull(), 'cutTime']= df.eventTime
+#after merging, drop the old binary coded vars
+df.drop(eventVars,axis=1, inplace=True)
 
 
 # #Remove all rows with NaN eventTimes (these are just placeholders, not valid observations) 
@@ -434,14 +237,7 @@ df['trialID'] = df[(df.eventType == 'DStime') | (
 # df['trialType']= df[df.trialID.notna()].eventType
 
 #dp 1/11/21 seems to be more efficient way of indexing
-# df['trialType']= df.loc[df.trialID.notna(),'eventType']
-
-#3/4/22
-#duplicates in index?
-# test= df.loc[df.index.duplicated()]
-
-df.loc[df.trialID.notna(),'trialType']= df.eventType
-
+df['trialType']= df.loc[df.trialID.notna(),'eventType']
 
 
 #%% Assign more specific trialTypes based on trialVars (OPTO ONLY specific for now)
@@ -522,7 +318,6 @@ df.loc[(df.trialID==0) & (df.eventTime>=2500), 'eventTime']= pd.NA
 print('False first DS cue removed, fileIDs:'+ (np.array2string(df.loc[idx].fileID.sort_values().unique())))
 
 #cannot use eventTime to do this for time series! #could use cuttime?
-
 df.loc[idx,'cutTime']=pd.NA 
 df= df.loc[df.cutTime.notnull()]
 
@@ -561,33 +356,10 @@ df= df.drop(idx).copy()
 #reset the index since values are now missing
 df.reset_index(drop=True, inplace=True)
 
-#%% Sort by eventType (to ensure correct trialID ffill)
-
-# df= df.sort_values(['fileID','cutTime','eventType'])
-
-#sort by time, trialID within file making sure that the Trial events (cues) are first
-
-df= df.sort_values(['fileID','cutTime','trialID'])
-
-
-#% dp 3/7/22 finding UStime with same timestamp as DStime being assigned to ITI instead of trial (must be from inport trial)
-
-# #by chance the UStime is simply ordered in the index prior to the cue so ffill doesn't work... it's just falling into ITI
-# test= df.loc[df.fileID==df.fileID.min()]
-
-# #for these cases, subset equivalent timestamps and manually assign trialID & trialStart
-# dfTemp= df.copy()
-
-#-==--dp 3/7/22
-#check if any nextTrialStart are equal to this timestamp, if so, trialID should updated to that trial.
-# dfTemp2= dfTemp.loc[dfTemp.eventTime==dfTemp.nextTrialStart]
 
 
 #%% dp 1/17/22
 #Try new direct timestamp trialID & trialType approach. works w no issues
-
-
-
 dfTemp= df.loc[(df.eventType=='DStime')|(df.eventType=='NStime')].copy()
 
 #+1 to trialID so it doesn't start at 0 (could cause issues with negative trialID)
@@ -628,7 +400,6 @@ df= dfTemp.copy()
 
 #--Now that we have timings for each trial, define events within epochs
 #first should be able to ffill(), then can use that to groupby() and relabel for pre-cue?
-
 dfTemp= df.copy()
 
 dfTemp.trialID= dfTemp.groupby(['fileID'])['trialID'].fillna(method='ffill')
@@ -666,19 +437,6 @@ df.loc[:,'nextTrialStart']= dfTemp.nextTrialStart
 df.nextTrialStart= df.groupby(['fileID','trialID'])['nextTrialStart'].fillna(method='ffill')
 
 
-#% dp 3/7/22 finding UStime with same timestamp as DStime being assigned to ITI instead of trial (must be from inport trial)
-
-# #by chance the UStime is simply ordered in the index prior to the cue so ffill doesn't work... it's just falling into ITI
-# test= df.loc[df.fileID==df.fileID.min()]
-
-# #for these cases, subset equivalent timestamps and manually assign trialID & trialStart
-# dfTemp= df.copy()
-
-#-==--dp 3/7/22
-#check if any nextTrialStart are equal to this timestamp, if so, trialID should updated to that trial.
-# dfTemp2= dfTemp.loc[dfTemp.eventTime==dfTemp.nextTrialStart]
-
-
 #-- Assign ts to ITI & Pre-Cue epochs
 dfTemp= df.copy()
 
@@ -709,11 +467,7 @@ dfTemp.loc[((dfTemp.trialType=='ITI')|(dfTemp.trialType=='Pre-Cue')), 'trialID']
 #assign back to df
 df= dfTemp.copy()
 
-
 #%% 
-
-
-
 dfTidy= df.copy()
 # del df
 

@@ -246,112 +246,112 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
 
     cutTime = reTime(numStartExclude:end-numEndExclude);        % define cutTime as a new time axis w/o removed points- remember each intensity value should have a corresponding timestamp
     
-    %% Correct cutTime
-    %make sure every unique event timestamp is present in cutTime, so we
-    %don't have to do any shifting and can use the correct original
-    %timestamps for calculations without worrying about indexing errors
-    allTS= [];
-    for event=1:numel(data.events)
-        allTS= [allTS; data.events{event}.timestamps];
-    end
-    
-    allTS= unique(allTS)';
-    
-    %Initial vizualization/proof of concept
-%     vq = interp1(x,v,xq) returns interpolated values of a 1-D function at specific query points using linear interpolation. Vector x contains the sample points, and v contains the corresponding values, v(x). Vector xq contains the coordinates of the query points.
-% 
-% If you have multiple sets of data that are sampled at the same point coordinates, then you can pass v as an array. Each column of array v contains a different set of 1-D sample values.
-%     x are the x values and y are the y values for the control points. xp are the points you want to evaluate the function at.
-    
-    %first create a full time axis for the photometry signal (we'll use
-    %this to index)
-    
-    origTime= linspace(data.tbeg, data.tend, length(blueA));
-    
-    %add in any missing timestamps, get fp values using interp
-    blueAinterp= interp1(origTime, blueA, allTS)';
-
-    %combine both (and sort by fullTime)
-    fullTime= ([origTime,allTS]);
-    
-    [fullTime, indSort]= sort(fullTime);
-    
-    blueAfull= [blueA; blueAinterp];
-    blueAfull= blueAfull(indSort);
-    
-    %downsampling will likely get rid of some event timestamps and lead to indexing errors no matter
-    %what we do... analyses should operate on raw timestamps regardless of
-    %any time 'axis' & independent of resampling.
-    
-    fs= data.contvars{i,1}.ADFrequency;
-    
-    reFullTime= resample(fullTime,40,round(fs));
-        
-    test= ismember(allTS, reFullTime);
-
-    reblueAfull= resample(blueAfull,40,round(fs));
-    
-%     figure(); hold on;
-%     subplot(3,1,1)
-%     plot(origTime, blueA);
-%     legend('blueA')
-%     subplot(3,1,2)
-%     plot(allTS, blueAinterp);
-%     legend('blueA, interpolated from unique eventTimestamps')
-%     subplot(3,1,3); hold on;
-%     plot(fullTime, blueAfull);
-%     scatter(allTS, blueAinterp, 'rx');
-%     legend('blueA full', 'interpolated values')
-% 
-%     linkaxes()
-    
-    %Instead of downsampling to fixed rate, correct cutTime and signal by
-    %adding orignal interpolated values and timestamps, sorting
-    %appropriately
-
-    %get interp() values
-    
-    %add in any missing timestamps, get fp values using interp
-    blueAinterp= interp1(origTime, blueA, allTS)';
-    blueBinterp= interp1(origTime, blueB, allTS)';
-    purpleAinterp= interp1(origTime, purpleA, allTS)';
-    purpleBinterp= interp1(origTime, purpleB, allTS)';
-
-    
-    %combine both (and sort by fullTime)
-    cutTime2= ([cutTime, allTS]);
-   
-    [cutTime2, indSort]= sort(cutTime2);
-    
-    %add and sort fp signals
-    reblueA2= [reblueA; blueAinterp];
-    reblueA2= reblueA2(indSort);
-    
-    reblueB2= [reblueB; blueBinterp];
-    reblueB2= reblueB2(indSort);
-  
-    repurpleA2= [repurpleA; purpleAinterp];
-    repurpleA2= repurpleA2(indSort);
-    
-    repurpleB2= [repurpleB; purpleBinterp];
-    repurpleB2= repurpleB2(indSort);
-     
-     
-%     figure(); hold on;
-%     subplot(2,1,1)
-%     plot(cutTime, reblueA);
-%     legend('reblueA')
-%     subplot(2,1,2); hold on;
-%     plot(cutTime2, reblueA2);
-%     scatter(allTS, blueAinterp, 'rx');
-%     legend('reblueA2', 'interpolated values')
-%     linkaxes();
+    %% Correct cutTime- probs unnecessary
+%     %make sure every unique event timestamp is present in cutTime, so we
+%     %don't have to do any shifting and can use the correct original
+%     %timestamps for calculations without worrying about indexing errors
+%     allTS= [];
+%     for event=1:numel(data.events)
+%         allTS= [allTS; data.events{event}.timestamps];
+%     end
 %     
-    
-    
-    
-    %be sure to get actual photometry signal for all of these timestamps
-%     blueA2= blueA
+%     allTS= unique(allTS)';
+%     
+%     %Initial vizualization/proof of concept
+% %     vq = interp1(x,v,xq) returns interpolated values of a 1-D function at specific query points using linear interpolation. Vector x contains the sample points, and v contains the corresponding values, v(x). Vector xq contains the coordinates of the query points.
+% % 
+% % If you have multiple sets of data that are sampled at the same point coordinates, then you can pass v as an array. Each column of array v contains a different set of 1-D sample values.
+% %     x are the x values and y are the y values for the control points. xp are the points you want to evaluate the function at.
+%     
+%     %first create a full time axis for the photometry signal (we'll use
+%     %this to index)
+%     
+%     origTime= linspace(data.tbeg, data.tend, length(blueA));
+%     
+%     %add in any missing timestamps, get fp values using interp
+%     blueAinterp= interp1(origTime, blueA, allTS)';
+% 
+%     %combine both (and sort by fullTime)
+%     fullTime= ([origTime,allTS]);
+%     
+%     [fullTime, indSort]= sort(fullTime);
+%     
+%     blueAfull= [blueA; blueAinterp];
+%     blueAfull= blueAfull(indSort);
+%     
+%     %downsampling will likely get rid of some event timestamps and lead to indexing errors no matter
+%     %what we do... analyses should operate on raw timestamps regardless of
+%     %any time 'axis' & independent of resampling.
+%     
+%     fs= data.contvars{i,1}.ADFrequency;
+%     
+%     reFullTime= resample(fullTime,40,round(fs));
+%         
+%     test= ismember(allTS, reFullTime);
+% 
+%     reblueAfull= resample(blueAfull,40,round(fs));
+%     
+% %     figure(); hold on;
+% %     subplot(3,1,1)
+% %     plot(origTime, blueA);
+% %     legend('blueA')
+% %     subplot(3,1,2)
+% %     plot(allTS, blueAinterp);
+% %     legend('blueA, interpolated from unique eventTimestamps')
+% %     subplot(3,1,3); hold on;
+% %     plot(fullTime, blueAfull);
+% %     scatter(allTS, blueAinterp, 'rx');
+% %     legend('blueA full', 'interpolated values')
+% % 
+% %     linkaxes()
+%     
+%     %Instead of downsampling to fixed rate, correct cutTime and signal by
+%     %adding orignal interpolated values and timestamps, sorting
+%     %appropriately
+% 
+%     %get interp() values
+%     
+%     %add in any missing timestamps, get fp values using interp
+%     blueAinterp= interp1(origTime, blueA, allTS)';
+%     blueBinterp= interp1(origTime, blueB, allTS)';
+%     purpleAinterp= interp1(origTime, purpleA, allTS)';
+%     purpleBinterp= interp1(origTime, purpleB, allTS)';
+% 
+%     
+%     %combine both (and sort by fullTime)
+%     cutTime2= ([cutTime, allTS]);
+%    
+%     [cutTime2, indSort]= sort(cutTime2);
+%     
+%     %add and sort fp signals
+%     reblueA2= [reblueA; blueAinterp];
+%     reblueA2= reblueA2(indSort);
+%     
+%     reblueB2= [reblueB; blueBinterp];
+%     reblueB2= reblueB2(indSort);
+%   
+%     repurpleA2= [repurpleA; purpleAinterp];
+%     repurpleA2= repurpleA2(indSort);
+%     
+%     repurpleB2= [repurpleB; purpleBinterp];
+%     repurpleB2= repurpleB2(indSort);
+%      
+%      
+% %     figure(); hold on;
+% %     subplot(2,1,1)
+% %     plot(cutTime, reblueA);
+% %     legend('reblueA')
+% %     subplot(2,1,2); hold on;
+% %     plot(cutTime2, reblueA2);
+% %     scatter(allTS, blueAinterp, 'rx');
+% %     legend('reblueA2', 'interpolated values')
+% %     linkaxes();
+% %     
+%     
+%     
+%     
+%     %be sure to get actual photometry signal for all of these timestamps
+% %     blueA2= blueA
            
     %% Artifact removal goes here
 
@@ -385,10 +385,10 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
 
         [fixedBlueB, fixedPurpleB] = fpArtifactElimination_DynamicMAD(reblueB2, repurpleB2, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);    
     elseif artifactRemove==false
-        fixedBlueA= reblueA2;
-        fixedPurpleA= repurpleA2;
-        fixedBlueB= reblueB2;
-        fixedPurpleB= repurpleB2;
+        fixedBlueA= reblueA; % reblueA2;
+        fixedPurpleA= repurpleA; %repurpleA2;
+        fixedBlueB= reblueB; %reblueB2;
+        fixedPurpleB= repurpleB; %repurpleB2;
     end
     
     %% Save all data for a given session to struct for easy access

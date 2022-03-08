@@ -43,7 +43,7 @@ for key in my_shelf:
 my_shelf.close()
 
 
-d#%% Plot settings
+#%% Plot settings
 
 savePath= r'./_output/_fpPeriEvent/'
 
@@ -233,6 +233,11 @@ groups= dfTidy.groupby('fileID')
 #currently fxn will go through and z score surrounding ALL events. Need to restrict to FIRST event per trial 
     
 for name, group in groups:
+    
+    #TODO: write fxn or loop for all eventtypes
+    # for eventType in dfTidy.eventType.unique()
+    
+    
     #-- peri-DS
     z, timeLock=  zscoreCustom(group, 'reblue', 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
     dfTidy.loc[group.index,'blue-z-periDS']= z
@@ -284,7 +289,7 @@ for name, group in groups:
 
 #%% Plot some fp signals!
 
-#subset 
+#subset encoding model input
 
 stagesToPlot= [7]
 

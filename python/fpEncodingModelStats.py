@@ -174,6 +174,10 @@ for subj in subjects:
     eventsToInclude= ['DStime','NStime','UStime','PEtime','lickTime','lickUS']
     # dfTemp.loc[~dfTemp.eventType.isin(eventsToInclude),'eventType']= pd.NA
     
+    
+    #clear eventVars and update to actual events we're including
+    eventVars=[]
+    
     #only keep cols that match events
     #col will be used as boolean index for columns, start False then switch to True if event is in name
     #regressors/predictors will be all remaining columns
@@ -184,8 +188,11 @@ for subj in subjects:
         indEvent= group.columns.str.contains(eventsToInclude[eventCol])
         
         col[indEvent]= True
-
     
+        #update eventVars
+        if indEvent.any():
+            eventVars= eventVars+[eventsToInclude[eventCol]]
+
     #use index instead of copying data (save memory)
     X= col
     

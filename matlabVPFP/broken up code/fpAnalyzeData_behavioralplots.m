@@ -98,6 +98,8 @@ saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},
 
 disp('plotting port entry ratios')
 
+stagesToPlot= [1:5] %only plot training stages
+
 %initialize
     id=[];
     days = []; 
@@ -106,18 +108,19 @@ disp('plotting port entry ratios')
     tensecDSpeRatio= [];
     tensecNSpeRatio= [];
     
-
 %create one vector for each identifier of the data by concatinating all
 %subject data for each respective variable, for all days
 for subj= 1:numel(subjects) %for each subject
     for day=1:numel(subjDataAnalyzed.(subjectsAnalyzed{subj}));
     
-    id=vertcat(id,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).rat);
-    days = vertcat(days,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).trainDay); 
-    DSpeRatio= vertcat(DSpeRatio,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).behavior.DSpeRatio);
-    NSpeRatio= vertcat(NSpeRatio,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).behavior.NSpeRatio);
-    tensecDSpeRatio= vertcat(tensecDSpeRatio,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).behavior.tensecDSpeRatio);
-    tensecNSpeRatio= vertcat(tensecNSpeRatio,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).behavior.tensecNSpeRatio);
+        if ismember(subjDataAnalyzed.(subjectsAnalyzed{subj})(day).trainStage, stagesToPlot)
+            id=vertcat(id,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).rat);
+            days = vertcat(days,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).trainDay); 
+            DSpeRatio= vertcat(DSpeRatio,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).behavior.DSpeRatio);
+            NSpeRatio= vertcat(NSpeRatio,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).behavior.NSpeRatio);
+            tensecDSpeRatio= vertcat(tensecDSpeRatio,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).behavior.tensecDSpeRatio);
+            tensecNSpeRatio= vertcat(tensecNSpeRatio,subjDataAnalyzed.(subjectsAnalyzed{subj})(day).behavior.tensecNSpeRatio);
+        end
     end
 end
 
@@ -134,7 +137,7 @@ end
 %         NSpeRatio(session)= currentSubj(session).behavior.NSpeRatio; %get NSpeRatio
 %    end
 %   
-  figure(figureCount) %one figure with poxCount across sessions for all subjects
+figure(figureCount) %one figure with poxCount across sessions for all subjects
 
 figureCount= figureCount+1; %iterate the figure count
    g(1,1)=gramm('x',days,'y', DSpeRatio,'color',id);
@@ -170,17 +173,22 @@ figureCount= figureCount+1; %iterate the figure count
    %mean DS PE ratio in first 10 sec across animals, will display as a dark
    %black line
    j(1,1)= gramm('x',days,'y', tensecDSpeRatio)
-   j(1,1).stat_summary('geom','line');
+%    j(1,1).stat_summary('geom','line');
+    j(1,1).stat_summary('type','sem','geom','area');
+
    j(1,1).set_title(' DS PE Ratio across days')
    j(1,1).set_color_options('chroma',0,'lightness',30);
    
    %mean NS PE ratio in first 10 sec across animals, will display as a dark
    %black line
    j(2,1)= gramm('x',days,'y',tensecNSpeRatio)
-   j(2,1).stat_summary('geom','line');
-   j(2,1).set_line_options('styles',{'--'})
+%    j(2,1).stat_summary('geom','line');
+    j(2,1).stat_summary('type','sem','geom','area');
+%    j(2,1).set_line_options('styles',{'--'})
    j(2,1).set_title(' NS PE Ratio across days')
    j(2,1).set_color_options('chroma',0,'lightness',30);
+% %    j(2,1).set_color_options('chroma',0,'lightness',30);
+
  
    %DS PE ratio in first 10 sec for all animals, will display as pastel
    %lines
@@ -197,8 +205,9 @@ figureCount= figureCount+1; %iterate the figure count
    j(2,1).update('color',id)
    j(2,1).geom_line()
    j(2,1).set_names('x','training day','y','port entry ratio in first 10 sec(# of trials with PE / total # of trials)','color','Subject')
-   j(2,1).set_line_options('styles',{'--'})
+%    j(2,1).set_line_options('styles',{'--'})
    j(2,1).set_color_options('map','pm')
+%    j(2,1).set_color_options('chroma',0,'lightness',30);
 
 %    j(2,1).set_color_options('map','brewer2')
 
@@ -241,7 +250,9 @@ saveas(gcf, strcat(figPath,'AvgDSPE_NSPE_first10sec'),'fig');
 % saveas(gcf, strcat(figPath, currentSubj(session).experiment,'_', subjects{subj},'pe_ratio_by_session','.fig'));
 % %         close; %close 
 
-
+linkaxes()
+xlim([1,20])
+ylim([0,1])
 
 %% PLOT DS & NS LICKS ACROSS DAYS
 

@@ -26,6 +26,8 @@ import time
 # x_basic= 148829 x 1803... # timestamps entire session x (# time shifts in peri-Trial window * num events). binary coded
 # gcamp_y = 148829 x 1 ; entire session signal predicted by regression . z scored photometry signal currently nan during ITI & only valid values during peri-DS
 
+
+
 #%% Load dfTidy.pkl
 
 
@@ -40,6 +42,11 @@ for key in my_shelf:
     globals()[key]=my_shelf[key]
 my_shelf.close()
 
+#%% TODO: load contvars & eventvars
+
+contVars= ['reblue','repurple']
+# eventVars= dfTidy.eventType.unique()
+
 #%% Subset data
 #for encoding model only need event times + photometry signal + metadata
 colToInclude= idVars+contVars+['trainDayThisStage','trialID','trialType','eventType']
@@ -47,6 +54,7 @@ colToInclude= idVars+contVars+['trainDayThisStage','trialID','trialType','eventT
 dfTidy= dfTidy.loc[:,colToInclude]
 
 # Hitting memory errors when time shifting events; so subsetting or processing in chunks should help
+
 
 #%% Define which specific stages / events / sessions to include!
 
@@ -60,6 +68,7 @@ nSessionsToInclude= 0
 #no exclusion (except null/nan)
 eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
 
+eventVars=eventsToInclude
 
 # #define which eventTypes to include!
 # eventsToInclude= ['DStime','NStime','UStime','PEtime','lickTime','lickUS']
@@ -74,7 +83,7 @@ eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnu
 dfTidy= dfTidy.loc[dfTidy.stage.isin(stagesToInclude),:]
 
 #exclude sessions within-stage
-dfTidy['maxSesThisStage']= dfTidy.groupby(['stage','subject'])['trainDayThisStage'].transform('max')
+dfTidy['maxSesThisStage']= dfTidy.groupby(['stage','subject'])['trainDayThisStage'].transform('max').copy()
 
 dfTidy= dfTidy.loc[dfTidy.trainDayThisStage>= dfTidy.maxSesThisStage-nSessionsToInclude]
 
@@ -161,7 +170,7 @@ baselineTime= 10*fs
  
 groups= dfTidy.groupby('fileID')
 
-#currently fxn will go through and z score surrounding ALL events. Need to restrict to FIRST event per trial 
+#currently fxn will go through and z score surrounding ALL events?? 2022-03-02 is this true?. Need to restrict to FIRST event per trial 
     
 for name, group in groups:
     for signal in contVars: #loop through each signal (465 & 405)
@@ -211,44 +220,44 @@ test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()]
 #%% Retain only First event per trial ??
 #Exclude all others (make nan)... TODO: consider renaming column so we know difference  name + 'First'
 
-dfTemp= dfTidy.copy()
+# dfTemp= dfTidy.copy()
 
-# dfTemp= dfTemp.pivot(columns='eventType')['cutTime'].copy()
-
-    
-# test= dfTemp.groupby(['fileID','trialID','eventType'], as_index=False)['eventType'].cumcount()
-
-# test= dfTemp.groupby(['fileID','trialID','eventType']).cumcount()
-
-# # ind= dfTemp.groupby(['fileID','trialID','eventType'], observed=True).cumcount()==0
-
-# # test= dfTemp.loc[ind]
-
-# #get ind of all events after First for each trial, then replace times w nan
-
-ind= dfTemp.groupby(['fileID','trialID','eventType'], observed=True).cumcount()!=0
-
-count= dfTemp.groupby(['fileID','trialID','eventType'], observed=True).cumcount()
-
-#%TODO ----------------------Replace these with clearer eventType instead of erasing
-
-# dfTemp.loc[ind, 'eventType']= dfTemp.eventType+'notFirst'
-
-
-#simply make eventType nan
-dfTemp.loc[ind, 'eventType']= None
-
-# #Or- this works:
-# #label cumcount?
-# #eventType= eventType + cumcount
-# dfTemp.eventType= dfTemp.eventType.astype(str)
-# dfTemp.loc[ind, 'eventType']= dfTemp.eventType + count.astype(str)
-
-# dfTemp.eventType= dfTemp.eventType.astype('category')
-
+# # dfTemp= dfTemp.pivot(columns='eventType')['cutTime'].copy()
 
     
-dfTidy.eventType= dfTemp.eventType.copy()
+# # test= dfTemp.groupby(['fileID','trialID','eventType'], as_index=False)['eventType'].cumcount()
+
+# # test= dfTemp.groupby(['fileID','trialID','eventType']).cumcount()
+
+# # # ind= dfTemp.groupby(['fileID','trialID','eventType'], observed=True).cumcount()==0
+
+# # # test= dfTemp.loc[ind]
+
+# # #get ind of all events after First for each trial, then replace times w nan
+
+# ind= dfTemp.groupby(['fileID','trialID','eventType'], observed=True).cumcount()!=0
+
+# count= dfTemp.groupby(['fileID','trialID','eventType'], observed=True).cumcount()
+
+# #%TODO ----------------------Replace these with clearer eventType instead of erasing
+
+# # dfTemp.loc[ind, 'eventType']= dfTemp.eventType+'notFirst'
+
+
+# #simply make eventType nan
+# dfTemp.loc[ind, 'eventType']= None
+
+# # #Or- this works:
+# # #label cumcount?
+# # #eventType= eventType + cumcount
+# # dfTemp.eventType= dfTemp.eventType.astype(str)
+# # dfTemp.loc[ind, 'eventType']= dfTemp.eventType + count.astype(str)
+
+# # dfTemp.eventType= dfTemp.eventType.astype('category')
+
+
+    
+# dfTidy.eventType= dfTemp.eventType.copy()
 #%% CORRELATION between eventTypes
 
 # should run on periEventTimeLock (time relative to trialStart)
@@ -258,7 +267,6 @@ dfTidy.eventType= dfTemp.eventType.copy()
 
 dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
 
-dfTemp= dfTemp[eventVars]
 
 #need to groupby or set index to get each time per trial
 
@@ -405,6 +413,11 @@ dfTidy= dfTidy.copy()
 eventVars= dfTidy.eventType.unique()
 #remove nan eventType
 eventVars= eventVars[pd.notnull(eventVars)]
+
+#exclude eventTypes if needed
+eventsToExclude= ['out']
+
+eventVars[eventVars.isin(eventsToExclude)]
 
 #pivot()
 # dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
