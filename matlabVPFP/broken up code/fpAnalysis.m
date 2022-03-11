@@ -10,10 +10,8 @@ cd ('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
 %cd ('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
 
 fpAnalyzeData_create_struct_with_animal_data;
-% fpAnalyzeData_behavioral_analysis;
-fpAnalyzeData_behavioral_analysis2;
-% fpAnalyzeData_eventtriggered_analysis;
-fpAnalyzeData_eventtriggered_analysis2;
+fpAnalyzeData_behavioral_analysis;
+fpAnalyzeData_eventtriggered_analysis;
 
 
 %% Plot Analyzed Data
