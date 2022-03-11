@@ -233,7 +233,10 @@ for subject=1:numel(subjects)
 
             DSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
 
+            %TODO: use strategy from 2022-03-11 commit to eliminate shifting/cutTime indexing  
+
             currentSubj(thisSessionInd).DSshifted= interp1(cutTime,cutTime, currentSubj(thisSessionInd).periDS.DS, 'nearest'); %get nearest timestamp in cutTime to actual DS onset
+
 
                        %NORMALIZE photometry signal (z-score)
                 %Here, we will do a rolling z score through the whole time series
