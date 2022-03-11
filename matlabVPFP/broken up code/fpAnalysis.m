@@ -28,7 +28,7 @@ fpAnalyzeData_heatplots_cuetimelocked_stages_avgtrainday;
 fpAnalyzeData_heatplots_cuetimelocked_stages_latencysorttrials; 
 fpAnalyzeData_statisticalquant; 
 
-%% Variable outcome analyses
+%% Variable outcome analyses- dp
 fpAnalyzeData_outcome_dataprep;
 fpAnalyzeData_outcome_analysis;
 

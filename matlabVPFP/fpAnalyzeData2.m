@@ -7883,7 +7883,7 @@ end
 figure;
 figureCount=figureCount+1; sgtitle('peri-DS response by PE outcome: mean between subjects ');
 for subj= 1:numel(subjects)
-    for thisStage= 1:size(allSubjDSblue,2) 
+    for thisStage= 1:size(allSubjPEDSblue,2) 
         thisStagePEDSblue= nanmean(allSubjPEDSblue(:,thisStage,:),3);
         thisStagePEDSpurple= nanmean(allSubjPEDSpurple(:,thisStage,:),3);
         
@@ -7965,7 +7965,7 @@ linkaxes(); %link axes for scale comparison
 figure;
 figureCount=figureCount+1; sgtitle('peri-NS response by PE outcome: mean between subjects ');
 for subj= 1:numel(subjects)
-    for thisStage= 1:size(allSubjNSblue,2) 
+    for thisStage= 1:size(allSubjPENSblue,2) 
         thisStagePENSblue= nanmean(allSubjPENSblue(:,thisStage,:),3);
         thisStagePENSpurple= nanmean(allSubjPENSpurple(:,thisStage,:),3);
         
