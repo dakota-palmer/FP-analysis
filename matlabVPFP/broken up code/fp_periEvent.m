@@ -73,6 +73,7 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
         eventOnset= trialEvents(trial);
         baselineOnset= trialBaselineEvents(trial);
 
+           
         if iscell(eventOnset) %if cell with multiple events, get the first event only
            eventOnset= eventOnset{:};
            if ~isempty(eventOnset)
@@ -133,6 +134,13 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
     %             subjDataAnalyzed.(subjects{subj})(session).periDS.DSbluedff(:,:,cue)= subjDataAnalyzed.(subjects{subj})(session).photometry.bluedff(preEventTimeDS:postEventTimeDS);
     %             subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurpledff(:,:,cue)= subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff(preEventTimeDS:postEventTimeDS);
 
+    
+                   
+       %Remove artifact trials: If there are any nans present in time ranges of this trial, make all data nan (set eventOnset to nan which should fill accordingly)
+       if (any(isnan(baselineBlue)) || any(isnan(periBlue)) && ~isnan(eventOnset))
+            eventOnset=nan;
+       end
+    
        if isnan(eventOnset)
             %~~~~~~if no event on this trial, make nan
             tRange= [preEventTimeS:postEventTimeS]*fs;
@@ -185,7 +193,7 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
             %of absolute time)
             currentSubjAnalyzed(session).periEvent.timeLock= tRange/fs;
        end
-
+            
     end %end trial loop
 
     baselineOnset = currentSubjAnalyzed(session).periEvent.baselineOnset;
