@@ -141,25 +141,35 @@ def plot_lasso_model_selection(X, y, cv, modelName, savePath):
     model_aic.fit(Xx, yY)
     alpha_aic_ = model_aic.alpha_
     
-    
     def plot_ic_criterion(model, name, color):
         criterion_ = model.criterion_
-        plt.semilogx(model.alphas_ + EPSILON, criterion_, '--', color=color,
-                     linewidth=3, label=('%s criterion' % name+str(model.alpha_)))
-        plt.axvline(model.alpha_ + EPSILON, color=color, linewidth=3,
-                    label='alpha: %s estimate' % name)
+        plt.semilogx(model.alphas_ + EPSILON, criterion_, color=color,
+                      linewidth=3, label=('%s criterion= ' % name+str(model.alpha_)))
+    
+        plt.axvline(model.alpha_ + EPSILON, linestyle='--', color=color, linewidth=3,
+                    label=('alpha: %s estimate='+str(model.alpha_)) % name)
+        plt.xlabel(r'$\alpha$')
+        plt.ylabel('criterion')
+        
+    def plot_ic_criterion_nonLog(model, name, color):
+        criterion_ = model.criterion_
+        plt.plot(model.alphas_ + EPSILON, criterion_, color=color,
+             linewidth=3, label=('%s criterion= ' % name+str(model.alpha_)))
+        plt.axvline(model.alpha_ + EPSILON, linestyle='--', color=color, linewidth=3,
+                    label=('alpha: %s estimate='+str(model.alpha_)) % name)
         plt.xlabel(r'$\alpha$')
         plt.ylabel('criterion')
     
     
-    plt.figure()
-    plot_ic_criterion(model_aic, 'AIC', 'b')
-    plot_ic_criterion(model_bic, 'BIC', 'r')
-    plt.legend()
-    plt.title('Information-criterion for model selection (training time %.3fs)'
-              % t_bic)
+    # fig= plt.figure()
+    # plot_ic_criterion(model_aic, 'AIC', 'b')
+    # plot_ic_criterion(model_bic, 'BIC', 'r')
+    # plt.legend()
+    # plt.title('Information-criterion for model selection (training time %.3fs)'
+    #           % t_bic)
     
-    saveFigCustom(plt.gcf, modelName+'-modelSelection_AIC-BIC', savePath)
+   
+    # # saveFigCustom(plt.gcf, modelName+'-modelSelection_AIC-BIC', savePath)
     
     
     # #############################################################################
@@ -168,28 +178,28 @@ def plot_lasso_model_selection(X, y, cv, modelName, savePath):
     # Compute paths
     print("Computing regularization path using the coordinate descent lasso...")
     t1 = time.time()
-    model = LassoCV(cv=cv).fit(Xx, yY)
+    model_cd = LassoCV(cv=cv).fit(Xx, yY)
     t_lasso_cv = time.time() - t1
     
-    # Display results
-    plt.figure()
-    # ymin, ymax = 2300, 3800
-    plt.semilogx(model.alphas_ + EPSILON, model.mse_path_, ':')
-    plt.plot(model.alphas_ + EPSILON, model.mse_path_.mean(axis=-1), 'k',
-             label='Average across the folds', linewidth=2)
-    plt.axvline(model.alpha_ + EPSILON, linestyle='--', color='k',
-                label='alpha: CV estimate-'+str(model.alpha_))
+    # # Display results
+    # plt.figure()
+    # # ymin, ymax = 2300, 3800
+    # plt.semilogx(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
+    # plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
+    #          label='Average across the folds', linewidth=2)
+    # plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k',
+    #             label='alpha: CV estimate= '+str(model_cd.alpha_))
     
-    plt.legend()
+    # plt.legend()
     
-    plt.xlabel(r'$\alpha$')
-    plt.ylabel('Mean square error')
-    plt.title('Mean square error on each fold: coordinate descent '
-              '(train time: %.2fs)' % t_lasso_cv)
-    plt.axis('tight')
-    # plt.ylim(ymin, ymax)
+    # plt.xlabel(r'$\alpha$')
+    # plt.ylabel('Mean square error')
+    # plt.title('Mean square error on each fold: coordinate descent '
+    #           '(train time: %.2fs)' % t_lasso_cv)
+    # plt.axis('tight')
+    # # plt.ylim(ymin, ymax)
     
-    saveFigCustom(plt.gcf, modelName+'-modelSelection_CV-coordinate-descent', savePath)
+    # # saveFigCustom(plt.gcf, modelName+'-modelSelection_CV-coordinate-descent', savePath)
     
     
     # #############################################################################
@@ -198,27 +208,170 @@ def plot_lasso_model_selection(X, y, cv, modelName, savePath):
     # Compute paths
     print("Computing regularization path using the Lars lasso...")
     t1 = time.time()
-    model = LassoLarsCV(cv=cv).fit(Xx, yY)
+    model_lars = LassoLarsCV(cv=cv).fit(Xx, yY)
     t_lasso_lars_cv = time.time() - t1
     
-    # Display results
-    plt.figure()
-    plt.semilogx(model.cv_alphas_ + EPSILON, model.mse_path_, ':')
-    plt.semilogx(model.cv_alphas_ + EPSILON, model.mse_path_.mean(axis=-1), 'k',
+    # # Display results
+    # plt.figure()
+    # plt.semilogx(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    # plt.semilogx(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
+    #              label='Average across the folds', linewidth=2)
+    # plt.axvline(model_lars.alpha_, linestyle='--', color='k',
+    #             label='alpha CV= '+str(model_lars.alpha_))
+    # plt.legend()
+    
+    # plt.xlabel(r'$\alpha$')
+    # plt.ylabel('Mean square error')
+    # plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+    #           % t_lasso_lars_cv)
+    
+    # plt.show()
+
+    # plt.axis('tight')
+    
+    
+    # plt.figure()
+    # plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    # plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
+    #              label='Average across the folds', linewidth=2)
+    # plt.axvline(model_lars.alpha_, linestyle='--', color='k',
+    #             label='alpha CV= '+str(model_lars.alpha_))
+    # plt.legend()
+    
+    # plt.xlabel(r'$\alpha$')
+    # plt.ylabel('Mean square error')
+    # plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+    #           % t_lasso_lars_cv)
+    
+    
+    # # plt.ylim(ymin, ymax)
+        
+    # # saveFigCustom(plt.gcf, modelName+'-modelSelection_CV-LARS', savePath)
+    
+    
+    # #########################################################################
+    
+#%% --Subplot all model alpha selections in 1 fig- log X scale
+    fig, ax= plt.subplots(3,1, sharex=True)
+    
+    #-aic/bic
+    plt.subplot(3,1,1)
+    
+    plot_ic_criterion(model_aic, 'AIC', 'b')
+    plot_ic_criterion(model_bic, 'BIC', 'r')
+    plt.legend()
+    plt.title('Information-criterion for model selection (training time %.3fs)'
+              % t_bic)
+    
+    #-LASSO coordinate descent
+    plt.subplot(3,1,2)
+    plt.semilogx(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
+    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
+            label='Average across the folds', linewidth=2)
+    plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
+            label='alpha: CV estimate= '+str(model_cd.alpha_))
+    
+    indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
+    estMSE= model_cd.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+           label='est MSE CV= '+str(estMSE))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: coordinate descent '
+              '(train time: %.2fs)' % t_lasso_cv)
+    plt.axis('tight')
+    
+    #-LASSO LARS
+    plt.subplot(3,1,3, sharey= ax[2]) #share y axis with other MSE plots
+    plt.semilogx(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    plt.semilogx(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
                  label='Average across the folds', linewidth=2)
-    plt.axvline(model.alpha_, linestyle='--', color='k',
-                label='alpha CV-'+str(model.alpha_))
+    plt.axvline(model_lars.alpha_+EPSILON, linestyle='--', color='k', linewidth=3,
+                label='alpha CV= '+str(model_lars.alpha_))
+    
+      
+    indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
+    estMSE= model_lars.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+           label='est MSE CV= '+str(estMSE))
+    
     plt.legend()
     
     plt.xlabel(r'$\alpha$')
     plt.ylabel('Mean square error')
     plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
               % t_lasso_lars_cv)
+    
+    
+    saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison_logX', savePath)
+    
+    #%% --Subplot all model alpha selections in 1 fig- normal X scale
+    
+    fig, ax= plt.subplots(3,1, sharex=True)
+    
+    #-aic/bic
+    plt.subplot(3,1,1)
+    
+    plot_ic_criterion_nonLog(model_aic, 'AIC', 'b')
+    plot_ic_criterion_nonLog(model_bic, 'BIC', 'r')
+    plt.legend()
+    plt.title('Information-criterion for model selection (training time %.3fs)'
+              % t_bic)
+    
+    #-LASSO coordinate descent
+    plt.subplot(3,1,2)
+    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
+    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
+            label='Average across the folds', linewidth=2)
+    plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
+            label='alpha: CV estimate= '+str(model_cd.alpha_))
+    
+    indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
+    estMSE= model_cd.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+           label='est MSE CV= '+str(estMSE))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: coordinate descent '
+              '(train time: %.2fs)' % t_lasso_cv)
     plt.axis('tight')
-    # plt.ylim(ymin, ymax)
     
-    plt.show()
+    #-LASSO LARS
+    plt.subplot(3,1,3, sharey= ax[2]) #share y axis with other MSE plots
+    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
+                 label='Average across the folds', linewidth=2)
+    plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
+                label='alpha CV= '+str(model_lars.alpha_))
     
-    saveFigCustom(plt.gcf, modelName+'-modelSelection_CV-LARS', savePath)
+      
+    indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
+    estMSE= model_lars.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+           label='est MSE CV= '+str(estMSE))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+              % t_lasso_lars_cv)
+    
 
+    saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison', savePath)
+
+            
+    #%% --Return model results
+    
+    return model_aic, model_bic, model_cd, model_lars, EPSILON
 

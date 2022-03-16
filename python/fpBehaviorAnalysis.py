@@ -905,7 +905,7 @@ ax.legend()
 
 
 
-#%% Refine eventTypes: Separate anticipatory/non-reward from reward/consumption licks
+#%% Refine Lick eventTypes: Separate anticipatory/non-reward from reward/consumption licks
 
 # #isolate licks occuring during 'reward' epoch, redefine as new eventType
 # dfTidy.eventType.cat.add_categories(['lickUS'], inplace=True)
@@ -937,13 +937,27 @@ ax.legend()
 
 dfTidy.eventType= dfTidy.eventType.astype(str)
 
-dfTemp= dfTidy.loc[dfTidy.eventType=='lickTime'].copy()
+dfTemp= dfTidy.loc[dfTidy.eventType.str.contains('lick')].copy()
+
+
+#TODO: NS licks should have another name?
+#there won't be an actual UStime in these trials to have equivalent epochs but could add estimate above and go that way?
+dfTemp.loc[((dfTemp.trialType=='NStime') & ((dfTemp.epoch=='NStime') | (dfTemp.epoch=='cue-postPE'))), 'eventType']= 'lickNS'
+
 
 #some flexibiilty for preUS licks
-dfTemp.loc[((dfTemp.epoch=='DStime')|(dfTemp.epoch=='NStime') | (dfTemp.epoch=='cue-postPE')), 'eventType']= 'lickPreUS'
+# dfTemp.loc[((dfTemp.epoch=='DStime')|(dfTemp.epoch=='NStime') | (dfTemp.epoch=='cue-postPE')), 'eventType']= 'lickPreUS'
+dfTemp.loc[((dfTemp.trialType=='DStime') & ((dfTemp.epoch=='DStime')| (dfTemp.epoch=='cue-postPE'))), 'eventType']= 'lickPreUS'
+
+
+
 
 #some flexibility for postUS licks
-dfTemp.loc[dfTemp.epoch.str.contains('postUS'), 'eventType']= 'lickPostUS'
+#just defining these as lickUS also so should be guranteeed to capture first reward licks (that is the most important)
+# dfTemp.loc[dfTemp.epoch.str.contains('postUS'), 'eventType']= 'lickPostUS'
+
+dfTemp.loc[dfTemp.epoch.str.contains('postUS'), 'eventType']= 'lickUS'
+
 
 dfTemp.loc[(dfTemp.epoch=='UStime'), 'eventType']= 'lickUS'
 
@@ -961,9 +975,9 @@ dfTidy.eventType= dfTidy.eventType.astype('category')
 #viz
 # test= dfTidy.loc[(dfTidy.fileID==dfTidy.fileID.min())].copy()
 
-#testing assignment
-# ~~~~~~~ noticing ITI-postPE lickTimes (should be labelled lickPostUS so must be missing UStimes?)~~~~~~
-#pump times are currently defined in matlab code based on variable stage delays, possible mistake was make there (these aren't actually raw pump times)
+# #testing assignment
+# # ~~~~~~~ noticing ITI-postPE lickTimes (should be labelled lickPostUS so must be missing UStimes?)~~~~~~
+# #pump times are currently defined in matlab code based on variable stage delays, possible mistake was make there (these aren't actually raw pump times)
 test= dfTidy.copy()
 test= test.loc[((test.epoch=='ITI-postPE') & (test.eventType=='lickTime'))]
 
@@ -984,17 +998,30 @@ test3= test3.loc[test3.trialID==8]
 test3.eventType.unique()
 
 
+#%% Refine PE eventTypes- Specify port entry in 10s of cue vs. non
+
+dfTidy.eventType= dfTidy.eventType.astype(str)
+
+dfTemp= dfTidy.loc[dfTidy.eventType.str.contains('PEtime')].copy()
+
+#note will be guranteed cue-postPE epoch since defined by first PE in cue
+dfTemp.loc[((dfTemp.epoch=='DStime')|(dfTemp.epoch=='NStime')| (dfTemp.epoch=='cue-postPE')), 'eventType']= 'PEcue'
+
+
+
+#merge back into df
+dfTidy.loc[dfTemp.index, 'eventType']= dfTemp.eventType.copy()
+
+dfTidy.eventType= dfTidy.eventType.astype('category')
+
+
 #%% viz epocs
 
-# dfPlot= dfTidy.loc[dfTidy.fileID==16].copy()
-dfPlot= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
-
-#signal with epochs + vertical lines at event times
-# g= sns.relplot(data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+dfPlot= dfTidy.loc[dfTidy.fileID==16].copy()
+# dfPlot= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
 
 fig, ax= plt.subplots()
-# sns.lineplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch', dropna=False) #retain gaps (dropna=False)
-sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+# sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
 
 
 ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
@@ -1011,8 +1038,29 @@ ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickUS', 'cutTime'], ymin=ax.get_ylim(
 
 ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickTime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickTime', color='gray')
 
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='PEcue', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='PEcue', color='red')
+
 
 ax.legend()
+
+
+
+#%% viz epocs, facet trialType (too slow)
+
+# stagesToPlot= dfTidy.stage.unique()
+# trialTypesToPlot= dfTidy.trialType.unique()
+# eventsToPlot= dfTidy.eventType.unique()
+
+
+# dfPlot= dfTidy.loc[dfTidy.fileID==16].copy()
+
+# dfPlot= subsetData(dfTidy, stagesToPlot, trialTypesToPlot, eventsToPlot)
+
+# g= sns.FacetGrid(data= dfPlot, row='trialType', hue='epoch')
+
+# g.map_dataframe(sns.scatterplot, x= 'cutTime', y='eventType')
+
+# ax.legend()
 
 
 
@@ -1340,7 +1388,7 @@ dfTidyAnalyzed.to_pickle(savePath+'dfTidyAnalyzed.pkl')
 
 eventVars= dfTidy.eventType.unique()
 
-saveVars= ['idVars', 'eventVars', 'trialVars', 'experimentType']
+saveVars= ['idVars', 'contVars', 'eventVars', 'trialVars', 'experimentType']
 
 #use shelve module to save variables as dict keys
 my_shelf= shelve.open(savePath+'dfTidyMeta', 'n') #start new file

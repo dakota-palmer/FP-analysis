@@ -27,6 +27,9 @@ from customFunctions import saveFigCustom
 
 from plot_lasso_model_selection import plot_lasso_model_selection
 
+
+import time
+
 #%% PREPARING INPUT FOR PARKER ENCODING MODEL
 # want - 
 # x_basic= 148829 x 1803... # timestamps entire session x (# time shifts in peri-Trial window * num events). binary coded
@@ -52,7 +55,7 @@ modeSignal= 'reblue'
 
 
 #%% Load regression input.pkl
-dataPath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+dataPath= r'./_output/fpEncodingModelPrep/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
 if modeCue=='DS':
     dfTemp= pd.read_pickle(dataPath+'dfRegressionInputDSonly.pkl')
@@ -65,6 +68,8 @@ my_shelf = shelve.open(dataPath+'dfRegressionInputMeta')
 for key in my_shelf:
     globals()[key]=my_shelf[key]
 my_shelf.close()
+
+#eventVars/eventVars should be imported from fpEncodingModelPrep
 
 
 # # contVars should be loaded from shelf
@@ -87,18 +92,20 @@ my_shelf.close()
 # mode= 'DS'
 
 if modeCue=='DS':
-    # # dfTemp= dfTemp.drop(['timeLock-z-periNS','repurple-z-periNS','reblue-z-periNS'],axis=1)
+    # # dfTemp= dfTemp.drop(['timeLock-z-periNS-NStime','repurple-z-periNS','reblue-z-periNS-NStime'],axis=1)
     # col= ~dfTemp.columns.str.contains('NS')
     # dfTemp= dfTemp.loc[:,col]
     exclude='NS'
 if modeCue=='NS':
-    # # dfTemp= dfTemp.drop(['timeLock-z-periDS','repurple-z-periDS','reblue-z-periDS','DStime'],axis=1)
+    # # dfTemp= dfTemp.drop(['timeLock-z-periDS-DStime','repurple-z-periDS','reblue-z-periDS','DStime'],axis=1)
     # col= ~dfTemp.columns.str.contains('DS')
     # dfTemp= dfTemp.loc[:,col]
     exclude='DS'
     
 dfTemp= dfTemp.loc[:,~dfTemp.columns.str.contains(exclude)]
 
+
+#TODO: update eventVars post-exclusion
 eventVars= eventVars[eventVars!=exclude+'time']
 
 
@@ -135,7 +142,7 @@ elif modeSignal=='repurple':
 #will save X and y as index instead of copying data to save mem
     
 #regressors/predictors will be all remaining columns that are not idVars or contVars
-# col= ~dfTemp.columns.isin(idVars+contVars+['trainDayThisStage','trialID','timeLock-z-periDS','timeLock-z-periNS'])
+# col= ~dfTemp.columns.isin(idVars+contVars+['trainDayThisStage','trialID','timeLock-z-periDS-DStime','timeLock-z-periNS-NStime'])
 
 #regressand/response variable is fp signal
 y= 'reblue-z-periDS'
@@ -170,13 +177,13 @@ for subj in subjects:
     # X = group.loc[:,col]
     
 
-    #define which eventTypes to include!
-    eventsToInclude= ['DStime','NStime','UStime','PEtime','lickTime','lickUS']
-    # dfTemp.loc[~dfTemp.eventType.isin(eventsToInclude),'eventType']= pd.NA
+    # #define which eventTypes to include!-- should already be defined in encodingModelPrep
+    # eventVars= ['DStime','UStime','PEtime','lickTime','lickUS']
+    # # dfTemp.loc[~dfTemp.eventType.isin(eventVars),'eventType']= pd.NA
     
     
-    #clear eventVars and update to actual events we're including
-    eventVars=[]
+    # #clear eventVars and update to actual events we're including
+    # eventVars=[]
     
     #only keep cols that match events
     #col will be used as boolean index for columns, start False then switch to True if event is in name
@@ -184,14 +191,23 @@ for subj in subjects:
     col= np.array(range(len(group.columns)), dtype= bool)
     col[:]= False
     
-    for eventCol in range(len(eventsToInclude)):
-        indEvent= group.columns.str.contains(eventsToInclude[eventCol])
+    for eventCol in range(len(eventVars)):
+        
+        #find columns containing this eventType string
+        indEvent= group.columns.str.contains(eventVars[eventCol])
         
         col[indEvent]= True
+            
+        #but manually ensure no timeLock is included as predictor (since this may contain eventType string)
+        indEvent= group.columns.str.contains('timeLock')
+        col[indEvent]= False
+
     
-        #update eventVars
-        if indEvent.any():
-            eventVars= eventVars+[eventsToInclude[eventCol]]
+        # #update eventVars
+        # if indEvent.any():
+        #     eventVars= eventVars+[eventVars[eventCol]]
+
+    
 
     #use index instead of copying data (save memory)
     X= col
@@ -245,9 +261,13 @@ for subj in subjects:
 # https://stats.stackexchange.com/questions/445831/how-is-tol-used-in-scikit-learns-lasso-and-elasticnethttps://stats.stackexchange.com/questions/445831/how-is-tol-used-in-scikit-learns-lasso-and-elasticnet
 
     
-    #fit model
-    #Time: profiler said this took ~24min for one group with range of alphas
+    #fit model 
+    t1 = time.time()
+    
     model.fit(group.loc[:,X], group.loc[:,y])
+    
+    t_model = time.time() - t1
+
     
     #display alpha that produced the lowest test MSE
     print('best alpha model='+str(model.alpha_))
@@ -449,12 +469,161 @@ for subj in subjects:
 
   
     
-    #--COMPARE regularization methods: AIC/BIC vs CV-coordinate descent vs CV-LARS
+    #%% --COMPARE regularization methods: AIC/BIC vs CV-coordinate descent vs CV-LARS
     modelName= 'subj-'+str(subj)+'-'+modeCue+'-trials-'+modeSignal
     
-    plot_lasso_model_selection(group.loc[:,X].copy(), group.loc[:,y].copy(), cv, modelName, r'./_output/fpEncodingModelStats/regularizationComparison/')
+    [model_aic, model_bic, model_cd, model_lars, EPSILON]= plot_lasso_model_selection(group.loc[:,X].copy(), group.loc[:,y].copy(), cv, modelName, savePath)
+    
+
+    t_lasso_cv=0
+    t_lasso_lars_cv=0
+    
+     # TODO: Subplot all lasso alpha selections in 1 fig, including current lasso in this script
+    fig, ax= plt.subplots(3,1, sharex=True)
+
+    plt.subplot(3,1,1)
+    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
+    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
+            label='Average across the folds', linewidth=2)
+    plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
+            label='alpha: CV estimate= '+str(model_cd.alpha_))
+    
+    indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
+    estMSE= model_cd.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+            label='est MSE CV= '+str(estMSE))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: coordinate descent '
+              '(train time: %.2fs)' % t_lasso_cv)
+    plt.axis('tight')
+    
+    #-LASSO LARS
+    plt.subplot(3,1,2) #share y axis with other MSE plots
+    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
+                  label='Average across the folds', linewidth=2)
+    plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
+                label='alpha CV= '+str(model_lars.alpha_))
+    
+      
+    indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
+    estMSE= model_lars.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+            label='est MSE CV= '+str(estMSE))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+              % t_lasso_lars_cv)
+    
+    #   #-LASSO coordinate descent
+    # plt.subplot(3,1,3, sharey=ax[1])
+    # plt.plot(model.alphas_, model.mse_path_, ':')
+    # plt.plot(model.alphas_, model.mse_path_.mean(axis=-1), 'k',
+    #         label='Average across the folds', linewidth=2)
+    # plt.axvline(model.alpha_, linestyle='--', color='k', linewidth=3,
+    #         label='alpha: CV estimate= '+str(model.alpha_))
+    
+    # indAlpha= np.where(model.alphas_==model.alpha_)
+    # estMSE= model.mse_path_[indAlpha, :].mean()
+                 
+    # plt.axhline(estMSE, linestyle='--', color='blue',
+    #         label='est MSE CV= '+str(estMSE))
+    
+    # plt.legend()
+    
+    # plt.xlabel(r'$\alpha$')
+    # plt.ylabel('Mean square error')
+    # plt.title('Mean square error on each fold: Custom LASSO coordinate descent '
+    #           '(train time: %.2fs)' % t_model)
+    
+     #%% TODO: line up all alpha estimates with coefficients
+    fig, ax= plt.subplots(5,1, sharex=True)
+
+    plt.subplot(5,1,2)
+    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
+    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
+            label='Average across the folds', linewidth=2)
+    plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
+            label='alpha: CV estimate= '+str(model_cd.alpha_))
+    
+    indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
+    estMSE= model_cd.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+            label='est MSE CV= '+str(estMSE))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: coordinate descent '
+              '(train time: %.2fs)' % t_lasso_cv)
+    plt.axis('tight')
+    
+    #-LASSO LARS
+    plt.subplot(5,1,3) #share y axis with other MSE plots
+    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
+                  label='Average across the folds', linewidth=2)
+    plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
+                label='alpha CV= '+str(model_lars.alpha_))
+    
+      
+    indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
+    estMSE= model_lars.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+            label='est MSE CV= '+str(estMSE))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+              % t_lasso_lars_cv)
+    
+    #mse la
+    plt.subplot(5,1,4)
+    g=sns.scatterplot(ax=ax[3], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
+    g=sns.lineplot(ax=ax[3], data=msePath, x='alpha', y='MSE', color='black')
+    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    # ax[4].set_xscale('log')
+    # ax[4].set_xlabel('log alpha')
     
     
+    g.set_xlabel('alpha')
+    g.set_ylabel('MSE')
+    g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
+    g.set(xlabel='alpha', ylabel='MSE')
+    
+    #coef path
+    g=sns.lineplot(ax= ax[4], data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
+    g=sns.lineplot(ax= ax[4], data=modelPath,  x='alpha', y='coef', hue='eventType', palette='dark')
+    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    # ax[5].set_xscale('log')
+    # ax[5].set_xlabel('log alpha')
+    
+    g.set(title=('subj-'+str(subj)+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
+    g.set(ylabel='coef')
+    # ax.set_xscale('log') #log scale if wanted
+    
+    
+    
+    
+    # saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison_All', savePath)
+        
+    
+    
+    #%%
     #TODO: https://scikit-learn.org/stable/auto_examples/exercises/plot_cv_diabetes.html
     
     #matlab gives stats.fitInfo.MSE: 1 val per each 100 iterations (lambda reg coefs)
@@ -581,8 +750,8 @@ for subj in subjects:
     
     # dfTemp.loc[group.index,'predicted']= model.predict(group.loc[:,X])
     
-    # g= sns.relplot(data=dfTemp.loc[group.index,:],y=predicted, x='timeLock-z-periDS', kind='line', color='blue')
-    # sns.lineplot(ax=g.ax, data=dfTemp.loc[group.index,:], x='timeLock-z-periDS', y=y, color='black')
+    # g= sns.relplot(data=dfTemp.loc[group.index,:],y=predicted, x='timeLock-z-periDS-DStime', kind='line', color='blue')
+    # sns.lineplot(ax=g.ax, data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=y, color='black')
     # g.ax.legend(['predicted','actual'])
     # g.set(title=('subj-'+str(subj)+'-modelPrediction-'+modeCue+'-trials-'+modeSignal))
     # g.set_ylabels('Z-score FP signal')
@@ -611,8 +780,8 @@ for subj in subjects:
     g.text(0.05, 0.3, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
 
 
-    g= sns.lineplot(ax=ax[1,],data=dfTemp.loc[group.index,:], x='timeLock-z-periDS', y=predicted, color='black')
-    g= sns.lineplot(ax=ax[1,], data=dfTemp.loc[group.index,:], x='timeLock-z-periDS', y=y, color='blue')
+    g= sns.lineplot(ax=ax[1,],data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=predicted, color='black')
+    g= sns.lineplot(ax=ax[1,], data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=y, color='blue')
     g.legend(['predicted??','actual'])
     g.set(title=('subj-'+str(subj)+'-periCueModelPrediction-'+modeCue+'-trials-'+modeSignal))
     g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')

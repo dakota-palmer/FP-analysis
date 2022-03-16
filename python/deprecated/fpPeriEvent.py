@@ -121,8 +121,8 @@ groups= dfTidy.groupby('fileID')
 for name, group in groups:
     #-- peri-DS
     z, timeLock=  zscoreCustom(group, 'reblue', 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
-    dfTidy.loc[group.index,'blue-z-periDS']= z
-    dfTidy.loc[group.index,'timeLock-z-periDS']= timeLock
+    dfTidy.loc[group.index,'blue-z-periDS-DStime']= z
+    dfTidy.loc[group.index,'timeLock-z-periDS-DStime']= timeLock
 
     #-- peri-DS Port Entry
     z, timeLock=  zscoreCustom(group, 'reblue', 'pox', preEventTime, postEventTime,'DStime', baselineTime)
@@ -141,7 +141,7 @@ for name, group in groups:
 #test
 indPlot= dfTidy.stage==7.0
 
-sns.relplot(data=dfTidy.loc[indPlot,:], x='timeLock-z-periDS', col='stage', col_wrap=4, y='blue-z-periDS', hue='trainDayThisStage', kind='line')
+sns.relplot(data=dfTidy.loc[indPlot,:], x='timeLock-z-periDS-DStime', col='stage', col_wrap=4, y='blue-z-periDS-DStime', hue='trainDayThisStage', kind='line')
 sns.relplot(data=dfTidy.loc[indPlot,:], x='timeLock-z-periDS-pox', col='stage', col_wrap=4, y='blue-z-periDS-pox', hue='trainDayThisStage', kind='line')
 
 
@@ -155,5 +155,5 @@ sns.relplot(data=dfTidy.loc[indPlot,:], x='timeLock-z-periDS-pox', col='stage', 
 # indPlot= dfTidy.stage==7.0
 
 # ## looks good!
-# sns.relplot(data=dfTidy.loc[indPlot,:], x='timeLock-z-periDS', col='stage', col_wrap=4, y='blue-z-periDS', hue='trainDayThisStage', kind='line')
+# sns.relplot(data=dfTidy.loc[indPlot,:], x='timeLock-z-periDS-DStime', col='stage', col_wrap=4, y='blue-z-periDS-DStime', hue='trainDayThisStage', kind='line')
 

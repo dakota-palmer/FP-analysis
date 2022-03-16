@@ -20,12 +20,33 @@ from sklearn.model_selection import RepeatedKFold
 
 import time
 
+from customFunctions import saveFigCustom
+
 
 #%% PREPARING INPUT FOR PARKER ENCODING MODEL
 # want - 
 # x_basic= 148829 x 1803... # timestamps entire session x (# time shifts in peri-Trial window * num events). binary coded
 # gcamp_y = 148829 x 1 ; entire session signal predicted by regression . z scored photometry signal currently nan during ITI & only valid values during peri-DS
 
+
+#%% Plot & output settings
+
+sns.set_style("darkgrid")
+sns.set_context('notebook')
+
+
+#create and viz custom palette
+# heatPalette= sns.diverging_palette(270, 190, n=200)
+
+# heatPalette= sns.diverging_palette(180, 220, n=200)
+
+heatPalette= sns.diverging_palette(20, 220, n=200)
+
+
+g= sns.palplot(heatPalette)
+
+
+savePath= r'./_output/fpEncodingModelPrep/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
 
 #%% Load dfTidy.pkl
@@ -47,14 +68,158 @@ my_shelf.close()
 contVars= ['reblue','repurple']
 # eventVars= dfTidy.eventType.unique()
 
-#%% Subset data
-#for encoding model only need event times + photometry signal + metadata
-colToInclude= idVars+contVars+['trainDayThisStage','trialID','trialType','eventType']
+# #%% CORRELATION redo- try correlation without pivot first for better plot faceting 
 
-dfTidy= dfTidy.loc[:,colToInclude]
+# dfTemp=dfTidy.copy()
 
-# Hitting memory errors when time shifting events; so subsetting or processing in chunks should help
 
+# #get unique trialID cumcount pooled across all sessions for plotting 
+# dfTidy['trialIDpooled']= None
+
+# # dfTemp = dfTemp.loc[dfTemp.groupby(['fileID','trialID']).cumcount() == 0].copy()
+
+# ind= dfTemp.groupby(['fileID','trialID']).cumcount() == 0
+
+# dfTemp= dfTemp.loc[ind]
+
+# #make 1 and then use cumsum() to cumulatively count series (cumcount seems limited to groupbys)
+# dfTemp.loc[ind,'trialIDpooled']= 1; 
+
+# dfTemp['trialIDpooled']= dfTemp.trialIDpooled.cumsum()
+
+# dfTidy.loc[ind, 'trialIDpooled'] = dfTemp.trialIDpooled
+
+# # dfTidy.loc[:, 'trialIDpooled'] = dfTemp['trialID'].transform('cumcount') #dfTidy.groupby(['fileID','trialID']).transform('cumcount')
+
+# dfTidy.loc[:, 'trialIDpooled'] = dfTidy.groupby(['fileID','trialID'])['trialIDpooled'].fillna(method='ffill')
+
+# dfTemp= dfTidy.copy()
+
+# #TODO: maybe cumcount of trialID within stage should be used in all groupers. Could be useful to reveal temporal changes/patterns
+# groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType']
+# # groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialID']
+# # groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialID', 'eventType']
+
+# #include unique cumulative trialCount for plotting
+# groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID']
+# groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID', 'eventType']
+
+
+
+# #--DS trials correlation
+
+# #define events to correlate (e.g. drop the NStimes since they're a separate trialType)
+# corrEvents= eventVars[eventVars!='NStime']
+# corrEvents= corrEvents[corrEvents!='nan']
+
+# #get the relative latency from trialStart for each eventType for each trial
+# corrInput= dfTemp.groupby(groupHierarchyEventType, observed=True, as_index=False)['eventLatency'].first()    
+
+# #subset DS trials
+# corrInput= corrInput.loc[corrInput.trialType=='DStime']
+
+# #drop unwanted eventTypes
+# corrInput= corrInput.loc[corrInput.eventType.isin(corrEvents)]
+
+# # corrInput= corrInput.dropna(axis=1, how='all')
+# # corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+
+# # corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
+
+
+# #pivot() eventVars prior to corr()
+# #pivot eventType into columns, append, drop old col
+# # dfTemp2= corrInput.pivot(columns='eventType')['eventLatency'].copy()
+
+# #set index prior to pivot
+# corrInputPivot= corrInput.set_index(groupHierarchyTrialID)
+
+# corrInputPivot= corrInputPivot.pivot(columns='eventType')['eventLatency'].copy()
+
+# #subset only eventVars
+# corrInputPivot= corrInputPivot[corrEvents]
+
+# #reset_index() if needed prior to corr
+# corrInputPivot= corrInputPivot.reset_index()
+
+# #run corr()
+# corr= corrInputPivot[corrEvents].corr()
+
+# #viz corr matrix- should work in jupyter notebook, otherwise will use sns heatmap
+# corr.style.background_gradient(cmap="Blues")
+
+
+# # #index matches so simple join
+# # dfTemp= dfTidy.join(dfTemp.loc[:,corrEvents]).copy()
+# # dfTemp= dfTemp.drop(['eventType'], axis=1)
+
+
+# # corr= corrInput.groupby(groupHierarchyEventType).corr()
+
+
+# # g= sns.pairplot(data=corr)
+# # g.fig.suptitle('DS trial event correlations')
+
+
+# # corr= corrInput.groupby(['stage','subject','trialType'])[corrEvents].corr()
+
+# # g= sns.pairplot(data=corr)
+# # g.fig.suptitle('DS trial event correlations')
+
+# # #pairplot of just time(not coef)
+# # dfPlot= corrInput[corrEvents]
+# # g= sns.pairplot(data=dfPlot)
+# # g.fig.suptitle('DS trial event timings scatter')
+
+
+# # #pairplot of just time(not coef)
+# # g= sns.lmplot(data=dfPlot)
+
+# #--Jointplot is nice for showing distro of event timings prior to correlation
+
+# dfPlot= corrInput.copy()
+
+# # g= sns.jointplot(data=dfPlot, x='eventLatency', y='trialIDpooled', hue='eventType')
+
+# g= sns.jointplot(data=dfPlot, x='eventLatency', y='trialID', hue='eventType')
+
+
+
+# #PairGrid of pivoted data for flexibility?
+# dfPlot= corrInputPivot[corrEvents]
+# g= sns.PairGrid(data= dfPlot)
+
+# g.map(sns.scatterplot)
+
+
+# g= sns.pairplot(data=dfPlot)
+
+# #heatmap correlation coefs
+
+# g= sns.heatmap(corr, annot=True, cmap='Greens');
+
+
+# #palette 
+
+
+# g = sns.heatmap(
+#     corr, 
+#     annot=True,
+#     vmin=0, vmax=1, center=0,
+#     cmap= heatPalette,
+#     square=True
+# )
+
+
+
+# # g= sns.jointplot(data=dfPlot, col='subject', col_wrap= 4, x='eventLatency', y='trialIDpooled', hue='eventType')
+
+
+# #may be able to add regression line to jointplot here
+
+
+
+#%% TODO: integrate peri-event plotting & session viewing beforehand to make sure we're getting good sessions
 
 #%% Define which specific stages / events / sessions to include!
 
@@ -65,18 +230,26 @@ stagesToInclude= [7]
 #number of sessions to include, 0 includes final session of this stage+n
 nSessionsToInclude= 0 
 
-#no exclusion (except null/nan)
-eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
+# #no exclusion (except null/nan)
+# eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
 
-eventVars=eventsToInclude
 
 # #define which eventTypes to include!
-# eventsToInclude= ['DStime','NStime','UStime','PEtime','lickTime','lickUS']
-# dfTidy.loc[~dfTidy.eventType.isin(eventsToInclude),'eventType']= pd.NA
+#for correlation should keep all
+eventVars= dfTidy.eventType.unique()
 
-#REPLICATE matlab
-# eventsToInclude= ['DStime','NStime','PEtime','lickTime']
+# eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
+
+eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+
+
 # dfTidy.loc[~dfTidy.eventType.isin(eventsToInclude),'eventType']= pd.NA
+#
+
+# eventVars= eventVars[eventVars.isin(eventsToInclude)]
+
+
+# eventVars=eventsToInclude
 
 
 #exclude stages
@@ -88,6 +261,261 @@ dfTidy['maxSesThisStage']= dfTidy.groupby(['stage','subject'])['trainDayThisStag
 dfTidy= dfTidy.loc[dfTidy.trainDayThisStage>= dfTidy.maxSesThisStage-nSessionsToInclude]
 
 dfTidy= dfTidy.drop('maxSesThisStage', axis=1)
+
+
+#%% CORRELATION of event timings based on subset data
+
+dfTemp=dfTidy.copy()
+
+
+#get unique trialID cumcount pooled across all sessions for plotting 
+dfTidy['trialIDpooled']= None
+
+# dfTemp = dfTemp.loc[dfTemp.groupby(['fileID','trialID']).cumcount() == 0].copy()
+
+ind= dfTemp.groupby(['fileID','trialID']).cumcount() == 0
+
+dfTemp= dfTemp.loc[ind]
+
+#make 1 and then use cumsum() to cumulatively count series (cumcount seems limited to groupbys)
+dfTemp.loc[ind,'trialIDpooled']= 1; 
+
+dfTemp['trialIDpooled']= dfTemp.trialIDpooled.cumsum()
+
+dfTidy.loc[ind, 'trialIDpooled'] = dfTemp.trialIDpooled
+
+# dfTidy.loc[:, 'trialIDpooled'] = dfTemp['trialID'].transform('cumcount') #dfTidy.groupby(['fileID','trialID']).transform('cumcount')
+
+dfTidy.loc[:, 'trialIDpooled'] = dfTidy.groupby(['fileID','trialID'])['trialIDpooled'].fillna(method='ffill')
+
+dfTemp= dfTidy.copy()
+
+#TODO: maybe cumcount of trialID within stage should be used in all groupers. Could be useful to reveal temporal changes/patterns
+groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType']
+# groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialID']
+# groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialID', 'eventType']
+
+#include unique cumulative trialCount for plotting
+groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID']
+groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID', 'eventType']
+
+
+
+#--DS trials correlation
+
+#define events to correlate (e.g. drop the NStimes since they're a separate trialType)
+corrEvents= eventVars[eventVars!='NStime']
+corrEvents= corrEvents[corrEvents!='lickNS'] 
+corrEvents= corrEvents[corrEvents!='nan']
+
+#get the relative latency from trialStart for each eventType for each trial
+corrInput= dfTemp.groupby(groupHierarchyEventType, observed=True, as_index=False)['eventLatency'].first()    
+
+#subset DS trials
+corrInput= corrInput.loc[corrInput.trialType=='DStime']
+
+#drop unwanted eventTypes
+corrInput= corrInput.loc[corrInput.eventType.isin(corrEvents)]
+
+# corrInput= corrInput.dropna(axis=1, how='all')
+# corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+
+# corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
+
+
+#pivot() eventVars prior to corr()
+#pivot eventType into columns, append, drop old col
+# dfTemp2= corrInput.pivot(columns='eventType')['eventLatency'].copy()
+
+#set index prior to pivot
+corrInputPivot= corrInput.set_index(groupHierarchyTrialID)
+
+corrInputPivot= corrInputPivot.pivot(columns='eventType')['eventLatency'].copy()
+
+#subset only eventVars
+corrInputPivot= corrInputPivot[corrEvents]
+
+#reset_index() if needed prior to corr
+corrInputPivot= corrInputPivot.reset_index()
+
+#run corr()
+corr= corrInputPivot.corr()
+
+#viz corr matrix- should work in jupyter notebook, otherwise will use sns heatmap
+corr.style.background_gradient(cmap="Blues")
+
+
+# #index matches so simple joinc
+# dfTemp= dfTidy.join(dfTemp.loc[:,corrEvents]).copy()
+# dfTemp= dfTemp.drop(['eventType'], axis=1)
+
+
+# corr= corrInput.groupby(groupHierarchyEventType).corr()
+
+
+# g= sns.pairplot(data=corr)
+# g.fig.suptitle('DS trial event correlations')
+
+
+# corr= corrInput.groupby(['stage','subject','trialType'])[corrEvents].corr()
+
+# g= sns.pairplot(data=corr)
+# g.fig.suptitle('DS trial event correlations')
+
+# #pairplot of just time(not coef)
+# dfPlot= corrInput[corrEvents]
+# g= sns.pairplot(data=dfPlot)
+# g.fig.suptitle('DS trial event timings scatter')
+
+
+# #pairplot of just time(not coef)
+# g= sns.lmplot(data=dfPlot)
+
+#--Jointplot is nice for showing distro of event timings prior to correlation
+
+dfPlot= corrInput.copy()
+
+# g= sns.jointplot(data=dfPlot, x='eventLatency', y='trialIDpooled', hue='eventType')
+
+g= sns.jointplot(data=dfPlot, x='eventLatency', y='trialID', hue='eventType')
+
+ #PairGrid of pivoted data for flexibility?
+dfPlot= corrInputPivot[corrEvents]
+g= sns.PairGrid(data= dfPlot)
+
+g.map(sns.scatterplot)
+
+
+g= sns.pairplot(data=dfPlot)
+
+
+
+# -----heatplots
+
+#--heatmap correlation coefs
+
+dfPlot= corr[corrEvents]
+
+f, ax = plt.subplots(1, 1)
+
+g = sns.heatmap(ax= ax,
+    data= dfPlot, 
+    annot=True,
+    vmin=0, vmax=1, center=0,
+    cmap= heatPalette,
+    square=True
+)
+
+
+g.set(title=('allSubj'+'-eventCorrelation-'))
+
+saveFigCustom(f, 'allSubj-'+'-eventCorrelation-heatmap', savePath)
+
+
+#Run correlation and plot for individual subjects
+
+for subj in corrInput.subject.unique():
+    
+    corrInputPivot2= corrInputPivot.loc[corrInputPivot.subject==subj].copy()
+    
+    #subset only eventVars
+    corrInputPivot2= corrInputPivot2[corrEvents]
+    
+    #reset_index() if needed prior to corr
+    corrInputPivot2= corrInputPivot2.reset_index()
+    
+    #run corr()
+    corr2= corrInputPivot2.corr()
+        
+    dfPlot= corr2.copy()
+    
+    dfPlot= dfPlot[corrEvents]
+    
+    
+    f, ax = plt.subplots(1, 1)
+    
+    g = sns.heatmap(ax= ax,
+        data= dfPlot, 
+        annot=True,
+        vmin=-.5, vmax=1, center=0,
+        cmap= heatPalette,
+        square=True
+    )
+    
+    
+    g.set(title=('subj-'+str(subj)+'-eventCorrelation-heatmap'))
+
+    saveFigCustom(f, 'subj-'+str(subj)+'-eventCorrelation-heatmap', savePath)
+
+
+# REPEAT CORR BUT REPLACE NANS WITH HIGH LATENCY VALUES
+
+for thisEvent in corrEvents:
+    corrInputPivot.loc[corrInputPivot[thisEvent].isnull(), thisEvent]= 999
+    
+corr= corrInputPivot.corr()
+
+    
+    #between-subj mean
+dfPlot= corr[corrEvents]
+
+f, ax = plt.subplots(1, 1)
+
+g = sns.heatmap(ax= ax,
+    data= dfPlot, 
+    annot=True,
+    vmin=0, vmax=1, center=0,
+    cmap= heatPalette,
+    square=True
+    )
+
+
+g.set(title=('allSubj'+'-eventCorrelation-'))
+
+saveFigCustom(f, 'allSubj-'+'-eventCorrelation-heatmap', savePath)
+
+#Run correlation and plot for individual subjects
+
+for subj in corrInput.subject.unique():
+    
+    corrInputPivot2= corrInputPivot.loc[corrInputPivot.subject==subj].copy()
+    
+    #subset only eventVars
+    corrInputPivot2= corrInputPivot2[corrEvents]
+    
+    #reset_index() if needed prior to corr
+    corrInputPivot2= corrInputPivot2.reset_index()
+    
+    #run corr()
+    corr2= corrInputPivot2.corr()
+        
+    dfPlot= corr2.copy()
+    
+    dfPlot= dfPlot[corrEvents]
+    
+    
+    f, ax = plt.subplots(1, 1)
+    
+    g = sns.heatmap(ax= ax,
+        data= dfPlot, 
+        annot=True,
+        vmin=-.5, vmax=1, center=0,
+        cmap= heatPalette,
+        square=True
+    )
+    
+    
+    g.set(title=('subj-'+str(subj)+'-eventCorrelation-heatmap-Nan timestamps=999'))
+
+    saveFigCustom(f, 'subj-'+str(subj)+'-eventCorrelation-heatmap-NaNs-to-longLatency', savePath)
+
+
+
+# g= sns.jointplot(data=dfPlot, col='subject', col_wrap= 4, x='eventLatency', y='trialIDpooled', hue='eventType')
+
+
+#may be able to add regression line to jointplot here
+
 
 
 #%% Define custom Z score function
@@ -146,6 +574,18 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
     return dfResult, timeLock
         
 
+#%% Eliminate uneeded columns prior to shifting events
+#for encoding model only need event times + photometry signal + metadata
+colToInclude= idVars+contVars+['trainDayThisStage','trialID','trialType','eventType']
+
+
+colToInclude= colToInclude+ eventsToInclude
+
+
+# Hitting memory errors when time shifting events; so subsetting or processing in chunks should help
+
+
+
 #%% Define peri-event z scoring parameters
 fs= 40
 
@@ -177,13 +617,13 @@ for name, group in groups:
         #-- peri-DS 
         z, timeLock=  zscoreCustom(group, signal, 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
         dfTidy.loc[group.index,signal+'-z-periDS']= z
-        dfTidy.loc[group.index,'timeLock-z-periDS']= timeLock
+        dfTidy.loc[group.index,'timeLock-z-periDS-DStime']= timeLock
 
         
         #-- peri-NS 
         z, timeLock=  zscoreCustom(group, signal, 'NStime', preEventTime, postEventTime,'NStime', baselineTime)
         dfTidy.loc[group.index,signal+'-z-periNS']= z
-        dfTidy.loc[group.index,'timeLock-z-periNS']= timeLock
+        dfTidy.loc[group.index,'timeLock-z-periNS-NStime']= timeLock
     
 test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()]
 
@@ -198,8 +638,8 @@ test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()]
 # for name, group in groups:
 #     #-- peri-DS
 #     z, timeLock=  zscoreCustom(group, 'reblue', 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
-#     dfTidy.loc[group.index,'blue-z-periDS']= z
-#     dfTidy.loc[group.index,'timeLock-z-periDS']= timeLock
+#     dfTidy.loc[group.index,'blue-z-periDS-DStime']= z
+#     dfTidy.loc[group.index,'timeLock-z-periDS-DStime']= timeLock
 
 #     #-- peri-DS Port Entry
 #     z, timeLock=  zscoreCustom(group, 'reblue', 'PEtime', preEventTime, postEventTime,'DStime', baselineTime)
@@ -258,145 +698,161 @@ test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()]
 
     
 # dfTidy.eventType= dfTemp.eventType.copy()
-#%% CORRELATION between eventTypes
-
-# should run on periEventTimeLock (time relative to trialStart)
-
-# how correlated are events going into our model?
-#should run on eventTime before converting to binary coded?
-
-dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
 
 
-#need to groupby or set index to get each time per trial
 
-#subset DS trials
-dfTemp= dfTidy.loc[dfTidy.trialType=='DStime']
+# #%% CORRELATION between eventTypes
 
-#try corr with set ind ?
+# #TODO: should move to just before model is run, so each individual dataset has correlation saved
+# #That would be a ton of shifted columns tho which is probs not what we want?
+# #or at minimum should run on data guranteed to be in model. 
 
-# dfTemp= dfTidy.copy()
+# # should run on periEventTimeLock (time relative to trialStart)
 
-# dfTemp= dfTemp.set_index(['stage','subject','fileID','trialType','trialID'])
+# # how correlated are events going into our model?
+# #should run on eventTime before converting to binary coded?
 
-# dfTemp2= dfTemp.pivot(columns='eventType')['cutTime'].copy()
-
-# #doesn't seem to matter if set_index()
-
-#-----Timelock-sensitive (relative timestamp correlation- good):
-
-    #--DS
-
-#pivot eventType into columns, append, drop old col
-dfTemp= dfTidy.pivot(columns='eventType')['timeLock-z-periDS'].copy()
-#index matches so simple join
-dfTemp= dfTidy.join(dfTemp.loc[:,eventVars]).copy()
-dfTemp= dfTemp.drop(['eventType'], axis=1)
-
-#get all of the first events for each trial, grouped by trialType
-
-#will need to isolate eventTypes by trialType for this to work (na observations for events that don't occur)
-#limited to trials where all events are recorded
+# dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
 
 
-#TODO: could be embedded in a groupby trialType.groups loop
+# #need to groupby or set index to get each time per trial
 
-# groupers= ['stage','subject','fileID','trialType','trialID']
+# #subset DS trials
+# dfTemp= dfTidy.loc[dfTidy.trialType=='DStime']
 
-groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType']
-groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialID']
+# #try corr with set ind ?
 
-#--DS trials correlation
-corrInput= dfTemp.groupby(groupHierarchyTrialID, observed=True, as_index=False)[eventVars].first()    
+# # dfTemp= dfTidy.copy()
 
-#subset DS trials and drop events that don't occur (NStime)
-corrInput= corrInput.loc[corrInput.DStime.notnull()]
-corrInput= corrInput.dropna(axis=1, how='all')
-corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+# # dfTemp= dfTemp.set_index(['stage','subject','fileID','trialType','trialID'])
 
-corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
-g= sns.pairplot(data=corr)
-g.fig.suptitle('DS trial event correlations')
+# # dfTemp2= dfTemp.pivot(columns='eventType')['cutTime'].copy()
 
+# # #doesn't seem to matter if set_index()
 
-corr= corrInput.groupby(['stage','subject','trialType'])[corrEvents].corr()
+# #-----Timelock-sensitive (relative timestamp correlation- good):
 
-g= sns.pairplot(data=corr)
-g.fig.suptitle('DS trial event correlations')
+#     #--DS
 
-#pairplot of just time(not coef)
-dfPlot= corrInput[corrEvents]
-g= sns.pairplot(data=dfPlot)
+# #pivot eventType into columns, append, drop old col
+# dfTemp= dfTidy.pivot(columns='eventType')['timeLock-z-periDS-DStime'].copy()
+# #index matches so simple join
+# dfTemp= dfTidy.join(dfTemp.loc[:,eventVars]).copy()
+# dfTemp= dfTemp.drop(['eventType'], axis=1)
 
-#pairplot of just time(not coef)
-dfPlot= corrInput[corrEvents]
-g= sns.lmplot(data=dfPlot)
+# #get all of the first events for each trial, grouped by trialType
 
-#want to viz better, reorganize
-dfPlot= corr.reset_index().melt(id_vars= groupHierarchyTrialType, value_vars= corrEvents, value_name= 'eventType')
-
-corr= corrInput.groupby(['stage','subject','trialType'])[corrEvents].corr()
+# #will need to isolate eventTypes by trialType for this to work (na observations for events that don't occur)
+# #limited to trials where all events are recorded
 
 
-#------Timelock-agnostic (absolute timestamp correlation version) :
-#try groupby
-#pivot eventType into columns, append, drop old col
-dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
-#index matches so simple join
-dfTemp= dfTidy.join(dfTemp.loc[:,eventVars]).copy()
-dfTemp= dfTemp.drop(['eventType'], axis=1)
+# #TODO: could be embedded in a groupby trialType.groups loop
+
+# # groupers= ['stage','subject','fileID','trialType','trialID']
+
+# groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType']
+# groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialID']
+
+# #--DS trials correlation
+# corrInput= dfTemp.groupby(groupHierarchyTrialID, observed=True, as_index=False)[eventVars].first()    
+
+# #subset DS trials and drop events that don't occur (NStime)
+# corrInput= corrInput.loc[corrInput.DStime.notnull()]
+# corrInput= corrInput.dropna(axis=1, how='all')
+# corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+
+# corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
+# g= sns.pairplot(data=corr)
+# g.fig.suptitle('DS trial event correlations')
 
 
-#get all of the first events for each trial, grouped by trialType
+# corr= corrInput.groupby(['stage','subject','trialType'])[corrEvents].corr()
 
-#will need to isolate eventTypes by trialType for this to work (na observations for events that don't occur)
-#limited to trials where all events are recorded
+# g= sns.pairplot(data=corr)
+# g.fig.suptitle('DS trial event correlations')
 
-
-#TODO: could be embedded in a groupby trialType.groups loop
-
-# groupers= ['stage','subject','fileID','trialType','trialID']
-
-groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType']
-groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialID']
-
-#--DS trials correlation
-corrInput= dfTemp.groupby(groupHierarchyTrialID, observed=True, as_index=False)[eventVars].first()    
-
-#subset DS trials and drop events that don't occur (NStime)
-corrInput= corrInput.loc[corrInput.DStime.notnull()]
-corrInput= corrInput.dropna(axis=1, how='all')
-corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
-
-#drop trials without all events? corr should handle this
-# corrInput= corrInput.dropna(axis=0, how='any')
-
-corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
-
-# corr= corr.reset_index()
-
-# dfPlot= corr[corrEvents+'subject']
-
-# sns.pairplot(data= corr, hue='subject')
-
-g= sns.pairplot(data=corr)
-g.fig.suptitle('DS trial event correlations')
-g.set(ylim= [0,1.1])
-
-#-- NS trials correlation
-
-corrInput= dfTemp.groupby(groupHierarchyTrialID, observed=True, as_index=False)[eventVars].first()    
-
-#subset NS trials and drop events that don't occur (NStime)
-corrInput= corrInput.loc[corrInput.NStime.notnull()]
-corrInput= corrInput.dropna(axis=1, how='all')
-corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+# #pairplot of just time(not coef)
+# dfPlot= corrInput[corrEvents]
+# g= sns.pairplot(data=dfPlot)
+# g.fig.suptitle('DS trial event timings scatter')
 
 
-corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
+# #pairplot of just time(not coef)
+# dfPlot= corrInput[corrEvents]
+# g= sns.lmplot(data=dfPlot)
 
-sns.pairplot(data=corr)
-sns.suptitle('NS trial event correlations')
+
+
+# #jointplot is very nice to show distribution
+# g= sns.jointplot(data=dfPlot)
+
+# g= sns.jointplot(data= corrInput[corrEvents])
+
+# #want to viz better, reorganize
+# dfPlot= corr.reset_index().melt(id_vars= ['stage','subject','trialType'], value_vars= corrEvents, value_name= 'eventType')
+
+# corr= corrInput.groupby(['stage','subject','trialType'])[corrEvents].corr()
+
+
+# # #------Timelock-agnostic (absolute timestamp correlation version) :
+# # #try groupby
+# # #pivot eventType into columns, append, drop old col
+# # dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
+# # #index matches so simple join
+# # dfTemp= dfTidy.join(dfTemp.loc[:,eventVars]).copy()
+# # dfTemp= dfTemp.drop(['eventType'], axis=1)
+
+
+# # #get all of the first events for each trial, grouped by trialType
+
+# # #will need to isolate eventTypes by trialType for this to work (na observations for events that don't occur)
+# # #limited to trials where all events are recorded
+
+
+# # #TODO: could be embedded in a groupby trialType.groups loop
+
+# # # groupers= ['stage','subject','fileID','trialType','trialID']
+
+# # groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType']
+# # groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialID']
+
+# # #--DS trials correlation
+# # corrInput= dfTemp.groupby(groupHierarchyTrialID, observed=True, as_index=False)[eventVars].first()    
+
+# # #subset DS trials and drop events that don't occur (NStime)
+# # corrInput= corrInput.loc[corrInput.DStime.notnull()]
+# # corrInput= corrInput.dropna(axis=1, how='all')
+# # corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+
+# # #drop trials without all events? corr should handle this
+# # # corrInput= corrInput.dropna(axis=0, how='any')
+
+# # corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
+
+# # # corr= corr.reset_index()
+
+# # # dfPlot= corr[corrEvents+'subject']
+
+# # # sns.pairplot(data= corr, hue='subject')
+
+# # g= sns.pairplot(data=corr)
+# # g.fig.suptitle('DS trial event correlations')
+# # g.set(ylim= [0,1.1])
+
+# # #-- NS trials correlation
+
+# # corrInput= dfTemp.groupby(groupHierarchyTrialID, observed=True, as_index=False)[eventVars].first()    
+
+# # #subset NS trials and drop events that don't occur (NStime)
+# # corrInput= corrInput.loc[corrInput.NStime.notnull()]
+# # corrInput= corrInput.dropna(axis=1, how='all')
+# # corrEvents=  corrInput.columns[corrInput.columns.isin(eventVars)]
+
+
+# # corr= corrInput.groupby(groupHierarchyTrialType)[corrEvents].corr()
+
+# # g= sns.pairplot(data=corr)
+# # g.fig.suptitle('NS trial event correlations')
 
 
 #%% Reverse melt() of eventTypes by pivot() into separate columns
@@ -409,15 +865,21 @@ dfTidy= dfTidy.copy()
 # dfTidy= test.copy()
 
 
-#update eventVars
+# #update eventVars
 eventVars= dfTidy.eventType.unique()
-#remove nan eventType
-eventVars= eventVars[pd.notnull(eventVars)]
+
+# #remove nan eventType
+# eventVars= eventVars[pd.notnull(eventVars)]
+
+# eventVars= eventVars[eventVars!='nan']
+
 
 #exclude eventTypes if needed
-eventsToExclude= ['out']
+# eventsToExclude= ['out']
 
-eventVars[eventVars.isin(eventsToExclude)]
+# eventVars= eventVars[~eventVars.isin(eventsToExclude)]
+
+eventVars= eventVars[eventVars.isin(eventsToInclude)]
 
 #pivot()
 # dfTemp= dfTidy.pivot(columns='eventType')['cutTime'].copy()
@@ -503,7 +965,7 @@ del dfTidy
     
 
 #preallocate, try making event timings Sparse- this works!
-for eventCol in eventVars.categories:
+for eventCol in eventVars: #.categories:
     for shiftNum in np.arange(-preEventTime,postEventTime):
         # a= pd.Series(np.zeros(len(dfTemp), int))
         # a= np.zeros(len(dfTemp), int))
@@ -516,7 +978,7 @@ for eventCol in eventVars.categories:
         # dfTemp.loc[:,(eventCol+'+'+(str(shiftNum)))]= pd.Series(pd.arrays.SparseArray(a, fill_value=0), dtype='int')
         #3) works? only assingning as dense then changing dtype to sparse after assignment seems to preserve int?
         a= np.zeros(len(dfTemp), int)
-        dfTemp[(eventCol+'+'+(str(shiftNum)))]= a
+        dfTemp[(eventCol+'+'+(str(shiftNum)))]= a.copy() #PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead.
         dfTemp[(eventCol+'+'+(str(shiftNum)))]=  dfTemp[(eventCol+'+'+(str(shiftNum)))].astype(pd.SparseDtype("int", 0))
         #this suggests to me that any reassignment of the Series after setting sparse dtype will convert to float?
         #so how could I make changes afterward and retain int() dtype?
@@ -533,7 +995,7 @@ groups= dfTemp[col].copy().groupby(['fileID'])
 
 # #attempt 5-- WORKED! (very slow, idk how long)
 # #~2s/ iteration so ~10s/shift with 5 events
-for eventCol in eventVars.categories:
+for eventCol in eventVars: #.categories:
     for shiftNum in np.arange(-preEventTime,postEventTime):
         #note fill_value=0 here will fill the beginning and end of session with 0 instead of nan (e.g. spots where there are no valid timestamps to shift())
         dfTemp.loc[:,(eventCol+'+'+(str(shiftNum)))]= groups[eventCol].shift(shiftNum,fill_value=0)
@@ -623,15 +1085,14 @@ dfTemp= dfTemp.drop(eventVars,axis=1)
 
 #just get index of each and save as separate datasets. this way can load quickly and analyze separately
 
-savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
 print('saving regression input dfTemp to file')
 
-ind= dfTemp['timeLock-z-periDS'].notnull()
+ind= dfTemp['timeLock-z-periDS-DStime'].notnull()
 dfTemp.loc[ind].to_pickle(savePath+'dfRegressionInputDSonly.pkl')
 
 
-ind= dfTemp['timeLock-z-periNS'].notnull()
+ind= dfTemp['timeLock-z-periNS-NStime'].notnull()
 dfTemp.loc[ind].to_pickle(savePath+'dfRegressionInputNSonly.pkl')
 
 #update list of contVars to include normalized fp signals

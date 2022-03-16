@@ -96,3 +96,8 @@ python/_output/dfTidyFP.pkl
 matlabVPFP/_dp_manuscript/_trash/struct2tableAll.m
 *.html
 matlabVPFP/replay_pid14800.log
+python/.pylint.d/fpEncodingModelPrep1.stats
+python/.pylint.d/fpBehaviorAnalysis1.stats
+python/__pycache__/plot_lasso_model_selection.cpython-38.pyc
+python/__pycache__/plot_lasso_model_selection.cpython-38.pyc
+*.pyc
