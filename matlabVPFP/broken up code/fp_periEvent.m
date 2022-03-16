@@ -213,7 +213,7 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
     periBlueMean = nanmean(periBlue, 3); %avg across 3rd dimension (across each page) %this just gives us an average response to all cues 
     periPurpleMean = nanmean(periBlue, 3);
     periBlueZMean = nanmean(periBlueZ, 3);
-    periPurpleZMean = nanmean(periBlueZ, 3);
+    periPurpleZMean = nanmean(periPurpleZ, 3);
     
 
     %matlab actually seems smart enough to autofill empty fields with nans where

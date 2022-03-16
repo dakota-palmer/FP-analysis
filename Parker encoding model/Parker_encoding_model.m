@@ -112,7 +112,7 @@ for neuron=1:numel(neurons)
     %Normalize gcamp signal by the max -- COMMENT OUT WHEN NOT NEEDED
     % gcamp_y=g_output.gcamp;
     % gcamp_y=g_output.gcamp./max(g_output.gcamp);
-    gcamp_y=(g_output.gcamp-mean(g_output.gcamp))./std(g_output.gcamp); fprintf('Z-scored \n')
+    gcamp_y=(g_output.gcamp-nanmean(g_output.gcamp))./nanstd(g_output.gcamp); fprintf('Z-scored \n')
     
     % %Choice/ outcome modulation for initial submission
     % cons={'NPTimes','LeverPresent','LeverTimes','LeverTimesI'...

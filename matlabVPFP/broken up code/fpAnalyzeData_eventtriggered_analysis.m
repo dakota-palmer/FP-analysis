@@ -91,8 +91,8 @@ for subj= 1:numel(subjects)
        
        subjDataAnalyzed.(subjects{subj})(session).periDS.DSblueMean= periBlueMean;
        subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurpleMean= periPurpleMean;
-       subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblueMean= periBlueMean;
-       subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurpleMean= periBlueMean;
+       subjDataAnalyzed.(subjects{subj})(session).periDS.DSzblueMean= periBlueZMean;
+       subjDataAnalyzed.(subjects{subj})(session).periDS.DSzpurpleMean= periPurpleZMean;
 
 
               

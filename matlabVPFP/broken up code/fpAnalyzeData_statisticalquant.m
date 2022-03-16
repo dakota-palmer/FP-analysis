@@ -243,8 +243,8 @@ for ratid=1:length(rat)
 idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
 DSidindex=contains(anovacell{4}(idindex),'DS');
 DSidindex=idindex(DSidindex);
-anovamatrix(ratid,1)=mean(anovacell{1}(DSidindex));%mean DS blue signal
-anovamatrix(ratid,2)=mean(anovacell{2}(DSidindex));%mean DS purple signal
+anovamatrix(ratid,1)=nanmean(anovacell{1}(DSidindex));%mean DS blue signal
+anovamatrix(ratid,2)=nanmean(anovacell{2}(DSidindex));%mean DS purple signal
 
 end
 %NS loop
@@ -252,8 +252,8 @@ for ratid=1:length(rat)
 idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
 NSidindex=contains(anovacell{4}(idindex),'NS');
 NSidindex=idindex(NSidindex);
-anovamatrix(1+length(anovamatrix(:,1)),1)=mean(anovacell{1}(NSidindex));%mean NS blue signal
-anovamatrix(length(anovamatrix(:,2)),2)=mean(anovacell{2}(NSidindex));%mean NS purple signal
+anovamatrix(1+length(anovamatrix(:,1)),1)=nanmean(anovacell{1}(NSidindex));%mean NS blue signal
+anovamatrix(length(anovamatrix(:,2)),2)=nanmean(anovacell{2}(NSidindex));%mean NS purple signal
 end
 
 %get every animals mean for all responses for repeated measures anova
@@ -263,8 +263,8 @@ for ratid=1:length(rat)
 idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
 DSidindex=contains(anovacell{4}(idindex),'DS');
 DSidindex=idindex(DSidindex);
-rmanovamatrix(1,ratid)=mean(anovacell{1}(DSidindex));%mean DS blue signal
-rmanovamatrix(2,ratid)=mean(anovacell{2}(DSidindex));%mean DS purple signal
+rmanovamatrix(1,ratid)=nanmean(anovacell{1}(DSidindex));%mean DS blue signal
+rmanovamatrix(2,ratid)=nanmean(anovacell{2}(DSidindex));%mean DS purple signal
 
 end
 %NS loop
@@ -272,8 +272,8 @@ for ratid=1:length(rat)
 idindex=find(anovacell{3}==rat(ratid));% finding the index of the  DS signal in anova cell
 NSidindex=contains(anovacell{4}(idindex),'NS');
 NSidindex=idindex(NSidindex);
-rmanovamatrix(3,ratid)=mean(anovacell{1}(NSidindex));%mean NS blue signal
-rmanovamatrix(4,ratid)=mean(anovacell{2}(NSidindex));%mean NS purple signal
+rmanovamatrix(3,ratid)=nanmean(anovacell{1}(NSidindex));%mean NS blue signal
+rmanovamatrix(4,ratid)=nanmean(anovacell{2}(NSidindex));%mean NS purple signal
 end
 
 

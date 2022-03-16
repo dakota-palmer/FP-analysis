@@ -73,8 +73,8 @@ for subj= 1:numel(subjects) %for each subject
    end %end session loop
    
    %Get the mean and SEM for each subject
-   poxCountMean(1, subj)= mean(poxCount{1,subj}(:,1)); %calculate avg poxCount across sessions for each subject
-   poxCountSEM(1,subj)= std(poxCount{1,subj}(:,1))/sqrt(numel(currentSubj)); %calculate SEM for each subject: standard deviation of number of port entries across sessions / number of sessions for this subject
+   poxCountMean(1, subj)= nanmean(poxCount{1,subj}(:,1)); %calculate avg poxCount across sessions for each subject
+   poxCountSEM(1,subj)= nanstd(poxCount{1,subj}(:,1))/sqrt(numel(currentSubj)); %calculate SEM for each subject: standard deviation of number of port entries across sessions / number of sessions for this subject
 
 
    %now plot the data

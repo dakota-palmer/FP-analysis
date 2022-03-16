@@ -1,6 +1,6 @@
 function[answer]=mean_center(matrix)
 
-mean_mat=mean(matrix);
+mean_mat=nanmean(matrix);
 matrix_new=zeros(size(matrix));
 
 for rowz=1:numel(matrix(1,:))

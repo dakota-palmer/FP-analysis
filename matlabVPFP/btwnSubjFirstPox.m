@@ -253,7 +253,7 @@ allRats(1).firstPox.grandMeanDSzpoxpurpleExtinctionLastSes= nanmean(allRats(1).f
 allRats(1).firstPox.grandMeanNSzpoxpurpleExtinctionLastSes= nanmean(allRats(1).firstPox.NSzpoxpurpleMeanExtinctionLastSes,3);  
 
 
- %Calculate standard error of the mean(SEM)
+ %Calculate standard error of the nanmean(SEM)
   %treat each animal's avg as an obesrvation and calculate their std from
   %the grand mean across all animals
     %stage 2

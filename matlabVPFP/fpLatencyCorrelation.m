@@ -346,7 +346,7 @@ for subj= 1:numel(subjects)
              %Extracting cue response
              %to do so, will use
              %cueOnsetFrame:cueOnsetFrame+cueResponseFrames as indices to
-             %pull out relevant photometry data and will take the mean()
+             %pull out relevant photometry data and will take the nanmean()
 
               %Identify trials where animal was in port at trial start,
               %trials with no PE, and trials with a valid PE. For each

@@ -70,7 +70,7 @@ function [fixedSignal, fixedReference] = fpArtifactElimination_DynamicMAD(signal
 %    MAD = abs(reference - blurredReference); %original method, using conv()
 
     %-define threshold beyond which to ID as 'artifact'
-    threshold= movmean(MAD, thresholdWindow*fs)+std(MAD)*thresholdFactor; 
+    threshold= movmean(MAD, thresholdWindow*fs)+nanstd(MAD)*thresholdFactor; 
     %         yline(threshold, 'r--'); %plot static threshold
 
     badIndexes= MAD>threshold;%MAD(trendAgrees==1)>threshold(trendAgrees==1);

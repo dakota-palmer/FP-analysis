@@ -253,7 +253,7 @@ allRats(1).allCues.grandMeanDSzpurpleExtinctionLastSes= nanmean(allRats(1).allCu
 allRats(1).allCues.grandMeanNSzpurpleExtinctionLastSes= nanmean(allRats(1).allCues.NSzpurpleMeanExtinctionLastSes,3);  
 
 
- %Calculate standard error of the mean(SEM)
+ %Calculate standard error of the nanmean(SEM)
   %treat each animal's avg as an obesrvation and calculate their std from
   %the grand mean across all animals
     %stage 2

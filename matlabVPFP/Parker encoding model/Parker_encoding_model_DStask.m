@@ -98,7 +98,7 @@ for subject=1:numel(subjects)
 
         % gcamp_y=g_output.reblue;
         % gcamp_y=g_output.reblue./max(g_output.reblue
-    %     gcamp_y=(g_output.reblue-mean(g_output.reblue))./std(g_output.reblue); fprintf('Z-scored \n')
+    %     gcamp_y=(g_output.reblue-nanmean(g_output.reblue))./nanstd(g_output.reblue); fprintf('Z-scored \n')
 
         %TRYING OTHER NORMALIZATION METHODS
                  %matlab's built in moving median function
@@ -109,10 +109,10 @@ for subject=1:numel(subjects)
 
         %perhaps Std should be rolling or just based off first couple seconds (representative only of spontaneous noise)?
         rollingStdBlue= movstd(g_output.reblue{1,session},800);
-        stdBlueNoise= std(g_output.reblue{1,session}(1:g_output.samp_rate(1,session))); %first second
+        stdBlueNoise= nanstd(g_output.reblue{1,session}(1:g_output.samp_rate(1,session))); %first second
 
         dffblue= (g_output.reblue{1,session}-rollingMedianBlue)./rollingMedianBlue;
-    %     zblueMedian= (g_output.reblue-rollingMedianBlue)./std(rollingMedianBlue); %simple std
+    %     zblueMedian= (g_output.reblue-rollingMedianBlue)./nanstd(rollingMedianBlue); %simple std
 
         zblueMedian= (g_output.reblue{1,session}-rollingMedianBlue)./rollingStdBlue; %rolling Std
     %     zblueMedian= (g_output.reblue-rollingMedianBlue)./stdBlueNoise;   %simple beginning noise std
@@ -131,9 +131,9 @@ for subject=1:numel(subjects)
     %     
     %     reblueFiltered= filter(Hhp, g_output.reblue);
     %     
-    %     dffFiltered= reblueFiltered/mean(g_output.reblue);
+    %     dffFiltered= reblueFiltered/nanmean(g_output.reblue);
     %     
-    %     dffZ= dffFiltered/std(dffFiltered);
+    %     dffZ= dffFiltered/nanstd(dffFiltered);
     %     
     %     figure;
     %     subplot(4,1,1); hold on; title('signal');
@@ -142,7 +142,7 @@ for subject=1:numel(subjects)
     %     plot(reblueFiltered);
     %     subplot(4,1,3); hold on; title('dff filtered signal (filtered/mean unfiltered)');
     %     plot(dffFiltered);
-    %     subplot(4,1,4); hold on; title('z scored dff filtered (dff/std(dff)');
+    %     subplot(4,1,4); hold on; title('z scored dff filtered (dff/nanstd(dff)');
     %     plot(dffZ);
     %     
 
@@ -172,7 +172,7 @@ for subject=1:numel(subjects)
         plot(dffblue);
         subplot(4,1,4);
         hold on;
-        title('blue z score median (value-median/std(median))')
+        title('blue z score median (value-median/nanstd(median))')
         plot(zblueMedian);
 
         gcamp_y = zblueMedian; fprintf('z scored based on moving median');
@@ -337,7 +337,7 @@ for subject=1:numel(subjects)
 
             subplot(2,1,2); hold on; title('Normalized peri-DS');
             plot(squeeze(currentSubj(thisSessionInd).deconvolution.periDS.DSzblueNormalized), 'b--');
-            plot(mean(currentSubj(thisSessionInd).deconvolution.periDS.DSzblueNormalized,3), 'r', 'LineWidth', 2);
+            plot(nanmean(currentSubj(thisSessionInd).deconvolution.periDS.DSzblueNormalized,3), 'r', 'LineWidth', 2);
 
 
         %Exclude all intervening data between trials (only include peri-cue

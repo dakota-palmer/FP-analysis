@@ -146,8 +146,8 @@ for subj= 1:numel(subjIncluded) %for each subject
                 
                 %Now, use the DSselected as an index to get only mean
                 %response on trials without PE
-               allRats(1).poxOnly.DSzblueMeanStage2FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.DSzpurpleMeanStage2FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';
+               allRats(1).poxOnly.DSzblueMeanStage2FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.DSzpurpleMeanStage2FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';
            end 
         end
        
@@ -237,15 +237,15 @@ for subj= 1:numel(subjIncluded) %for each subject
                 
                 %Now, use the DSselected & NSSelected as an indexes to get only mean
                 %response on trials without PE
-               allRats(1).poxOnly.DSzblueMeanStage5FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.DSzpurpleMeanStage5FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';            
-               allRats(1).poxOnly.NSzblueMeanStage5FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedFirstSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.NSzpurpleMeanStage5FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedFirstSes)),3)'; 
+               allRats(1).poxOnly.DSzblueMeanStage5FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.DSzpurpleMeanStage5FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';            
+               allRats(1).poxOnly.NSzblueMeanStage5FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedFirstSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.NSzpurpleMeanStage5FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedFirstSes)),3)'; 
                
-               allRats(1).poxOnly.DSzblueMeanStage5LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedLastSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.DSzpurpleMeanStage5LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedLastSes)),3)';            
-               allRats(1).poxOnly.NSzblueMeanStage5LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedLastSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.NSzpurpleMeanStage5LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedLastSes)),3)'; 
+               allRats(1).poxOnly.DSzblueMeanStage5LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedLastSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.DSzpurpleMeanStage5LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedLastSes)),3)';            
+               allRats(1).poxOnly.NSzblueMeanStage5LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedLastSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.NSzpurpleMeanStage5LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedLastSes)),3)'; 
            end          
          end %end cond B       
          
@@ -334,15 +334,15 @@ for subj= 1:numel(subjIncluded) %for each subject
                 
                 %Now, use the DSselected & NSSelected as an indexes to get only mean
                 %response on trials without PE
-               allRats(1).poxOnly.DSzblueMeanStage7FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.DSzpurpleMeanStage7FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';            
-               allRats(1).poxOnly.NSzblueMeanStage7FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedFirstSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.NSzpurpleMeanStage7FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedFirstSes)),3)'; 
+               allRats(1).poxOnly.DSzblueMeanStage7FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.DSzpurpleMeanStage7FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';            
+               allRats(1).poxOnly.NSzblueMeanStage7FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedFirstSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.NSzpurpleMeanStage7FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedFirstSes)),3)'; 
                
-               allRats(1).poxOnly.DSzblueMeanStage7LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedLastSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.DSzpurpleMeanStage7LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedLastSes)),3)';            
-               allRats(1).poxOnly.NSzblueMeanStage7LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedLastSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.NSzpurpleMeanStage7LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedLastSes)),3)'; 
+               allRats(1).poxOnly.DSzblueMeanStage7LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedLastSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.DSzpurpleMeanStage7LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedLastSes)),3)';            
+               allRats(1).poxOnly.NSzblueMeanStage7LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedLastSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.NSzpurpleMeanStage7LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedLastSes)),3)'; 
            end          
          end %end cond C
          
@@ -431,15 +431,15 @@ for subj= 1:numel(subjIncluded) %for each subject
                 
                 %Now, use the DSselected & NSSelected as an indexes to get only mean
                 %response on trials without PE
-               allRats(1).poxOnly.DSzblueMeanStage8FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.DSzpurpleMeanStage8FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';            
-               allRats(1).poxOnly.NSzblueMeanStage8FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedFirstSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.NSzpurpleMeanStage8FirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedFirstSes)),3)'; 
+               allRats(1).poxOnly.DSzblueMeanStage8FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.DSzpurpleMeanStage8FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';            
+               allRats(1).poxOnly.NSzblueMeanStage8FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedFirstSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.NSzpurpleMeanStage8FirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedFirstSes)),3)'; 
                
-               allRats(1).poxOnly.DSzblueMeanStage8LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedLastSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.DSzpurpleMeanStage8LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedLastSes)),3)';            
-               allRats(1).poxOnly.NSzblueMeanStage8LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedLastSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.NSzpurpleMeanStage8LastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedLastSes)),3)'; 
+               allRats(1).poxOnly.DSzblueMeanStage8LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedLastSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.DSzpurpleMeanStage8LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedLastSes)),3)';            
+               allRats(1).poxOnly.NSzblueMeanStage8LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedLastSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.NSzpurpleMeanStage8LastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedLastSes)),3)'; 
            end          
          end %end cond D
          
@@ -528,15 +528,15 @@ for subj= 1:numel(subjIncluded) %for each subject
                 
                 %Now, use the DSselected & NSSelected as an indexes to get only mean
                 %response on trials without PE
-               allRats(1).poxOnly.DSzblueMeanExtinctionFirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.DSzpurpleMeanExtinctionFirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';            
-               allRats(1).poxOnly.NSzblueMeanExtinctionFirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedFirstSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.NSzpurpleMeanExtinctionFirstSes(1,:,subj)= mean(currentSubj(firstSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedFirstSes)),3)'; 
+               allRats(1).poxOnly.DSzblueMeanExtinctionFirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedFirstSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.DSzpurpleMeanExtinctionFirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedFirstSes)),3)';            
+               allRats(1).poxOnly.NSzblueMeanExtinctionFirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedFirstSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.NSzpurpleMeanExtinctionFirstSes(1,:,subj)= nanmean(currentSubj(firstSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedFirstSes)),3)'; 
                
-               allRats(1).poxOnly.DSzblueMeanExtinctionLastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedLastSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.DSzpurpleMeanExtinctionLastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedLastSes)),3)';            
-               allRats(1).poxOnly.NSzblueMeanExtinctionLastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedLastSes)),3)'; %transposing for readability
-               allRats(1).poxOnly.NSzpurpleMeanExtinctionLastSes(1,:,subj)= mean(currentSubj(lastSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedLastSes)),3)'; 
+               allRats(1).poxOnly.DSzblueMeanExtinctionLastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periDS.DSzblue(:,:,~isnan(DSselectedLastSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.DSzpurpleMeanExtinctionLastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periDS.DSzpurple(:,:,~isnan(DSselectedLastSes)),3)';            
+               allRats(1).poxOnly.NSzblueMeanExtinctionLastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periNS.NSzblue(:,:,~isnan(NSselectedLastSes)),3)'; %transposing for readability
+               allRats(1).poxOnly.NSzpurpleMeanExtinctionLastSes(1,:,subj)= nanmean(currentSubj(lastSessionIndex).periNS.NSzpurple(:,:,~isnan(NSselectedLastSes)),3)'; 
            end          
          end %end cond E
          
@@ -595,7 +595,7 @@ allRats(1).poxOnly.grandMeanDSzpurpleExtinctionLastSes= nanmean(allRats(1).poxOn
 allRats(1).poxOnly.grandMeanNSzpurpleExtinctionLastSes= nanmean(allRats(1).poxOnly.NSzpurpleMeanExtinctionLastSes,3);
 
 
- %Calculate standard error of the mean(SEM)
+ %Calculate standard error of the nanmean(SEM)
   %treat each animal's avg as an obesrvation and calculate their std from
   %the grand mean across all animals
     %stage 2

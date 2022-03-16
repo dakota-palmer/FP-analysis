@@ -152,10 +152,10 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
             %DSonset_b=max(DSonset_b);
            %DSonset_y=gcamp_y_blue(DSonset);
            %DSonset_b_y=gcamp_y_blue(DSonset_b);
-            z_blue_baseline=mean(gcamp_y_blue(DSonset-(tb*fs):DSonset));%basline to use until next DS cue
-            z_blue_std=std(gcamp_y_blue(DSonset-(tb*fs):DSonset));
-            z_purple_baseline=mean(gcamp_y_purple(DSonset-(tb*fs):DSonset));%basline to use until next DS cue
-            z_purple_std=std(gcamp_y_purple(DSonset-(tb*fs):DSonset));
+            z_blue_baseline=nanmean(gcamp_y_blue(DSonset-(tb*fs):DSonset));%basline to use until next DS cue
+            z_blue_std=nanstd(gcamp_y_blue(DSonset-(tb*fs):DSonset));
+            z_purple_baseline=nanmean(gcamp_y_purple(DSonset-(tb*fs):DSonset));%basline to use until next DS cue
+            z_purple_std=nanstd(gcamp_y_purple(DSonset-(tb*fs):DSonset));
         
              % need to store z_score of time points before 1st DS
              if DS==1
@@ -179,10 +179,10 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
                 % z-score for time points from last DS until the end
             DSonset_y=gcamp_y_blue(DSonset);
             
-            z_blue_baseline=mean(gcamp_y_blue(DSonset-(tb*fs):DSonset));%basline to use until next DS cue
-            z_blue_std=std(gcamp_y_blue(DSonset-(tb*fs):DSonset));
-            z_purple_baseline=mean(gcamp_y_purple(DSonset-(tb*fs):DSonset));%basline to use until next DS cue
-            z_purple_std=std(gcamp_y_purple(DSonset-(tb*fs):DSonset));
+            z_blue_baseline=nanmean(gcamp_y_blue(DSonset-(tb*fs):DSonset));%basline to use until next DS cue
+            z_blue_std=nanstd(gcamp_y_blue(DSonset-(tb*fs):DSonset));
+            z_purple_baseline=nanmean(gcamp_y_purple(DSonset-(tb*fs):DSonset));%basline to use until next DS cue
+            z_purple_std=nanstd(gcamp_y_purple(DSonset-(tb*fs):DSonset));
             
             z_gcamp_y_blue_temp=[];
             z_gcamp_y_purple_temp=[];
@@ -229,7 +229,7 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
 % %     criteria=3;
 % %     exind=find(z_blue>criteria*nanmean(z_blue));
 % 
-% %      z_blue= (gcamp_y_blue-mean(gcamp_y_blue))./std(gcamp_y_blue); fprintf('Z-scored \n')
+% %      z_blue= (gcamp_y_blue-nanmean(gcamp_y_blue))./nanstd(gcamp_y_blue); fprintf('Z-scored \n')
 
 
 
@@ -310,10 +310,10 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
             % Calculate average baseline mean&stdDev 10s prior to DS for z-score
             %blueA
             baselineMeanblue= nanmean(gcamp_y_blue((DSonset-slideTime):DSonset)); %baseline mean blue 10s prior to DS onset for boxA
-            baselineStdblue=std(gcamp_y_blue((DSonset-slideTime):DSonset)); %baseline stdDev blue 10s prior to DS onset for boxA
+            baselineStdblue=nanstd(gcamp_y_blue((DSonset-slideTime):DSonset)); %baseline stdDev blue 10s prior to DS onset for boxA
             %purpleA
             baselineMeanpurple=nanmean(gcamp_y_purple((DSonset-slideTime):DSonset)); %baseline mean purple 10s prior to DS onset for boxA
-            baselineStdpurple=std(gcamp_y_purple((DSonset-slideTime):DSonset)); %baseline stdDev purple 10s prior to DS onset for boxA
+            baselineStdpurple=nanstd(gcamp_y_purple((DSonset-slideTime):DSonset)); %baseline stdDev purple 10s prior to DS onset for boxA
 
             %save all of the following data in the subjDataAnalyzed struct under the periDS field
 
@@ -388,11 +388,11 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
      
      stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
      
-     topDSzblue= stdFactor*abs(mean((std(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurple= stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzblue= stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzpurple= stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-     bottomDSzblue = -stdFactor*abs(mean((std(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));
+     bottomDSzblue = -stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     bottomDSzpurple= -stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpurpleAllTrials, 0, 2))));
      
      %now choose the most extreme of these two (between blue and
      %purple)to represent the color axis 
@@ -609,11 +609,11 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
      
     stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
      
-     topDSzblue= stdFactor*abs(mean((std(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     topDSzpurple= stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzblue= stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     topDSzpurple= stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-     bottomDSzblue = -stdFactor*abs(mean((std(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-     bottomDSzpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));
+     bottomDSzblue = -stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+     bottomDSzpurple= -stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpurpleAllTrials, 0, 2))));
      
      %now choose the most extreme of these two (between blue and
      %purple)to represent the color axis 

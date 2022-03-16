@@ -39,7 +39,7 @@ for subj= 1:numel(subjects)
          %loop through each trial type (1= PE, 2= noPE, 3= inPort) and get
          %peri-DS response
                            
-         %Here we will collect mean() peri-DS response within sessions,
+         %Here we will collect nanmean() peri-DS response within sessions,
          %that we can see if there's a particularly bad session that would
          %otherwise be hidden in a between-session mean
             for PEtrial= currentSubj(includedSession).trialOutcome.DSoutcome==1 %loop through trials and cat responses into one array
@@ -164,22 +164,22 @@ for subj= 1:numel(subjects)
                 subplot(3,numel(includedSessions), subplotCountNS); hold on; title(strcat('No PE NS stage-',num2str(allStages(thisStage)),'-session#',num2str(includedSessions(sessionCount))));
     %             plot(timeLock, noPENSblue, 'b'); %plot individual session means 
     %             plot(timeLock, noPENSpurple,'m');%plot individual session means 
-                plot(timeLock, mean(noPENSblue,2),'k','LineWidth',2); %plot mean between all sessions of this stage
-                plot(timeLock, mean(noPENSpurple, 2), 'r', 'LineWidth', 2); %plot mean between all sessions of this stage
+                plot(timeLock, nanmean(noPENSblue,2),'k','LineWidth',2); %plot mean between all sessions of this stage
+                plot(timeLock, nanmean(noPENSpurple, 2), 'r', 'LineWidth', 2); %plot mean between all sessions of this stage
 
                 subplotCountNS= subplotCountNS+1;
                 subplot(3,numel(includedSessions), subplotCountNS); hold on; title(strcat('PE NS stage-',num2str(allStages(thisStage)),'-session#',num2str(includedSessions(sessionCount))));
     %             plot(timeLock, PENSblue, 'b');%plot individual session means 
     %             plot(timeLock, PENSpurple, 'm');%plot individual session means 
-                plot(timeLock, mean(PENSblue,2),'k','LineWidth',2); %plot mean between all sessions of this stage
-                plot(timeLock, mean(PENSpurple, 2), 'r', 'LineWidth', 2); %plot mean between all sessions of this stage
+                plot(timeLock, nanmean(PENSblue,2),'k','LineWidth',2); %plot mean between all sessions of this stage
+                plot(timeLock, nanmean(PENSpurple, 2), 'r', 'LineWidth', 2); %plot mean between all sessions of this stage
 
                 subplotCountNS= subplotCountNS+1;
                 subplot(3, numel(includedSessions), subplotCountNS); hold on; title(strcat('inPort NS stage-',num2str(allStages(thisStage)),'-session#',num2str(includedSessions(sessionCount))));
     %             plot(timeLock, inPortNSblue, 'b');%plot individual session means 
     %             plot(timeLock, inPortNSpurple, 'm');%plot individual session means 
-                plot(timeLock, mean(inPortNSblue,2),'k','LineWidth',2); %plot mean between all sessions of this stage
-                plot(timeLock, mean(inPortNSpurple, 2), 'r', 'LineWidth', 2); %plot mean between all sessions of this stage
+                plot(timeLock, nanmean(inPortNSblue,2),'k','LineWidth',2); %plot mean between all sessions of this stage
+                plot(timeLock, nanmean(inPortNSpurple, 2), 'r', 'LineWidth', 2); %plot mean between all sessions of this stage
 
             end %end NS stage conditional
         end %end included session loop

@@ -116,7 +116,7 @@ for neuron=1:numel(neurons)
     
     % gcamp_y=g_output.gcamp;
     % gcamp_y=g_output.gcamp./max(g_output.gcamp);
-    gcamp_y=(g_output.gcamp-mean(g_output.gcamp))./std(g_output.gcamp); fprintf('Z-scored \n')
+    gcamp_y=(g_output.gcamp-nanmean(g_output.gcamp))./nanstd(g_output.gcamp); fprintf('Z-scored \n')
     
     %visualizing normalized trace- dp
     figure; 

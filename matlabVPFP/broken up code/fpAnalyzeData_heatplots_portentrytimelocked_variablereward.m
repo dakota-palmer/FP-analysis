@@ -98,17 +98,17 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
     subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluePump2= currentSubj(1).DSzpoxbluePump2;
     subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluePump3= currentSubj(1).DSzpoxbluePump3;
                 
-    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluemeanPump1= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluePump1,2);
-    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluemeanPump2= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluePump2,2);
-    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluemeanPump3= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluePump3,2);
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluemeanPump1= nanmean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluePump1,2);
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluemeanPump2= nanmean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluePump2,2);
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluemeanPump3= nanmean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxbluePump3,2);
     
     subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplePump1= currentSubj(1).DSzpoxpurplePump1;
     subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplePump2= currentSubj(1).DSzpoxpurplePump2;
     subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplePump3= currentSubj(1).DSzpoxpurplePump3;
                 
-    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplemeanPump1= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplePump1,2);
-    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplemeanPump2= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplePump2,2);
-    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplemeanPump3= mean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplePump3,2);
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplemeanPump1= nanmean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplePump1,2);
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplemeanPump2= nanmean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplePump2,2);
+    subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplemeanPump3= nanmean(subjDataAnalyzed.(subjectsAnalyzed{subj})(session).periDSpox.DSzpoxpurplePump3,2);
         end %end session loop
     end %end ~isempty reward conditional (alternative to stage conditional)
     
@@ -150,20 +150,20 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
 
          stdFactor= 4; %multiplicative factor- how many stds away do we want our color max & min?
 
-         topDSzpoxbluePump1= stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         topDSzpoxbluePump2= stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         topDSzpoxbluePump3= stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzpoxbluePump1= stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpoxbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzpoxbluePump2= stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpoxbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         topDSzpoxbluePump3= stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpoxbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
          
          
-%          topDSzpurple= stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%          topDSzpurple= stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
-         bottomDSzpoxbluePump1 = -stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         bottomDSzpoxbluePump2 = -stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-         bottomDSzpoxbluePump3 = -stdFactor*abs(nanmean((std(currentSubj(1).DSzpoxbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzpoxbluePump1 = -stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpoxbluePump1, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzpoxbluePump2 = -stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpoxbluePump2, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+         bottomDSzpoxbluePump3 = -stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpoxbluePump3, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 
          
-%          bottomDSzpurple= -stdFactor*abs(mean((std(currentSubj(1).DSzpurpleAllTrials, 0, 2))));
+%          bottomDSzpurple= -stdFactor*abs(nanmean((nanstd(currentSubj(1).DSzpurpleAllTrials, 0, 2))));
 
          %now choose the most extreme of these two (between blue and
          %purple)to represent the color axis 
@@ -172,11 +172,11 @@ rewardSessionCount= 0; %counter for sessions with valid variable reward data
 
 %         %same, but defining color axes for NS
 %         if ~isempty(currentSubj(1).NSzblueAllTrials) %only run this if there's NS data
-%             topNSzblue= stdFactor*abs(mean((std(currentSubj(1).NSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
-%             topNSzpurple= stdFactor*abs(mean((std(currentSubj(1).NSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%             topNSzblue= stdFactor*abs(nanmean((nanstd(currentSubj(1).NSzblueAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
+%             topNSzpurple= stdFactor*abs(nanmean((nanstd(currentSubj(1).NSzpurpleAllTrials, 0, 2))));%std calculated for each cue (across all timestamps), then averaged, absolute valued, then multiplied by factor
 % 
-%             bottomNSzblue= -stdFactor*abs(mean((std(currentSubj(1).NSzblueAllTrials, 0, 2))));
-%             bottomNSzpurple= -stdFactor*abs(mean((std(currentSubj(1).NSzpurpleAllTrials, 0, 2))));
+%             bottomNSzblue= -stdFactor*abs(nanmean((nanstd(currentSubj(1).NSzblueAllTrials, 0, 2))));
+%             bottomNSzpurple= -stdFactor*abs(nanmean((nanstd(currentSubj(1).NSzpurpleAllTrials, 0, 2))));
 % 
 %             bottomAllNS= min(bottomNSzblue, bottomNSzpurple);
 %             topAllNS= max(topNSzblue, topNSzpurple);
