@@ -291,13 +291,13 @@ dfTidy.loc[:, 'trialIDpooled'] = dfTidy.groupby(['fileID','trialID'])['trialIDpo
 dfTemp= dfTidy.copy()
 
 #TODO: maybe cumcount of trialID within stage should be used in all groupers. Could be useful to reveal temporal changes/patterns
-groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType']
+groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType', 'epoch']
 # groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialID']
 # groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialID', 'eventType']
 
 #include unique cumulative trialCount for plotting
-groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID']
-groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID', 'eventType']
+groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'epoch', 'trialID']
+groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID',  'epoch', 'eventType']
 
 
 
@@ -388,6 +388,25 @@ g.map(sns.scatterplot)
 
 g= sns.pairplot(data=dfPlot)
 
+#-- Plot of event timings going into regression (just double checking reasonable times)
+dfPlot= corrInput.copy()
+
+dfPlot= dfPlot.loc[dfPlot.eventType.isin(eventsToInclude)].copy()
+
+#remove all unused categories from vars (so sns doesn't plot empty labels)
+ind= dfPlot.dtypes=='category'
+ind= dfPlot.columns[ind]
+
+for col in ind:
+    dfPlot[col]= dfPlot[col].cat.remove_unused_categories()
+
+
+g= sns.catplot(data=dfPlot, y='eventType', x='eventLatency')
+g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2)
+
+
+g= sns.catplot(data=dfPlot, row='epoch', y='eventType', x='eventLatency')
+g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2)
 
 
 # -----heatplots

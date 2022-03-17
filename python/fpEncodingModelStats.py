@@ -264,9 +264,13 @@ for subj in subjects:
     #fit model 
     t1 = time.time()
     
+    print('fitting model')
+    
     model.fit(group.loc[:,X], group.loc[:,y])
     
     t_model = time.time() - t1
+
+    print('fit time='+t_model)
 
     
     #display alpha that produced the lowest test MSE

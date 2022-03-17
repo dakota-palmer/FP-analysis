@@ -1121,6 +1121,7 @@ ax.legend()
 # sns.displot(data=dfPlot, x='eventLatency', col='stage', hue='subject')
 
 
+
 #%% Conduct trial-based analyses AFTER  revising trialID?
 
 #yeah  we'll want UStimes etc during entire 'trial' (not just limited to cueDur) so will want to revise this after

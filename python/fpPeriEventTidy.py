@@ -335,11 +335,66 @@ for name, group in groups:
 
 #perhaps 'trialID', 'timeLock', 'baselineEvent','timeLockEvent', 'signalType', 'signal'
 
-#%% Plot ALL event timelocks from ALL SESSIONS specific stage
+#%% Plot Between Subjects ALL event timelocks from specific stage
+stagesToPlot= [5,7,8,12] #dfTidy.stage.unique()
+
+dfPlot= dfTidy.loc[dfTidy.stage.isin(stagesToPlot),:].copy()
+    
+dfPlot2= dfPlot.copy()
+
+for thisStage in dfPlot2.stage.unique():
+    
+    for thisBaselineEventType in baselineEvents:
+
+
+        dfPlot3= dfPlot2.loc[dfPlot.stage==thisStage,:].copy()
+        
+        f, ax = plt.subplots(1,len(eventsToInclude), sharey=True, sharex=True)
+        
+        for thisEventType in eventsToInclude:
+                
+             #conditional to skip different cue types
+            if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
+                continue
+                
+            if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
+                continue
+            
+            x= 'timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+
+            y= 'blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+            
+            axes= eventsToInclude.index(thisEventType)
+        
+            g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject')
+            
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, units='trainDayThisStage', estimator=None, x=x,y=y, hue='subject')
+
+            
+            ax[axes].axvline(x=0, linestyle='--', color='black', linewidth=2)
+            
+            ax[axes].set(xlabel= 'time from event (s)')
+            ax[axes].set(ylabel= 'GCaMP Z-score (based on pre-cue baseline')
+            ax[axes].set(title= thisEventType)
+
+            
+            # plt.xlabel('time from event (s)')
+            # plt.ylabel('GCaMP Z-score (based on pre-cue baseline')
+            # plt.title(thisEventType)
+            
+            f.suptitle('allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials')
+        
+        saveFigCustom(f, 'allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials', savePath)
+
+
+#%% Plot ALL event timelocks from ALL SESSIONS specific stage-- VERY slow
 
 stagesToPlot= [5,7,8,12] #dfTidy.stage.unique()
 
 dfPlot= dfTidy.loc[dfTidy.stage.isin(stagesToPlot),:].copy()
+
+    #between subj plot only
+    
 
 for subject in dfPlot.subject.unique():
 
