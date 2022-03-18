@@ -522,7 +522,7 @@ dfPlot= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
 
 fig, ax= plt.subplots()
 # sns.lineplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch', dropna=False) #retain gaps (dropna=False)
-sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+# sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
 
 
 ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
@@ -794,7 +794,7 @@ dfPlot= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
 
 fig, ax= plt.subplots()
 # sns.lineplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch', dropna=False) #retain gaps (dropna=False)
-sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+# sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
 
 
 ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')

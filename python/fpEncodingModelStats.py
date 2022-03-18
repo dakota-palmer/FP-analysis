@@ -270,7 +270,7 @@ for subj in subjects:
     
     t_model = time.time() - t1
 
-    print('fit time='+t_model)
+    print('fit time='+str(t_model))
 
     
     #display alpha that produced the lowest test MSE
@@ -623,7 +623,84 @@ for subj in subjects:
     
     
     
-    # saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison_All', savePath)
+    saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison_All', savePath)
+        
+    
+    #--all models, log scale
+    fig, ax= plt.subplots(5,1, sharex=True)
+
+    plt.subplot(5,1,2)
+    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
+    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
+            label='Average across the folds', linewidth=2)
+    plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
+            label='alpha: CV estimate= '+str(model_cd.alpha_))
+    
+    indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
+    estMSE= model_cd.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+            label='est MSE CV= '+str(estMSE))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: coordinate descent '
+              '(train time: %.2fs)' % t_lasso_cv)
+    plt.axis('tight')
+    
+    #-LASSO LARS
+    plt.subplot(5,1,3) #share y axis with other MSE plots
+    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
+                  label='Average across the folds', linewidth=2)
+    plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
+                label='alpha CV= '+str(model_lars.alpha_))
+    
+      
+    indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
+    estMSE= model_lars.mse_path_[indAlpha, :].mean()
+                 
+    plt.axhline(estMSE, linestyle='--', color='blue',
+            label='est MSE CV= '+str(estMSE))
+    
+    plt.legend()
+    
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Mean square error')
+    plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+              % t_lasso_lars_cv)
+    
+    #mse la
+    plt.subplot(5,1,4)
+    g=sns.scatterplot(ax=ax[3], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
+    g=sns.lineplot(ax=ax[3], data=msePath, x='alpha', y='MSE', color='black')
+    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    ax[4].set_xscale('log')
+    ax[4].set_xlabel('log alpha')
+    
+    
+    g.set_xlabel('alpha')
+    g.set_ylabel('MSE')
+    g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
+    g.set(xlabel='alpha', ylabel='MSE')
+    
+    #coef path
+    g=sns.lineplot(ax= ax[4], data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
+    g=sns.lineplot(ax= ax[4], data=modelPath,  x='alpha', y='coef', hue='eventType', palette='dark')
+    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    ax[5].set_xscale('log')
+    ax[5].set_xlabel('log alpha')
+    
+    g.set(title=('subj-'+str(subj)+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
+    g.set(ylabel='coef')
+    ax.set_xscale('log') #log scale if wanted
+    
+    
+    
+    
+    saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison_All', savePath)
         
     
     
@@ -664,15 +741,7 @@ for subj in subjects:
     # #https://stackoverflow.com/questions/41045752/using-statsmodel-estimations-with-scikit-learn-cross-validation-is-it-possible/48949667
 
     
-    #save model output?
-    # savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
-
-    print('saving model to file')
     
-    #Save as pickel
-    pd.to_pickle(model, (savePath+'subj'+str(subj)+'regressionModel.pkl'))
-        
-
 
     #%-- Visualize kernels
     
@@ -747,6 +816,33 @@ for subj in subjects:
     # textstr= 'intercept='+str(model.intercept_)
     # g.ax.text(0.05, 0.90, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
     
+    #--save model output?
+    # savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+    print('saving model to file')
+    
+    #Save as pickel
+    # pd.to_pickle(model, (savePath+'subj'+str(subj)+'regressionModel.pkl'))
+        
+    #Save all models in shelf .pkl for later recall
+    
+    saveVars= ['model', 'model_aic', 'model_bic', 'model_cd','model_lars', 'modelPath', 'kernels', 'dfTemp']
+    
+    #use shelve module to save variables as dict keys
+    my_shelf= shelve.open(savePath+'subj'+str(subj)+'-encodingOutput.pkl', 'n') #start new file
+    
+    for key in saveVars:
+        try:
+            my_shelf[key]= globals()[key] 
+        except TypeError:
+            #
+            # __builtins__, my_shelf, and imported modules can not be shelved.
+            #
+            print('ERROR shelving: {0}'.format(key))
+    my_shelf.close()
+
+
+    
     #%% TODO: plot of predicted vs actual FP signal in addition to kernels
     #prediction? maybe use actual timeshift=0 values?
     #need equal number of columns so probably a different session or trial subset
@@ -815,9 +911,3 @@ for subj in subjects:
 
 
 
-
-#%% 
-
-#Establish hierarchical grouping for analysis
-#want to be able to aggregate data appropriately for similar conditions, so make sure group operations are done correctly
-groupers= ['subject', 'trainDayThisStage', 'fileID']

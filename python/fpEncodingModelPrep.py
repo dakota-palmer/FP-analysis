@@ -604,7 +604,6 @@ colToInclude= colToInclude+ eventsToInclude
 # Hitting memory errors when time shifting events; so subsetting or processing in chunks should help
 
 
-
 #%% Define peri-event z scoring parameters
 fs= 40
 
@@ -997,7 +996,7 @@ for eventCol in eventVars: #.categories:
         # dfTemp.loc[:,(eventCol+'+'+(str(shiftNum)))]= pd.Series(pd.arrays.SparseArray(a, fill_value=0), dtype='int')
         #3) works? only assingning as dense then changing dtype to sparse after assignment seems to preserve int?
         a= np.zeros(len(dfTemp), int)
-        dfTemp[(eventCol+'+'+(str(shiftNum)))]= a.copy() #PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead.
+        dfTemp[(eventCol+'+'+(str(shiftNum)))]= a #a.copy() #PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead.
         dfTemp[(eventCol+'+'+(str(shiftNum)))]=  dfTemp[(eventCol+'+'+(str(shiftNum)))].astype(pd.SparseDtype("int", 0))
         #this suggests to me that any reassignment of the Series after setting sparse dtype will convert to float?
         #so how could I make changes afterward and retain int() dtype?

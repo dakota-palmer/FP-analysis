@@ -124,10 +124,10 @@ baselineEvents= ['DStime', 'NStime']
 
 
 #     ##initialize resulting series, which will be a column that aligns with original df index
-#     dfResult= np.empty(df.shape[0])
-#     dfResult= pd.Series(dfResult, dtype='float64')
-#     dfResult.loc[:]= None
-#     dfResult.index= df.index
+#     zResult= np.empty(df.shape[0])
+#     zResult= pd.Series(zResult, dtype='float64')
+#     zResult.loc[:]= None
+#     zResult.index= df.index
     
 #     timeLock= np.empty(df.shape[0])
 #     timeLock= pd.Series(timeLock, dtype='float64')
@@ -155,14 +155,14 @@ baselineEvents= ['DStime', 'NStime']
             
 #             z= (raw-baseline.mean())/(baseline.std())
                 
-#             dfResult.loc[preInd:postInd]= z
+#             zResult.loc[preInd:postInd]= z
             
 #             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
     
 #         except:
 #             continue
         
-#     return dfResult, timeLock
+#     return zResult, timeLock
         
 #%% Define custom Z score function
 # FOR TIDY DATA, SINGLE eventType COLUMN
@@ -179,20 +179,32 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
 
 
     ##initialize resulting series, which will be a column that aligns with original df index
-    dfResult= np.empty(df.shape[0])
-    dfResult= pd.Series(dfResult, dtype='float64')
-    dfResult.loc[:]= None
-    dfResult.index= df.index
+    zResult= np.empty(df.shape[0])
+    zResult= pd.Series(zResult, dtype='float64')
+    zResult.loc[:]= None
+    zResult.index= df.index
     
     timeLock= np.empty(df.shape[0])
     timeLock= pd.Series(timeLock, dtype='float64')
     timeLock.loc[:]= None
     timeLock.index= df.index
     
-    #save label col for easy faceting
-    dfLabel= np.empty(df.shape[0])
-    dfResult.loc[:]= None
+    #save label cols for easy faceting
+    zEventBaseline= np.empty(df.shape[0])
+    zEventBaseline= pd.Series(zEventBaseline, dtype='string')
+    zEventBaseline.loc[:]= None
+    zEventBaseline.index= df.index
+    
+    zEvent= np.empty(df.shape[0])
+    zEvent= pd.Series(zEvent, dtype='string')
+    zEvent.loc[:]= None
+    zEvent.index= df.index
 
+    #new trialID based on timeLock (since it will bleed through trials)
+    trialIDtimeLock= np.empty(df.shape[0])
+    trialIDtimeLock= pd.Series(zEventBaseline, dtype='float64')
+    trialIDtimeLock.loc[:]= None
+    trialIDtimeLock.index= df.index
     
     #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
     #RESTRICTING to 1st event in trial
@@ -215,16 +227,20 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
             
             z= (raw-baseline.mean())/(baseline.std())
                 
-            dfResult.loc[preInd:postInd]= z
+            zResult.loc[preInd:postInd]= z
             
             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
     
-            dfLabel[preInd:postInd]= eventCol
+            zEventBaseline[preInd:postInd]= eventColBaseline
+            
+            zEvent[preInd:postInd]= eventCol
+            
+            trialIDtimeLock[preInd:postInd]= event
     
         except:
             continue
         
-    return dfResult, timeLock
+    return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock
         
 
 #%% Define peri-event z scoring parameters
@@ -326,17 +342,97 @@ for name, group in groups:
                 colName2= ['timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType]
     
                 
-                z, timeLock=  zscoreCustom(group, 'reblue', thisEventType, preEventTime, postEventTime, thisBaselineEventType, baselineTime)
+                z, timeLock, zEventBaseline, zEvent, trialIDtimeLock =  zscoreCustom(group, 'reblue', thisEventType, preEventTime, postEventTime, thisBaselineEventType, baselineTime)
                 dfTidy.loc[group.index,colName]= z
                 dfTidy.loc[group.index, colName2]= timeLock
+                
+                
+                #TODO: having event and baselineEvent cols should eliminate need for programmatic col names, should be able to subset & groupby these
+                dfTidy.loc[group.index, 'zEventBaseline']= zEventBaseline
+                dfTidy.loc[group.index, 'zEvent']= zEvent
+                dfTidy.loc[group.index, 'trialIDtimeLock']= trialIDtimeLock
+
+                
         
 #%% TODO: I think periEvent / trial by trial data warrants a new dataframe where
 #one single column is timeLock. would probs eliminate a lot of unnecessary data? 
 
 #perhaps 'trialID', 'timeLock', 'baselineEvent','timeLockEvent', 'signalType', 'signal'
 
+#%% Specific examination of subj 17 st 7; trying to id cause of weird SEM lines
+
+# stagesToPlot= [7] #dfTidy.stage.unique()
+
+# dfPlot = dfTidy.loc[dfTidy.subject==17].copy()
+
+# dfPlot2= dfPlot.loc[dfPlot.stage.isin(stagesToPlot)].copy()
+
+
+x= 'timeLock-z-periDS-PEcue'
+y= 'blue-z-periDS-PEcue'
+
+# g= sns.relplot(data= dfPlot2, x=x, y=y, hue='fileID', kind='line', legend='full', palette='tab20')
+
+
+# #3 specific files examining
+# dfPlot3= dfPlot2.loc[((dfPlot2.fileID==308) | (dfPlot2.fileID==309 )|  (dfPlot2.fileID==315))].copy()
+
+# g= sns.relplot(data= dfPlot3, x=x, y=y, row='fileID', kind='line', units='trialID', estimator=None, hue='trialID', legend='full')
+
+# g= sns.relplot(data= dfPlot3, x=x, y=y, row='fileID', kind='line')
+
+
+# #309 is def weird
+# dfPlot3= dfPlot2.loc[dfPlot2.fileID==309].copy()
+
+# g= sns.relplot(data= dfPlot3, x=x, y=y, kind='line')
+
+# #plot signal
+# dfPlot3= dfPlot3.loc[dfPlot3.trialID<999]
+
+# g= sns.relplot(data=dfPlot3, x=x, y='reblue', kind= 'line', units='trialID', estimator=None, hue='trialID')
+
+# g= sns.relplot(data=dfPlot3, x=x, y=y, kind= 'line', units='trialID', estimator=None, hue='trialID')
+
+# g= sns.relplot(data=dfPlot3, row='trialID', x=x, y='reblue', kind= 'line', units='trialID', estimator=None, hue='trialID')
+
+
+# #gaps in signal- critical to remember bleedthrough across trials due to timeLock so cant really facet accurately with original trialID
+
+
+# #narrowing in on specific trials
+# trialsToPlot= np.arange(0.,20,1)
+
+# dfPlot4= dfPlot3.loc[dfPlot3.trialID.isin(trialsToPlot)].copy()
+                     
+# g= sns.relplot(data=dfPlot4, row='trialID', x=x, y='reblue', kind= 'line', hue='trialID')
+
+#specific Culprits:
+    #faceting by trialID these have sem patch even tho 1 trial somehow
+trialsToPlot= [1,45]
+
+
+# dfPlot4= dfPlot3.loc[dfPlot3.trialID.isin(trialsToPlot)].copy()
+
+dfPlot4= dfTidy.loc[((dfTidy.fileID==309) & (dfTidy.trialID.isin(trialsToPlot)))].copy()
+
+                     
+g= sns.relplot(data=dfPlot4, row='trialID', x=x, y='reblue', kind= 'line', hue='trialID')
+
+g= sns.relplot(data=dfPlot4,  x=x, y='reblue', kind= 'line', units='trialID', estimator=None, hue='trialID')
+
+#scatter reveals multiple observations...how
+g= sns.relplot(data=dfPlot4, row='trialID', x=x, y='reblue', kind= 'scatter', hue='trialID')
+
+#multiple values / timelocked events for single trial (1)... during ITI I think? looks like ~101s cutTime but trialStart is 60.2 and nextTrialStart is 105.4
+
+#I guess this could be a fxn of timelock bleedthrough? early relative timestamps in ITI could overlap with early relative timestamps at actual trialStart if trialID is the same
+
+
 #%% Plot Between Subjects ALL event timelocks from specific stage
-stagesToPlot= [5,7,8,12] #dfTidy.stage.unique()
+# stagesToPlot= [5,7,8,12] #dfTidy.stage.unique()
+stagesToPlot= [7] #dfTidy.stage.unique()
+
 
 dfPlot= dfTidy.loc[dfTidy.stage.isin(stagesToPlot),:].copy()
     
@@ -366,7 +462,7 @@ for thisStage in dfPlot2.stage.unique():
             
             axes= eventsToInclude.index(thisEventType)
         
-            g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject')
+            g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
             
             # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, units='trainDayThisStage', estimator=None, x=x,y=y, hue='subject')
 
