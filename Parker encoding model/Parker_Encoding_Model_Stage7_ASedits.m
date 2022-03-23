@@ -10,6 +10,7 @@ clc
 
 cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\encoding model\');
 
+% cd('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\Parker encoding model\');
 
 %determine if folder exists and if so purge it, if not create it
 curr_dir = pwd;
@@ -290,82 +291,85 @@ if isfield(data_to_input_GADVPFP,'output_stage7')
 
     %% TIMELOCK TO DS
 
-    %In this section, go cue-by-cue examining how fluorescence intensity changes in response to cue onset (either DS or NS)
-    %Use an event-triggered sort of approach viewing data before and after cue onset where time 0 = cue onset time
-    %Also, a sliding z-score will be calculated for each timepoint like in (Richard et al., 2018)- using data comprising 10s prior to that timepoint as a baseline  
+
     
-    disp(strcat('running DS-triggered analysis subject_',  string(subjects(subj))));
+%     %In this section, go cue-by-cue examining how fluorescence intensity changes in response to cue onset (either DS or NS)
+%     %Use an event-triggered sort of approach viewing data before and after cue onset where time 0 = cue onset time
+%     %Also, a sliding z-score will be calculated for each timepoint like in (Richard et al., 2018)- using data comprising 10s prior to that timepoint as a baseline  
+%     
+%     disp(strcat('running DS-triggered analysis subject_',  string(subjects(subj))));
 
-        DSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
-
-        for cue=1:length(DSonsetindex) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
-
-            %each entry in DS is a timestamp of the DS onset 
-            DSonset = DSonsetindex(1,cue);
-
-            %define the frames (datapoints) around each cue to analyze
-            preEventTimeDS = DSonset-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
-            postEventTimeDS = DSonset+postCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
-
-            
-            if preEventTimeDS< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
-                disp(strcat('****DS cue ', num2str(cue), ' too close to beginning, continuing'));
-                DSskipped= DSskipped+1;
-                continue
-            end
-
-            if postEventTimeDS> length(cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
-                disp(strcat('****DS cue ', num2str(cue), ' too close to end, continuing'));
-                DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
-                continue %continue out of the loop and move onto the next DS cue
-            end
-
-            % Calculate average baseline mean&stdDev 10s prior to DS for z-score
-            %blueA
-            baselineMeanblue= nanmean(gcamp_y_blue((DSonset-slideTime):DSonset)); %baseline mean blue 10s prior to DS onset for boxA
-            baselineStdblue=nanstd(gcamp_y_blue((DSonset-slideTime):DSonset)); %baseline stdDev blue 10s prior to DS onset for boxA
-            %purpleA
-            baselineMeanpurple=nanmean(gcamp_y_purple((DSonset-slideTime):DSonset)); %baseline mean purple 10s prior to DS onset for boxA
-            baselineStdpurple=nanstd(gcamp_y_purple((DSonset-slideTime):DSonset)); %baseline stdDev purple 10s prior to DS onset for boxA
-
-            %save all of the following data in the subjDataAnalyzed struct under the periDS field
-
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.DS(cue) = currentSubj(session).DS(cue); %this way only included cues are saved
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(cue)= DSonset;% DS onset index in cutTime
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
-
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.DSblue(:,:,cue)= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);
-%             subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurple(:,:,cue)= currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);
-                
-                %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
-            subjDataPEM.(subj_name).periDSRichard.DSzblue(:,:,cue)= (((gcamp_y_blue(1,preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue); 
-            subjDataPEM.(subj_name).periDSRichard.DSzpurple(:,:,cue)= (((gcamp_y_purple(1,preEventTimeDS:postEventTimeDS))- baselineMeanpurple))/(baselineStdpurple);
-
-            subjDataPEM.(subj_name).periDSParker.DSzblue(:,:,cue)= z_gcamp_y_blue(1,preEventTimeDS:postEventTimeDS); 
-            subjDataPEM.(subj_name).periDSParker.DSzpurple(:,:,cue)= z_gcamp_y_purple(1,preEventTimeDS:postEventTimeDS);
- 
-
-            
-            subjDataAnalyzed.(subj_name).periDSRichard.timeLock= [-preCueFrames:postCueFrames]/fs;
-            subjDataAnalyzed.(subj_name).periDSParker.timeLock= [-preCueFrames:postCueFrames]/fs;
-       
-        
-            %for visualizing cue periods, save pre & postEventTimeDS
-            %(should help ID if sudden changes are being introduced)
-            %not that these are indices of cutTime that correspond to start
-            %& end of peri-cue window
-            periDSstarts= [periDSstarts, preEventTimeDS]; %cat start into this array
-            periDSends= [periDSends, postEventTimeDS]; %cat end into this array
-            
-        
-        
-        end %end DS cue loop
+%         DSskipped= 0;  %counter to know how many cues were cut off/not analyzed (since those too close to the end will be chopped off- this shouldn't happen often though)
+% 
+%         for cue=1:length(DSonsetindex) %DS CUES %For each DS cue, conduct event-triggered analysis of data surrounding that cue's onset
+% 
+% %             %each entry in DS is a timestamp of the DS onset 
+% %             DSonset = DSonsetindex(1,cue);
+% % 
+% %             %define the frames (datapoints) around each cue to analyze
+% %             preEventTimeDS = DSonset-preCueFrames; %earliest timepoint to examine is the shifted DS onset time - the # of frames we defined as periDSFrames (now this is equivalent to 20s before the shifted cue onset)
+% %             postEventTimeDS = DSonset+postCueFrames; %latest timepoint to examine is the shifted DS onset time + the # of frames we defined as periDSFrames (now this is equivalent to 20s after the shifted cue onset)
+% % 
+% %             
+% %             if preEventTimeDS< 1 %if cue onset is too close to the beginning to extract preceding frames, skip this cue
+% %                 disp(strcat('****DS cue ', num2str(cue), ' too close to beginning, continuing'));
+% %                 DSskipped= DSskipped+1;
+% %                 continue
+% %             end
+% % 
+% %             if postEventTimeDS> length(cutTime)-slideTime %%if cue onset is too close to the end to extract following frames, skip this cue; if the latest timepoint to examine is greater than the length of our time axis minus slideTime (10s), then we won't be able to collect sufficient basline data within the 'slideTime' to calculate our sliding z score- so we will just exclude this cue
+% %                 disp(strcat('****DS cue ', num2str(cue), ' too close to end, continuing'));
+% %                 DSskipped= DSskipped+1;  %iterate the counter for skipped DS cues
+% %                 continue %continue out of the loop and move onto the next DS cue
+% %             end
+% % 
+% %             % Calculate average baseline mean&stdDev 10s prior to DS for z-score
+% %             %blueA
+% %             baselineMeanblue= nanmean(gcamp_y_blue((DSonset-slideTime):DSonset)); %baseline mean blue 10s prior to DS onset for boxA
+% %             baselineStdblue=nanstd(gcamp_y_blue((DSonset-slideTime):DSonset)); %baseline stdDev blue 10s prior to DS onset for boxA
+% %             %purpleA
+% %             baselineMeanpurple=nanmean(gcamp_y_purple((DSonset-slideTime):DSonset)); %baseline mean purple 10s prior to DS onset for boxA
+% %             baselineStdpurple=nanstd(gcamp_y_purple((DSonset-slideTime):DSonset)); %baseline stdDev purple 10s prior to DS onset for boxA
+% % 
+% %             %save all of the following data in the subjDataAnalyzed struct under the periDS field
+% % 
+% % %             subjDataAnalyzed.(subjects{subj})(session).periDS.DS(cue) = currentSubj(session).DS(cue); %this way only included cues are saved
+% % %             subjDataAnalyzed.(subjects{subj})(session).periDS.DSonset(cue)= DSonset;% DS onset index in cutTime
+% % %             subjDataAnalyzed.(subjects{subj})(session).periDS.periDSwindow(:,:,cue)= currentSubj(session).cutTime(preEventTimeDS:postEventTimeDS);
+% % 
+% % %             subjDataAnalyzed.(subjects{subj})(session).periDS.DSblue(:,:,cue)= currentSubj(session).reblue(preEventTimeDS:postEventTimeDS);
+% % %             subjDataAnalyzed.(subjects{subj})(session).periDS.DSpurple(:,:,cue)= currentSubj(session).repurple(preEventTimeDS:postEventTimeDS);
+% %                 
+% %                 %z score calculation: for each timestamp, subtract baselineMean from current photometry value and divide by baselineStd
+% %             subjDataPEM.(subj_name).periDSRichard.DSzblue(:,:,cue)= (((gcamp_y_blue(1,preEventTimeDS:postEventTimeDS))-baselineMeanblue))/(baselineStdblue); 
+% %             subjDataPEM.(subj_name).periDSRichard.DSzpurple(:,:,cue)= (((gcamp_y_purple(1,preEventTimeDS:postEventTimeDS))- baselineMeanpurple))/(baselineStdpurple);
+% % 
+% %             subjDataPEM.(subj_name).periDSParker.DSzblue(:,:,cue)= z_gcamp_y_blue(1,preEventTimeDS:postEventTimeDS); 
+% %             subjDataPEM.(subj_name).periDSParker.DSzpurple(:,:,cue)= z_gcamp_y_purple(1,preEventTimeDS:postEventTimeDS);
+% %  
+% % 
+% %             
+% %             subjDataAnalyzed.(subj_name).periDSRichard.timeLock= [-preCueFrames:postCueFrames]/fs;
+% %             subjDataAnalyzed.(subj_name).periDSParker.timeLock= [-preCueFrames:postCueFrames]/fs;
+% %        
+% %         
+% %             %for visualizing cue periods, save pre & postEventTimeDS
+% %             %(should help ID if sudden changes are being introduced)
+% %             %not that these are indices of cutTime that correspond to start
+% %             %& end of peri-cue window
+% %             periDSstarts= [periDSstarts, preEventTimeDS]; %cat start into this array
+% %             periDSends= [periDSends, postEventTimeDS]; %cat end into this array
+% %             
+% %         
+%         
+%         end %end DS cue loop
 
     %collect all z score responses to every single DS across all sessions
            
     currentSubj(1).DSzblueAllTrials= squeeze(subjDataPEM.(subj_name).periDSParker.DSzblue); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
     currentSubj(1).DSzpurpleAllTrials= squeeze(subjDataPEM.(subj_name).periDSParker.DSzpurple); %squeeze the 3d matrix into a 2d array, with each coumn containing response to 1 cue
 
+    currentSubj(1).DSzblueAllTrials= squeeze(subjDataAnalyzed.(subjects{subj}).periDS.DSzblue);
 
     
     %Transpose these data for readability

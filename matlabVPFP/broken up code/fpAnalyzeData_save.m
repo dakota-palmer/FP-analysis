@@ -433,6 +433,18 @@ for subj=1:numel(subjects)
            data_to_input_GADVPFP.output(1).inPortDS_cat(:)=inPortDS_cat;
            data_to_input_GADVPFP.output(1).poxDS_cat(:)= poxDS_cat;
            
+           %save metadata as well
+           data_to_intput_GADVPFP.metadata(1).subject= subjects{subj};
+           
+           %save z scored peri-DS and peri-NS fp signals (so don't have to
+           %recalc later)
+           data_to_intput_GADVPFP.g_output.periDS.DSzblue{1,session}= currentSubj(session).periDS.DSzblue;
+           data_to_intput_GADVPFP.g_output.periDS.DSzpurple{1,session}= currentSubj(session).periDS.DSzpurple;
+
+           data_to_intput_GADVPFP.g_output.periNS.NSzblue{1,session}= currentSubj(session).periNS.NSzblue;
+           data_to_intput_GADVPFP.g_output.periNS.NSzpurple{1,session}= currentSubj(session).periNS.NSzpurple;
+
+           
            
 %TODO: ADD NS DATA
 %            %g_camp_465

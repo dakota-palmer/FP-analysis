@@ -142,6 +142,14 @@ for subj= 1:numel(subjectsAnalyzed)
        %save one file per session
 %        save(strcat(savePath,experimentName,'-',subjectsAnalyzed{subj},'-ses-',num2str(currentSubj(session).date),'.mat'), 'g_output', 'output', 'metadata'); %the second argument here is the variable being saved, the first is the filename 
        
+
+    %save peri-DS signals so we don't need to recalculate
+    g_output.periDS.DSzblue{1,session}= currentSubj(session).periDS.DSzblue;
+    g_output.periDS.DSzpurple{1,session}= currentSubj(session).periDS.DSzpurple;
+
+    g_output.periNS.NSzblue{1,session}= currentSubj(session).periNS.NSzblue;
+    g_output.periNS.NSzpurple{1,session}= currentSubj(session).periNS.NSzpurple;
+    
    end %end session loop
             %save one file per subj containing all sessions of interest
           save(strcat(savePath,experimentName,'-',subjectsAnalyzed{subj},'-stage-',num2str(includedStage),'.mat'), 'g_output', 'output', 'metadata'); %the second argument here is the variable being saved, the first is the filename 
