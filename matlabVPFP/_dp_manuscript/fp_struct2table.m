@@ -7,7 +7,8 @@ fpTable= table;
 
 
 % data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\VP-VTA-FP-01-Mar-2022subjDataRaw.mat")
-data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\VP-VTA-FP-01-Mar-2022subjDataAnalyzed.mat")
+
+data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-noArtifact-21-Mar-2022subjDataAnalyzed.mat");
 
 data=data.subjDataAnalyzed;
 
@@ -192,7 +193,10 @@ for session= 1:size(T,1)
     
     %NS cue
     eventTime=[]; eventInd= [];
-    eventTime= T.periNS{session}.NS;
+%     eventTime= T.periNS{session}.NS;
+    eventTime= T.periNS(session).NS;
+
+
         %assign timestamps
     eventInd= sesInd(1:numel(eventTime));
     fpTable.NS(eventInd)= eventTime; 
