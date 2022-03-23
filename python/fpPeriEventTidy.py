@@ -68,6 +68,13 @@ eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
 baselineEvents= ['DStime', 'NStime']
 
 
+#%% specifically debugging subj 17
+
+# dfTidy= dfTidy[dfTidy['subject']==17]
+
+dfTidy= dfTidy[dfTidy['fileID']==309]
+
+
 #%% Reverse melt() of eventTypes by pivot() into separate columns
 
 #memory intensive! should probably either 1) do at end or 2) subset before pivot
@@ -219,6 +226,8 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
         
         #get index of only first event in this trial
         try: #embed in try: in case there are no events
+        
+        #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
             preInd= dfTemp.index[0]- preEventTime
             postInd=dfTemp.index[0] +postEventTime
             
@@ -231,16 +240,121 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
             
             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
     
-            zEventBaseline[preInd:postInd]= eventColBaseline
+
+        #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
+            zEventBaseline.loc[preInd:postInd]= eventColBaseline
             
-            zEvent[preInd:postInd]= eventCol
+            zEvent.loc[preInd:postInd]= eventCol
             
-            trialIDtimeLock[preInd:postInd]= event
+            trialIDtimeLock.loc[preInd:postInd]= event
     
         except:
             continue
         
+        #round timeLock so that we have exact shared X values for stats and viz!
+        timLock= np.round(timeLock, decimals=3)
+    
+        
     return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock
+        
+
+#%% Define LONG FORMAT custom Z score function
+# #one single column is timeLock. would probs eliminate a lot of unnecessary data and bleedthrough between trials
+
+# #perhaps 'trialID', 'timeLock', 'baselineEvent','timeLockEvent', 'signalType', 'signal'
+
+
+# # FOR TIDY DATA, SINGLE eventType COLUMN
+
+# #assume input eventCol is binary coded event timestamp, with corresponding cutTime value
+# def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColBaseline, baselineTime):
+    
+#     #want to groupby trial but can't strictly since want pre-cue data as baseline
+#     #rearrange logical strucutre here a bit, go through and find all of the baseline events
+#     #then find the get the first event in this trial. TODO: For now assuming 1 baseline event= 1 trial (e.g. 60 cues, 1 per trialID) 
+#     preIndBaseline= df.index[df.eventType==eventColBaseline]-preEventTime
+#     #end baseline at timestamp prior to baseline event onset
+#     postIndBaseline= df.index[df.eventType==eventColBaseline]-1
+
+
+#     ##initialize resulting series, which will be a column that aligns with original df index
+#     zResult= np.empty(df.shape[0])
+#     zResult= pd.Series(zResult, dtype='float64')
+#     zResult.loc[:]= None
+#     zResult.index= df.index
+    
+#     timeLock= np.empty(df.shape[0])
+#     timeLock= pd.Series(timeLock, dtype='float64')
+#     timeLock.loc[:]= None
+#     timeLock.index= df.index
+    
+#     #save label cols for easy faceting
+#     zEventBaseline= np.empty(df.shape[0])
+#     zEventBaseline= pd.Series(zEventBaseline, dtype='string')
+#     zEventBaseline.loc[:]= None
+#     zEventBaseline.index= df.index
+    
+#     zEvent= np.empty(df.shape[0])
+#     zEvent= pd.Series(zEvent, dtype='string')
+#     zEvent.loc[:]= None
+#     zEvent.index= df.index
+
+#     #new trialID based on timeLock (since it will bleed through trials)
+#     trialIDtimeLock= np.empty(df.shape[0])
+#     trialIDtimeLock= pd.Series(zEventBaseline, dtype='float64')
+#     trialIDtimeLock.loc[:]= None
+#     trialIDtimeLock.index= df.index
+    
+#     #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
+#     #RESTRICTING to 1st event in trial
+#     for event in range(preIndBaseline.size):
+#         #assumes 1 unique trialID per baseline event!!!
+#         trial= df.loc[postIndBaseline[event]+1,'trialID']
+        
+#         dfTemp= df.loc[df.trialID==trial].copy()
+        
+#         #get events in this trial
+#         dfTemp= dfTemp.loc[dfTemp.eventType==eventCol]
+        
+#         #get index of only first event in this trial
+#         try: #embed in try: in case there are no events
+        
+#         #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
+#             preInd= dfTemp.index[0]- preEventTime
+#             postInd=dfTemp.index[0] +postEventTime
+            
+#             raw= df.loc[preInd:postInd, signalCol]
+#             baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol]
+            
+#             z= (raw-baseline.mean())/(baseline.std())
+                
+#             zResult.loc[preInd:postInd]= z
+            
+#             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
+    
+#             zEventBaseline.loc[preInd:postInd]= eventColBaseline
+            
+#             zEvent.loc[preInd:postInd]= eventCol
+            
+#             trialIDtimeLock.loc[preInd:postInd]= event
+    
+    
+#             #assign to df to be returned
+#             df.loc[preInd:postInd, 'z-reblue']= z
+#             df.loc[preInd:postInd, 'timeLock']= timeLock
+            
+            
+#             # #TODO: having event and baselineEvent cols should eliminate need for programmatic col names, should be able to subset & groupby these
+#             df.loc[preInd:postInd, 'zEventBaseline']= zEventBaseline
+#             df.loc[preInd:postInd, 'zEvent']= zEvent
+#             df.loc[preInd:postInd, 'trialIDtimeLock']= trialIDtimeLock
+
+    
+    
+#         except:
+#             continue
+        
+#     return df #zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock
         
 
 #%% Define peri-event z scoring parameters
@@ -253,7 +367,7 @@ baselineTime= 10*fs
 
 
 
-# #%% Peri-event z-scoring 
+#%% Peri-event z-scoring 
 # #Iterate through files using groupby() and conduct peri event Z scoring
 # #iterating through fileID to gurantee no contamination between sessions
  
@@ -336,6 +450,14 @@ for name, group in groups:
                     continue
                     
             
+                df= group
+                signalCol='reblue'
+                eventCol= thisEventType
+                preEventTime= preEventTime
+                postEventTime= postEventTime
+                eventColBaseline= thisBaselineEventType
+                baselineTime= baselineTime
+            
                 #TODO: name here is temp bandaid to match rest of code, simply getting rid of last 4 chars '-time' after DS/NS
                 
                 colName= ['blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType]
@@ -347,10 +469,59 @@ for name, group in groups:
                 dfTidy.loc[group.index, colName2]= timeLock
                 
                 
-                #TODO: having event and baselineEvent cols should eliminate need for programmatic col names, should be able to subset & groupby these
-                dfTidy.loc[group.index, 'zEventBaseline']= zEventBaseline
-                dfTidy.loc[group.index, 'zEvent']= zEvent
-                dfTidy.loc[group.index, 'trialIDtimeLock']= trialIDtimeLock
+                #TODO: lots of redundant columns really but preventing bleedthrough between trialID as well as eventTypes
+                #would be best fixed by some long format solution? maybe a groupby (['fileID', 'zEventBaseline','zEvent']).cumcount()? still dont think it solves bleedthrough btwn eventtypes
+                colName= thisBaselineEventType[0:-4]+'-'+thisEventType
+
+                # dfTidy.loc[group.index, ['zEventBaseline'+colName]]= zEventBaseline
+                # dfTidy.loc[group.index, ['zEvent'+colName]]= zEvent
+                dfTidy.loc[group.index, ['trialIDtimeLock-z-peri'+colName]]= trialIDtimeLock
+
+# #%% LONG FORMAT Peri-event z-scoring ; programatic loop through eventsToInclude
+# #Iterate through files using groupby() and conduct peri event Z scoring
+# #iterating through fileID to gurantee no contamination between sessions
+ 
+# groups= dfTidy.groupby('fileID')
+
+# #currently fxn will go through and z score surrounding ALL events. Need to restrict to FIRST event per trial? 
+
+# for name, group in groups:
+
+#     for thisBaselineEventType in baselineEvents:
+                
+#         for thisEventType in eventsToInclude:
+                          
+#                 #conditional to skip different cue types
+#                 if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
+#                     continue
+                    
+#                 if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
+#                     continue
+                    
+            
+#                 df= group
+#                 signalCol='reblue'
+#                 eventCol= thisEventType
+#                 preEventTime= preEventTime
+#                 postEventTime= postEventTime
+#                 eventColBaseline= thisBaselineEventType
+#                 baselineTime= baselineTime
+            
+#                 #TODO: name here is temp bandaid to match rest of code, simply getting rid of last 4 chars '-time' after DS/NS
+                    
+                
+#                 df=  zscoreCustom(group, 'reblue', thisEventType, preEventTime, postEventTime, thisBaselineEventType, baselineTime)
+                
+#                 ind= df.timeLock.notnull()
+                
+#                 dfTidy.loc[ind, 'z-reblue']= df['z-reblue']
+#                 dfTidy.loc[ind, 'timeLock']= df.timeLock
+                
+                
+#                 # #TODO: having event and baselineEvent cols should eliminate need for programmatic col names, should be able to subset & groupby these
+#                 dfTidy.loc[ind, 'zEventBaseline']= df.zEventBaseline
+#                 dfTidy.loc[ind, 'zEvent']= df.zEvent
+#                 dfTidy.loc[ind, 'trialIDtimeLock']= df.trialIDtimeLock
 
                 
         
@@ -359,75 +530,142 @@ for name, group in groups:
 
 #perhaps 'trialID', 'timeLock', 'baselineEvent','timeLockEvent', 'signalType', 'signal'
 
+#also would prevent bleedthrough between trials when plotting on timeLock
+
+#Melt() into long format?
+
+# dfTemp= dfTidy.melt(value_vars=[])
+
+
 #%% Specific examination of subj 17 st 7; trying to id cause of weird SEM lines
 
-# stagesToPlot= [7] #dfTidy.stage.unique()
+# # stagesToPlot= [7] #dfTidy.stage.unique()
 
-# dfPlot = dfTidy.loc[dfTidy.subject==17].copy()
+# # dfPlot = dfTidy.loc[dfTidy.subject==17].copy()
 
-# dfPlot2= dfPlot.loc[dfPlot.stage.isin(stagesToPlot)].copy()
-
-
-x= 'timeLock-z-periDS-PEcue'
-y= 'blue-z-periDS-PEcue'
-
-# g= sns.relplot(data= dfPlot2, x=x, y=y, hue='fileID', kind='line', legend='full', palette='tab20')
+# # dfPlot2= dfPlot.loc[dfPlot.stage.isin(stagesToPlot)].copy()
 
 
-# #3 specific files examining
-# dfPlot3= dfPlot2.loc[((dfPlot2.fileID==308) | (dfPlot2.fileID==309 )|  (dfPlot2.fileID==315))].copy()
+# x= 'timeLock-z-periDS-PEcue'
+# y= 'blue-z-periDS-PEcue'
 
-# g= sns.relplot(data= dfPlot3, x=x, y=y, row='fileID', kind='line', units='trialID', estimator=None, hue='trialID', legend='full')
+# trialID=  'trialIDtimeLock-z-periDS-PEcue'
 
-# g= sns.relplot(data= dfPlot3, x=x, y=y, row='fileID', kind='line')
-
-
-# #309 is def weird
-# dfPlot3= dfPlot2.loc[dfPlot2.fileID==309].copy()
-
-# g= sns.relplot(data= dfPlot3, x=x, y=y, kind='line')
-
-# #plot signal
-# dfPlot3= dfPlot3.loc[dfPlot3.trialID<999]
-
-# g= sns.relplot(data=dfPlot3, x=x, y='reblue', kind= 'line', units='trialID', estimator=None, hue='trialID')
-
-# g= sns.relplot(data=dfPlot3, x=x, y=y, kind= 'line', units='trialID', estimator=None, hue='trialID')
-
-# g= sns.relplot(data=dfPlot3, row='trialID', x=x, y='reblue', kind= 'line', units='trialID', estimator=None, hue='trialID')
+# # g= sns.relplot(data= dfPlot2, x=x, y=y, hue='fileID', kind='line', legend='full', palette='tab20')
 
 
-# #gaps in signal- critical to remember bleedthrough across trials due to timeLock so cant really facet accurately with original trialID
+# # #3 specific files examining
+# # dfPlot3= dfPlot2.loc[((dfPlot2.fileID==308) | (dfPlot2.fileID==309 )|  (dfPlot2.fileID==315))].copy()
+
+# # g= sns.relplot(data= dfPlot3, x=x, y=y, row='fileID', kind='line', units='trialID', estimator=None, hue='trialID', legend='full')
+
+# # g= sns.relplot(data= dfPlot3, x=x, y=y, row='fileID', kind='line')
 
 
-# #narrowing in on specific trials
-# trialsToPlot= np.arange(0.,20,1)
+# # #309 is def weird
+# # dfPlot3= dfPlot2.loc[dfPlot2.fileID==309].copy()
 
-# dfPlot4= dfPlot3.loc[dfPlot3.trialID.isin(trialsToPlot)].copy()
+# # g= sns.relplot(data= dfPlot3, x=x, y=y, kind='line')
+
+# # #plot signal
+# # dfPlot3= dfPlot3.loc[dfPlot3.trialID<999]
+
+# # g= sns.relplot(data=dfPlot3, x=x, y='reblue', kind= 'line', units='trialID', estimator=None, hue='trialID')
+
+# # g= sns.relplot(data=dfPlot3, x=x, y=y, kind= 'line', units='trialID', estimator=None, hue='trialID')
+
+# # g= sns.relplot(data=dfPlot3, row='trialID', x=x, y='reblue', kind= 'line', units='trialID', estimator=None, hue='trialID')
+
+
+# # #gaps in signal- critical to remember bleedthrough across trials due to timeLock so cant really facet accurately with original trialID
+
+
+# # #narrowing in on specific trials
+# # trialsToPlot= np.arange(0.,20,1)
+
+# # dfPlot4= dfPlot3.loc[dfPlot3.trialID.isin(trialsToPlot)].copy()
+                     
+# # g= sns.relplot(data=dfPlot4, row='trialID', x=x, y='reblue', kind= 'line', hue='trialID')
+
+# #specific Culprits:
+#     #faceting by trialID these have sem patch even tho 1 trial somehow
+# trialsToPlot= [1,45]
+
+
+# # dfPlot4= dfPlot3.loc[dfPlot3.trialID.isin(trialsToPlot)].copy()
+
+# dfPlot4= dfTidy.loc[((dfTidy.fileID==309) & (dfTidy.trialID.isin(trialsToPlot)))].copy()
+# # 
+# # dfPlot4= dfTidy[dfTidy['fileID']==309]
+
                      
 # g= sns.relplot(data=dfPlot4, row='trialID', x=x, y='reblue', kind= 'line', hue='trialID')
 
-#specific Culprits:
-    #faceting by trialID these have sem patch even tho 1 trial somehow
-trialsToPlot= [1,45]
+# g= sns.relplot(data=dfPlot4,  x=x, y='reblue', kind= 'line', units='trialID', estimator=None, hue='trialID')
+
+# #scatter reveals multiple observations...how
+# g= sns.relplot(data=dfPlot4, row='trialID', x=x, y='reblue', kind= 'scatter', hue='trialID')
+
+# #try new trialID- wont work in current scheme
+# # g= sns.relplot(data=dfPlot4, row='trialIDtimeLock', x=x, y='reblue', kind= 'scatter', hue='trialIDtimeLock')
+
+# #still 2...
+
+# #multiple values / timelocked events for single trial (1)... during ITI I think? looks like ~101s cutTime but trialStart is 60.2 and nextTrialStart is 105.4
+
+# #I guess this could be a fxn of timelock bleedthrough? early relative timestamps in ITI could overlap with early relative timestamps at actual trialStart if trialID is the same
 
 
-# dfPlot4= dfPlot3.loc[dfPlot3.trialID.isin(trialsToPlot)].copy()
+# # #plot absolute time - looks fine. issue is bleedthrough between trialIDs and plotting by shared time axes 
+# g= sns.relplot(data=dfPlot4, row='trialID', x='cutTime', y='reblue', kind= 'scatter', hue='trialID')
+# g= sns.relplot(data=dfPlot4, row='trialID', x='cutTime', y='reblue', kind= 'line', hue='trialID')
 
-dfPlot4= dfTidy.loc[((dfTidy.fileID==309) & (dfTidy.trialID.isin(trialsToPlot)))].copy()
 
-                     
-g= sns.relplot(data=dfPlot4, row='trialID', x=x, y='reblue', kind= 'line', hue='trialID')
+# # now with unique trialID col  
+# dfPlot4= dfTidy[dfTidy['fileID']==309]
 
-g= sns.relplot(data=dfPlot4,  x=x, y='reblue', kind= 'line', units='trialID', estimator=None, hue='trialID')
+# g= sns.relplot(data=dfPlot4, x=x, y='reblue', kind= 'line', hue=trialID)
+# g= sns.relplot(data=dfPlot4, x=x, y=y, kind= 'line', hue=trialID)
 
-#scatter reveals multiple observations...how
-g= sns.relplot(data=dfPlot4, row='trialID', x=x, y='reblue', kind= 'scatter', hue='trialID')
+# # try subj mean 
+# g= sns.relplot(data=dfPlot4, x=x, y=y, kind='line', hue='subject')
 
-#multiple values / timelocked events for single trial (1)... during ITI I think? looks like ~101s cutTime but trialStart is 60.2 and nextTrialStart is 105.4
 
-#I guess this could be a fxn of timelock bleedthrough? early relative timestamps in ITI could overlap with early relative timestamps at actual trialStart if trialID is the same
+# #try only with col we want (for stackexchange at least)
+# dfPlot= dfPlot4[[x,y,'subject', trialID]]
 
+# g= sns.relplot(data=dfPlot, x=x, y=y, kind='line', hue='subject')
+
+# #remove nan
+# dfPlot= dfPlot.loc[dfPlot[x].notnull()]
+
+
+# g= sns.relplot(data=dfPlot, x=x, y=y, kind='line', hue=trialID)
+
+
+# g= sns.relplot(data=dfPlot, x=x, y=y, kind='line', hue='subject')
+
+# g= sns.relplot(data=dfPlot, x=x, y=y, kind='line', hue='subject', units=trialID, estimator=None)
+
+# g= sns.relplot(data=dfPlot, x=x, y=y, kind='line', hue=trialID, units=trialID, estimator=None)
+
+
+# #another trial is issue? everything looks fine here...
+# g= sns.relplot(data=dfPlot, row=trialID, x=x, y=y, kind='line', hue=trialID)
+
+# # Fixed! issue was unique values in timeLock, needed to round
+
+# # # #%% LONG FORMAT examination
+
+# # # dfPlot4= dfTidy.loc[((dfTidy.zEventBaseline=='DStime' ) & (dfTidy.zEvent=='PEcue'))]
+
+# # # g= sns.relplot(data=dfPlot4, x='cutTime', y='reblue', kind= 'scatter', hue='trialID')
+
+# # # g= sns.relplot(data=dfPlot4, x='timeLock', y='reblue', kind= 'line', hue='trialID')
+
+# # # g= sns.relplot(data=dfPlot4, x='timeLock', y='reblue', kind= 'line', hue='trialIDtimeLock')
+
+# # # #now have bleedthrough between events 
 
 #%% Plot Between Subjects ALL event timelocks from specific stage
 # stagesToPlot= [5,7,8,12] #dfTidy.stage.unique()
@@ -460,9 +698,37 @@ for thisStage in dfPlot2.stage.unique():
 
             y= 'blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
             
+            z= 'trialIDtimeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+            
             axes= eventsToInclude.index(thisEventType)
         
+            # here there is error potential bleedthrough between trials. idk how seaborn is grouping the data for this
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+            # woof this is looking wquite different
+            g= sns.lineplot(ax= ax[axes],  data=dfPlot3, sort=False, x=x,y=y, hue='subject', legend='full')
+
+            #style- no
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, style=z, hue='subject', legend='full')
+
+            #perhaps sorting before plotting will help- no
+            # dfPlot3= dfPlot3.sort_values([z,x])
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+            # #maybe set index will help- no, very very slow
+            # dfPlot3= dfPlot3.set_index([z])
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+            #drop na then set index?
+            dfPlot3= dfPlot3.loc[dfPlot3[z].notnull()]
+            dfPlot3= dfPlot3.set_index([z])
+            
             g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+            #define units- no, requires plotting all
+            
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, units=z, estimator=None, hue='subject', legend='full')
+
             
             # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, units='trainDayThisStage', estimator=None, x=x,y=y, hue='subject')
 
@@ -479,7 +745,7 @@ for thisStage in dfPlot2.stage.unique():
             # plt.title(thisEventType)
             
             f.suptitle('allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials')
-        
+       #%% 
         saveFigCustom(f, 'allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials', savePath)
 
 

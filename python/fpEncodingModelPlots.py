@@ -43,7 +43,16 @@ savePath= r'./_output/fpEncodingModelStats/'
     
 
 #%% Load model output
+dataPath= r'./_output/fpEncodingModelStats/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
+# dfTemp= pd.read_pickle(r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_output\fpEncodingModelStats\subj13.0regressionModel.pkl")
+
+
+#load variables previously saved (shelf)
+my_shelf = shelve.open(r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_output\fpEncodingModelStats\subj13.0regressionModel.pkl")
+for key in my_shelf:
+    globals()[key]=my_shelf[key]
+my_shelf.close()
 #%% Load regression input.pkl
 dataPath= r'./_output/fpEncodingModelPrep/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
@@ -54,7 +63,7 @@ elif modeCue=='NS':
 
 
 #load any other variables saved during the import process ('dfTidymeta' shelf)
-my_shelf = shelve.open(dataPath+'dfRegressionInputMeta')
+#load variables previously saved (shelf)
 for key in my_shelf:
     globals()[key]=my_shelf[key]
 my_shelf.close()

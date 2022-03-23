@@ -158,6 +158,8 @@ subjects= dfTemp.subject.unique()
 #run only specific subjects
 # subjects= [14,15,17,19]
 
+#intialize a df to combine all data?
+
 for subj in subjects:
     group= dfTemp.loc[dfTemp.subject==subj]
        
@@ -549,158 +551,157 @@ for subj in subjects:
     # plt.title('Mean square error on each fold: Custom LASSO coordinate descent '
     #           '(train time: %.2fs)' % t_model)
     
-     #%% TODO: line up all alpha estimates with coefficients
-    fig, ax= plt.subplots(5,1, sharex=True)
+      #%% TODO: line up all alpha estimates with coefficients
+    # fig, ax= plt.subplots(5,1, sharex=True)
 
-    plt.subplot(5,1,2)
-    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
-    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
-            label='Average across the folds', linewidth=2)
-    plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
-            label='alpha: CV estimate= '+str(model_cd.alpha_))
+    # plt.subplot(5,1,2)
+    # plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
+    # plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
+    #         label='Average across the folds', linewidth=2)
+    # plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
+    #         label='alpha: CV estimate= '+str(model_cd.alpha_))
     
-    indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
-    estMSE= model_cd.mse_path_[indAlpha, :].mean()
+    # indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
+    # estMSE= model_cd.mse_path_[indAlpha, :].mean()
                  
-    plt.axhline(estMSE, linestyle='--', color='blue',
-            label='est MSE CV= '+str(estMSE))
+    # plt.axhline(estMSE, linestyle='--', color='blue',
+    #         label='est MSE CV= '+str(estMSE))
     
-    plt.legend()
+    # plt.legend()
     
-    plt.xlabel(r'$\alpha$')
-    plt.ylabel('Mean square error')
-    plt.title('Mean square error on each fold: coordinate descent '
-              '(train time: %.2fs)' % t_lasso_cv)
-    plt.axis('tight')
+    # plt.xlabel(r'$\alpha$')
+    # plt.ylabel('Mean square error')
+    # plt.title('Mean square error on each fold: coordinate descent '
+    #           '(train time: %.2fs)' % t_lasso_cv)
+    # plt.axis('tight')
     
-    #-LASSO LARS
-    plt.subplot(5,1,3) #share y axis with other MSE plots
-    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
-    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
-                  label='Average across the folds', linewidth=2)
-    plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
-                label='alpha CV= '+str(model_lars.alpha_))
+    # #-LASSO LARS
+    # plt.subplot(5,1,3) #share y axis with other MSE plots
+    # plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    # plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
+    #               label='Average across the folds', linewidth=2)
+    # plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
+    #             label='alpha CV= '+str(model_lars.alpha_))
     
       
-    indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
-    estMSE= model_lars.mse_path_[indAlpha, :].mean()
+    # indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
+    # estMSE= model_lars.mse_path_[indAlpha, :].mean()
                  
-    plt.axhline(estMSE, linestyle='--', color='blue',
-            label='est MSE CV= '+str(estMSE))
+    # plt.axhline(estMSE, linestyle='--', color='blue',
+    #         label='est MSE CV= '+str(estMSE))
     
-    plt.legend()
+    # plt.legend()
     
-    plt.xlabel(r'$\alpha$')
-    plt.ylabel('Mean square error')
-    plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
-              % t_lasso_lars_cv)
+    # plt.xlabel(r'$\alpha$')
+    # plt.ylabel('Mean square error')
+    # plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+    #           % t_lasso_lars_cv)
     
-    #mse la
-    plt.subplot(5,1,4)
-    g=sns.scatterplot(ax=ax[3], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
-    g=sns.lineplot(ax=ax[3], data=msePath, x='alpha', y='MSE', color='black')
-    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    # #mse la
+    # plt.subplot(5,1,4)
+    # g=sns.scatterplot(ax=ax[3], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
+    # g=sns.lineplot(ax=ax[3], data=msePath, x='alpha', y='MSE', color='black')
+    # plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    # # ax[4].set_xscale('log')
+    # # ax[4].set_xlabel('log alpha')
+    
+    
+    # g.set_xlabel('alpha')
+    # g.set_ylabel('MSE')
+    # g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
+    # g.set(xlabel='alpha', ylabel='MSE')
+    
+    # #coef path
+    # g=sns.lineplot(ax= ax[4], data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
+    # g=sns.lineplot(ax= ax[4], data=modelPath,  x='alpha', y='coef', hue='eventType', palette='dark')
+    # plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    # # ax[5].set_xscale('log')
+    # # ax[5].set_xlabel('log alpha')
+    
+    # g.set(title=('subj-'+str(subj)+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
+    # g.set(ylabel='coef')
+    # # ax.set_xscale('log') #log scale if wanted
+    
+    
+    
+    
+    # saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison_All', savePath)
+        
+    
+    # #--all models, log scale
+    # fig, ax= plt.subplots(5,1, sharex=True)
+
+    # plt.subplot(5,1,2)
+    # plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
+    # plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
+    #         label='Average across the folds', linewidth=2)
+    # plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
+    #         label='alpha: CV estimate= '+str(model_cd.alpha_))
+    
+    # indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
+    # estMSE= model_cd.mse_path_[indAlpha, :].mean()
+                 
+    # plt.axhline(estMSE, linestyle='--', color='blue',
+    #         label='est MSE CV= '+str(estMSE))
+    
+    # plt.legend()
+    
+    # plt.xlabel(r'$\alpha$')
+    # plt.ylabel('Mean square error')
+    # plt.title('Mean square error on each fold: coordinate descent '
+    #           '(train time: %.2fs)' % t_lasso_cv)
+    # plt.axis('tight')
+    
+    # #-LASSO LARS
+    # plt.subplot(5,1,3) #share y axis with other MSE plots
+    # plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    # plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
+    #               label='Average across the folds', linewidth=2)
+    # plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
+    #             label='alpha CV= '+str(model_lars.alpha_))
+    
+      
+    # indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
+    # estMSE= model_lars.mse_path_[indAlpha, :].mean()
+                 
+    # plt.axhline(estMSE, linestyle='--', color='blue',
+    #         label='est MSE CV= '+str(estMSE))
+    
+    # plt.legend()
+    
+    # plt.xlabel(r'$\alpha$')
+    # plt.ylabel('Mean square error')
+    # plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+    #           % t_lasso_lars_cv)
+    
+    # #mse la
+    # plt.subplot(5,1,4)
+    # g=sns.scatterplot(ax=ax[3], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
+    # g=sns.lineplot(ax=ax[3], data=msePath, x='alpha', y='MSE', color='black')
+    # plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
     # ax[4].set_xscale('log')
     # ax[4].set_xlabel('log alpha')
     
     
-    g.set_xlabel('alpha')
-    g.set_ylabel('MSE')
-    g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
-    g.set(xlabel='alpha', ylabel='MSE')
+    # g.set_xlabel('alpha')
+    # g.set_ylabel('MSE')
+    # g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
+    # g.set(xlabel='alpha', ylabel='MSE')
     
-    #coef path
-    g=sns.lineplot(ax= ax[4], data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
-    g=sns.lineplot(ax= ax[4], data=modelPath,  x='alpha', y='coef', hue='eventType', palette='dark')
-    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
-    # ax[5].set_xscale('log')
-    # ax[5].set_xlabel('log alpha')
+    # #coef path
+    # g=sns.lineplot(ax= ax[4], data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
+    # g=sns.lineplot(ax= ax[4], data=modelPath,  x='alpha', y='coef', hue='eventType', palette='dark')
+    # plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+    # ax[4].set_xscale('log')
+    # ax[4].set_xlabel('log alpha')
     
-    g.set(title=('subj-'+str(subj)+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
-    g.set(ylabel='coef')
-    # ax.set_xscale('log') #log scale if wanted
-    
-    
-    
-    
-    saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison_All', savePath)
-        
-    
-    #--all models, log scale
-    fig, ax= plt.subplots(5,1, sharex=True)
-
-    plt.subplot(5,1,2)
-    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
-    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
-            label='Average across the folds', linewidth=2)
-    plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
-            label='alpha: CV estimate= '+str(model_cd.alpha_))
-    
-    indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
-    estMSE= model_cd.mse_path_[indAlpha, :].mean()
-                 
-    plt.axhline(estMSE, linestyle='--', color='blue',
-            label='est MSE CV= '+str(estMSE))
-    
-    plt.legend()
-    
-    plt.xlabel(r'$\alpha$')
-    plt.ylabel('Mean square error')
-    plt.title('Mean square error on each fold: coordinate descent '
-              '(train time: %.2fs)' % t_lasso_cv)
-    plt.axis('tight')
-    
-    #-LASSO LARS
-    plt.subplot(5,1,3) #share y axis with other MSE plots
-    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
-    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
-                  label='Average across the folds', linewidth=2)
-    plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
-                label='alpha CV= '+str(model_lars.alpha_))
-    
-      
-    indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
-    estMSE= model_lars.mse_path_[indAlpha, :].mean()
-                 
-    plt.axhline(estMSE, linestyle='--', color='blue',
-            label='est MSE CV= '+str(estMSE))
-    
-    plt.legend()
-    
-    plt.xlabel(r'$\alpha$')
-    plt.ylabel('Mean square error')
-    plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
-              % t_lasso_lars_cv)
-    
-    #mse la
-    plt.subplot(5,1,4)
-    g=sns.scatterplot(ax=ax[3], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
-    g=sns.lineplot(ax=ax[3], data=msePath, x='alpha', y='MSE', color='black')
-    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
-    ax[4].set_xscale('log')
-    ax[4].set_xlabel('log alpha')
-    
-    
-    g.set_xlabel('alpha')
-    g.set_ylabel('MSE')
-    g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
-    g.set(xlabel='alpha', ylabel='MSE')
-    
-    #coef path
-    g=sns.lineplot(ax= ax[4], data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
-    g=sns.lineplot(ax= ax[4], data=modelPath,  x='alpha', y='coef', hue='eventType', palette='dark')
-    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
-    ax[5].set_xscale('log')
-    ax[5].set_xlabel('log alpha')
-    
-    g.set(title=('subj-'+str(subj)+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
-    g.set(ylabel='coef')
-    ax.set_xscale('log') #log scale if wanted
+    # g.set(title=('subj-'+str(subj)+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
+    # g.set(ylabel='coef')
     
     
     
     
-    saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison_All', savePath)
+    # saveFigCustom(plt.gcf, modelName+'-modelSelection_Comparison_All', savePath)
         
     
     
@@ -743,80 +744,80 @@ for subj in subjects:
     
     
 
-    #%-- Visualize kernels
+    #%% -- Visualize kernels
     
-    #coefficients: 1 col for each shifted version of event timestamps in the range of timeShifts. events ordered sequentially
+    # #coefficients: 1 col for each shifted version of event timestamps in the range of timeShifts. events ordered sequentially
      
-    #alt method of lining up coef with feature names:
-        # for eventCol in range(len(eventVars)):
-        #     indEvent= group.columns[X].str.contains(eventVars[eventCol])
+    # #alt method of lining up coef with feature names:
+    #     # for eventCol in range(len(eventVars)):
+    #     #     indEvent= group.columns[X].str.contains(eventVars[eventCol])
 
-        #     eventType_lasso[indEvent]= eventVars[eventCol]
+    #     #     eventType_lasso[indEvent]= eventVars[eventCol]
     
-    b= model.coef_
+    # b= model.coef_
 
-    kernels= pd.DataFrame()
-    kernels['beta']= np.empty(len(b))
-    kernels['predictor']= np.empty(len(b))
-    kernels['eventType']= np.empty(len(b))
-    kernels['timeShift']= np.empty(len(b))
+    # kernels= pd.DataFrame()
+    # kernels['beta']= np.empty(len(b))
+    # kernels['predictor']= np.empty(len(b))
+    # kernels['eventType']= np.empty(len(b))
+    # kernels['timeShift']= np.empty(len(b))
     
-    #adding statsmodels output
-    # kernels['betaStatsModels']= np.empty(len(b))
+    # #adding statsmodels output
+    # # kernels['betaStatsModels']= np.empty(len(b))
      
-    kernels.loc[:,'beta']= b
-    kernels.loc[:,'predictor']= group.columns[X]
+    # kernels.loc[:,'beta']= b
+    # kernels.loc[:,'predictor']= group.columns[X]
             
-    #assign eventType specific info
-    for eventCol in range(len(eventVars)):
-        indEvent= group.columns[X].str.contains(eventVars[eventCol])
-        
-        kernels.loc[indEvent,'eventType']= eventVars[eventCol]
-        kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
-            
-    
+    # #assign eventType specific info
     # for eventCol in range(len(eventVars)):
-    #     if eventCol==0:
-    #         ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
-    #     else:
-    #         ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
+    #     indEvent= group.columns[X].str.contains(eventVars[eventCol])
+        
+    #     kernels.loc[indEvent,'eventType']= eventVars[eventCol]
+    #     kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
+            
+    
+    # # for eventCol in range(len(eventVars)):
+    # #     if eventCol==0:
+    # #         ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
+    # #     else:
+    # #         ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
        
-    #     # kernels[(eventVars[eventCol]+'-coef')]= b[ind]
-    #     kernels.loc[ind,'beta']= b[ind]
-    #     kernels.loc[ind,'eventType']= eventVars[eventCol]
-    #     kernels.loc[ind, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
-    #     # kernels.loc[ind,'betaStatsModels']= fit.params[ind].values
+    # #     # kernels[(eventVars[eventCol]+'-coef')]= b[ind]
+    # #     kernels.loc[ind,'beta']= b[ind]
+    # #     kernels.loc[ind,'eventType']= eventVars[eventCol]
+    # #     kernels.loc[ind, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
+    # #     # kernels.loc[ind,'betaStatsModels']= fit.params[ind].values
         
         
-    # #compare scikitlearn vs statsmodels output
-    # f, ax = plt.subplots(2, 1)
-    # g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue='eventType')
-    # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
-    # g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef. statsModels')
-    # g= sns.lineplot(ax=ax[1,], data=kernels, x='timeShift',y='betaStatsModels',hue='eventType')
-    # g.set(title=('subj-'+str(subj)+'-StatsModels-kernels-'+modeCue+'-trials-'+modeSignal))
+    # # #compare scikitlearn vs statsmodels output
+    # # f, ax = plt.subplots(2, 1)
+    # # g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue='eventType')
+    # # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
+    # # g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef. statsModels')
+    # # g= sns.lineplot(ax=ax[1,], data=kernels, x='timeShift',y='betaStatsModels',hue='eventType')
+    # # g.set(title=('subj-'+str(subj)+'-StatsModels-kernels-'+modeCue+'-trials-'+modeSignal))
 
 
         
         
             
-    # #Plot
-    # # sns.FacetGrid(eventCol,1)
-    # # sns.relplot(data= kernels.iloc[:,eventCol], kind='line')
-    # g=sns.relplot(data=kernels, x='timeShift', y='beta', hue='eventType', kind='line')
-    # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
-    # g.set_ylabels('beta coef.')
-    # g.set_xlabels('timeShift from event onset (s)')
+    # # #Plot
+    # # # sns.FacetGrid(eventCol,1)
+    # # # sns.relplot(data= kernels.iloc[:,eventCol], kind='line')
+    # # g=sns.relplot(data=kernels, x='timeShift', y='beta', hue='eventType', kind='line')
+    # # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
+    # # g.set_ylabels('beta coef.')
+    # # g.set_xlabels('timeShift from event onset (s)')
     
-    # # place a text box in upper left in axes coords with more model info
-    # # these are matplotlib.patch.Patch properties
-    # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-    # textstr= 'alpha with lowest MSE='+str(model.alpha_)
-    # g.ax.text(0.05, 0.95, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
-    # textstr= 'intercept='+str(model.intercept_)
-    # g.ax.text(0.05, 0.90, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+    # # # place a text box in upper left in axes coords with more model info
+    # # # these are matplotlib.patch.Patch properties
+    # # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    # # textstr= 'alpha with lowest MSE='+str(model.alpha_)
+    # # g.ax.text(0.05, 0.95, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+    # # textstr= 'intercept='+str(model.intercept_)
+    # # g.ax.text(0.05, 0.90, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
     
-    #--save model output?
+    #%% --save model output
     # savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
     print('saving model to file')
@@ -841,52 +842,55 @@ for subj in subjects:
             print('ERROR shelving: {0}'.format(key))
     my_shelf.close()
 
+    #%% Combine data from all subj?
+    # allSubjModels[subj]
+
 
     
     #%% TODO: plot of predicted vs actual FP signal in addition to kernels
     #prediction? maybe use actual timeshift=0 values?
-    #need equal number of columns so probably a different session or trial subset
-    predicted= model.predict(group.loc[:,X])
+    # #need equal number of columns so probably a different session or trial subset
+    # predicted= model.predict(group.loc[:,X])
     
-    # dfTemp.loc[group.index,'predicted']= model.predict(group.loc[:,X])
+    # # dfTemp.loc[group.index,'predicted']= model.predict(group.loc[:,X])
     
-    # g= sns.relplot(data=dfTemp.loc[group.index,:],y=predicted, x='timeLock-z-periDS-DStime', kind='line', color='blue')
-    # sns.lineplot(ax=g.ax, data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=y, color='black')
-    # g.ax.legend(['predicted','actual'])
-    # g.set(title=('subj-'+str(subj)+'-modelPrediction-'+modeCue+'-trials-'+modeSignal))
-    # g.set_ylabels('Z-score FP signal')
-    # g.set_xlabels('time from cue onset')
+    # # g= sns.relplot(data=dfTemp.loc[group.index,:],y=predicted, x='timeLock-z-periDS-DStime', kind='line', color='blue')
+    # # sns.lineplot(ax=g.ax, data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=y, color='black')
+    # # g.ax.legend(['predicted','actual'])
+    # # g.set(title=('subj-'+str(subj)+'-modelPrediction-'+modeCue+'-trials-'+modeSignal))
+    # # g.set_ylabels('Z-score FP signal')
+    # # g.set_xlabels('time from cue onset')
 
-    # #error here bc single columns i think:
-    # # #get actual event timings (shift+0) since string starts with + need to 'escape' with r\
-    # # col= group.columns.str.contains(r'\+0')
-    # # group['predicted']= model.predict(group.loc[:,col])
+    # # #error here bc single columns i think:
+    # # # #get actual event timings (shift+0) since string starts with + need to 'escape' with r\
+    # # # col= group.columns.str.contains(r'\+0')
+    # # # group['predicted']= model.predict(group.loc[:,col])
     
-    #COMBINE above into single Figure, save
+    # #COMBINE above into single Figure, save
 
-    f, ax = plt.subplots(2, 1)
+    # f, ax = plt.subplots(2, 1)
     
-    g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue='eventType')
-    g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
-    g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
-    # place a text box in bottom left in axes coords with more model info
-    # these are matplotlib.patch.Patch properties
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-    textstr= 'alpha with lowest MSE='+str(model.alpha_)+'(0=no penalty, OLS)'
-    g.text(0.05, .1, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
-    textstr= 'intercept='+str(model.intercept_)
-    g.text(0.05, 0.2, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
-    textstr= 'R2='+str(model.score(group.loc[:,X],group.loc[:,y], sample_weight=None))
-    g.text(0.05, 0.3, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+    # g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue='eventType')
+    # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
+    # g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
+    # # place a text box in bottom left in axes coords with more model info
+    # # these are matplotlib.patch.Patch properties
+    # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    # textstr= 'alpha with lowest MSE='+str(model.alpha_)+'(0=no penalty, OLS)'
+    # g.text(0.05, .1, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+    # textstr= 'intercept='+str(model.intercept_)
+    # g.text(0.05, 0.2, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+    # textstr= 'R2='+str(model.score(group.loc[:,X],group.loc[:,y], sample_weight=None))
+    # g.text(0.05, 0.3, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
 
 
-    g= sns.lineplot(ax=ax[1,],data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=predicted, color='black')
-    g= sns.lineplot(ax=ax[1,], data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=y, color='blue')
-    g.legend(['predicted??','actual'])
-    g.set(title=('subj-'+str(subj)+'-periCueModelPrediction-'+modeCue+'-trials-'+modeSignal))
-    g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
+    # g= sns.lineplot(ax=ax[1,],data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=predicted, color='black')
+    # g= sns.lineplot(ax=ax[1,], data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=y, color='blue')
+    # g.legend(['predicted??','actual'])
+    # g.set(title=('subj-'+str(subj)+'-periCueModelPrediction-'+modeCue+'-trials-'+modeSignal))
+    # g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
     
-    saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal, savePath)
+    # saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal, savePath)
     
     
     #%% TODO: should apply kernels on trial-by-trial basis like in matlab code after calculating? or maybe the model prediction accomplishes fine
@@ -910,4 +914,26 @@ for subj in subjects:
 # https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_model_selection.html#sphx-glr-auto-examples-linear-model-plot-lasso-model-selection-py
 
 
+   #%% --save all subj model output
+# # savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
+# print('saving all subj model to file')
+
+# #Save as pickel
+# pd.to_pickle(model, (savePath+'allSubj'+'regressionModel.pkl'))
+
+# #Save all models in shelf .pkl for later recall
+# saveVars= ['model', 'model_aic', 'model_bic', 'model_cd','model_lars', 'modelPath', 'kernels', 'dfTemp']
+
+# #use shelve module to save variables as dict keys
+# my_shelf= shelve.open(savePath+'allSubj'+'-encodingOutput.pkl', 'n') #start new file
+
+# for key in saveVars:
+#     try:
+#         my_shelf[key]= globals()[key] 
+#     except TypeError:
+#         #
+#         # __builtins__, my_shelf, and imported modules can not be shelved.
+#         #
+#         print('ERROR shelving: {0}'.format(key))
+# my_shelf.close()
