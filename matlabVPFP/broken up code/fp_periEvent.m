@@ -191,7 +191,9 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
 
             %save timeLock time axis- 'normalized' relative time from event (instead
             %of absolute time)
-            currentSubjAnalyzed(session).periEvent.timeLock= tRange/fs;
+%             currentSubjAnalyzed(session).periEvent.timeLock= tRange/fs;
+            currentSubjAnalyzed(session).periEvent.timeLock= linspace(-preEventTimeS,postEventTimeS,tBins)
+            
        end
             
     end %end trial loop
