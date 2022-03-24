@@ -33,14 +33,52 @@ from plot_lasso_model_selection import plot_lasso_model_selection
 
 import time
 
+import os
+
+
     
 #%% Plot settings
 sns.set_style("darkgrid")
 sns.set_context('notebook')
 
-savePath= r'./_output/fpEncodingModelStats/'
+savePath= r'./_output/fpEncodingModelPlots/'
+
+#%% Get all .pkl files in encoding model output folder (1 per subj)
+    
+dataPath= r'./_output/fpEncodingModelStats/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+
+
+files= []
+# return all files as a list
+for file in os.listdir(dataPath):
+     # check the files which are end with specific extension
+    if file.endswith(".pkl"):
+        # print path name of selected files
+        print(os.path.join(dataPath), file)
+        
+        files.append(file)
+        
+#%% Combine individual subj data into single dataframe for all subj
+
+
+dfEncoding= np.empty(np.shape(files))
+dfEncoding= pd.DataFrame(dfEncoding) 
+
+
+for file in range(len(files)):
+    dfTemp= pd.read_pickle(dataPath+files[file])
+    
+    dfEncoding.loc[file,'file']= files[file]
+    dfEncoding.loc[file,'model']= dfTemp['model_lasso']
+    dfEncoding.loc[file,'subject']= dfTemp.subject
+    dfEncoding.loc[file,'modelName']= dfTemp.modelName
+    dfEncoding.loc[file,'modelStage']= dfTemp.modelStage
+    dfEncoding.loc[file,'nSessions']= dfTemp.nSessions
+    
 
     
+
 
 #%% Load model output
 dataPath= r'./_output/fpEncodingModelStats/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 

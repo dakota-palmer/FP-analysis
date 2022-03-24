@@ -822,25 +822,44 @@ for subj in subjects:
 
     print('saving model to file')
     
-    #Save as pickel
+    # #Save as pickel
     # pd.to_pickle(model, (savePath+'subj'+str(subj)+'regressionModel.pkl'))
+    
+    #save model output along with metadata
+    dfEncoding= np.empty(0)
+    dfEncoding= pd.DataFrame(dfEncoding) 
+
+    dfEncoding['subject']= str(subj)
+    dfEncoding['modelName']= modelName
+    dfEncoding['modelStage']= stagesToInclude
+    dfEncoding['nSessions']= nSessionsToInclude
+    
+    dfEncoding['modeL_lasso']= model
+ 
+    dfEncoding['modelInput']= [group.copy()]
+
+
+
+
+    #Save as pickel
+    pd.to_pickle(dfEncoding, (savePath+'subj'+str(subj)+'regressionModel.pkl'))
         
-    #Save all models in shelf .pkl for later recall
+    #%% Save all models in shelf for later recall
     
-    saveVars= ['model', 'model_aic', 'model_bic', 'model_cd','model_lars', 'modelPath', 'kernels', 'dfTemp']
+    # saveVars= ['model', 'model_aic', 'model_bic', 'model_cd','model_lars', 'modelPath', 'kernels', 'dfTemp']
     
-    #use shelve module to save variables as dict keys
-    my_shelf= shelve.open(savePath+'subj'+str(subj)+'-encodingOutput.pkl', 'n') #start new file
+    # #use shelve module to save variables as dict keys
+    # my_shelf= shelve.open(savePath+'subj'+str(subj)+'-encodingOutput.pkl', 'n') #start new file
     
-    for key in saveVars:
-        try:
-            my_shelf[key]= globals()[key] 
-        except TypeError:
-            #
-            # __builtins__, my_shelf, and imported modules can not be shelved.
-            #
-            print('ERROR shelving: {0}'.format(key))
-    my_shelf.close()
+    # for key in saveVars:
+    #     try:
+    #         my_shelf[key]= globals()[key] 
+    #     except TypeError:
+    #         #
+    #         # __builtins__, my_shelf, and imported modules can not be shelved.
+    #         #
+    #         print('ERROR shelving: {0}'.format(key))
+    # my_shelf.close()
 
     #%% Combine data from all subj?
     # allSubjModels[subj]
