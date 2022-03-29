@@ -147,7 +147,6 @@ elif modeSignal=='repurple':
 #regressand/response variable is fp signal
 y= 'reblue-z-periDS'
 
-
 # Remove invalid observations (nan, inf) in these columns
 # shouldn't be any. at this point not sure where they come from?
 # dfTemp= dfTemp.loc[~dfTemp.loc[:,col].isin([np.nan, np.inf, -np.inf]).any(1),:]
@@ -156,7 +155,9 @@ y= 'reblue-z-periDS'
 subjects= dfTemp.subject.unique()
 
 #run only specific subjects
-# subjects= [14,15,17,19]
+subjects= [8,9]
+# subjects= [11,12,13]
+
 
 #intialize a df to combine all data?
 
@@ -264,6 +265,9 @@ for subj in subjects:
 
     
     #fit model 
+    
+    modelName= 'subj-'+str(subj)+'-'+modeCue+'-trials-'+modeSignal
+
     t1 = time.time()
     
     print('fitting model')
@@ -279,267 +283,223 @@ for subj in subjects:
     print('best alpha model='+str(model.alpha_))
     
         
-    #TODO: Feature selection /test specific combos of eventTypes
-    #starting with 'full model' of all eventTypes, pare down successively based on criteria e.g. forward/backward selection:
-#Backward elimination begins with the model having the largest number of predictors and eliminates variables one-by-one until we are satisfied that all remaining variables are important to the model. Forward selection starts with no variables included in the model, then it adds in variables according to their importance until no other important variables are found. Notice that, for both methods, we have always chosen to retain the model with the largest adjusted R2
-# It is highly advised that before you begin the model selection process, you decide what a “meaningful” difference in adjusted R2 is for the context of your data. Maybe this difference is 1% or maybe it is 5%. This “threshold” is what you will then use to decide if one model is “better” than another model. 
-        # https://scikit-learn.org/stable/modules/feature_selection.html -- fxns here could be used
+#     #TODO: Feature selection /test specific combos of eventTypes
+#     #starting with 'full model' of all eventTypes, pare down successively based on criteria e.g. forward/backward selection:
+# #Backward elimination begins with the model having the largest number of predictors and eliminates variables one-by-one until we are satisfied that all remaining variables are important to the model. Forward selection starts with no variables included in the model, then it adds in variables according to their importance until no other important variables are found. Notice that, for both methods, we have always chosen to retain the model with the largest adjusted R2
+# # It is highly advised that before you begin the model selection process, you decide what a “meaningful” difference in adjusted R2 is for the context of your data. Maybe this difference is 1% or maybe it is 5%. This “threshold” is what you will then use to decide if one model is “better” than another model. 
+#         # https://scikit-learn.org/stable/modules/feature_selection.html -- fxns here could be used
     
-    # from sklearn.feature_selection import SelectFromModel
+#     # from sklearn.feature_selection import SelectFromModel
 
-    # model2= SelectFromModel(model)
+#     # model2= SelectFromModel(model)
     
-    #Seems LassoCV is using ~coordinate descent~ as the criteria to select the optimal alpha 
-    #(minimizes mean MSE across all CV folds) https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_model_selection.html#sphx-glr-auto-examples-linear-model-plot-lasso-model-selection-py
+#     #Seems LassoCV is using ~coordinate descent~ as the criteria to select the optimal alpha 
+#     #(minimizes mean MSE across all CV folds) https://scikit-learn.org/stable/auto_examples/linear_model/plot_lasso_model_selection.html#sphx-glr-auto-examples-linear-model-plot-lasso-model-selection-py
     
-    #I think lassoCV is probably appropriate - 'for high dimensional datasets with many colinear features'. event timestamps will be colinear
-    #also consider- LassoLarsCV has the advantage of exploring more relevant values of alpha parameter, and if the number of samples is very small compared to the number of features, it is often faster than LassoCV.
-    #and- the estimator LassoLarsIC proposes to use the Akaike information criterion (AIC) and the Bayes Information criterion (BIC).
+#     #I think lassoCV is probably appropriate - 'for high dimensional datasets with many colinear features'. event timestamps will be colinear
+#     #also consider- LassoLarsCV has the advantage of exploring more relevant values of alpha parameter, and if the number of samples is very small compared to the number of features, it is often faster than LassoCV.
+#     #and- the estimator LassoLarsIC proposes to use the Akaike information criterion (AIC) and the Bayes Information criterion (BIC).
     
-    #wondering now how to assess model, recover MSE
-    #Model.MSE_path_? 25 col like matlab but 100 rows. Plotting
-    msePath= pd.DataFrame(model.mse_path_)
-    msePath= msePath.reset_index().melt(id_vars= 'index', value_vars=msePath.columns, var_name='cvIteration', value_name='MSE')
-    msePath= msePath.rename(columns={"index": "alphaCount"})
+#     #wondering now how to assess model, recover MSE
+#     #Model.MSE_path_? 25 col like matlab but 100 rows. Plotting
+#     msePath= pd.DataFrame(model.mse_path_)
+#     msePath= msePath.reset_index().melt(id_vars= 'index', value_vars=msePath.columns, var_name='cvIteration', value_name='MSE')
+#     msePath= msePath.rename(columns={"index": "alphaCount"})
     
-    msePath['alpha']= np.nan
+#     msePath['alpha']= np.nan
     
-    msePath['alpha']= model.alphas_[msePath.alphaCount]
+#     msePath['alpha']= model.alphas_[msePath.alphaCount]
     
-    # fig, ax = plt.subplots()
-    # sns.scatterplot(ax=ax, data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
-    # sns.lineplot(ax=ax, data=msePath, x='alpha', y='MSE', color='black')
+#     # fig, ax = plt.subplots()
+#     # sns.scatterplot(ax=ax, data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
+#     # sns.lineplot(ax=ax, data=msePath, x='alpha', y='MSE', color='black')
     
-    # ax.set_xlabel('alpha')
-    # ax.set_ylabel('MSE')
-    # ax.set_title('MSE across CV folds')
+#     # ax.set_xlabel('alpha')
+#     # ax.set_ylabel('MSE')
+#     # ax.set_title('MSE across CV folds')
    
-    # #Show coefficients as fxn of alpha regularization
-    #hitting error
-    # from sklearn.linear_model import Lasso
-    # alphas = alphas#np.linspace(0.01,500,100)
+#     # #Show coefficients as fxn of alpha regularization
+#     #hitting error
+#     # from sklearn.linear_model import Lasso
+#     # alphas = alphas#np.linspace(0.01,500,100)
     
-    # lasso = Lasso(max_iter=100)
-    # coefs = []
-    # X_train= group.loc[:,X]
-    # y_train= group.loc[:,y]
-    # for a in alphas:
-    #     lasso.set_params(alpha=a)
-    #     lasso.fit(X_train, y_train)
-    #     coefs.append(lasso.coef_)
+#     # lasso = Lasso(max_iter=100)
+#     # coefs = []
+#     # X_train= group.loc[:,X]
+#     # y_train= group.loc[:,y]
+#     # for a in alphas:
+#     #     lasso.set_params(alpha=a)
+#     #     lasso.fit(X_train, y_train)
+#     #     coefs.append(lasso.coef_)
     
-    #     ax = plt.gca()
+#     #     ax = plt.gca()
         
-    #     ax.plot(alphas, coefs)
-    #     ax.set_xscale('log')
-    #     plt.axis('tight')
-    #     plt.xlabel('alpha')
-    #     plt.ylabel('Standardized Coefficients')
-    #     plt.title('Lasso coefficients as a function of alpha');
+#     #     ax.plot(alphas, coefs)
+#     #     ax.set_xscale('log')
+#     #     plt.axis('tight')
+#     #     plt.xlabel('alpha')
+#     #     plt.ylabel('Standardized Coefficients')
+#     #     plt.title('Lasso coefficients as a function of alpha');
     
-    #try function
-    # plot_lasso_path_crossval()
+#     #try function
+#     # plot_lasso_path_crossval()
     
-    # #-- visualize regularization: lasso path
-    # eps = 1e-2 # the smaller it is the longer is the path
-    # # models = lasso_path(boston.data, boston.target, eps=eps)
-    # #Running LassoCV gives optimal output but want to see full path?
-    # modelFit= model.fit(group.loc[:,X], group.loc[:,y])
-    # modelsFit= modelFit.path(group.loc[:,X],group.loc[:,y])
+#     # #-- visualize regularization: lasso path
+#     # eps = 1e-2 # the smaller it is the longer is the path
+#     # # models = lasso_path(boston.data, boston.target, eps=eps)
+#     # #Running LassoCV gives optimal output but want to see full path?
+#     # modelFit= model.fit(group.loc[:,X], group.loc[:,y])
+#     # modelsFit= modelFit.path(group.loc[:,X],group.loc[:,y])
     
-    #model.path() returns tuple...not consistent with documentation
-    #but seems that [0]= alphas, [1]=coefs, [2]=dualgaps ?
-    #saving these into df
-    # models= model.path(group.loc[:,X],group.loc[:,y])
+#     #model.path() returns tuple...not consistent with documentation
+#     #but seems that [0]= alphas, [1]=coefs, [2]=dualgaps ?
+#     #saving these into df
+#     # models= model.path(group.loc[:,X],group.loc[:,y])
 
-    # pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y], alphas=alphas)
+#     # pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y], alphas=alphas)
     
-    #doesn't seem to be giving the full path across all cv's just a mean I guess?
-    #these two give identical results:
-    pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y])
-    # pathAlphas, pathCoefs, pathDualGaps= model.path(group.loc[:,X],group.loc[:,y], cv=cv)
+#     #doesn't seem to be giving the full path across all cv's just a mean I guess?
+#     #these two give identical results:
+#     pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y])
+#     # pathAlphas, pathCoefs, pathDualGaps= model.path(group.loc[:,X],group.loc[:,y], cv=cv)
     
-    #???? Why are alphas in this 'path' so different than the model.alphas?
-    #try manually choosing same as model alphas. #convergencewarning
-    #this basically makes everything zero except very small alpha. maybe a sign to look specifically at smaller alphas?
-    # pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y], alphas= model.alphas_)
+#     #???? Why are alphas in this 'path' so different than the model.alphas?
+#     #try manually choosing same as model alphas. #convergencewarning
+#     #this basically makes everything zero except very small alpha. maybe a sign to look specifically at smaller alphas?
+#     # pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y], alphas= model.alphas_)
 
     
-    #initialize df to store path
-    modelPath= pd.DataFrame()
-    modelPath['alpha']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['coef']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['dualGap']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['modelCount']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['predictor']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['eventType']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath[:]= np.nan
+#     #initialize df to store path
+#     modelPath= pd.DataFrame()
+#     modelPath['alpha']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['coef']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['dualGap']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['modelCount']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['predictor']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['eventType']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath[:]= np.nan
     
    
-    #fill df with data from each iteration along the path
-    ind= np.arange(0,(pathCoefs.shape[0]))
-    for thisModel in range(0,len(pathAlphas)):
+#     #fill df with data from each iteration along the path
+#     ind= np.arange(0,(pathCoefs.shape[0]))
+#     for thisModel in range(0,len(pathAlphas)):
     
-        pathAlphas_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
-        pathAlphas_lasso[:]= pathAlphas[thisModel]
+#         pathAlphas_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
+#         pathAlphas_lasso[:]= pathAlphas[thisModel]
     
-        pathDualGaps_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
-        pathDualGaps_lasso[:]= pathDualGaps[thisModel]
+#         pathDualGaps_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
+#         pathDualGaps_lasso[:]= pathDualGaps[thisModel]
         
-        modelCount_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
-        modelCount_lasso[:]= thisModel
+#         modelCount_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
+#         modelCount_lasso[:]= thisModel
         
-        predictor_lasso= group.columns[X] #np.arange(0,len(pathCoefs[:,thisModel]))
+#         predictor_lasso= group.columns[X] #np.arange(0,len(pathCoefs[:,thisModel]))
         
     
-        pathCoefs_lasso= pathCoefs[:,thisModel]
+#         pathCoefs_lasso= pathCoefs[:,thisModel]
         
 
-        modelPath.loc[ind,'alpha']= pathAlphas_lasso
-        modelPath.loc[ind,'coef']= pathCoefs_lasso
-        modelPath.loc[ind,'dualGap']= pathDualGaps_lasso
-        modelPath.loc[ind, 'modelCount']= modelCount_lasso
-        modelPath.loc[ind, 'predictor']= predictor_lasso
+#         modelPath.loc[ind,'alpha']= pathAlphas_lasso
+#         modelPath.loc[ind,'coef']= pathCoefs_lasso
+#         modelPath.loc[ind,'dualGap']= pathDualGaps_lasso
+#         modelPath.loc[ind, 'modelCount']= modelCount_lasso
+#         modelPath.loc[ind, 'predictor']= predictor_lasso
         
-        #go through more specifically and label eventType of each predictor
-        eventType_lasso= np.empty(pathCoefs.shape[0])
-        eventType_lasso= pd.Series(eventType_lasso)#,index=predictor_lasso)
+#         #go through more specifically and label eventType of each predictor
+#         eventType_lasso= np.empty(pathCoefs.shape[0])
+#         eventType_lasso= pd.Series(eventType_lasso)#,index=predictor_lasso)
 
 
-        for eventCol in range(len(eventVars)):
-            indEvent= group.columns[X].str.contains(eventVars[eventCol])
+#         for eventCol in range(len(eventVars)):
+#             indEvent= group.columns[X].str.contains(eventVars[eventCol])
 
-            eventType_lasso[indEvent]= eventVars[eventCol]
+#             eventType_lasso[indEvent]= eventVars[eventCol]
 
-            #assigning .values since i made this a series and index doesn't align
-        modelPath.loc[ind, 'eventType']= eventType_lasso.values
+#             #assigning .values since i made this a series and index doesn't align
+#         modelPath.loc[ind, 'eventType']= eventType_lasso.values
 
-        ind= ind+(pathCoefs.shape[0])
+#         ind= ind+(pathCoefs.shape[0])
 
          
 
-    #   # viz path
-    # fig, ax = plt.subplots()
-    # sns.lineplot(ax= ax, data=modelPath, x='alpha', y='coef', hue='eventType')
-    # ax.set_title('regularization path: coefficients for each alpha')
-    # ax.set_xlabel('alpha')
+#     #   # viz path
+#     # fig, ax = plt.subplots()
+#     # sns.lineplot(ax= ax, data=modelPath, x='alpha', y='coef', hue='eventType')
+#     # ax.set_title('regularization path: coefficients for each alpha')
+#     # ax.set_xlabel('alpha')
     
-    # fig, ax = plt.subplots()
-    # sns.lineplot(ax= ax, data=modelPath, x='alpha', y='coef', hue='eventType')
-    # ax.set_title('regularization path: coefficients for each log alpha')
-    # ax.set_xscale('log')
-    # ax.set_xlabel('log alpha')
+#     # fig, ax = plt.subplots()
+#     # sns.lineplot(ax= ax, data=modelPath, x='alpha', y='coef', hue='eventType')
+#     # ax.set_title('regularization path: coefficients for each log alpha')
+#     # ax.set_xscale('log')
+#     # ax.set_xlabel('log alpha')
     
     
-    # fig, ax = plt.subplots()
-    # sns.lineplot(ax= ax, data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType')
-    # ax.set_title('regularization path: coefficients for each alpha')
-    # ax.set_xlabel('alpha')
+#     # fig, ax = plt.subplots()
+#     # sns.lineplot(ax= ax, data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType')
+#     # ax.set_title('regularization path: coefficients for each alpha')
+#     # ax.set_xlabel('alpha')
 
-    # fig, ax = plt.subplots()
-    # sns.lineplot(ax= ax, data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType')
-    # ax.set_title('regularization path: coefficients for each log alpha')
-    # ax.set_xscale('log')
-    # ax.set_xlabel('log alpha')
+#     # fig, ax = plt.subplots()
+#     # sns.lineplot(ax= ax, data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType')
+#     # ax.set_title('regularization path: coefficients for each log alpha')
+#     # ax.set_xscale('log')
+#     # ax.set_xlabel('log alpha')
 
 
-    #COMBINE above into single figure for model validation
-    #MSE path + coefficient path
-    f, ax = plt.subplots(2,1)
+#     #COMBINE above into single figure for model validation
+#     #MSE path + coefficient path
+#     f, ax = plt.subplots(2,1)
     
-    #mse
-    g=sns.scatterplot(ax=ax[0], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
-    g=sns.lineplot(ax=ax[0], data=msePath, x='alpha', y='MSE', color='black')
-    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
-    ax[0].set_xscale('log')
-    ax[0].set_xlabel('log alpha')
+#     #mse
+#     g=sns.scatterplot(ax=ax[0], data=msePath, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
+#     g=sns.lineplot(ax=ax[0], data=msePath, x='alpha', y='MSE', color='black')
+#     plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+#     ax[0].set_xscale('log')
+#     ax[0].set_xlabel('log alpha')
     
     
-    g.set_xlabel('alpha')
-    g.set_ylabel('MSE')
-    g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
-    g.set(xlabel='alpha', ylabel='MSE')
+#     g.set_xlabel('alpha')
+#     g.set_ylabel('MSE')
+#     g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
+#     g.set(xlabel='alpha', ylabel='MSE')
     
-    #coef path
-    g=sns.lineplot(ax= ax[1], data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
-    g=sns.lineplot(ax= ax[1], data=modelPath,  x='alpha', y='coef', hue='eventType', palette='dark')
-    plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
-    ax[1].set_xscale('log')
-    ax[1].set_xlabel('log alpha')
+#     #coef path
+#     g=sns.lineplot(ax= ax[1], data=modelPath, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
+#     g=sns.lineplot(ax= ax[1], data=modelPath,  x='alpha', y='coef', hue='eventType', palette='dark')
+#     plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+#     ax[1].set_xscale('log')
+#     ax[1].set_xlabel('log alpha')
     
-    g.set(title=('subj-'+str(subj)+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
-    g.set(ylabel='coef')
-    # ax.set_xscale('log') #log scale if wanted
+#     g.set(title=('subj-'+str(subj)+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
+#     g.set(ylabel='coef')
+#     # ax.set_xscale('log') #log scale if wanted
     
-    saveFigCustom(f, 'subj-'+str(subj)+'-lassoValidation-'+modeCue+'-trials-'+modeSignal, savePath)
+#     saveFigCustom(f, 'subj-'+str(subj)+'-lassoValidation-'+modeCue+'-trials-'+modeSignal, savePath)
 
   
     
     #%% --COMPARE regularization methods: AIC/BIC vs CV-coordinate descent vs CV-LARS
-    modelName= 'subj-'+str(subj)+'-'+modeCue+'-trials-'+modeSignal
+    # modelName= 'subj-'+str(subj)+'-'+modeCue+'-trials-'+modeSignal
     
-    [model_aic, model_bic, model_cd, model_lars, EPSILON]= plot_lasso_model_selection(group.loc[:,X].copy(), group.loc[:,y].copy(), cv, modelName, savePath)
+    # [model_aic, model_bic, model_cd, model_lars, EPSILON]= plot_lasso_model_selection(group.loc[:,X].copy(), group.loc[:,y].copy(), cv, modelName, savePath)
     
 
-    t_lasso_cv=0
-    t_lasso_lars_cv=0
+    # t_lasso_cv=0
+    # t_lasso_lars_cv=0
     
-     # TODO: Subplot all lasso alpha selections in 1 fig, including current lasso in this script
-    fig, ax= plt.subplots(3,1, sharex=True)
+    #  # TODO: Subplot all lasso alpha selections in 1 fig, including current lasso in this script
+    # fig, ax= plt.subplots(3,1, sharex=True)
 
-    plt.subplot(3,1,1)
-    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
-    plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
-            label='Average across the folds', linewidth=2)
-    plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
-            label='alpha: CV estimate= '+str(model_cd.alpha_))
-    
-    indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
-    estMSE= model_cd.mse_path_[indAlpha, :].mean()
-                 
-    plt.axhline(estMSE, linestyle='--', color='blue',
-            label='est MSE CV= '+str(estMSE))
-    
-    plt.legend()
-    
-    plt.xlabel(r'$\alpha$')
-    plt.ylabel('Mean square error')
-    plt.title('Mean square error on each fold: coordinate descent '
-              '(train time: %.2fs)' % t_lasso_cv)
-    plt.axis('tight')
-    
-    #-LASSO LARS
-    plt.subplot(3,1,2) #share y axis with other MSE plots
-    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
-    plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
-                  label='Average across the folds', linewidth=2)
-    plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
-                label='alpha CV= '+str(model_lars.alpha_))
-    
-      
-    indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
-    estMSE= model_lars.mse_path_[indAlpha, :].mean()
-                 
-    plt.axhline(estMSE, linestyle='--', color='blue',
-            label='est MSE CV= '+str(estMSE))
-    
-    plt.legend()
-    
-    plt.xlabel(r'$\alpha$')
-    plt.ylabel('Mean square error')
-    plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
-              % t_lasso_lars_cv)
-    
-    #   #-LASSO coordinate descent
-    # plt.subplot(3,1,3, sharey=ax[1])
-    # plt.plot(model.alphas_, model.mse_path_, ':')
-    # plt.plot(model.alphas_, model.mse_path_.mean(axis=-1), 'k',
+    # plt.subplot(3,1,1)
+    # plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_, ':')
+    # plt.plot(model_cd.alphas_ + EPSILON, model_cd.mse_path_.mean(axis=-1), 'k',
     #         label='Average across the folds', linewidth=2)
-    # plt.axvline(model.alpha_, linestyle='--', color='k', linewidth=3,
-    #         label='alpha: CV estimate= '+str(model.alpha_))
+    # plt.axvline(model_cd.alpha_ + EPSILON, linestyle='--', color='k', linewidth=3,
+    #         label='alpha: CV estimate= '+str(model_cd.alpha_))
     
-    # indAlpha= np.where(model.alphas_==model.alpha_)
-    # estMSE= model.mse_path_[indAlpha, :].mean()
+    # indAlpha= np.where(model_cd.alphas_==model_cd.alpha_)
+    # estMSE= model_cd.mse_path_[indAlpha, :].mean()
                  
     # plt.axhline(estMSE, linestyle='--', color='blue',
     #         label='est MSE CV= '+str(estMSE))
@@ -548,8 +508,52 @@ for subj in subjects:
     
     # plt.xlabel(r'$\alpha$')
     # plt.ylabel('Mean square error')
-    # plt.title('Mean square error on each fold: Custom LASSO coordinate descent '
-    #           '(train time: %.2fs)' % t_model)
+    # plt.title('Mean square error on each fold: coordinate descent '
+    #           '(train time: %.2fs)' % t_lasso_cv)
+    # plt.axis('tight')
+    
+    # #-LASSO LARS
+    # plt.subplot(3,1,2) #share y axis with other MSE plots
+    # plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_, ':')
+    # plt.plot(model_lars.cv_alphas_ + EPSILON, model_lars.mse_path_.mean(axis=-1), 'k',
+    #               label='Average across the folds', linewidth=2)
+    # plt.axvline(model_lars.alpha_ +EPSILON, linestyle='--', color='k', linewidth=3,
+    #             label='alpha CV= '+str(model_lars.alpha_))
+    
+      
+    # indAlpha= np.where(model_lars.cv_alphas_==model_lars.alpha_)
+    # estMSE= model_lars.mse_path_[indAlpha, :].mean()
+                 
+    # plt.axhline(estMSE, linestyle='--', color='blue',
+    #         label='est MSE CV= '+str(estMSE))
+    
+    # plt.legend()
+    
+    # plt.xlabel(r'$\alpha$')
+    # plt.ylabel('Mean square error')
+    # plt.title('Mean square error on each fold: Lars (train time: %.2fs)'
+    #           % t_lasso_lars_cv)
+    
+    # #   #-LASSO coordinate descent
+    # # plt.subplot(3,1,3, sharey=ax[1])
+    # # plt.plot(model.alphas_, model.mse_path_, ':')
+    # # plt.plot(model.alphas_, model.mse_path_.mean(axis=-1), 'k',
+    # #         label='Average across the folds', linewidth=2)
+    # # plt.axvline(model.alpha_, linestyle='--', color='k', linewidth=3,
+    # #         label='alpha: CV estimate= '+str(model.alpha_))
+    
+    # # indAlpha= np.where(model.alphas_==model.alpha_)
+    # # estMSE= model.mse_path_[indAlpha, :].mean()
+                 
+    # # plt.axhline(estMSE, linestyle='--', color='blue',
+    # #         label='est MSE CV= '+str(estMSE))
+    
+    # # plt.legend()
+    
+    # # plt.xlabel(r'$\alpha$')
+    # # plt.ylabel('Mean square error')
+    # # plt.title('Mean square error on each fold: Custom LASSO coordinate descent '
+    # #           '(train time: %.2fs)' % t_model)
     
       #%% TODO: line up all alpha estimates with coefficients
     # fig, ax= plt.subplots(5,1, sharex=True)
@@ -826,24 +830,37 @@ for subj in subjects:
     # pd.to_pickle(model, (savePath+'subj'+str(subj)+'regressionModel.pkl'))
     
     #save model output along with metadata
-    dfEncoding= np.empty(0)
+    dfEncoding= np.empty([1,0])
     dfEncoding= pd.DataFrame(dfEncoding) 
 
-    dfEncoding['subject']= str(subj)
+    dfEncoding['subject']= subj
     dfEncoding['modelName']= modelName
     dfEncoding['modelStage']= stagesToInclude
     dfEncoding['nSessions']= nSessionsToInclude
     
-    dfEncoding['modeL_lasso']= model
+    dfEncoding['model_lasso']= model
+    
+    dfEncoding['eventVars']= [eventVars]
+
+    dfEncoding['modeSignal']= modeSignal
+    dfEncoding['modeCue']= modeCue
  
     dfEncoding['modelInput']= [group.copy()]
+    
+    dfEncoding['X']= [X]
+    dfEncoding['y']= [y]
 
+    
 
 
 
     #Save as pickel
-    pd.to_pickle(dfEncoding, (savePath+'subj'+str(subj)+'regressionModel.pkl'))
+    pd.to_pickle(dfEncoding, (savePath+'subj'+str(subj)+modeCue+'-trials-'+modeSignal+'regressionModel.pkl'))
         
+    
+      
+
+    
     #%% Save all models in shelf for later recall
     
     # saveVars= ['model', 'model_aic', 'model_bic', 'model_cd','model_lars', 'modelPath', 'kernels', 'dfTemp']
