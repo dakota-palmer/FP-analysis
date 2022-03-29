@@ -13,7 +13,7 @@ figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 
 % dp workstation
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-noArtifact-21-Mar-2022subjDataAnalyzed.mat")
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-23-Mar-2022subjDataAnalyzed.mat")
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-24-Mar-2022subjDataAnalyzed.mat")
 
 
 % %ally no artifacts (bu"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat"t all trials)
@@ -25,9 +25,11 @@ fp_manuscript_tidyTable();
 %% make peri-event 465nm plots
 fp_manuscript_periEventTraces();
 
-%% FIGURE 1
+%% FIGURE 2
 
-%-- Peri DS vs. Peri NS AUC
+%-- Peri DS vs. Peri NS 2D traces
+
+%-- Peri DS vs. Peri NS AUC & Stat comparison
 
 %% make variable reward plots
 fp_manuscript_variableReward();

@@ -33,6 +33,8 @@ saveFig(gcf, figPath, 'allSubj-periDS-allStages', figFormats)
 %subset specific data to plot
 data= periEventTable;
 
+%temp subset for testing
+% data= periEventTable(periEventTable.stage==5,:);
    
 %transform to have trialType variable
 %ideally want to melt() from wide to long 3 eventTypes into single col
@@ -41,20 +43,55 @@ data= periEventTable;
 data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
 
 
-%define variables to plot and grouping 
-%ind subjects
-i=gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'lightness', data.subject);
-
-% i.geom_line();
+%mean between subj
+i= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType);
 
 i.facet_wrap(data.stage);
 
+i.stat_summary('type','sem','geom','area');
+
+i().set_line_options('base_size',2)
+
+i().set_color_options('lightness', 60)
+
+i.draw();
+
+%define variables to plot and grouping 
+%ind subjects
+i.update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'lightness', data.subject);
+% i=gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType);
+
+
 %define stats to show
 % Mean line for individual subj w/o SEM
-% i.stat_summary('type','sem','geom','area');
+% i.stat_summary('type','sem','geom','area'); %mean + sem shade
+i.stat_summary('type','sem','geom','line'); %mean line only?
+
+%TODO: i think ind subjects x trialtype may require separate, sequential
+%subplotting? ideally low alpha idk how to do this with gramm without
+%manually calculating mean
+
+%just do in illustrator later!
+
+% i().set_color_options('chroma',0,'lightness',30); % define color for ind subjs
+
+%color_options : Lower chroma = darker, lower lightness= darker
+%lightness 0:100 (white) , color range unclear, beyond 255 possible
+%chroma 10, lightness 90 = very dull, kinda similar to a low alpha?
+%chroma 40, lightness 90/60 good
+
+% The values are Hue (defines the color, [0-360]), Chroma (defines the colorness; restricted to [0-100] here) and Luminance (defines the brightness, [0-100]). 
+
+% i().set_color_options('chroma', 40, 'lightness',60); % define color for ind subjs
+
+% flat range of lightness? still has some variability. Just tune later in
+% illustrator
+i().set_color_options('lightness_range', [20,20])
+
+i().set_line_options('base_size',0.5)
 
 %define labels for plot axes
-i.set_names('x','time from event (s)','y','z-score','color','subject');
+i.set_names('x','time from event (s)','y','z-score','color','trialType','lightness','subject');
 i.set_title('Peri-Cue');
 
 %set y axes limits manually
@@ -63,16 +100,418 @@ i.axe_property('YLim',[-2,5]);
 %draw the actual plot
 i.draw();
 
-%mean between subj
-i.update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType);
-
-i.draw();
 % 
 % i.update('x',data.timeLock,'y',data.NSblue);
 % i.stat_summary('type','sem','geom','area');
 % i.draw();
 
 saveFig(gcf, figPath, 'allSubj-periDSvsNS-allStages', figFormats)
+
+
+%% DS vs NS AUC (Figure 1)s
+data= periEventTable;
+
+%---This METHOD seems WAY TOO SLOW, consider another solution elsewhere?
+%ran longer than over night still running
+% seems just like matlab is very inefficient doing this... cpu, ram, disk
+% usage all very low 
+
+%Overnight made it to NS subj 4 thisDate 3, trial 2386
+
+%--running AUC on all individual trials within loop of table
+
+
+%-------peri DS AUC
+
+%string of signal column(s)
+signalCol= 'DSblue'
+
+%string of trialID col
+trialIDCol= 'DStrialID'
+
+subjects= unique(data.subject);
+
+for subj= 1:numel(subjects)
+%  %    dataTemp= data(strcmp(data.subject,subjects{subj}),:);
+   
+   %create a conditional index which we'll cumulatively combine for
+   %reassignment into original table
+   ind=[]; ind2=[]; ind3=[]; ind4=[]; ind5=[];
+
+   ind= (strcmp(data.subject,subjects{subj}));
+   
+%    dates= unique(dataTemp.date);
+
+   dates= unique(data(ind, 'date'));
+   
+   for thisDate= 1:numel(dates)
+%        dataTemp2= dataTemp(strcmp(dataTemp.date,dates{date}),:);
+       
+%         ind2= (ind & (strcmp(data(:,'date'),dates{thisDate})));
+%         ind2= (ind & (strcmp(data(:,'date'),dates{thisDate,:})));
+
+        %kinda slow but likely faster than ismember
+        ind2= (ind & (strcmp(data{:,'date'},dates{thisDate,:})));
+
+
+      
+       %TODO: ~~ismember is super slow!
+%        ind2= (ind & (ismember(data(:,'date'),dates(thisDate,:))));
+
+       
+       
+        %retain only those with valid trialIDs 
+        ind5= (ind2 & (~ismissing(data(:,trialIDCol))));
+
+       
+%        trials= unique(dataTemp2(:,trialIDCol))
+    
+%        trials= unique(table2array(data(ind2, trialIDCol))); %if run unique() on table doesn't actually get unique values of column
+       
+       %for some reason ind2 w/ nan trialID returns a unique nan for every row
+       trials= unique(data(ind5,trialIDCol));
+
+       trials= table2array(trials);
+       
+       for trial= 1:numel(trials)
+            
+%            dataTemp3= dataTemp2((ismember(dataTemp2(:,trialID),trial)),:);
+           
+%            ind3= (ind2 & (ismember(data(:,trialID),trials(trial))));
+
+%              ind3= (ind5 & (ismember(data(:,trialIDCol),trials(trial,:)))); %this line takes awhile?
+%              ind3= (ind5 & (data(:,trialIDCol)==trials(trial,:))); %this line takes awhile?
+             ind3= (ind5 & (data.(trialIDCol))==trials(trial,:)); %this line takes awhile?
+
+
+
+
+           %compute AUC of signal within this trial
+           auc= []; aucAbs= []; aucCum= []; aucCumAbs= [];
+           
+           signal= data(ind3, signalCol);
+           
+           signal= table2array(signal);
+           
+           
+
+           %for auc and aucAbs, single value for trials so retain only one
+           %observation (for correct plotting & stats; easy w/o changing later)
+           ind4= find(ind3==1);
+
+           auc= nan(size(ind4));
+           aucAbs= nan(size(ind4));
+           
+           [auc(1), aucAbs(1), aucCum, aucCumAbs] = fp_AUC(signal);
+          
+           
+        % -- Eliminate redundant auc values
+        
+%         %for auc and aucAbs, single value for trials so retain only one
+%         %observation (for correct plotting & stats; easy w/o changing later)
+%         ind4= find(ind3==1);
+% %         
+% %         
+% %         auc(1)= auc;
+% % 
+% %         auc(2:,:)= nan;
+% %         aucAbs(2:,:)=nan;
+
+           
+           data(ind3, append('auc',signalCol))= table(auc); %single AUC value for trial
+           data(ind3, append('aucAbs',signalCol))= table(aucAbs); %single AUC value for abs(signal) 
+           data(ind3, append('aucCum',signalCol))= table(aucCum); %cumulative AUC across time within trial 
+           data(ind3, append('aucCumAbs',signalCol))= table(aucCumAbs); %cumulative AUC of abs(signal) across time within trial 
+
+       end %end trial loop
+   end %end ses loop
+    
+end %end subj loop
+
+
+%-------Repeat for NS
+% 
+
+%string of signal column(s)
+signalCol= 'NSblue'
+
+%string of trialID col
+trialIDCol= 'NStrialID'
+
+subjects= unique(data.subject);
+
+for subj= 1:numel(subjects)
+%    dataTemp= data(strcmp(data.subject,subjects{subj}),:);
+   
+   %create a conditional index which we'll cumulatively combine for
+   %reassignment into original table
+   ind=[]; ind2=[]; ind3=[]; ind4=[]; ind5=[];
+
+   ind= (strcmp(data.subject,subjects{subj}));
+   
+%    dates= unique(dataTemp.date);
+
+   dates= unique(data(ind, 'date'));
+   
+   for thisDate= 1:numel(dates)
+%        dataTemp2= dataTemp(strcmp(dataTemp.date,dates{date}),:);
+       
+%         ind2= (ind & (strcmp(data(:,'date'),dates{thisDate})));
+%         ind2= (ind & (strcmp(data(:,'date'),dates{thisDate,:})));
+
+        %kinda slow but likely faster than ismember
+        ind2= (ind & (strcmp(data{:,'date'},dates{thisDate,:})));
+
+
+      
+       %TODO: ~~ismember is super slow!
+%        ind2= (ind & (ismember(data(:,'date'),dates(thisDate,:))));
+
+       
+       
+        %retain only those with valid trialIDs 
+        ind5= (ind2 & (~ismissing(data(:,trialIDCol))));
+
+       
+%        trials= unique(dataTemp2(:,trialIDCol))
+    
+%        trials= unique(table2array(data(ind2, trialIDCol))); %if run unique() on table doesn't actually get unique values of column
+       
+       %for some reason ind2 w/ nan trialID returns a unique nan for every row
+       trials= unique(data(ind5,trialIDCol));
+
+       trials= table2array(trials);
+       
+       for trial= 1:numel(trials)
+            
+%            dataTemp3= dataTemp2((ismember(dataTemp2(:,trialID),trial)),:);
+           
+%            ind3= (ind2 & (ismember(data(:,trialID),trials(trial))));
+
+%              ind3= (ind5 & (ismember(data(:,trialIDCol),trials(trial,:)))); %this line takes awhile?
+%              ind3= (ind5 & (data(:,trialIDCol)==trials(trial,:))); %this line takes awhile?
+             ind3= (ind5 & (data.(trialIDCol))==trials(trial,:)); %this line takes awhile?
+
+
+
+
+           %compute AUC of signal within this trial
+           auc= []; aucAbs= []; aucCum= []; aucCumAbs= [];
+           
+           signal= data(ind3, signalCol);
+           
+           signal= table2array(signal);
+           
+           
+
+           %for auc and aucAbs, single value for trials so retain only one
+           %observation (for correct plotting & stats; easy w/o changing later)
+           ind4= find(ind3==1);
+
+           auc= nan(size(ind4));
+           aucAbs= nan(size(ind4));
+           
+           [auc(1), aucAbs(1), aucCum, aucCumAbs] = fp_AUC(signal);
+          
+           
+        % -- Eliminate redundant auc values
+        
+%         %for auc and aucAbs, single value for trials so retain only one
+%         %observation (for correct plotting & stats; easy w/o changing later)
+%         ind4= find(ind3==1);
+% %         
+% %         
+% %         auc(1)= auc;
+% % 
+% %         auc(2:,:)= nan;
+% %         aucAbs(2:,:)=nan;
+
+           
+           data(ind3, append('auc',signalCol))= table(auc); %single AUC value for trial
+           data(ind3, append('aucAbs',signalCol))= table(aucAbs); %single AUC value for abs(signal) 
+           data(ind3, append('aucCum',signalCol))= table(aucCum); %cumulative AUC across time within trial 
+           data(ind3, append('aucCumAbs',signalCol))= table(aucCumAbs); %cumulative AUC of abs(signal) across time within trial 
+
+           
+       end
+   end %end ses loop
+    
+end %end subj loop
+
+
+periEventTable= data; %reassign
+
+%
+%that took a long time to run, let's save the table
+save(fullfile(figPath,strcat(experimentName,'-',date, 'periEventTable')), 'data', '-v7.3');
+
+
+
+%% ------------------------------PLOT of AUC data
+
+stagesToPlot= [4,5,7];
+
+data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+%temp subset for testing
+% data= periEventTable(periEventTable.stage==5,:);
+   
+%transform to have trialType variable
+%ideally want to melt() from wide to long 3 eventTypes into single col
+%matlab lacks good tidying functions like melt() but we have stack
+%which is quite helpful!
+
+%------Cumulative AUC Plot over time
+
+data= stack(data, {'aucCumDSblue', 'aucCumNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAucCum');
+
+
+%mean between subj
+i= gramm('x',data.timeLock,'y',data.periCueBlueAucCum, 'color', data.trialType);
+
+i.facet_wrap(data.stage);
+
+i.stat_summary('type','sem','geom','area');
+
+i().set_line_options('base_size',2)
+
+i().set_color_options('lightness', 60)
+
+i.draw();
+
+%ind subjects
+i.update('x',data.timeLock,'y',data.periCueBlueAucCum, 'color', data.trialType, 'lightness', data.subject);
+
+
+%define stats to show
+% Mean line for individual subj w/o SEM
+% i.stat_summary('type','sem','geom','area'); %mean + sem shade
+i.stat_summary('type','sem','geom','line'); %mean line only?
+
+i().set_color_options('lightness_range', [20,20])
+
+i().set_line_options('base_size',0.5)
+
+%define labels for plot axes
+i.set_names('x','time from event (s)','y','cumulative AUC (of z-score)','color','trialType','lightness','subject');
+i.set_title('Peri-Cue: Cumulative AUC');
+
+%set y axes limits manually
+i.axe_property('YLim',[-200,200]);
+
+%draw the actual plot
+i.draw();
+
+saveFig(gcf, figPath, 'allSubj-periCueAucCum', figFormats);
+
+%% ------------------------------PLOT of AUC data
+
+stagesToPlot= [4,5,7];
+
+data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+%temp subset for testing
+% data= periEventTable(periEventTable.stage==5,:);
+   
+%transform to have trialType variable
+%ideally want to melt() from wide to long 3 eventTypes into single col
+%matlab lacks good tidying functions like melt() but we have stack
+%which is quite helpful!
+
+%------Cumulative AUC Plot over time
+
+data= stack(data, {'aucCumAbsDSblue', 'aucCumAbsNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAucCumAbs');
+
+
+%mean between subj
+i= gramm('x',data.timeLock,'y',data.periCueBlueAucCumAbs, 'color', data.trialType);
+
+i.facet_wrap(data.stage);
+
+i.stat_summary('type','sem','geom','area');
+
+i().set_line_options('base_size',2)
+
+i().set_color_options('lightness', 60)
+
+i.draw();
+
+%ind subjects
+i.update('x',data.timeLock,'y',data.periCueBlueAucCumAbs, 'color', data.trialType, 'lightness', data.subject);
+
+
+%define stats to show
+% Mean line for individual subj w/o SEM
+% i.stat_summary('type','sem','geom','area'); %mean + sem shade
+i.stat_summary('type','sem','geom','line'); %mean line only?
+
+i().set_color_options('lightness_range', [20,20])
+
+i().set_line_options('base_size',0.5)
+
+%define labels for plot axes
+i.set_names('x','time from event (s)','y','cumulative Absolute AUC (of z-score)','color','trialType','lightness','subject');
+i.set_title('Peri-Cue: Cumulative AUC');
+
+%set y axes limits manually
+i.axe_property('YLim',[-50,1000]);
+
+%draw the actual plot
+i.draw();
+
+saveFig(gcf, figPath, 'allSubj-periCueAucCumAbs', figFormats);
+
+
+%% --------- Bar plot of single AUC values
+
+%subset data
+stagesToPlot= [4,5,7];
+
+data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+
+data= stack(data, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
+
+
+%mean between subj
+i= gramm('x',data.trialType,'y',data.periCueBlueAuc, 'color', data.trialType);
+
+i.facet_wrap(data.stage);
+
+%mean bar for trialType
+i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+
+i().set_line_options('base_size',2)
+
+i().set_color_options('lightness', 60)
+
+i.draw();
+
+
+%ind subjects
+i.update('x',data.trialType,'y',data.periCueBlueAuc, 'color', data.trialType, 'lightness', data.subject);
+
+
+%define stats to show
+% Mean point for ind subjects
+i.stat_summary('type','sem','geom','line'); %mean line only
+
+i().set_color_options('lightness_range', [20,20])
+
+i().set_line_options('base_size',0.5)
+
+%define labels for plot axes
+i.set_names('x','time from event (s)','y','AUC (of z-score)','color','trialType','lightness','subject');
+i.set_title('Peri-Cue: AUC');
+
+%set y axes limits manually
+i.axe_property('YLim',[-500,500]);
+
+%draw the actual plot
+i.draw();
+
+saveFig(gcf, figPath, 'allSubj-periCueAucCum-Bar', figFormats);
+
 
 
 %% Stage 7 peri-Cue vs peri-Pox vs peri-Lox
@@ -87,9 +526,9 @@ data= periEventTable(periEventTable.stage==7,:);
 %ideally want to melt() from wide to long 3 eventTypes into single col
 %matlab lacks good tidying functions like melt() but we have stack
 %which is quite helpful!
-data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox', 'NSblue', 'NSbluePox','NSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periCueBlue');
+data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox', 'NSblue', 'NSbluePox','NSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
 
-i=gramm('x',data.timeLock,'y',data.DSblue, 'color', data.EventType, 'lightness',data.subject);
+i=gramm('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType, 'lightness',data.subject);
 
 
 
