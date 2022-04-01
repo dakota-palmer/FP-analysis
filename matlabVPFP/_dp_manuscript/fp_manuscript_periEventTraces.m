@@ -129,6 +129,13 @@ signalCol= 'DSblue'
 %string of trialID col
 trialIDCol= 'DStrialID'
 
+%preallocate new columns with nan (otherwise matlab may autofill blanks with 0)
+data(:, append('auc',signalCol))= table(nan); %single AUC value for trial
+data(:, append('aucAbs',signalCol))= table(nan); %single AUC value for abs(signal) 
+data(:, append('aucCum',signalCol))= table(nan); %cumulative AUC across time within trial 
+data(:, append('aucCumAbs',signalCol))= table(nan); %cumulative AUC of abs(signal) across time within trial 
+
+
 subjects= unique(data.subject);
 
 for subj= 1:numel(subjects)
@@ -136,7 +143,7 @@ for subj= 1:numel(subjects)
    
    %create a conditional index which we'll cumulatively combine for
    %reassignment into original table
-   ind=[]; ind2=[]; ind3=[]; ind4=[]; ind5=[];
+   ind=[]; ind2=[]; ind3=[]; ind4=[]; ind5=[]; ind6= [];
 
    ind= (strcmp(data.subject,subjects{subj}));
    
@@ -188,6 +195,13 @@ for subj= 1:numel(subjects)
 
            %compute AUC of signal within this trial
            auc= []; aucAbs= []; aucCum= []; aucCumAbs= [];
+           
+           
+           
+           %Only include post-cue portion of signal in AUC (timeLock >=0)
+           ind6= data.timeLock>=0;
+           
+           ind3= (ind3 & ind6);
            
            signal= data(ind3, signalCol);
            
@@ -230,13 +244,20 @@ end %end subj loop
 
 
 %-------Repeat for NS
-% 
+%
 
 %string of signal column(s)
 signalCol= 'NSblue'
 
 %string of trialID col
 trialIDCol= 'NStrialID'
+
+%preallocate new columns with nan (otherwise matlab may autofill blanks with 0)
+data(:, append('auc',signalCol))= table(nan); %single AUC value for trial
+data(:, append('aucAbs',signalCol))= table(nan); %single AUC value for abs(signal) 
+data(:, append('aucCum',signalCol))= table(nan); %cumulative AUC across time within trial 
+data(:, append('aucCumAbs',signalCol))= table(nan); %cumulative AUC of abs(signal) across time within trial 
+
 
 subjects= unique(data.subject);
 
@@ -245,7 +266,7 @@ for subj= 1:numel(subjects)
    
    %create a conditional index which we'll cumulatively combine for
    %reassignment into original table
-   ind=[]; ind2=[]; ind3=[]; ind4=[]; ind5=[];
+   ind=[]; ind2=[]; ind3=[]; ind4=[]; ind5=[]; ind6=[];
 
    ind= (strcmp(data.subject,subjects{subj}));
    
@@ -298,8 +319,13 @@ for subj= 1:numel(subjects)
            %compute AUC of signal within this trial
            auc= []; aucAbs= []; aucCum= []; aucCumAbs= [];
            
-           signal= data(ind3, signalCol);
+           %Only include post-cue portion of signal in AUC (timeLock >=0)
+           ind6= data.timeLock>=0;
            
+           ind3= (ind3 & ind6);
+           
+           signal= data(ind3, signalCol);
+                      
            signal= table2array(signal);
            
            
@@ -313,7 +339,43 @@ for subj= 1:numel(subjects)
            
            [auc(1), aucAbs(1), aucCum, aucCumAbs] = fp_AUC(signal);
           
-           
+%            %auc(1) == aucCum(end)
+%            
+%            x= 401; %tbins
+%            
+%            %default x = 1
+%            test= trapz(signal);
+%            
+%            x= 401/fs;
+%            test2= trapz(x, signal); 
+%            
+%            x= 401*fs;
+%            test3= trapz(x, signal); 
+% 
+%            %each of these makes more extreme trapz?
+%            %still get 401 values
+%            % but ~10x larger each time
+%           % x= 401; %tbins
+%            test= cumtrapz(signal);
+%            
+%            x= 2; %401/fs;
+%            test2= cumtrapz(x, signal); 
+%            
+%            x= 0.5;%401*fs;
+%            test3= cumtrapz(x, signal); 
+% 
+%            
+%            %looks like 1/fs is pretty reasonable?
+%            x= 1/fs;%401*fs;
+%            test= cumtrapz(x, signal);
+%            
+%            figure;
+%            subplot(1,2,1); hold on;
+%            plot(signal, 'b');
+%            subplot(1,2,2); hold on;
+%            plot(test, 'k');
+%            
+                
         % -- Eliminate redundant auc values
         
 %         %for auc and aucAbs, single value for trials so retain only one
@@ -367,6 +429,7 @@ data= stack(data, {'aucCumDSblue', 'aucCumNSblue'}, 'IndexVariableName', 'trialT
 
 
 %mean between subj
+figure();
 i= gramm('x',data.timeLock,'y',data.periCueBlueAucCum, 'color', data.trialType);
 
 i.facet_wrap(data.stage);
@@ -396,8 +459,10 @@ i().set_line_options('base_size',0.5)
 i.set_names('x','time from event (s)','y','cumulative AUC (of z-score)','color','trialType','lightness','subject');
 i.set_title('Peri-Cue: Cumulative AUC');
 
-%set y axes limits manually
-i.axe_property('YLim',[-200,200]);
+%set axes limits manually
+i.axe_property('YLim',[-7,6]);
+
+i.axe_property('XLim',[0,max(data.timeLock)]);
 
 %draw the actual plot
 i.draw();
@@ -419,9 +484,10 @@ data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
 %which is quite helpful!
 
 %------Cumulative AUC Plot over time
-
+ 
 data= stack(data, {'aucCumAbsDSblue', 'aucCumAbsNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAucCumAbs');
 
+figure();
 
 %mean between subj
 i= gramm('x',data.timeLock,'y',data.periCueBlueAucCumAbs, 'color', data.trialType);
@@ -453,8 +519,10 @@ i().set_line_options('base_size',0.5)
 i.set_names('x','time from event (s)','y','cumulative Absolute AUC (of z-score)','color','trialType','lightness','subject');
 i.set_title('Peri-Cue: Cumulative AUC');
 
-%set y axes limits manually
-i.axe_property('YLim',[-50,1000]);
+%set axes limits manually
+i.axe_property('YLim',[-5,10]);
+
+i.axe_property('XLim',[0,max(data.timeLock)]);
 
 %draw the actual plot
 i.draw();
@@ -505,7 +573,7 @@ i.set_names('x','time from event (s)','y','AUC (of z-score)','color','trialType'
 i.set_title('Peri-Cue: AUC');
 
 %set y axes limits manually
-i.axe_property('YLim',[-500,500]);
+i.axe_property('YLim',[-1,5]);
 
 %draw the actual plot
 i.draw();
@@ -555,6 +623,102 @@ i.draw();
 
 
 saveFig(gcf, figPath, 'allSubj-periEvent-stage7', figFormats)
+
+%% Figure 2: DS vs NS Peri event Z + AUC bar
+
+stagesToPlot= [5];
+
+%---- i(1) pericue z trace
+%subset specific data to plot
+data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+%transform to have trialType variable
+data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
+
+clear i
+
+%mean between subj
+i(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType);
+
+i(1,1).stat_summary('type','sem','geom','area');
+
+i(1,1).set_line_options('base_size',2)
+
+i(1,1).set_color_options('lightness', 60)
+
+i.draw();
+
+
+%draw the actual plot
+i.draw();
+
+
+%---- i(2) bar AUC
+data2= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
+
+
+%mean between subj
+i(2,1)= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType);
+
+% i.facet_wrap(data.stage);
+
+%mean bar for trialType
+i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+
+i(2,1).set_line_options('base_size',2)
+
+i(2,1).set_color_options('lightness', 60)
+
+i.draw();
+
+
+%-- Subplotting requires single draw call then single update call, Update:
+
+%define variables to plot and grouping 
+%ind subjects
+i(1,1).update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'lightness', data.subject);
+
+
+%define stats to show
+% Mean line for individual subj w/o SEM
+i(1,1).stat_summary('type','sem','geom','line'); %mean line only
+
+i(1,1).set_color_options('lightness_range', [20,20])
+
+i(1,1).set_line_options('base_size',0.5)
+
+%define labels for plot axes
+i(1,1).set_names('x','time from event (s)','y','z-score','color','trialType','lightness','subject');
+i(1,1).set_title('Peri-Cue');
+
+%set y axes limits manually
+i(1,1).axe_property('YLim',[-2,5]);
+
+%ind subjects
+i(2,1).update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'lightness', data2.subject);
+
+
+%define stats to show
+% Mean point for ind subjects
+i(2,1).stat_summary('type','sem','geom','line'); %mean line only
+
+i(2,1).set_color_options('lightness_range', [20,20])
+
+i(2,1).set_line_options('base_size',0.5)
+
+%define labels for plot axes
+i(2,1).set_names('x','time from event (s)','y','AUC (of z-score)','color','trialType','lightness','subject');
+i(2,1).set_title('Peri-Cue: AUC');
+
+%set y axes limits manually
+i(2,1).axe_property('YLim',[-1,5]);
+
+%draw the actual plot
+i.draw();
+
+saveFig(gcf, figPath, '_figure2-allSubj-periCue', figFormats)
 
 %% individual subj all stages: peri-Cue vs peri-Pox vs peri-Lox
 
