@@ -262,6 +262,15 @@ dfTidy= dfTidy.loc[dfTidy.trainDayThisStage>= dfTidy.maxSesThisStage-nSessionsTo
 
 dfTidy= dfTidy.drop('maxSesThisStage', axis=1)
 
+#%% Define peri-event z scoring parameters
+fs= 40
+
+preEventTime= 5 *fs # seconds x fs
+postEventTime= 10 *fs
+
+#time window to normalize against
+baselineTime= 10*fs
+
 
 #%% CORRELATION of event timings based on subset data
 
@@ -604,15 +613,6 @@ colToInclude= colToInclude+ eventsToInclude
 # Hitting memory errors when time shifting events; so subsetting or processing in chunks should help
 
 
-#%% Define peri-event z scoring parameters
-fs= 40
-
-preEventTime= 5 *fs # seconds x fs
-postEventTime= 10 *fs
-
-#time window to normalize against
-baselineTime= 10*fs
-
 #%% NORMALIZE photometry signal
 
 #TODO: may want to add some random trialStart time 'jitter' to add variation to cue onset times for regression (will currently always be t=0)
@@ -946,11 +946,23 @@ del dfTemp
 
 #%% Define peri-event time shift parameters
 
-#keep same time shift parameters as periEvent
-fs=  fs
+# #if you wanted different peri-event timelocking and timeShifting for encoding you could change params here.
 
-preEventTime= preEventTime
-postEventTime= postEventTime
+# #keep same time shift parameters as periEvent
+# fs=  fs
+
+# preEventTime= preEventTime
+# postEventTime= postEventTime
+
+#%% Define "time of influence" for events
+
+#Cue-related activity should happen at short latency within fixed window of time.
+
+#for example, we may want to limit the timeShifts applied (influence in model) to within +2s after cue onset
+
+
+cueTimeOfInfluence= 2*fs
+
 
 
 #%% Shift event timestamps for encoding model
@@ -984,7 +996,15 @@ del dfTidy
 
 #preallocate, try making event timings Sparse- this works!
 for eventCol in eventVars: #.categories:
-    for shiftNum in np.arange(-preEventTime,postEventTime):
+    
+    #limit time shifting to within window of influence for cue eventTypes
+    
+    if ((eventCol== 'DStime' )|( eventCol=='NStime')):
+        postEventShift= cueTimeOfInfluence
+    else:
+        postEventShift= postEventTime
+    
+    for shiftNum in np.arange(-preEventTime,postEventShift):
         # a= pd.Series(np.zeros(len(dfTemp), int))
         # a= np.zeros(len(dfTemp), int))
 
@@ -1014,7 +1034,13 @@ groups= dfTemp[col].copy().groupby(['fileID'])
 # #attempt 5-- WORKED! (very slow, idk how long)
 # #~2s/ iteration so ~10s/shift with 5 events
 for eventCol in eventVars: #.categories:
-    for shiftNum in np.arange(-preEventTime,postEventTime):
+    
+    if ((eventCol== 'DStime' )|( eventCol=='NStime')):
+        postEventShift= cueTimeOfInfluence
+    else:
+        postEventShift= postEventTime
+
+    for shiftNum in np.arange(-preEventTime,postEventShift):
         #note fill_value=0 here will fill the beginning and end of session with 0 instead of nan (e.g. spots where there are no valid timestamps to shift())
         dfTemp.loc[:,(eventCol+'+'+(str(shiftNum)))]= groups[eventCol].shift(shiftNum,fill_value=0)
         # startTime = time.time()
@@ -1032,7 +1058,7 @@ for eventCol in eventVars: #.categories:
 # #attempt 6- failed, MEMORY ERROR @ col 3622
 # #without sparse df preallocation ~9.5s/ 
 # #~9s with sparse preallocation
-# for shiftNum in np.arange(-preEventTime,postEventTime):
+# for shiftNum in np.arange(-preEventTime,postEventShift):
 #     startTime = time.time()
     
 #     #####your python script#####
@@ -1049,7 +1075,7 @@ for eventCol in eventVars: #.categories:
 #Now that i'm using sparse data maybe I can speed up using older methods below
 #~7.5-8s/iteration
 #failed, hit mem error col 3014?
-# for shiftNum in np.arange(-preEventTime,postEventTime):
+# for shiftNum in np.arange(-preEventTime,postEventShift):
 #     startTime = time.time()
     
 #     #####your python script#####
@@ -1064,12 +1090,12 @@ for eventCol in eventVars: #.categories:
 #loop through fileIDs (need this grouping to prevent contamination) and apply shift
 #hitting memory errors this way
 # for name, group in groups:
-    # for shiftNum in np.arange(-preEventTime,postEventTime):
+    # for shiftNum in np.arange(-preEventTime,postEventShift):
     #     # dfTemp.loc[group.index,(eventVars.categories+'+'+(str(shiftNum)))]= group.loc[:,eventVars].shift(shiftNum)
     #     dfTemp.loc[group.index,(eventVars.categories+'+'+(str(shiftNum)))]= group.loc[:,eventVars].shift(shiftNum)
 
 #attempt 2- making it pretty far, to +329... still doesn't work with sparse
-# for shiftNum in np.arange(-preEventTime,postEventTime):
+# for shiftNum in np.arange(-preEventTime,postEventShift):
 #     dfTemp.loc[:,(eventVars.categories+'+'+(str(shiftNum)))]= groups[eventVars.categories].shift(shiftNum)
 
 #attempt 3
@@ -1079,7 +1105,7 @@ for eventCol in eventVars: #.categories:
 #probs bc invoking dfTemp.groupby and it's changing size?
 
 # for eventCol in eventVars.categories:
-#     for shiftNum in np.arange(-preEventTime,postEventTime):
+#     for shiftNum in np.arange(-preEventTime,postEventShift):
 #         dfTemp.loc[:,(eventCol+'+'+(str(shiftNum)))]= groups[eventCol].shift(shiftNum)
 
 #For the shifted event timestamps type of data, just save into np.array. 
@@ -1088,8 +1114,8 @@ for eventCol in eventVars: #.categories:
 
 #preallocate array
 #why is this 90gb now?? df above was saying 21gb at some point?
-# x_basic= np.zeros([(len(eventVars)*(len(np.arange(-preEventTime,postEventTime)))),len(dfTemp)])
-# for shiftNum in np.arange(-preEventTime,postEventTime):
+# x_basic= np.zeros([(len(eventVars)*(len(np.arange(-preEventTime,postEventShift)))),len(dfTemp)])
+# for shiftNum in np.arange(-preEventTime,postEventShift):
 #     dfTemp.loc[:,(eventVars.categories+'+'+(str(shiftNum)))]= pd.NA
 
 #TODO: May want scipy sparse matrix instead, more efficient than pandas?
@@ -1117,7 +1143,7 @@ dfTemp.loc[ind].to_pickle(savePath+'dfRegressionInputNSonly.pkl')
 contVars= list(dfTemp.columns[(dfTemp.columns.str.contains('reblue') | dfTemp.columns.str.contains('repurple'))])
 
 #also save other variables e.g. variables actually included in regression Input dataset (since we may have excluded specific eventTypes)
-saveVars= ['idVars', 'eventVars', 'contVars', 'trialVars', 'experimentType', 'stagesToInclude', 'nSessionsToInclude', 'preEventTime','postEventTime', 'fs']
+saveVars= ['idVars', 'eventVars', 'contVars', 'trialVars', 'experimentType', 'stagesToInclude', 'nSessionsToInclude', 'preEventTime','postEventShift', 'fs', 'cueTimeOfInfluence']
 
 
 #use shelve module to save variables as dict keys
@@ -1145,7 +1171,7 @@ my_shelf.close()
 
 
 # #also save other variables e.g. variables actually included in regression Input dataset (since we may have excluded specific eventTypes)
-# saveVars= ['idVars', 'eventVars', 'trialVars', 'experimentType', 'stagesToInclude', 'nSessionsToInclude', 'preEventTime','postEventTime', 'fs']
+# saveVars= ['idVars', 'eventVars', 'trialVars', 'experimentType', 'stagesToInclude', 'nSessionsToInclude', 'preEventTime','postEventShift', 'fs']
 
 
 # #use shelve module to save variables as dict keys
@@ -1235,9 +1261,9 @@ my_shelf.close()
 
 # for eventCol in range(len(eventVars)):
 #     if eventCol==0:
-#         ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
+#         ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventShift)))
 #     else:
-#         ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
+#         ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventShift)),((eventCol+1)*len(np.arange(-preEventTime,postEventShift)-1)))
    
 #     kernels[(eventVars[eventCol]+'-coef')]= b[ind]
 

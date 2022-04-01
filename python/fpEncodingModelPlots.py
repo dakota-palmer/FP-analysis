@@ -53,13 +53,14 @@ print(subjectsToExclude)
 
 #%% TODO: Load other variables
 
-# preEventTime, postEventTime, fs
+# preEventTime, postEventTime, fs, cueTimeOfInfluence
 
 fs= 40
 
 preEventTime= 5 *fs
 postEventTime= 10 *fs
 
+cueTimeOfInfluence= 2*fs
 #%% Get all .pkl files in encoding model output folder (1 per subj)
     
 dataPath= r'./_output/fpEncodingModelStats/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
@@ -322,7 +323,7 @@ kernelsAll= pd.DataFrame()
 for subj in dfEncoding.subject.unique():
 
     
-    #get data for this subj from df
+#-get data for this subj from df
     ind= np.where(dfEncoding.subject==subj)
     
     dfTemp= dfEncoding.loc[ind].reset_index().copy() #reset index so can just retrieve values with [0]
@@ -361,6 +362,8 @@ for subj in dfEncoding.subject.unique():
     
     b= model.coef_
 
+
+#-now actually get kernels
     kernels= pd.DataFrame()
     kernels['beta']= np.empty(len(b))
     kernels['predictor']= np.empty(len(b))
@@ -377,8 +380,13 @@ for subj in dfEncoding.subject.unique():
     for eventCol in range(len(eventVars)):
         indEvent= group.columns[X].str.contains(eventVars[eventCol])
         
+        if ((eventVars[eventCol]== 'DStime' )|(eventVars[eventCol]=='NStime')):
+            postEventShift= cueTimeOfInfluence
+        else:
+            postEventShift= postEventTime
+        
         kernels.loc[indEvent,'eventType']= eventVars[eventCol]
-        kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
+        kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventShift)/fs
             
 
     
@@ -391,14 +399,14 @@ kernelsAll= kernelsAll.reset_index()
     
     # for eventCol in range(len(eventVars)):
     #     if eventCol==0:
-    #         ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventTime)))
+    #         ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventShift)))
     #     else:
-    #         ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventTime)),((eventCol+1)*len(np.arange(-preEventTime,postEventTime)-1)))
+    #         ind= np.arange((eventCol)*len(np.arange(-preEventTime,postEventShift)),((eventCol+1)*len(np.arange(-preEventTime,postEventShift)-1)))
        
     #     # kernels[(eventVars[eventCol]+'-coef')]= b[ind]
     #     kernels.loc[ind,'beta']= b[ind]
     #     kernels.loc[ind,'eventType']= eventVars[eventCol]
-    #     kernels.loc[ind, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
+    #     kernels.loc[ind, 'timeShift']= np.arange(-preEventTime,postEventShift)/fs
     #     # kernels.loc[ind,'betaStatsModels']= fit.params[ind].values
         
         
@@ -514,94 +522,94 @@ dfPredictedAll= dfPredictedAll.reset_index()
 
 #%%  TODO: linear sum of kernels at time=0
 
-# TODO: sum Kernels as prediction (like in the Parker 2016 paper)
+# # TODO: sum Kernels as prediction (like in the Parker 2016 paper)
 
-#kernels need to be shifted to time=0 of each event onset prior to summation.
+# #kernels need to be shifted to time=0 of each event onset prior to summation.
 
-kernelsShiftedAll= pd.DataFrame()
+# kernelsShiftedAll= pd.DataFrame()
 
-for subj in dfEncoding.subject.unique():
-
-    
-    #get data for this subj from df
-    ind= np.where(dfEncoding.subject==subj)
-    
-    dfTemp= dfEncoding.loc[ind].reset_index().copy() #reset index so can just retrieve values with [0]
+# for subj in dfEncoding.subject.unique():
 
     
-    model= dfTemp['model_lasso'][0] 
+#     #get data for this subj from df
+#     ind= np.where(dfEncoding.subject==subj)
+    
+#     dfTemp= dfEncoding.loc[ind].reset_index().copy() #reset index so can just retrieve values with [0]
+
+    
+#     model= dfTemp['model_lasso'][0] 
     
     
-    group= dfTemp['modelInput'][0]
+#     group= dfTemp['modelInput'][0]
      
-    X= dfTemp['X'][0][0]
-    y= dfTemp['y']
+#     X= dfTemp['X'][0][0]
+#     y= dfTemp['y']
     
-    eventVars= dfTemp['eventVars']
-    eventVars= eventVars[0]
+#     eventVars= dfTemp['eventVars']
+#     eventVars= eventVars[0]
     
    
-    eventVars= eventVars[0]
+#     eventVars= eventVars[0]
 
     
-    b= model.coef_
+#     b= model.coef_
 
-    # kernelsShifted= pd.DataFrame()
-    # kernels['beta']= np.empty(len(b))
-    # kernels['predictor']= np.empty(len(b))
-    # kernels['eventType']= np.empty(len(b))
-    # kernels['timeShift']= np.empty(len(b))
+#     # kernelsShifted= pd.DataFrame()
+#     # kernels['beta']= np.empty(len(b))
+#     # kernels['predictor']= np.empty(len(b))
+#     # kernels['eventType']= np.empty(len(b))
+#     # kernels['timeShift']= np.empty(len(b))
     
-    #adding statsmodels output
-    # # kernels['betaStatsModels']= np.empty(len(b))
+#     #adding statsmodels output
+#     # # kernels['betaStatsModels']= np.empty(len(b))
      
-    # kernels.loc[:,'beta']= b
-    # kernels.loc[:,'predictor']= group.columns[X]
+#     # kernels.loc[:,'beta']= b
+#     # kernels.loc[:,'predictor']= group.columns[X]
     
-    #copy input data but set all=0 except timeShift=0
-    xActual= group.copy()
+#     #copy input data but set all=0 except timeShift=0
+#     xActual= group.copy()
 
-    col= group.columns.str.contains(r'\+0')
+#     col= group.columns.str.contains(r'\+0')
 
-    xActual.loc[:,~col]= 0
+#     xActual.loc[:,~col]= 0
     
-    #just subset these cols? (probs will want metadata tho for plotting)
-    # xActual= xActual.loc[:,col]
+#     #just subset these cols? (probs will want metadata tho for plotting)
+#     # xActual= xActual.loc[:,col]
     
-    #for each eventType insert corresponding kernel centered on onsets (1) at t=0         
+#     #for each eventType insert corresponding kernel centered on onsets (1) at t=0         
     
     
-    #assign eventType specific info
-    for eventCol in range(len(eventVars)):
-        indEvent= xActual.columns.str.contains(eventVars[eventCol])
+#     #assign eventType specific info
+#     for eventCol in range(len(eventVars)):
+#         indEvent= xActual.columns.str.contains(eventVars[eventCol])
         
-        indOnset= np.where(xActual.loc[:,((indEvent) & (col))]==1)
+#         indOnset= np.where(xActual.loc[:,((indEvent) & (col))]==1)
         
-        # kernels.loc[indEvent,'eventType']= eventVars[eventCol]
-        # kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventTime)/fs
+#         # kernels.loc[indEvent,'eventType']= eventVars[eventCol]
+#         # kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventShift)/fs
             
 
     
-    kernels['subject']= subj
+#     kernels['subject']= subj
         
-    kernelsAll= pd.concat([kernelsAll, kernels], axis=0)
+#     kernelsAll= pd.concat([kernelsAll, kernels], axis=0)
 
-#reset index after combining
-kernelsAll= kernelsAll.reset_index()
+# #reset index after combining
+# kernelsAll= kernelsAll.reset_index()
 
-# #set all eventtimes
-# xActual= group.copy()
+# # #set all eventtimes
+# # xActual= group.copy()
 
-# col= group.columns.str.contains(r'\+0')
+# # col= group.columns.str.contains(r'\+0')
 
-# xActual.loc[:,~col]= 0
+# # xActual.loc[:,~col]= 0
 
-# yPredicted= model.predict(xActual.loc[:,X])
+# # yPredicted= model.predict(xActual.loc[:,X])
 
-# dfPredicted['yPredicted2']= yPredicted
+# # dfPredicted['yPredicted2']= yPredicted
 
-#sum
-betaSum= kernelsAll.groupby(['subject','timeShift'])['beta'].sum().reset_index()
+# #sum
+# betaSum= kernelsAll.groupby(['subject','timeShift'])['beta'].sum().reset_index()
 
 
 #%%% Side by side plot of predicted values.

@@ -114,6 +114,8 @@ dfTidy = dfTidy.merge(dfTemp, how='left', on=groupHierarchyTrialID).copy()
 
 #%% TODO: Calculate pump onset times (UStimes) manually
 
+# started this but not really necessary. fixed in matlab and just pulling from there.
+
 # #revising from MATLAB code (bug found in matlab 2022-02-27 which can cause trials to be misclassified and UStimes to be incorrect)
 
 # #manually account for error with variable pump on delays for specific pumps
@@ -174,8 +176,7 @@ dfTidy = dfTidy.merge(dfTemp, how='left', on=groupHierarchyTrialID).copy()
 
 #no  we'll want UStimes etc during entire 'trial' (not just limited to cueDur) so will want to revise this after
 
-#%% DP 1/18/22 
-# Event latency, count, and behavioral outcome for each TRIALID
+#%% Event latency, count, and behavioral outcome for each TRIALID
 #old section below could be converted to 'epoc' or something if want relative comparison between pre-cue/ITI/cue
 
 dfTemp= dfTidy.copy()

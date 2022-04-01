@@ -54,6 +54,12 @@ modeSignal= 'reblue'
 # modeSignal= 'repurple'
 
 
+#%% TODO: Make sure everything is saved and loaded by shelve
+
+stagesToInclude=[7]
+nSessionsToInclude= 0
+
+
 #%% Load regression input.pkl
 dataPath= r'./_output/fpEncodingModelPrep/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
@@ -155,8 +161,8 @@ y= 'reblue-z-periDS'
 subjects= dfTemp.subject.unique()
 
 #run only specific subjects
-subjects= [8,9]
-# subjects= [11,12,13]
+# subjects= [8,9]
+subjects= [11,12,13, 15, 19]
 
 
 #intialize a df to combine all data?
