@@ -26,6 +26,11 @@ from customFunctions import groupPercentCalc
 #plot settings in section below
 
 
+#%% TODO: make sure everything is saved/imported by shelve correctly
+
+# 'experimentType'
+
+experimentType= 'fp'
          
 
 #%% Load previously saved dfTidy (and other vars) from pickle
@@ -112,72 +117,9 @@ dfTemp= dfTemp.loc[:,groupHierarchyTrialID+['trialCountThisSubj']+['trialCountTh
 
 dfTidy = dfTidy.merge(dfTemp, how='left', on=groupHierarchyTrialID).copy()
 
-#%% TODO: Calculate pump onset times (UStimes) manually
-
-# started this but not really necessary. fixed in matlab and just pulling from there.
-
-# #revising from MATLAB code (bug found in matlab 2022-02-27 which can cause trials to be misclassified and UStimes to be incorrect)
-
-# #manually account for error with variable pump on delays for specific pumps
-# # currentSubj(session).trainStage>=8 %error was on on stage 8 code (I'm using >= 8 here temporarily because I am using some numbers greater than 8 as excel metadata labels for some stage 8 sessions) 
-# # %if pump1 trial, DS ttl delay was 10 miliseconds, %if pump2 trial, DS ttl delay was 20 miliseconds, %if pump3 trial, DS ttl delay was 20 milisecond
-
-# #still interpolating before importing to python so unclear impact... need to do everything raw
-
-# #approach here will be to find the first PE within cueDur of each trial, then manaully calculate pump onset based on known delay
-
-# dfTemp= dfTidy.copy()
-
-# #TODO: consider calculating an 'estimated' NS pump on / expected pump on for direct comparison between DS and NS trials
-# #will just do this actually
-# # dfTemp= dfTemp.loc[dfTemp.trialType=='DStime'] 
-# dfTemp= dfTemp.loc[(dfTemp.trialType.str.contains('NStime')|(dfTemp.trialType.str.contains('DStime')))] 
-
-
-# # #get time of the first PE of each trial (have this from groupby cumcount() earlier)
-# ind= dfTemp.trialPE==0
-
-# dfTemp['firstPEtime']= dfTemp.loc[ind, 'cutTime']
-
-# #fill na throughout trial
-# dfTemp['firstPEtime']= dfTemp.groupby(['fileID','trialID'])['firstPEtime'].transform('fillna', method='ffill')
-
-
-# #manual delay adjustment
-# dfTemp['USdelay']= None
-
-
-# #add delay; varies by stage
-# stages= [1,2,3,4,5,6,7,8,9,10,11,12]
-# delay= [0,0,0,0,0,0.5,1,1,1,1,1,1]
-
-# #add additional delay for stages 8+; varies per trial by pumpID (caused by bug, used sequential conditional MPC statements so delay compounded)
-# pumps[1,2,3]
-# delay2= [0.1, 0.2, 0.3]
-
-# for thisStage in range(len(stages)):
-#     dfTemp.loc[dfTemp.stage==stages[thisStage],'delay']= delay[thisStage]
-#     for thisPump in range(len(pumps)):
-#         dfTemp.loc[dfTemp.pumpID==pumps[thisPump],'delay']= delay[thisStage]+delay2[thisPump]
-
-
-# dfTemp.loc['USdelay']
-
-# dfTemp['USTimeEstimate']= None
-
-# #example lambda transforms
-# # trials= dfTemp.groupby(['fileID','trialID'])['epoch'].transform(lambda x: (x==epocName).any())
-# # dfTemp['UStime']=  dfTemp.groupby(['fileID','trialID'])['eventType'].transform(lambda x: x==refEvent)
-# #attempt
-# # dfTemp['UStimeEst']=  dfTemp[ind].groupby(['fileID','trialID'])['cutTime'].transform(lambda x: x==refEvent)
-
-
-#%% Conduct trial-based analyses prior to revising trialID?
-
-#no  we'll want UStimes etc during entire 'trial' (not just limited to cueDur) so will want to revise this after
 
 #%% Event latency, count, and behavioral outcome for each TRIALID
-#old section below could be converted to 'epoc' or something if want relative comparison between pre-cue/ITI/cue
+# want to count all events within a trial (between this cue onset and next cue onset -1 timestamp)
 
 dfTemp= dfTidy.copy()
 
@@ -209,61 +151,7 @@ dfTemp['trialLickUS'] = dfTemp.loc[(dfTemp.eventType == 'lickUS')].groupby([
 #assign back to df
 dfTidy= dfTemp.copy()
 
-
-#%% OLD Preliminary data analyses (for tidy data)
-# # Event latency, count, and behavioral outcome for each TRIALID
-
-# #TODO: Lick 'cleaning' to eliminate invalid licks (are they in port, is ILI within reasonable range)
-
-
-# #Calculate latency to each event in trial (from cue onset). based on trialEnd to keep it simple
-#   # trialEnd is = cue onset + cueDur. So just subtract cueDur for cue onset time  
-# dfTidy.loc[dfTidy.trialID>=0, 'eventLatency'] = (
-#     (dfTidy.eventTime)-(dfTidy.trialEnd-dfTidy.cueDur)).copy()
-
-# #have trial start now, subtract trialStart from eventTime to get latency per trial
-# #no need for -trialID exception
-# dfTidy.loc[:,'eventLatency']= ((dfTidy.eventTime)-(dfTidy.trialStart)).copy()
-# # 
-# # dfTidy.loc[dfTidy.trialID>=0,'eventLatency']= ((dfTidy.eventTime)-(dfTidy.trialStart))
-
-# # dfTidy.loc[dfTidy.trialID<0, 'eventLatency'] = ((dfTidy.eventTime)-(dfTidy.trialStart)).copy()
-
-# #TODO: exception needs to be made for first ITI; for now fill w nan
-# dfTidy.loc[dfTidy.trialID== -999, 'eventLatency']= np.nan
-
-# #Count events in each trial 
-# #use cumcount() of event times within file & trial 
-
-# #converting to float for some reason
-# dfTidy['trialPE'] = dfTidy.loc[(dfTidy.eventType == 'PEtime')].groupby([
-# 'fileID', 'trialID'])['eventTime'].cumcount().copy()
-
-# # #try transform
-# # dfTidy.loc[:,'trialPE'] = dfTidy.loc[(dfTidy.eventType == 'PEtime')].groupby([
-# # 'fileID', 'trialID'])['eventTime'].transform('cumcount').copy()
-
-
-# dfTidy['trialLick'] = dfTidy.loc[(dfTidy.eventType == 'lickTime')].groupby([
-#     'fileID', 'trialID']).cumcount().copy()
-
-# # Add trainDay variable (cumulative count of sessions within each subject)
-# dfGroup= dfTidy.loc[dfTidy.groupby(['subject','fileID']).cumcount()==0]
-# # test= dfGroup.groupby(['subject','fileID']).transform('cumcount')
-# dfTidy.loc[:,'trainDay']= dfGroup.groupby(['subject'])['fileID'].transform('cumcount')
-# dfTidy.loc[:,'trainDay']= dfTidy.groupby(['subject','fileID']).fillna(method='ffill')
-
-# #Add cumulative count of training day within-stage (so we can normalize between subjects appropriately)
-# ##very important consideration!! Different subjects can run different programs on same day, which can throw plots/analysis off when aggregating data by date.
-# dfGroup= dfTidy.loc[dfTidy.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
-# dfTidy['trainDayThisStage']=  dfGroup.groupby(['subject', 'stage']).transform('cumcount')
-# dfTidy.trainDayThisStage= dfTidy.groupby(['fileID'])['trainDayThisStage'].fillna(method='ffill').copy()
-# # #QC visualizations
-# # g= sns.relplot(data=dfTidy, col='subject', col_wrap=4, x='date', y='trainDayThisStage', hue='stage', kind='scatter')
-# # g= sns.relplot(data=dfTidy, col='subject', col_wrap=4, x='date', y='trainDay', hue='stage', kind='scatter')
-# # g= sns.relplot(data=dfTidy, col='subject', col_wrap=4, x='date', y='date', hue='stage', kind='scatter')
-
-#%% TODO: count events within 10s of cue onset (cue duration in final stage)  
+#%% Count events within 10s of cue onset (cue duration in final stage)  
 #this is mainly for comparing progression/learning between stages since cueDuration varies by stage
 
 dfTemp=  dfTidy.loc[((dfTidy.eventLatency<= 10) & (dfTidy.eventLatency>0))].copy()
@@ -274,40 +162,10 @@ dfTidy['trialPE10s'] = dfTemp.loc[(dfTemp.eventType == 'PEtime')].groupby([
 dfTidy['trialLick10s'] = dfTemp.loc[(dfTemp.eventType == 'lickTime')].groupby([
 'fileID', 'trialID'])['eventTime'].cumcount().copy()
 
-#%% Define behavioral (pe,lick) outcome for each trial. For my lick+laser sessions I need 
-# #to isolate trials with both a PE+lick to measure effect of laser
+#%% Define behavioral (pe,lick) outcome for each trial within first 10s of each trial
 
-# #For each trial (trialID >=0),
-# #count the number of PEs per trial. if >0, they entered the port and earned sucrose. If=0, they did not.
-# #since groupby counting methods don't work well with nans, using nunique() 
-# # peOutcome= dfTidy.loc[dfTidy.trialID>=0].groupby(['fileID','trialID'],dropna=False)['trialPE'].nunique()
-# #do for all trials
-# outcome= dfTidy.groupby(['fileID','trialID'],dropna=False)['trialPE'].nunique()
+## TODO: consider limiting this to cueDur instead of 10s since stages vary and may want to examine ~~~~~~~~
 
-# #naming "trialOutcomeBeh" for now to distinguish between behavioral outcome and reward outcome if needed later
-# trialOutcomeBeh= outcome.copy()
-
-# trialOutcomeBeh.loc[outcome>0]='PE'
-# trialOutcomeBeh.loc[outcome==0]='noPE'
-
-# #now do the same for licks
-# outcome= dfTidy.groupby(['fileID','trialID'],dropna=False)['trialLick'].nunique()
-
-# #add lick outcome + PE outcome for clarity #if it doesn't say '+lick', then none was counted
-# trialOutcomeBeh.loc[outcome>0]=trialOutcomeBeh.loc[outcome>0]+ '+' + 'lick'
-
-# #set index to file,trial and
-# #fill in matching file,trial with trialOutcomeBeh
-# #TODO: I think there is a more efficient way to do this assignment, doens't take too long tho
-
-# dfTidy= dfTidy.reset_index().set_index(['fileID','trialID'])
-
-# dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh']= trialOutcomeBeh
-
-# #reset index to eventID
-# dfTidy= dfTidy.reset_index().set_index(['eventID'])
-
-#%% same as above but behavioral outcome within first 10s of each trial
 outcome= dfTidy.groupby(['fileID','trialID'],dropna=False)['trialPE10s'].nunique()
 
 #naming "trialOutcomeBeh" for now to distinguish between behavioral outcome and reward outcome if needed later
@@ -334,45 +192,8 @@ dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
 #reset index to eventID
 dfTidy= dfTidy.reset_index().set_index(['eventID'])
 
-#%% Calculate Probability of behavioral outcome for each trial type. 
-#This is normalized so is more informative than simple count of trials. 
 
-# #calculate Proportion of trials with PE out of all trials for each trial type
-# #can use nunique() to get count of unique trialIDs with specific PE outcome per file
-# #given this, can calculate Probortion as #PE/#PE+#noPE
-   
-# #subset data and save as intermediate variable dfGroup
-# #get only one entry per trial
-# dfGroup= dfTidy.loc[dfTidy.groupby(['fileID','trialID']).cumcount()==0].copy()
-
-# #for Lick+laser sessions, retain only trials with PE+lick for comparison (OPTO specific)
-# # dfGroup.loc[dfGroup.laserDur=='Lick',:]= dfGroup.loc[(dfGroup.laserDur=='Lick') & (dfGroup.trialOutcomeBeh=='PE+lick')].copy()
-   
-# dfPlot= dfGroup.copy() 
-
-# #for each unique behavioral outcome, loop through and get count of trials in file
-# #fill null counts with 0
-# dfTemp=dfPlot.groupby(
-#         ['fileID','trialType','trialOutcomeBeh'],dropna=False)['trialID'].nunique(dropna=False).unstack(fill_value=0)
-
-
-# ##calculate proportion for each trial type: num trials with outcome/total num trials of this type
-
-# trialCount= dfTemp.sum(axis=1)
-
-
-# outcomeProb= dfTemp.divide(dfTemp.sum(axis=1),axis=0)
-
-# #melt() into single column w label
-# dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='trialOutcomeBeh',value_name='outcomeProbFile')
-
-# #assign back to df by merging
-# #TODO: can probably be optimized. if this section is run more than once will get errors due to assignment back to dfTidy
-# # dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
-
-# dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh']).copy()
-
-#%% Same as above but probability of behavioral outcome within first 10s of trial 
+#%% Calculate probability of behavioral outcome within first 10s of trial 
 #This is normalized so is more informative than simple count of trials. 
 
 #calculate Proportion of trials with PE out of all trials for each trial type
@@ -536,32 +357,12 @@ ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'cutTime'], ymin=ax.get_ylim(
 
 ax.legend()
 
-#%%  TODO: Either have specific epocs for different circumstances (by trialType)
-#or should have shared epocs between trialTypes (e.g. DS, post-reward vs Cue, postPE(rewarded or unrewarded based on trialType) )
-
-#specific seems better at face, though occludes direct comparisons between trialTypes
-
-
-#%% TODO: Refine postPE epoc
-#based on outcome (e.g. pump, NS vs DS)
- 
-#can do using trialType column
 
 #%% REVISE TRIALID 
 
-#so for now treating these epochs somewhat independently from trialID. 
-#not sure how to best deal w this. Perhaps 'trials' should be all time 
-#from cue onset: next cue start, with 'Cue','Reward','ITI','Pre-Cue' epocs? 
+#convert trials trials to be all time from cue onset: next cue start, with 'Cue','Reward','ITI','Pre-Cue' epocs? 
 
-#example of the core issue: rat makes PE at cue+9s, so there are licks technically in 'ITI' based on 
-#current trial ID definitions. 
-
-#I think the big issue here 
-
-#--Solution: Revise TrialID to contain entire thisCue:nextCue period. Add Epocs of further within-trial times.
-
-# #for now could be as simple as reversing trialID transformations for ITI+Pre-Cue, will make current ITIs fall within same trialID
-# dfTidy.loc[:,'epoch']= dfTidy.loc[:,'trialType'].copy()
+# #for now as simple as reversing trialID transformations for ITI+Pre-Cue, will make current ITIs fall within same trialID
 
 #make ITI trialIDs positive again, make Pre-Cues corresponding integers
 dfTidy.loc[dfTidy.trialType=='ITI','trialID']= dfTidy.trialID*-1
@@ -576,12 +377,6 @@ dfTidy.trialType= dfTidy.copy().groupby(['fileID','trialID'])['trialType'].trans
 
 #TODO: could make more specific/efficient probably based on trialOutcomeBeh col
 
-# #make distinct noPE ITIs (did they seek or not), were they rewarded or not)
-
-# dfTemp= dfTidy.copy()
-
-# dfTemp.epoch= dfTemp.groupby(['fileID', 'trialID']).ffill()
-
 #Specify ITIs corresponding to this trial now as post-PE ITIs
 #find trials with epoc we're searching for
 epocName= 'cue-postPE'
@@ -594,22 +389,6 @@ dfTemp= dfTidy.copy()
 #skip first ITI
 dfTemp= dfTemp.loc[dfTemp.trialID!=999]
 
-
-# # lambda fxn here is quick way to check with groupby(); kinda slow
-# #returns multiindexed boolean representing each group
-# trials= dfTemp.groupby(['fileID','trialID']).apply(lambda x: (x['epoch']==epocName).any())
-
-# # dfTemp= dfTemp.set_index(['fileID','trialID']) 
-
-# ind= [((trials) & (dfTemp.epoch=='ITI'))]
-
-# dfTemp.loc[ind, 'epoch']= dfTemp.epoch+'-'+epocName
-
-
-#transform() to make indexing faster?
-# trials= dfTemp.groupby(['fileID','trialID']).transform(lambda x: (x['epoch']==epocName).any())
-
-# trials2= dfTemp.groupby(['fileID','trialID'])['epoch'].transform(lambda x: (x==epocName))
 
 trials= dfTemp.groupby(['fileID','trialID'])['epoch'].transform(lambda x: (x==epocName).any())
 
@@ -630,40 +409,6 @@ dfTidy.loc[dfTemp.index,'epoch'] = dfTemp.epoch.copy()
 
 dfTidy.epoch= dfTidy.epoch.astype('category')
 
-#%% add reward epochs
-
-# #add reward epoch (for now some time between pump onset and next pre-cue period?)
-# #within some window of time e.g. a few seconds after pump on, could be based on actual lick distribution
-
-# # !! not restricting to within trialID since a late PE could lead to bleed into next ITI
-# #so for now treating these epochs somewhat independently from trialID. 
-
-# #-- set epoch at pump on times, then fillna() within certain time window surrounding epoch
-
-# refEvent= 'UStime' #reference event surrounding which we'll define epochs
-
-# dfTidy.epoch.cat.add_categories([refEvent], inplace=True)
-# dfTemp= dfTidy.copy()
-
-# #prefill with na so we can just use ffill() method to fill nulls in time window
-# dfTemp.loc[:,'epoch']= pd.NA
-
-# dfTemp.loc[dfTemp.eventType==refEvent,'epoch']= refEvent
-
-
-# fs= 40 #40hz = sampling frequency
-# preEventTime= 0*fs #x seconds before refEvent; don't count any before refEvent
-# postEventTime= 2*fs # x seconds after refEvent  
-
-# #ffill will only fill null values!
-# # !! not restricting to within trialID since a late PE could lead to bleed into next ITI
-# #so for now treating these epochs somewhat independently from trialID. 
-# dfTemp.epoch= dfTemp.groupby(['fileID'])['epoch'].ffill(limit=postEventTime).copy()
-
-# #assign back to df
-# dfTidy.loc[dfTemp.epoch.notnull(),'epoch']= dfTemp.epoch.copy()
-
-# del dfTemp
 
 #%% Add reward epochs & refine postPE vs post-US
 
@@ -672,48 +417,13 @@ dfTidy.epoch= dfTidy.epoch.astype('category')
 #currently have gaps of cue-postPE between UStime and ITI-postPE
 #want to convert all of these and post-PE-ITIs to 'post-US' e.g. to count licks here as reward licks 
 
-# #strat A
-# dfTidy.epoch= dfTidy.epoch.astype(str)
-# dfTemp= dfTidy.copy()
-
-# #-- set epoch at pump on times, then fillna() until next trial
-
-# refEvent= 'UStime' #reference event surrounding which we'll define epochs
-
-# epocName= 'postUS' #name to add
-
-# dfTemp= dfTidy.copy()
-
-# #prefill with na so we can just use ffill() method to fill nulls in time window
-# dfTemp.loc[:,'epoch']= pd.NA
-
-# dfTemp.loc[dfTemp.eventType==refEvent,'epoch']= dfTidy.epoch+'-'+epocName
-
-
-# fs= 40 #40hz = sampling frequency
-# preEventTime= 0*fs #x seconds before refEvent; don't count any before refEvent
-# postEventTime= 2*fs # x seconds after refEvent  
-
-# #ffill will only fill null values!
-# # !! not restricting to within trialID since a late PE could lead to bleed into next ITI
-# #so for now treating these epochs somewhat independently from trialID. 
-# dfTemp.epoch= dfTemp.groupby(['fileID'])['epoch'].ffill(limit=postEventTime).copy()
-
-# #assign back to df
-# dfTidy.loc[dfTemp.epoch.notnull(),'epoch']= dfTemp.epoch.copy()
-
-# del dfTemp
-
-#-- strat c-- should operate solely on actual US timestamp (don't trust that epochs are correct)
+#should operate solely on actual US timestamp (don't trust that epochs are correct)
 dfTidy.epoch= dfTidy.epoch.astype(str)
 dfTemp= dfTidy.copy()
 dfTemp= dfTemp.loc[dfTemp.trialID!=999]
 
 refEvent= 'UStime'
 
-# dfTemp2= dfTemp.loc[dfTemp.eventType==refEvent]
-
-# dfTemp2['UStime']= dfTemp2.groupby(['fileID','trialID'])['cutTime'].transform
 
 #find UStime for each trial (if exists), then do simple timestamp check if prior or after UStime
 #returns boolean
@@ -739,8 +449,6 @@ preEventTime= 0 #x seconds before refEvent; don't count any before refEvent
 postEventTime= 2# x seconds after refEvent (pump is on for 2s) 
 
 #ffill will only fill null values!
-# !! not restricting to within trialID since a late PE could lead to bleed into next ITI
-#so for now treating these epochs somewhat independently from trialID. 
 ind= ((dfTemp.cutTime>=dfTemp.UStime)&(dfTemp.cutTime<=dfTemp.UStime+postEventTime))
 
 dfTemp.loc[ind,'epoch']= 'UStime'
@@ -750,41 +458,6 @@ dfTemp.loc[ind,'epoch']= 'UStime'
 #assign back to df
 dfTidy.loc[dfTemp.index, 'epoch']= dfTemp.epoch.copy()
 dfTidy.epoch= dfTidy.epoch.astype('category')
-
-#find trials containing US epoch, rename post-US epochs accordingly
-# trials= dfTemp.groupby(['fileID','trialID'])['epoch'].transform(lambda x: (x==refEpoc).any())
-
-
-
-# #strat b
-# #skip first ITI
-# dfTemp= dfTidy.copy()
-# dfTemp= dfTemp.loc[dfTemp.trialID!=999]
-
-# refEpoc= 'UStime'
-
-# #find trials containing US epoch, rename post-US epochs accordingly
-# trials= dfTemp.groupby(['fileID','trialID'])['epoch'].transform(lambda x: (x==refEpoc).any())
-
-# trials= trials.loc[trials==True]
-
-# #manually redefine 
-
-# #--anything that should come after UStime
-# ind= (trials & (dfTemp.epoch.str.contains('ITI'))
-
-# dfTemp.loc[ind, 'epoch']= )= 'ITI'+'postUS'
-
-
-# #label remaining ITIs as noPE    
-# # dfTidy.epoch.cat.add_categories(['ITI-noPE'], inplace=True)
-
-# dfTemp.loc[dfTemp.epoch=='ITI', 'epoch']= dfTemp.epoch+'-noPE'
-
-# #merge back into df
-# dfTidy.epoch = dfTemp.epoch
-
-# dfTidy.epoch= dfTidy.epoch.astype('category')
 
 
 #%% viz epocs
@@ -808,131 +481,13 @@ ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'cutTime'], ymin=ax.get_ylim(
 
 ax.legend()
 
-#%% Add Post-Cue (post-PE) epoch
-
-# #post-cue epoc = post-PE
-
-# #-- set epoch at pump on times, then fillna() within certain time window surrounding epoch
-
-# refEvent= 'PEtime' #reference event surrounding which we'll define epochs
-
-# epocName= 'postPE'
-
-# dfTidy.epoch.cat.add_categories([epocName], inplace=True)
-
-
-# #prefill with na so we can just use ffill() method to fill nulls in time window
-# dfTemp= dfTidy.copy()
-# dfTemp.loc[:,'epoch']= pd.NA
-
-
-# #Assign Post-Cue epoch between PE timestamp and Pre-Cue -1
-
-# #in sum, want epoch between PE DURING CUE (rewarded PE) and PreCue for next trial
-# # TODO: could specify postPErewarded; postPEunrewarded but not necessary
-
-# #starting with these epochs: DStime (cue onset:cue onset+cueDur), ITI (trialEnd:nextTrialStart-10), Pre-Cue (nextTrialStart-10)
-# # UStime (UStime:UStime+postEventTime)
-
-# # go in,subset data within trial (no Pre-Cue, only PEs during cue) 
-
-# #assign PE timestamp as postPE epoc start
-# #then we can groupby() trialID and ffill nans as post-PE
-
-# #subset- dont include first trial
-# # dfTemp= dfTemp.loc[dfTemp.trialID!=999]
-
-# #dont include pre-cue time
-# dfTemp = dfTemp.loc[dfTemp.trialType!='Pre-Cue']
-
-
-# dfTemp.loc[dfTemp.eventType==refEvent,'epoch']= epocName
-
-
-# # dfTemp.loc[dfTemp.trialType!='Pre-Cue', 'epoch']= epocName
-
-
-
-# fs= 40 #40hz = sampling frequency
-# preEventTime= 0*fs #x seconds before refEvent; don't count any before refEvent
-# # postEventTime= 2*fs # x seconds after refEvent  
-
-# #ffill will only fill null values!
-# # restricting to trialID 
-# dfTemp.epoch= dfTemp.groupby(['fileID', 'trialID'])['epoch'].ffill().copy()
-
-# test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
-# test.loc[dfTemp.epoch.notnull(),'epoch']= dfTemp.epoch.copy()
-
-# #assign back to df
-# dfTidy.loc[dfTemp.epoch.notnull(),'epoch']= dfTemp.epoch.copy()
-
-# del dfTemp
-
-
-#%% TODO: Refine Cue epoch (time between cue onset and cue duration OR US)
-# #we want cue epoc limited to cueDur. and Post-Cue epoc between cue end (or reward end) and next Pre-Trial
-# dfTemp= dfTidy.copy()
-
-
-# #if epoc is not UStime
-# dfTemp= dfTemp.loc[dfTemp.epoch!='UStime'].copy()
-
-
-# #if timestamp is between trial start and trial end, label as Cue epoch
-# dfTemp.loc[((dfTemp.cutTime>=dfTemp.trialStart) & (dfTemp.cutTime<=dfTemp.trialEnd)), 'epoch']= 'cue'
-
-
-
-# # dfTemp.groupby(groupHierarchyTrialID)
-
-
-#%% TODO: Add post-Cue epoch (time between cue end and next pre-cue?)
-
-#not necessary (remaining DStime & NStime should be this?)
-
-# dfTemp= dfTidy.copy()
-
-# #if event between trialEnd and preTrialStart, 
-
-# # #prefill with na so we can just use ffill() method to fill nulls in time window
-# # dfTemp.loc[:,'epoch']= pd.NA
-
-
-# # dfTemp.loc[dfTemp.eventType==refEvent,'epoch']= refEvent
-
-
-# dfTemp.epoch= dfTemp.groupby(['fileID'])['epoch'].ffill(limit=postEventTime).copy()
 
 
 
 #%% Refine Lick eventTypes: Separate anticipatory/non-reward from reward/consumption licks
 
 # #isolate licks occuring during 'reward' epoch, redefine as new eventType
-# dfTidy.eventType.cat.add_categories(['lickUS'], inplace=True)
 
-# dfTidy.loc[((dfTidy.eventType=='lickTime')&(dfTidy.epoch=='UStime')),'eventType']= 'lickUS'
-
-
-# #isolate licks occuring before reward epoch
-# dfTidy.eventType.cat.add_categories(['lickPreUS'], inplace=True)
-
-
-# #keep simple- just get licks between trialStart and trialEnd (that are not in reward epoch)
-# dfTemp= dfTidy.loc[dfTidy.eventType=='lickTime'].copy()
-
-# dfTemp= dfTemp.loc[dfTemp.epoch!= 'UStime'].copy()
-
-
-# ind= ((dfTemp.cutTime>= dfTemp.trialStart) & (dfTemp.cutTime<=dfTemp.trialEnd)).index
-
-# #redefine as pre-reward lick
-# # dfTemp.loc[ind, 'eventType']= 'lickPreUS'
-
-# dfTidy.loc[ind, 'eventType']= 'lickPreUS'
-
-
-#--Above works but have epochs now so could use these?
 # basic assumption here is that reward is consumed by the next trial
 # this should leave lickTimes during pre-cue I think as unspecified
 
@@ -949,8 +504,6 @@ dfTemp.loc[((dfTemp.trialType=='NStime') & ((dfTemp.epoch=='NStime') | (dfTemp.e
 #some flexibiilty for preUS licks
 # dfTemp.loc[((dfTemp.epoch=='DStime')|(dfTemp.epoch=='NStime') | (dfTemp.epoch=='cue-postPE')), 'eventType']= 'lickPreUS'
 dfTemp.loc[((dfTemp.trialType=='DStime') & ((dfTemp.epoch=='DStime')| (dfTemp.epoch=='cue-postPE'))), 'eventType']= 'lickPreUS'
-
-
 
 
 #some flexibility for postUS licks
@@ -992,7 +545,7 @@ test2= test2.loc[dfTidy.fileID.isin([247,58,59])]
 
 #247, 21 is a fluke. ITI postPE is happening RIGHT before UStime but we still have a UStime 
 
-#Found a missing UStime? file 247 trial 8. PE but no UStime, so no US epoch
+#%% ~~~~~~~!@!!!! Double check Found a missing UStime? file 247 trial 8. PE but no UStime, so no US epoch
 test3= test2.loc[test2.fileID==247]
 test3= test3.loc[test3.trialID==8]
 
@@ -2119,3 +1672,111 @@ my_shelf.close()
 
 # #%% all done
 print('all done')
+
+
+
+#%%--- in progress / todo stuff
+
+#%% TODO: Calculate pump onset times (UStimes) manually
+
+# started this but not really necessary. fixed in matlab and just pulling from there.
+
+# #revising from MATLAB code (bug found in matlab 2022-02-27 which can cause trials to be misclassified and UStimes to be incorrect)
+
+# #manually account for error with variable pump on delays for specific pumps
+# # currentSubj(session).trainStage>=8 %error was on on stage 8 code (I'm using >= 8 here temporarily because I am using some numbers greater than 8 as excel metadata labels for some stage 8 sessions) 
+# # %if pump1 trial, DS ttl delay was 10 miliseconds, %if pump2 trial, DS ttl delay was 20 miliseconds, %if pump3 trial, DS ttl delay was 20 milisecond
+
+# #still interpolating before importing to python so unclear impact... need to do everything raw
+
+# #approach here will be to find the first PE within cueDur of each trial, then manaully calculate pump onset based on known delay
+
+# dfTemp= dfTidy.copy()
+
+# #TODO: consider calculating an 'estimated' NS pump on / expected pump on for direct comparison between DS and NS trials
+# #will just do this actually
+# # dfTemp= dfTemp.loc[dfTemp.trialType=='DStime'] 
+# dfTemp= dfTemp.loc[(dfTemp.trialType.str.contains('NStime')|(dfTemp.trialType.str.contains('DStime')))] 
+
+
+# # #get time of the first PE of each trial (have this from groupby cumcount() earlier)
+# ind= dfTemp.trialPE==0
+
+# dfTemp['firstPEtime']= dfTemp.loc[ind, 'cutTime']
+
+# #fill na throughout trial
+# dfTemp['firstPEtime']= dfTemp.groupby(['fileID','trialID'])['firstPEtime'].transform('fillna', method='ffill')
+
+
+# #manual delay adjustment
+# dfTemp['USdelay']= None
+
+
+# #add delay; varies by stage
+# stages= [1,2,3,4,5,6,7,8,9,10,11,12]
+# delay= [0,0,0,0,0,0.5,1,1,1,1,1,1]
+
+# #add additional delay for stages 8+; varies per trial by pumpID (caused by bug, used sequential conditional MPC statements so delay compounded)
+# pumps[1,2,3]
+# delay2= [0.1, 0.2, 0.3]
+
+# for thisStage in range(len(stages)):
+#     dfTemp.loc[dfTemp.stage==stages[thisStage],'delay']= delay[thisStage]
+#     for thisPump in range(len(pumps)):
+#         dfTemp.loc[dfTemp.pumpID==pumps[thisPump],'delay']= delay[thisStage]+delay2[thisPump]
+
+
+# dfTemp.loc['USdelay']
+
+# dfTemp['USTimeEstimate']= None
+
+# #example lambda transforms
+# # trials= dfTemp.groupby(['fileID','trialID'])['epoch'].transform(lambda x: (x==epocName).any())
+# # dfTemp['UStime']=  dfTemp.groupby(['fileID','trialID'])['eventType'].transform(lambda x: x==refEvent)
+# #attempt
+# # dfTemp['UStimeEst']=  dfTemp[ind].groupby(['fileID','trialID'])['cutTime'].transform(lambda x: x==refEvent)
+
+#%%  TODO: Either have specific epocs for different circumstances (by trialType)
+#or should have shared epocs between trialTypes (e.g. DS, post-reward vs Cue, postPE(rewarded or unrewarded based on trialType) )
+
+#specific seems better at face, though occludes direct comparisons between trialTypes
+
+
+#%% TODO: Refine postPE epoc
+#based on outcome (e.g. pump, NS vs DS)
+ 
+#can do using trialType column
+
+#%% TODO: Refine Cue epoch (time between cue onset and cue duration OR US)
+# #we want cue epoc limited to cueDur. and Post-Cue epoc between cue end (or reward end) and next Pre-Trial
+# dfTemp= dfTidy.copy()
+
+
+# #if epoc is not UStime
+# dfTemp= dfTemp.loc[dfTemp.epoch!='UStime'].copy()
+
+
+# #if timestamp is between trial start and trial end, label as Cue epoch
+# dfTemp.loc[((dfTemp.cutTime>=dfTemp.trialStart) & (dfTemp.cutTime<=dfTemp.trialEnd)), 'epoch']= 'cue'
+
+
+
+# # dfTemp.groupby(groupHierarchyTrialID)
+
+
+#%% TODO: Add post-Cue epoch (time between cue end and next pre-cue?)
+
+#not necessary (remaining DStime & NStime should be this?)
+
+# dfTemp= dfTidy.copy()
+
+# #if event between trialEnd and preTrialStart, 
+
+# # #prefill with na so we can just use ffill() method to fill nulls in time window
+# # dfTemp.loc[:,'epoch']= pd.NA
+
+
+# # dfTemp.loc[dfTemp.eventType==refEvent,'epoch']= refEvent
+
+
+# dfTemp.epoch= dfTemp.groupby(['fileID'])['epoch'].ffill(limit=postEventTime).copy()

@@ -113,6 +113,8 @@ for file in range(len(files)):
 
 dfEncoding= dfEncoding.loc[~dfEncoding.subject.isin(subjectsToExclude)]
 
+dfEncoding= dfEncoding.reset_index()
+
 #%% Plot entire cross validation (CV) path (MSE + coefficients)
 
 
@@ -380,11 +382,13 @@ for subj in dfEncoding.subject.unique():
     for eventCol in range(len(eventVars)):
         indEvent= group.columns[X].str.contains(eventVars[eventCol])
         
-        if ((eventVars[eventCol]== 'DStime' )|(eventVars[eventCol]=='NStime')):
-            postEventShift= cueTimeOfInfluence
-        else:
-            postEventShift= postEventTime
+        # if ((eventVars[eventCol]== 'DStime' )|(eventVars[eventCol]=='NStime')):
+        #     postEventShift= cueTimeOfInfluence
+        # else:
+        #     postEventShift= postEventTime
         
+        postEventShift= postEventTime
+
         kernels.loc[indEvent,'eventType']= eventVars[eventCol]
         kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventShift)/fs
             
@@ -664,6 +668,8 @@ g.axes[0][0].legend(kernelsAll.subject.unique())
 
 g.add_legend()
 
+saveFigCustom(f, 'allSubj-'+'kernels', savePath)
+
             
 #%% Plot kernels & predicted data
 
@@ -699,6 +705,8 @@ g.legend(['predicted (model.fit())','actual'])
 g.set(title=('allSubj-'+'-periCueModelPrediction-'))#+modeCue+'-trials-'+modeSignal))
 g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
 
+saveFigCustom(f, 'allSubj-'+'model-prediction', savePath)
+
 # saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal, savePath)
 
 #-- R2 plot
@@ -706,6 +714,8 @@ f, ax = plt.subplots(1,1)
 
 g= sns.barplot(ax=ax,data= dfPredictedAll,  y='r2')
 g= sns.barplot(ax=ax,data= dfPredictedAll, x='subject',  y='r2', hue='subject')
+
+saveFigCustom(f, 'allSubj-'+'r2-', savePath)
 
 
 #swarmplot here seems very slow
