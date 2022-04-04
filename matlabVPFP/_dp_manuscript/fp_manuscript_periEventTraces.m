@@ -720,6 +720,23 @@ i.draw();
 
 saveFig(gcf, figPath, '_figure2-allSubj-periCue', figFormats)
 
+%% Stat comparison of auc conditions
+stagesToPlot= [5];
+%TODO: restrict analysis to subset data based on criteria/session
+
+%---- i(1) pericue z trace
+%subset specific data to plot
+data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+%transform to have trialType variable
+data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
+
+%run anova
+% [p, table, stats, terms]= anovan(data.periCueBlue, {data.trialType, data.subject});
+
+[p, table, stats, terms]= anovan(data.periCueBlue, {data.trialType});
+
+
 %% individual subj all stages: peri-Cue vs peri-Pox vs peri-Lox
 
 for subj= 1:numel(subjects)
