@@ -25,12 +25,6 @@ from customFunctions import groupPercentCalc
     
 #plot settings in section below
 
-
-#%% TODO: make sure everything is saved/imported by shelve correctly
-
-# 'experimentType'
-
-experimentType= 'fp'
          
 
 #%% Load previously saved dfTidy (and other vars) from pickle
@@ -86,7 +80,7 @@ groupHierarchyEventType = ['stage',
                            'subject', 'trainDayThisStage', 'trialType', 'fileID', 'trialID', 'eventType']
 
 
-#%% Preliminary data analyses
+#%%-- Preliminary data analyses
 
 # Add trainDay variable (cumulative count of sessions within each subject)
 dfGroup= dfTidy.loc[dfTidy.groupby(['subject','fileID']).cumcount()==0]
@@ -234,7 +228,7 @@ dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','tria
 
 
 
-#%% ADD EPOCS prior to revising trialID
+#%%-- ADD EPOCS prior to revising trialID
 
 #add epoch column
 #for now could be as simple as reversing trialID transformations for ITI+Pre-Cue, will make current ITIs fall within same trialID
@@ -358,7 +352,7 @@ ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'cutTime'], ymin=ax.get_ylim(
 ax.legend()
 
 
-#%% REVISE TRIALID 
+#%%-- Revise TrialID and Epocs
 
 #convert trials trials to be all time from cue onset: next cue start, with 'Cue','Reward','ITI','Pre-Cue' epocs? 
 
@@ -482,6 +476,115 @@ ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'cutTime'], ymin=ax.get_ylim(
 ax.legend()
 
 
+#%% viz epocs
+
+dfPlot= dfTidy.loc[dfTidy.fileID==16].copy()
+# dfPlot= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
+
+fig, ax= plt.subplots()
+# sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+
+
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
+
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='DStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='DStime', color='b')
+
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='NStime', color='k')
+
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickPreUS', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickPreUS', color='pink')
+
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickPostUS', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickPostUS', color='maroon')
+
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickUS', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickUS', color='gold')
+
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickTime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickTime', color='gray')
+
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='PEcue', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='PEcue', color='red')
+
+
+ax.legend()
+
+
+#%%-- Conduct trial-based analyses AFTER  revising trialID
+
+#%% Count events within 10s of cue onset (cue duration in final stage)  
+#this is mainly for comparing progression/learning between stages since cueDuration varies by stage
+
+dfTemp=  dfTidy.loc[((dfTidy.eventLatency<= 10) & (dfTidy.eventLatency>0))].copy()
+
+dfTidy['trialPE10s'] = dfTemp.loc[(dfTemp.eventType == 'PEtime')].groupby([
+'fileID', 'trialID'])['eventTime'].cumcount().copy()
+
+dfTidy['trialLick10s'] = dfTemp.loc[(dfTemp.eventType == 'lickTime')].groupby([
+'fileID', 'trialID'])['eventTime'].cumcount().copy()
+
+#%% Define behavioral (pe,lick) outcome for each trial  within first 10s of each trial
+outcome= dfTidy.groupby(['fileID','trialID'],dropna=False)['trialPE10s'].nunique()
+
+#naming "trialOutcomeBeh" for now to distinguish between behavioral outcome and reward outcome if needed later
+#10s = within 10s of epoch start
+trialOutcomeBeh= outcome.copy()
+
+trialOutcomeBeh.loc[outcome>0]='PE'
+trialOutcomeBeh.loc[outcome==0]='noPE'
+
+#now do the same for licks
+outcome= dfTidy.groupby(['fileID','trialID'],dropna=False)['trialLick10s'].nunique()
+
+#add lick outcome + PE outcome for clarity #if it doesn't say '+lick', then none was counted
+trialOutcomeBeh.loc[outcome>0]=trialOutcomeBeh.loc[outcome>0]+ '+' + 'lick'
+
+#set index to file,trial and
+#fill in matching file,trial with trialOutcomeBeh
+#TODO: I think there is a more efficient way to do this assignment, doens't take too long tho
+
+dfTidy= dfTidy.reset_index().set_index(['fileID','trialID'])
+
+dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
+
+#reset index to eventID
+dfTidy= dfTidy.reset_index().set_index(['eventID'])
+
+#%% Calculate Probability of behavioral outcome for each trial type. 
+#This is normalized so is more informative than simple count of trials. 
+
+#calculate Proportion of trials with PE out of all trials for each trial type
+#can use nunique() to get count of unique trialIDs with specific PE outcome per file
+#given this, can calculate Probortion as #PE/#PE+#noPE
+   
+#subset data and save as intermediate variable dfGroup
+#get only one entry per trial
+dfGroup= dfTidy.loc[dfTidy.groupby(['fileID','trialID']).cumcount()==0].copy()
+
+#for Lick+laser sessions, retain only trials with PE+lick for comparison (OPTO specific)
+# dfGroup.loc[dfGroup.laserDur=='Lick',:]= dfGroup.loc[(dfGroup.laserDur=='Lick') & (dfGroup.trialOutcomeBeh=='PE+lick')].copy()
+   
+dfPlot= dfGroup.copy() 
+
+#for each unique behavioral outcome, loop through and get count of trials in file
+#fill null counts with 0
+dfTemp=dfPlot.groupby(
+        ['fileID','trialType','trialOutcomeBeh10s'],dropna=False)['trialID'].nunique(dropna=False).unstack(fill_value=0)
+
+
+##calculate proportion for each trial type: num trials with outcome/total num trials of this type
+
+trialCount= dfTemp.sum(axis=1)
+
+
+outcomeProb= dfTemp.divide(dfTemp.sum(axis=1),axis=0)
+
+#melt() into single column w label
+dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='trialOutcomeBeh10s',value_name='outcomeProbFile10s')
+
+#assign back to df by merging
+#TODO: can probably be optimized. if this section is run more than once will get errors due to assignment back to dfTidy
+# dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
+
+dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
+
+
+#%%-- Refine eventTypes after trial analyses
 
 
 #%% Refine Lick eventTypes: Separate anticipatory/non-reward from reward/consumption licks
@@ -526,40 +629,16 @@ dfTidy.loc[dfTemp.index, 'eventType']= dfTemp.eventType.copy()
 dfTidy.eventType= dfTidy.eventType.astype('category')
 
 
-#viz
-# test= dfTidy.loc[(dfTidy.fileID==dfTidy.fileID.min())].copy()
-
-# #testing assignment
-# # ~~~~~~~ noticing ITI-postPE lickTimes (should be labelled lickPostUS so must be missing UStimes?)~~~~~~
-# #pump times are currently defined in matlab code based on variable stage delays, possible mistake was make there (these aren't actually raw pump times)
-test= dfTidy.copy()
-test= test.loc[((test.epoch=='ITI-postPE') & (test.eventType=='lickTime'))]
-
-#yes, e.g. python says PE outcome for some fileID 25 trialID 43
-#lots of stage 4 file 247 trial 8
-#! even stage 7- fileiD 58/59 trials 21,42/44...could impact encoding model
-
-#examine further
-test2= dfTidy.copy()
-test2= test2.loc[dfTidy.fileID.isin([247,58,59])]
-
-#247, 21 is a fluke. ITI postPE is happening RIGHT before UStime but we still have a UStime 
-
-#%% ~~~~~~~!@!!!! Double check Found a missing UStime? file 247 trial 8. PE but no UStime, so no US epoch
-test3= test2.loc[test2.fileID==247]
-test3= test3.loc[test3.trialID==8]
-
-test3.eventType.unique()
-
-
-#%% Refine PE eventTypes- Specify port entry in 10s of cue vs. non
-
+#%% Refine PE eventType to PEcue
 dfTidy.eventType= dfTidy.eventType.astype(str)
 
-dfTemp= dfTidy.loc[dfTidy.eventType.str.contains('PEtime')].copy()
+dfTemp= dfTidy.loc[dfTidy.eventType.str.contains('PE')].copy()
 
 #note will be guranteed cue-postPE epoch since defined by first PE in cue
-dfTemp.loc[((dfTemp.epoch=='DStime')|(dfTemp.epoch=='NStime')| (dfTemp.epoch=='cue-postPE')), 'eventType']= 'PEcue'
+# dfTemp.loc[((dfTemp.epoch=='DStime')|(dfTemp.epoch=='NStime')| (dfTemp.epoch=='cue-postPE')), 'eventType']= 'PEcue'
+
+#updated 2022-03-18 dp
+dfTemp.loc[dfTemp.eventLatency<dfTemp.cueDur, 'eventType']= 'PEcue'
 
 
 
@@ -567,360 +646,6 @@ dfTemp.loc[((dfTemp.epoch=='DStime')|(dfTemp.epoch=='NStime')| (dfTemp.epoch=='c
 dfTidy.loc[dfTemp.index, 'eventType']= dfTemp.eventType.copy()
 
 dfTidy.eventType= dfTidy.eventType.astype('category')
-
-
-#%% viz epocs
-
-dfPlot= dfTidy.loc[dfTidy.fileID==16].copy()
-# dfPlot= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
-
-fig, ax= plt.subplots()
-# sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
-
-
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
-
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='DStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='DStime', color='b')
-
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='NStime', color='k')
-
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickPreUS', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickPreUS', color='pink')
-
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickPostUS', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickPostUS', color='maroon')
-
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickUS', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickUS', color='gold')
-
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickTime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickTime', color='gray')
-
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='PEcue', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='PEcue', color='red')
-
-
-ax.legend()
-
-
-
-#%% viz epocs, facet trialType (too slow)
-
-# stagesToPlot= dfTidy.stage.unique()
-# trialTypesToPlot= dfTidy.trialType.unique()
-# eventsToPlot= dfTidy.eventType.unique()
-
-
-# dfPlot= dfTidy.loc[dfTidy.fileID==16].copy()
-
-# dfPlot= subsetData(dfTidy, stagesToPlot, trialTypesToPlot, eventsToPlot)
-
-# g= sns.FacetGrid(data= dfPlot, row='trialType', hue='epoch')
-
-# g.map_dataframe(sns.scatterplot, x= 'cutTime', y='eventType')
-
-# ax.legend()
-
-
-
-#%% Want to separate anticipatory/non-reward from reward/consumption licks
-
-# #To do so, let's simply calculate a latency from each lick and the nearest UStime
-# #set a threshold within which we'll count them as 'reward' licks (e.g. within a few seconds of pump on, could be based on distribution of licks during trials/ITI)
-
-# #TODO: could be useful to write function here for defining new event types conditionally 
-# #really just need to search within time window surrounding each UStime
-# #writing somewhat generalizable so can make fxn later
-
-# fs= 40 #40hz = sampling frequency
-
-# refEvent= 'UStime' #reference event surrounding which we'll search
-
-# preEventTime= 0 #don't count any before refEvent
-
-# postEventTime= 2*fs #count x seconds after refEvent
-
-# eventToChange= 'lickTime' #events to search for/redefine
-
-# newEvent= 'lickUS' #events to search for/redefine
-
-# #will need to groupby() fileID to prevent contamination between files
-
-# groups= dfTidy.groupby('fileID')
-
-
-# #loop here is too slow, need to try another method..
-# #alternate method could be to have reward 'epoch' in new column and then filter by that?
-
-# #currently fxn will go through and z score surrounding ALL events. Need to restrict to FIRST event per trial 
-# #looping here is probably inefficient but works    
-
-# for name, group in groups:
-#     #get index of time window surrounding refEvents
-#     preInd= group.index[group.eventType==refEvent]-preEventTime
-#     postInd= group.index[group.eventType==refEvent]+postEventTime
-
-#     for event in range(preInd.size):
-#         #update eventsToChange within this window  
-#         dfTemp= group.loc[preInd[event]:postInd[event]].copy()              
-        
-#         dfTidy.loc[dfTemp.index[dfTemp.eventType==eventToChange],'eventType']= newEvent
-
-#%% Visualize count of eventTypes by epoch
-# # #wondering when consumption licks are actually occurring
-# dfPlot= dfTidy.loc[((dfTidy.trialType=='DStime') | (dfTidy.trialType=='NStime'))].copy()
-# dfPlot= dfPlot.groupby(['stage','subject', 'trainDayThisStage', 'fileID','trialType', 'epoch', 'eventType'])['eventType'].count().reset_index(name='count')
-
-# # sns.catplot(data=dfPlot,x='eventType', y='count', hue='trialType', kind='bar')
-# sns.relplot(data=dfPlot, col='trialType', row='eventType', x='trainDayThisStage', y='count', hue='epoch', kind='line', facet_kws={'sharey':False})
-
-# dfPlot= dfTidy.copy()
-# dfPlot.loc[dfPlot.eventType=='lickUS']
-
-# sns.displot(data=dfPlot, x='eventLatency', col='stage', hue='subject')
-
-
-
-#%% Conduct trial-based analyses AFTER  revising trialID?
-
-#yeah  we'll want UStimes etc during entire 'trial' (not just limited to cueDur) so will want to revise this after
-
-#%% DP 1/18/22 
-# Event latency, count, and behavioral outcome for each TRIALID
-#old section below could be converted to 'epoc' or something if want relative comparison between pre-cue/ITI/cue
-
-dfTemp= dfTidy.copy()
-
-#have trial start now, subtract trialStart from eventTime to get latency per trial
-#no need for -trialID exception
-dfTemp.loc[:,'eventLatency']= ((dfTemp.eventTime)-(dfTemp.trialStart)).copy()
-
-#TODO: exception needs to be made for first ITI; for now fill w nan
-dfTemp.loc[dfTemp.trialID== -999, 'eventLatency']= np.nan
-
-#Count events in each trial 
-#use cumcount() of event times within file & trial 
-
-#converting to float for some reason
-dfTemp['trialPE'] = dfTemp.loc[(dfTemp.eventType == 'PEtime')].groupby([
-'fileID', 'trialID'])['eventTime'].cumcount().copy()
-
-
-dfTemp['trialLick'] = dfTemp.loc[(dfTemp.eventType == 'lickTime')].groupby([
-    'fileID', 'trialID']).cumcount().copy()
-
-dfTemp['trialUS'] = dfTemp.loc[(dfTemp.eventType == 'UStime')].groupby([
-    'fileID', 'trialID']).cumcount().copy()
-
-
-dfTemp['trialLickUS'] = dfTemp.loc[(dfTemp.eventType == 'lickUS')].groupby([
-    'fileID', 'trialID']).cumcount().copy()
-
-#assign back to df
-dfTidy= dfTemp.copy()
-
-
-#%% OLD Preliminary data analyses (for tidy data)
-# # Event latency, count, and behavioral outcome for each TRIALID
-
-# #TODO: Lick 'cleaning' to eliminate invalid licks (are they in port, is ILI within reasonable range)
-
-
-# #Calculate latency to each event in trial (from cue onset). based on trialEnd to keep it simple
-#   # trialEnd is = cue onset + cueDur. So just subtract cueDur for cue onset time  
-# dfTidy.loc[dfTidy.trialID>=0, 'eventLatency'] = (
-#     (dfTidy.eventTime)-(dfTidy.trialEnd-dfTidy.cueDur)).copy()
-
-# #have trial start now, subtract trialStart from eventTime to get latency per trial
-# #no need for -trialID exception
-# dfTidy.loc[:,'eventLatency']= ((dfTidy.eventTime)-(dfTidy.trialStart)).copy()
-# # 
-# # dfTidy.loc[dfTidy.trialID>=0,'eventLatency']= ((dfTidy.eventTime)-(dfTidy.trialStart))
-
-# # dfTidy.loc[dfTidy.trialID<0, 'eventLatency'] = ((dfTidy.eventTime)-(dfTidy.trialStart)).copy()
-
-# #TODO: exception needs to be made for first ITI; for now fill w nan
-# dfTidy.loc[dfTidy.trialID== -999, 'eventLatency']= np.nan
-
-# #Count events in each trial 
-# #use cumcount() of event times within file & trial 
-
-# #converting to float for some reason
-# dfTidy['trialPE'] = dfTidy.loc[(dfTidy.eventType == 'PEtime')].groupby([
-# 'fileID', 'trialID'])['eventTime'].cumcount().copy()
-
-# # #try transform
-# # dfTidy.loc[:,'trialPE'] = dfTidy.loc[(dfTidy.eventType == 'PEtime')].groupby([
-# # 'fileID', 'trialID'])['eventTime'].transform('cumcount').copy()
-
-
-# dfTidy['trialLick'] = dfTidy.loc[(dfTidy.eventType == 'lickTime')].groupby([
-#     'fileID', 'trialID']).cumcount().copy()
-
-# # Add trainDay variable (cumulative count of sessions within each subject)
-# dfGroup= dfTidy.loc[dfTidy.groupby(['subject','fileID']).cumcount()==0]
-# # test= dfGroup.groupby(['subject','fileID']).transform('cumcount')
-# dfTidy.loc[:,'trainDay']= dfGroup.groupby(['subject'])['fileID'].transform('cumcount')
-# dfTidy.loc[:,'trainDay']= dfTidy.groupby(['subject','fileID']).fillna(method='ffill')
-
-# #Add cumulative count of training day within-stage (so we can normalize between subjects appropriately)
-# ##very important consideration!! Different subjects can run different programs on same day, which can throw plots/analysis off when aggregating data by date.
-# dfGroup= dfTidy.loc[dfTidy.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
-# dfTidy['trainDayThisStage']=  dfGroup.groupby(['subject', 'stage']).transform('cumcount')
-# dfTidy.trainDayThisStage= dfTidy.groupby(['fileID'])['trainDayThisStage'].fillna(method='ffill').copy()
-# # #QC visualizations
-# # g= sns.relplot(data=dfTidy, col='subject', col_wrap=4, x='date', y='trainDayThisStage', hue='stage', kind='scatter')
-# # g= sns.relplot(data=dfTidy, col='subject', col_wrap=4, x='date', y='trainDay', hue='stage', kind='scatter')
-# # g= sns.relplot(data=dfTidy, col='subject', col_wrap=4, x='date', y='date', hue='stage', kind='scatter')
-
-#%% TODO: count events within 10s of cue onset (cue duration in final stage)  
-#this is mainly for comparing progression/learning between stages since cueDuration varies by stage
-
-dfTemp=  dfTidy.loc[((dfTidy.eventLatency<= 10) & (dfTidy.eventLatency>0))].copy()
-
-dfTidy['trialPE10s'] = dfTemp.loc[(dfTemp.eventType == 'PEtime')].groupby([
-'fileID', 'trialID'])['eventTime'].cumcount().copy()
-
-dfTidy['trialLick10s'] = dfTemp.loc[(dfTemp.eventType == 'lickTime')].groupby([
-'fileID', 'trialID'])['eventTime'].cumcount().copy()
-
-#%% Define behavioral (pe,lick) outcome for each trial. For my lick+laser sessions I need 
-# #to isolate trials with both a PE+lick to measure effect of laser
-
-# #For each trial (trialID >=0),
-# #count the number of PEs per trial. if >0, they entered the port and earned sucrose. If=0, they did not.
-# #since groupby counting methods don't work well with nans, using nunique() 
-# # peOutcome= dfTidy.loc[dfTidy.trialID>=0].groupby(['fileID','trialID'],dropna=False)['trialPE'].nunique()
-# #do for all trials
-# outcome= dfTidy.groupby(['fileID','trialID'],dropna=False)['trialPE'].nunique()
-
-# #naming "trialOutcomeBeh" for now to distinguish between behavioral outcome and reward outcome if needed later
-# trialOutcomeBeh= outcome.copy()
-
-# trialOutcomeBeh.loc[outcome>0]='PE'
-# trialOutcomeBeh.loc[outcome==0]='noPE'
-
-# #now do the same for licks
-# outcome= dfTidy.groupby(['fileID','trialID'],dropna=False)['trialLick'].nunique()
-
-# #add lick outcome + PE outcome for clarity #if it doesn't say '+lick', then none was counted
-# trialOutcomeBeh.loc[outcome>0]=trialOutcomeBeh.loc[outcome>0]+ '+' + 'lick'
-
-# #set index to file,trial and
-# #fill in matching file,trial with trialOutcomeBeh
-# #TODO: I think there is a more efficient way to do this assignment, doens't take too long tho
-
-# dfTidy= dfTidy.reset_index().set_index(['fileID','trialID'])
-
-# dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh']= trialOutcomeBeh
-
-# #reset index to eventID
-# dfTidy= dfTidy.reset_index().set_index(['eventID'])
-
-#%% same as above but behavioral outcome within first 10s of each trial
-outcome= dfTidy.groupby(['fileID','trialID'],dropna=False)['trialPE10s'].nunique()
-
-#naming "trialOutcomeBeh" for now to distinguish between behavioral outcome and reward outcome if needed later
-#10s = within 10s of epoch start
-trialOutcomeBeh= outcome.copy()
-
-trialOutcomeBeh.loc[outcome>0]='PE'
-trialOutcomeBeh.loc[outcome==0]='noPE'
-
-#now do the same for licks
-outcome= dfTidy.groupby(['fileID','trialID'],dropna=False)['trialLick10s'].nunique()
-
-#add lick outcome + PE outcome for clarity #if it doesn't say '+lick', then none was counted
-trialOutcomeBeh.loc[outcome>0]=trialOutcomeBeh.loc[outcome>0]+ '+' + 'lick'
-
-#set index to file,trial and
-#fill in matching file,trial with trialOutcomeBeh
-#TODO: I think there is a more efficient way to do this assignment, doens't take too long tho
-
-dfTidy= dfTidy.reset_index().set_index(['fileID','trialID'])
-
-dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
-
-#reset index to eventID
-dfTidy= dfTidy.reset_index().set_index(['eventID'])
-
-#%% Calculate Probability of behavioral outcome for each trial type. 
-#This is normalized so is more informative than simple count of trials. 
-
-# #calculate Proportion of trials with PE out of all trials for each trial type
-# #can use nunique() to get count of unique trialIDs with specific PE outcome per file
-# #given this, can calculate Probortion as #PE/#PE+#noPE
-   
-# #subset data and save as intermediate variable dfGroup
-# #get only one entry per trial
-# dfGroup= dfTidy.loc[dfTidy.groupby(['fileID','trialID']).cumcount()==0].copy()
-
-# #for Lick+laser sessions, retain only trials with PE+lick for comparison (OPTO specific)
-# # dfGroup.loc[dfGroup.laserDur=='Lick',:]= dfGroup.loc[(dfGroup.laserDur=='Lick') & (dfGroup.trialOutcomeBeh=='PE+lick')].copy()
-   
-# dfPlot= dfGroup.copy() 
-
-# #for each unique behavioral outcome, loop through and get count of trials in file
-# #fill null counts with 0
-# dfTemp=dfPlot.groupby(
-#         ['fileID','trialType','trialOutcomeBeh'],dropna=False)['trialID'].nunique(dropna=False).unstack(fill_value=0)
-
-
-# ##calculate proportion for each trial type: num trials with outcome/total num trials of this type
-
-# trialCount= dfTemp.sum(axis=1)
-
-
-# outcomeProb= dfTemp.divide(dfTemp.sum(axis=1),axis=0)
-
-# #melt() into single column w label
-# dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='trialOutcomeBeh',value_name='outcomeProbFile')
-
-# #assign back to df by merging
-# #TODO: can probably be optimized. if this section is run more than once will get errors due to assignment back to dfTidy
-# # dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
-
-# dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh']).copy()
-
-#%% Same as above but probability of behavioral outcome within first 10s of trial 
-#This is normalized so is more informative than simple count of trials. 
-
-#calculate Proportion of trials with PE out of all trials for each trial type
-#can use nunique() to get count of unique trialIDs with specific PE outcome per file
-#given this, can calculate Probortion as #PE/#PE+#noPE
-   
-#subset data and save as intermediate variable dfGroup
-#get only one entry per trial
-dfGroup= dfTidy.loc[dfTidy.groupby(['fileID','trialID']).cumcount()==0].copy()
-
-#for Lick+laser sessions, retain only trials with PE+lick for comparison (OPTO specific)
-# dfGroup.loc[dfGroup.laserDur=='Lick',:]= dfGroup.loc[(dfGroup.laserDur=='Lick') & (dfGroup.trialOutcomeBeh=='PE+lick')].copy()
-   
-dfPlot= dfGroup.copy() 
-
-#for each unique behavioral outcome, loop through and get count of trials in file
-#fill null counts with 0
-dfTemp=dfPlot.groupby(
-        ['fileID','trialType','trialOutcomeBeh10s'],dropna=False)['trialID'].nunique(dropna=False).unstack(fill_value=0)
-
-
-##calculate proportion for each trial type: num trials with outcome/total num trials of this type
-
-trialCount= dfTemp.sum(axis=1)
-
-
-outcomeProb= dfTemp.divide(dfTemp.sum(axis=1),axis=0)
-
-#melt() into single column w label
-dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='trialOutcomeBeh10s',value_name='outcomeProbFile10s')
-
-#assign back to df by merging
-#TODO: can probably be optimized. if this section is run more than once will get errors due to assignment back to dfTidy
-# dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
-
-dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
-
-
-
-
-#%% 
-dfPlot= dfTidy.copy()
-sns.displot(data=dfPlot, x='eventLatency', col='eventType', hue='trialType')
 
 
 #%% Save dfTidy so it can be loaded quickly for subesequent analysis
@@ -961,7 +686,7 @@ my_shelf.close()
 
 
 
-#%% PLOTS:
+#%% --PLOTS:
     
 # #%% Plot event counts across sessions (check for outlier sessions/event counts)
 # sns.set_palette('tab20')  #good for plotting by many subj

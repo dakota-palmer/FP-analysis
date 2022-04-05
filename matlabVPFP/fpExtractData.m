@@ -18,7 +18,7 @@ close all
 % TODO: fix rat names and other sesData (always showing 2 and 3 currently)
 
 %choose to remove artifact (true 1) or not (false 0)
-artifactRemove= 0
+artifactRemove= 1
 
 % %Ally GADVPFP
 % experimentName= 'GAD-VPFP'; %change experiment name for automatic naming of figures
@@ -381,9 +381,14 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     %plots are in the function itself commented out if you want to examine
     
     if artifactRemove==true
-        [fixedBlueA, fixedPurpleA] = fpArtifactElimination_DynamicMAD(reblueA2, repurpleA2, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);
-
-        [fixedBlueB, fixedPurpleB] = fpArtifactElimination_DynamicMAD(reblueB2, repurpleB2, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);    
+        [fixedBlueA, fixedPurpleA] = fpArtifactElimination_DynamicMAD(reblueA, repurpleA, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor);
+        fixedBlueA=  fixedBlueA;
+        fixedPurpleA= fixedPurpleA;
+ 
+        [fixedBlueB, fixedPurple] = fpArtifactElimination_DynamicMAD(reblueB, repurpleB, fs, refConvWindow, MADwindow, thresholdWindow, thresholdFactor); 
+        fixedBlueB= fixedBlueA;
+        fixedPurpleB= fixedBlueA;
+        
     elseif artifactRemove==false
         fixedBlueA= reblueA; % reblueA2;
         fixedPurpleA= repurpleA; %repurpleA2;
@@ -405,7 +410,7 @@ for file = 1:length(nexFiles) % All operations will be applied to EVERY nexFile
     sesData(file).outB= outB;
     
         %Photometry signals
-    sesData(file).cutTime= cutTime2; %now cutTime should have corresponding value for every eventTime (though fs won't be quite 40hz)
+    sesData(file).cutTime= cutTime;%cutTime2; %now cutTime should have corresponding value for every eventTime (though fs won't be quite 40hz)
     sesData(file).reblueA = fixedBlueA; %reblueA;
     sesData(file).reblueB = fixedBlueB; %reblueB;
     sesData(file).repurpleA = fixedPurpleA; %repurpleA;

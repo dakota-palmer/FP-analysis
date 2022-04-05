@@ -305,8 +305,8 @@ groupHierarchyTrialType= ['stage','trainDayThisStage', 'subject','trialType', 'e
 # groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialID', 'eventType']
 
 #include unique cumulative trialCount for plotting
-groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'epoch', 'trialID']
-groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID',  'epoch', 'eventType']
+groupHierarchyTrialID= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID']
+groupHierarchyEventType= ['stage','trainDayThisStage', 'subject','trialType', 'trialIDpooled', 'trialID', 'eventType']
 
 
 
@@ -414,8 +414,8 @@ g= sns.catplot(data=dfPlot, y='eventType', x='eventLatency')
 g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2)
 
 
-g= sns.catplot(data=dfPlot, row='epoch', y='eventType', x='eventLatency')
-g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2)
+# g= sns.catplot(data=dfPlot, row='epoch', y='eventType', x='eventLatency')
+# g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2)
 
 
 # -----heatplots
@@ -450,10 +450,15 @@ for subj in corrInput.subject.unique():
     corrInputPivot2= corrInputPivot2[corrEvents]
     
     #reset_index() if needed prior to corr
+   
     corrInputPivot2= corrInputPivot2.reset_index()
+    
+    #drop nans prior to running
+    # corrInputPivot2= corrInputPivot2.dropna()
     
     #run corr()
     corr2= corrInputPivot2.corr()
+    
         
     dfPlot= corr2.copy()
     
@@ -474,75 +479,97 @@ for subj in corrInput.subject.unique():
     g.set(title=('subj-'+str(subj)+'-eventCorrelation-heatmap'))
 
     saveFigCustom(f, 'subj-'+str(subj)+'-eventCorrelation-heatmap', savePath)
-
-
-# REPEAT CORR BUT REPLACE NANS WITH HIGH LATENCY VALUES
-
-for thisEvent in corrEvents:
-    corrInputPivot.loc[corrInputPivot[thisEvent].isnull(), thisEvent]= 999
     
-corr= corrInputPivot.corr()
+   # subject Plot of event timings going into regression (just double checking reasonable times)
+    dfPlot= corrInput.loc[corrInput.subject==subj].copy()
+    
+    dfPlot= dfPlot.loc[dfPlot.eventType.isin(eventsToInclude)].copy()
+    
+    #remove all unused categories from vars (so sns doesn't plot empty labels)
+    ind= dfPlot.dtypes=='category'
+    ind= dfPlot.columns[ind]
+    
+    for col in ind:
+        dfPlot[col]= dfPlot[col].cat.remove_unused_categories()
+    
+    
+    g= sns.catplot(data=dfPlot, y='eventType', x='eventLatency')
+    g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2)
+    g.set(title=('subj-'+str(subj)+'-encodingInput-eventLatencies'))
+    saveFigCustom(f, 'subj-'+str(subj)+'-encodingInput-eventLatencies', savePath)
+
+
+
+
+
+
+# # REPEAT CORR BUT REPLACE NANS WITH HIGH LATENCY VALUES
+
+# for thisEvent in corrEvents:
+#     corrInputPivot.loc[corrInputPivot[thisEvent].isnull(), thisEvent]= 999
+    
+# corr= corrInputPivot.corr()
 
     
-    #between-subj mean
-dfPlot= corr[corrEvents]
+#     #between-subj mean
+# dfPlot= corr[corrEvents]
 
-f, ax = plt.subplots(1, 1)
+# f, ax = plt.subplots(1, 1)
 
-g = sns.heatmap(ax= ax,
-    data= dfPlot, 
-    annot=True,
-    vmin=0, vmax=1, center=0,
-    cmap= heatPalette,
-    square=True
-    )
+# g = sns.heatmap(ax= ax,
+#     data= dfPlot, 
+#     annot=True,
+#     vmin=0, vmax=1, center=0,
+#     cmap= heatPalette,
+#     square=True
+#     )
 
 
-g.set(title=('allSubj'+'-eventCorrelation-'))
+# g.set(title=('allSubj'+'-eventCorrelation-'))
 
-saveFigCustom(f, 'allSubj-'+'-eventCorrelation-heatmap', savePath)
+# saveFigCustom(f, 'allSubj-'+'-eventCorrelation-heatmap', savePath)
 
-#Run correlation and plot for individual subjects
+# #Run correlation and plot for individual subjects
 
-for subj in corrInput.subject.unique():
+# for subj in corrInput.subject.unique():
     
-    corrInputPivot2= corrInputPivot.loc[corrInputPivot.subject==subj].copy()
+#     corrInputPivot2= corrInputPivot.loc[corrInputPivot.subject==subj].copy()
     
-    #subset only eventVars
-    corrInputPivot2= corrInputPivot2[corrEvents]
+#     #subset only eventVars
+#     corrInputPivot2= corrInputPivot2[corrEvents]
     
-    #reset_index() if needed prior to corr
-    corrInputPivot2= corrInputPivot2.reset_index()
+#     #reset_index() if needed prior to corr
+#     corrInputPivot2= corrInputPivot2.reset_index()
     
-    #run corr()
-    corr2= corrInputPivot2.corr()
+#     #run corr()
+#     corr2= corrInputPivot2.corr()
         
-    dfPlot= corr2.copy()
+#     dfPlot= corr2.copy()
     
-    dfPlot= dfPlot[corrEvents]
-    
-    
-    f, ax = plt.subplots(1, 1)
-    
-    g = sns.heatmap(ax= ax,
-        data= dfPlot, 
-        annot=True,
-        vmin=-.5, vmax=1, center=0,
-        cmap= heatPalette,
-        square=True
-    )
+#     dfPlot= dfPlot[corrEvents]
     
     
-    g.set(title=('subj-'+str(subj)+'-eventCorrelation-heatmap-Nan timestamps=999'))
+#     f, ax = plt.subplots(1, 1)
+    
+#     g = sns.heatmap(ax= ax,
+#         data= dfPlot, 
+#         annot=True,
+#         vmin=-.5, vmax=1, center=0,
+#         cmap= heatPalette,
+#         square=True
+#     )
+    
+    
+#     g.set(title=('subj-'+str(subj)+'-eventCorrelation-heatmap-Nan timestamps=999'))
 
-    saveFigCustom(f, 'subj-'+str(subj)+'-eventCorrelation-heatmap-NaNs-to-longLatency', savePath)
+#     saveFigCustom(f, 'subj-'+str(subj)+'-eventCorrelation-heatmap-NaNs-to-longLatency', savePath)
 
 
 
-# g= sns.jointplot(data=dfPlot, col='subject', col_wrap= 4, x='eventLatency', y='trialIDpooled', hue='eventType')
+# # g= sns.jointplot(data=dfPlot, col='subject', col_wrap= 4, x='eventLatency', y='trialIDpooled', hue='eventType')
 
 
-#may be able to add regression line to jointplot here
+# #may be able to add regression line to jointplot here
 
 
 
