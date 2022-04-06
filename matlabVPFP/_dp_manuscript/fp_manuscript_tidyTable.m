@@ -59,6 +59,8 @@ periEventTable= table();
 subjects= fieldnames(subjDataAnalyzed);
 
 sesCount= 1; %cumulative session counter for periEventTable
+DStrialCountCum=1; %cumulative count of unique trials between all subjects and sessions
+NStrialCountCum=1;
 % tsInd= [1:periCueFrames*numTrials]; %cumulative timestamp index for aucTableTS
 % tsInd= [1:periCueFrames]; %cumulative timestamp index for aucTableTS
 
@@ -127,6 +129,10 @@ for subj= 1:numel(subjects)
             NSblueLox= nan(periCueFrames, numTrials);
             NSpurpleLox= nan(periCueFrames, numTrials);
             
+            DStrialIDcum= nan(periCueFrames, numTrials);  %cumulative 
+            NStrialIDcum= nan(periCueFrames, numTrials); 
+
+            
             %reward info
             pumpID= nan(periCueFrames, numTrials);
             rewardID= cell(periCueFrames, numTrials);
@@ -145,6 +151,9 @@ for subj= 1:numel(subjects)
                 DSpurpleLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxpurple(:,:,cue);
                 DStrialID(trialInd,cue)= cue;
                 
+                DStrialIDcum(trialInd,cue)= DStrialCountCum;
+                DStrialCountCum= DStrialCountCum+1;
+                
                 if thisStage>=8 %variable reward
                     pumpID(trialInd, cue)= currentSubj(includedSession).reward.DSreward(cue);
                     rewardID(trialInd,cue)= currentSubj(includedSession).reward.rewardID(cue); 
@@ -162,6 +171,9 @@ for subj= 1:numel(subjects)
                     NSpurpleLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxpurple(:,:,cue);
                 end
                 NStrialID(trialInd,cue)= cue;
+                
+                NStrialIDcum(trialInd,cue)= NStrialCountCum;
+                NStrialCountCum= NStrialCountCum+1;
            end
 
 
@@ -204,6 +216,9 @@ for subj= 1:numel(subjects)
             periEventTable.rewardID(tsInd)= rewardID(:);
 
 
+            periEventTable.DStrialIDcum(tsInd)= DStrialIDcum(:);
+            periEventTable.NStrialIDcum(tsInd)= NStrialIDcum(:);
+
             
             periEventTable.NStrialID(tsInd)= NStrialID(:);
             periEventTable.NSblue(tsInd)= NSblue(:);
@@ -218,8 +233,121 @@ for subj= 1:numel(subjects)
             periEventTable.subject(tsInd)= {subjects{subj}};
             periEventTable.date(tsInd)= {num2str(currentSubj(includedSession).date)};
             periEventTable.stage(tsInd)= currentSubj(includedSession).trainStage;
-                        
+                     
+            periEventTable.DSpeRatio(tsInd)= currentSubj(includedSession).behavior.DSpeRatio;
+            periEventTable.NSpeRatio(tsInd)= currentSubj(includedSession).behavior.NSpeRatio;
+            
             sesCount=sesCount+1;
         end %end session loop
     end %end stage loop
 end %end subj loop
+
+
+%% -- Mark data for exclusion
+periEventTable.exclude= nan(size(periEventTable,1),1);
+
+%% Exclude data from specific subjects
+subjToExclude= {'rat17'};
+
+
+for subj= 1:numel(subjToExclude)
+    ind=[];
+    ind= strcmp(periEventTable.subject, subjToExclude{subj})==1;
+    
+    periEventTable(ind, 'exclude')= table(1);
+end
+
+%% Exclue sessions based on PE ratio
+criteriaDS= 0.6;
+
+criteriaNS= 0.4;
+
+ind=[];
+
+ind= periEventTable.DSpeRatio <= criteriaDS;
+
+ind= ind & (periEventTable.NSpeRatio >= criteriaNS);
+
+periEventTable(ind, 'exclude')= table(1);
+
+
+%% Remove data marked for exclusion
+
+ind= [];
+ind= (periEventTable.exclude~=1);
+
+periEventTable= periEventTable(ind,:);
+
+%% --Artifact exclusion
+
+%% viz summary stats of z score
+%summary stats of z score 
+y= 'DSpurple';
+
+% zSummary= groupsummary(periEventTable,["subject","stage","DStrialID"],'all', y);
+
+
+zSummary= groupsummary(periEventTable,["DStrialIDcum"],'all', y);
+
+%viz 
+figure;
+stackedplot(zSummary, [strcat("max_",y), strcat("min_",y), strcat("var_",y)]);
+
+figure;
+stackedplot(zSummary, [strcat("max_",y), strcat("min_",y)]);
+
+
+%% Exclude artifacts
+
+%z score max beyond which to just exclude
+artifactThreshold= 15;
+
+%- DS trials
+y= 'DSpurple';
+
+zSummary= table;
+zSummary= groupsummary(periEventTable,["DStrialIDcum"],'all', y);
+
+%find unique trialIDs where z max or min exceed threshold
+ind= []; 
+ind= abs(table2array(zSummary(:,strcat("max_"+y)))) >= artifactThreshold;
+
+ind= ind | abs(table2array(zSummary(:,strcat("min_"+y)))) >= artifactThreshold;
+
+trialsToExclude= zSummary(ind,'DStrialIDcum');
+
+
+trialsToExclude= table2array(trialsToExclude);
+%Replace data with nan for these trials
+for trial= 1:numel(trialsToExclude)
+    signalCol= ["DSblue", "DSbluePox", "DSblueLox", "DSpurple", "DSpurplePox", "DSpurpleLox"];
+    
+    periEventTable(periEventTable.DStrialIDcum== trialsToExclude(trial), signalCol)= table(nan);
+end
+
+%-NS trials
+y= 'NSpurple';
+
+zSummary= table;
+zSummary= groupsummary(periEventTable,["NStrialIDcum"],'all', y);
+
+
+%find unique trialIDs where z max or min exceed threshold
+ind= [];
+ind= abs(table2array(zSummary(:,strcat("max_"+y)))) >= artifactThreshold;
+
+ind= ind | abs(table2array(zSummary(:,strcat("min_"+y)))) >= artifactThreshold;
+
+trialsToExclude= zSummary(ind,'NStrialIDcum');
+
+
+trialsToExclude= table2array(trialsToExclude);
+%Replace data with nan for these trials
+for trial= 1:numel(trialsToExclude)
+    signalCol= ["NSblue", "NSbluePox", "NSblueLox", "NSpurple", "NSpurplePox", "NSpurpleLox"];
+    
+    periEventTable(periEventTable.NStrialIDcum== trialsToExclude(trial), signalCol)= table(nan);
+end
+
+
+

@@ -72,7 +72,7 @@ baselineEvents= ['DStime', 'NStime']
 
 # dfTidy= dfTidy[dfTidy['subject']==17]
 
-dfTidy= dfTidy[dfTidy['fileID']==309]
+# dfTidy= dfTidy[dfTidy['fileID']==309]
 
 
 #%% Reverse melt() of eventTypes by pivot() into separate columns
@@ -837,8 +837,8 @@ g= sns.lineplot(ax=ax[0,], data=dfPlot, x='timeLock-z-periDS-DStime',y='blue-z-p
 g.set(title=('peri-DS'))
 g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
 
-g= sns.lineplot(ax=ax[1,], data=dfPlot, x='timeLock-z-periDS-PEtime',y='blue-z-periDS-PEtime',hue='subject', palette=subjPalette, legend='full', linewidth=1, alpha=0.5)
-g= sns.lineplot(ax=ax[1,], data=dfPlot, x='timeLock-z-periDS-PEtime',y='blue-z-periDS-PEtime', linewidth=2.5, color='black')
+g= sns.lineplot(ax=ax[1,], data=dfPlot, x='timeLock-z-periDS-PEcue',y='blue-z-periDS-PEcue',hue='subject', palette=subjPalette, legend='full', linewidth=1, alpha=0.5)
+g= sns.lineplot(ax=ax[1,], data=dfPlot, x='timeLock-z-periDS-PEcue',y='blue-z-periDS-PEcue', linewidth=2.5, color='black')
 g.set(title=('peri-DS-PE'))
 g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
 

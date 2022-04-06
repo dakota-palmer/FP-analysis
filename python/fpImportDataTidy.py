@@ -45,6 +45,10 @@ experimentType= 'photometry'
 
 # datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp-07-Jan-2022.parquet"
 datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_input\vp-vta-fp-03-Mar-2022.parquet"
+
+#noartifact 
+datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_input\noartifact-vp-vta-fp-05-Apr-2022.parquet"
+
 #%% ID and import Parquet file 
 df= pd.read_parquet(datapath)
 
@@ -60,8 +64,8 @@ excludeDate= [] # ['20210604']
 df= df[~df.date.isin(excludeDate)]
 
 # #hitting memory cap, going to subset specific stages to reduce data (shouldn't really need anything below stage 3)
-# stagesToInclude= [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
-stagesToInclude= df.stage.unique()
+stagesToInclude= [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
+# stagesToInclude= df.stage.unique()
 df= df.loc[df.stage.isin(stagesToInclude)]
 
 #still hitting, so going to subset even further for debugging

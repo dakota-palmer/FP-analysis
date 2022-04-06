@@ -143,7 +143,9 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
     
        if isnan(eventOnset)
             %~~~~~~if no event on this trial, make nan
-            tRange= [preEventTimeS:postEventTimeS]*fs;
+%             tRange= [preEventTimeS:postEventTimeS]*fs;
+            tRange=linspace(preEventTimeS,postEventTimeS,tBins)';  %time range over which to interp() fp signal (pre:post)
+
 
             currentSubjAnalyzed(session).periEvent.baselineOnset(trial)= nan;
             currentSubjAnalyzed(session).periEvent.tRange(:,:,trial)= nan(tBins,1);
@@ -160,7 +162,7 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
             currentSubjAnalyzed(session).periEvent.baselineStdBlue(1,trial)= nan;
             currentSubjAnalyzed(session).periEvent.baselineStdPurple(1,trial)= nan;
             
-            currentSubjAnalyzed(session).periEvent.timeLock= nan(size(tRange));
+            currentSubjAnalyzed(session).periEvent.timeLock= tRange;%nan(size(tRange));
 
        elseif ~isnan(eventOnset)
             %~~~~ SAVE DATA INTO STRUCT- CHANGE THESE FIELDNAMES BASED ON EVENTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
