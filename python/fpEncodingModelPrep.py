@@ -572,7 +572,6 @@ for subj in corrInput.subject.unique():
 # #may be able to add regression line to jointplot here
 
 
-
 #%% Define custom Z score function
 # FOR TIDY DATA, SINGLE eventType COLUMN
 
@@ -588,15 +587,32 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
 
 
     ##initialize resulting series, which will be a column that aligns with original df index
-    dfResult= np.empty(df.shape[0])
-    dfResult= pd.Series(dfResult, dtype='float64')
-    dfResult.loc[:]= None
-    dfResult.index= df.index
+    zResult= np.empty(df.shape[0])
+    zResult= pd.Series(zResult, dtype='float64')
+    zResult.loc[:]= None
+    zResult.index= df.index
     
     timeLock= np.empty(df.shape[0])
     timeLock= pd.Series(timeLock, dtype='float64')
     timeLock.loc[:]= None
     timeLock.index= df.index
+    
+    #save label cols for easy faceting
+    zEventBaseline= np.empty(df.shape[0])
+    zEventBaseline= pd.Series(zEventBaseline, dtype='string')
+    zEventBaseline.loc[:]= None
+    zEventBaseline.index= df.index
+    
+    zEvent= np.empty(df.shape[0])
+    zEvent= pd.Series(zEvent, dtype='string')
+    zEvent.loc[:]= None
+    zEvent.index= df.index
+
+    #new trialID based on timeLock (since it will bleed through trials)
+    trialIDtimeLock= np.empty(df.shape[0])
+    trialIDtimeLock= pd.Series(zEventBaseline, dtype='float64')
+    trialIDtimeLock.loc[:]= None
+    trialIDtimeLock.index= df.index
     
     #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
     #RESTRICTING to 1st event in trial
@@ -611,6 +627,8 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
         
         #get index of only first event in this trial
         try: #embed in try: in case there are no events
+        
+        #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
             preInd= dfTemp.index[0]- preEventTime
             postInd=dfTemp.index[0] +postEventTime
             
@@ -619,14 +637,83 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
             
             z= (raw-baseline.mean())/(baseline.std())
                 
-            dfResult.loc[preInd:postInd]= z
+            zResult.loc[preInd:postInd]= z
             
             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
+    
+
+        #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
+            zEventBaseline.loc[preInd:postInd]= eventColBaseline
+            
+            zEvent.loc[preInd:postInd]= eventCol
+            
+            trialIDtimeLock.loc[preInd:postInd]= event
     
         except:
             continue
         
-    return dfResult, timeLock
+        #round timeLock so that we have exact shared X values for stats and viz!
+        timLock= np.round(timeLock, decimals=3)
+    
+        
+    return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock
+        
+
+
+#%% old Define custom Z score function
+# FOR TIDY DATA, SINGLE eventType COLUMN
+
+# #assume input eventCol is binary coded event timestamp, with corresponding cutTime value
+# def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColBaseline, baselineTime):
+    
+#     #want to groupby trial but can't strictly since want pre-cue data as baseline
+#     #rearrange logical strucutre here a bit, go through and find all of the baseline events
+#     #then find the get the first event in this trial. TODO: For now assuming 1 baseline event= 1 trial (e.g. 60 cues, 1 per trialID) 
+#     preIndBaseline= df.index[df.eventType==eventColBaseline]-preEventTime
+#     #end baseline at timestamp prior to baseline event onset
+#     postIndBaseline= df.index[df.eventType==eventColBaseline]-1
+
+
+#     ##initialize resulting series, which will be a column that aligns with original df index
+#     dfResult= np.empty(df.shape[0])
+#     dfResult= pd.Series(dfResult, dtype='float64')
+#     dfResult.loc[:]= None
+#     dfResult.index= df.index
+    
+#     timeLock= np.empty(df.shape[0])
+#     timeLock= pd.Series(timeLock, dtype='float64')
+#     timeLock.loc[:]= None
+#     timeLock.index= df.index
+    
+#     #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
+#     #RESTRICTING to 1st event in trial
+#     for event in range(preIndBaseline.size):
+#         #assumes 1 unique trialID per baseline event!!!
+#         trial= df.loc[postIndBaseline[event]+1,'trialID']
+        
+#         dfTemp= df.loc[df.trialID==trial].copy()
+        
+#         #get events in this trial
+#         dfTemp= dfTemp.loc[dfTemp.eventType==eventCol]
+        
+#         #get index of only first event in this trial
+#         try: #embed in try: in case there are no events
+#             preInd= dfTemp.index[0]- preEventTime
+#             postInd=dfTemp.index[0] +postEventTime
+            
+#             raw= df.loc[preInd:postInd, signalCol]
+#             baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol]
+            
+#             z= (raw-baseline.mean())/(baseline.std())
+                
+#             dfResult.loc[preInd:postInd]= z
+            
+#             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
+    
+#         except:
+#             continue
+        
+#     return dfResult, timeLock
         
 
 #%% Eliminate uneeded columns prior to shifting events
@@ -660,15 +747,20 @@ groups= dfTidy.groupby('fileID')
 for name, group in groups:
     for signal in contVars: #loop through each signal (465 & 405)
         #-- peri-DS 
-        z, timeLock=  zscoreCustom(group, signal, 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
+        z, timeLock, zEventBaseline, zEvent, trialIDtimeLock=  zscoreCustom(group, signal, 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
         dfTidy.loc[group.index,signal+'-z-periDS']= z
         dfTidy.loc[group.index,'timeLock-z-periDS-DStime']= timeLock
+        dfTidy.loc[group.index, ['trialIDtimeLock-z-periDS']]= trialIDtimeLock
+
 
         
         #-- peri-NS 
-        z, timeLock=  zscoreCustom(group, signal, 'NStime', preEventTime, postEventTime,'NStime', baselineTime)
+        z, timeLock, zEventBaseline, zEvent, trialIDtimeLock=  zscoreCustom(group, signal, 'NStime', preEventTime, postEventTime,'NStime', baselineTime)
         dfTidy.loc[group.index,signal+'-z-periNS']= z
         dfTidy.loc[group.index,'timeLock-z-periNS-NStime']= timeLock
+        
+        dfTidy.loc[group.index, ['trialIDtimeLock-z-periNS']]= trialIDtimeLock
+
     
 test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()]
 
@@ -1150,6 +1242,24 @@ for eventCol in eventVars: #.categories:
 #%% Drop original, unshifted event times (we should now have duplicate col for timeshift=0 now)
 
 dfTemp= dfTemp.drop(eventVars,axis=1)
+
+#%% Exclude artifacts
+
+#threshold absolute value z score beyond which entire trial should be excluded (replace w nan)
+thresholdArtifact= 15
+
+groupHierarchyTimeLockTrialID= ['fileID','trialIDtimeLock-z-periDS']
+
+#DS then NS
+#
+y= dfTemp.columns[dfTemp.columns.str.contains('repurple-z-periDS')]
+
+#find trials exceeding threshold
+# sumd= dfTemp.groupby(groupHierarchyTimeLockTrialID,as_index=False)[y].max()
+sumd= dfTemp.groupby(groupHierarchyTimeLockTrialID,as_index=False)[y].transform('max')
+
+
+
 
 #%% Isolate DS & NS data, SAVE as separate datasets
 #Restrict analysis to specific trialType

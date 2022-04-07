@@ -144,7 +144,8 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
        if isnan(eventOnset)
             %~~~~~~if no event on this trial, make nan
 %             tRange= [preEventTimeS:postEventTimeS]*fs;
-            tRange=linspace(preEventTimeS,postEventTimeS,tBins)';  %time range over which to interp() fp signal (pre:post)
+            %round to ensure shared values between all trials
+            tRange=round(linspace(-preEventTimeS,postEventTimeS,tBins),3)';  %time range over which to interp() fp signal (pre:post)
 
 
             currentSubjAnalyzed(session).periEvent.baselineOnset(trial)= nan;
@@ -162,7 +163,7 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
             currentSubjAnalyzed(session).periEvent.baselineStdBlue(1,trial)= nan;
             currentSubjAnalyzed(session).periEvent.baselineStdPurple(1,trial)= nan;
             
-            currentSubjAnalyzed(session).periEvent.timeLock= tRange;%nan(size(tRange));
+            currentSubjAnalyzed(session).periEvent.timeLock= round(linspace(-preEventTimeS,postEventTimeS,tBins),3)'%tRange;%nan(size(tRange));
 
        elseif ~isnan(eventOnset)
             %~~~~ SAVE DATA INTO STRUCT- CHANGE THESE FIELDNAMES BASED ON EVENTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -194,7 +195,8 @@ function [baselineOnset, tRange, periBlue, periPurple, periBlueZ, periPurpleZ, t
             %save timeLock time axis- 'normalized' relative time from event (instead
             %of absolute time)
 %             currentSubjAnalyzed(session).periEvent.timeLock= tRange/fs;
-            currentSubjAnalyzed(session).periEvent.timeLock= linspace(-preEventTimeS,postEventTimeS,tBins)
+            %round to ensure shared values between all trials
+            currentSubjAnalyzed(session).periEvent.timeLock= round(linspace(-preEventTimeS,postEventTimeS,tBins),3)';
             
        end
             

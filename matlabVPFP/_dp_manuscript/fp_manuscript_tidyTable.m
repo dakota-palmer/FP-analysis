@@ -297,6 +297,353 @@ figure;
 stackedplot(zSummary, [strcat("max_",y), strcat("min_",y)]);
 
 
+%% -- Viz distribution of z stats
+
+%--DS trials
+y= 'DSpurple';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+
+%subset data to viz
+data= zSummary;
+
+% col to viz
+x= strcat("max_",y);
+
+figure;
+i= gramm('x', data.(x));
+
+i.stat_bin();
+
+i.set_names('x', x);
+i.set_title('Artifact thresholding: Distribution of trial z score extremes');
+i.draw();
+
+
+%--pox timelock (expect more extreme artifacts than DS timelock)
+
+y= 'DSpurplePox';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+%subset data to viz
+data= zSummary;
+
+% col to viz
+x= strcat("max_",y);
+
+figure;
+i= gramm('x', data.(x), 'color', data.subject);
+
+i.stat_bin('geom', 'stairs');
+
+i.set_names('x', x);
+i.set_title('Artifact thresholding: Distribution of trial z score extremes');
+i.draw();
+
+x= strcat("max_",y);
+
+figure;
+i= gramm('x', data.(x), 'color', data.subject);
+
+i.stat_bin('normalization','cumcount');
+
+i.set_names('x', x);
+i.set_title('Artifact thresholding: Distribution of trial z score extremes');
+i.draw();
+
+%--abs val
+x= strcat("var_",y);
+
+figure;
+i= gramm('x', abs(data.(x)), 'color', data.subject);
+
+i.stat_bin('geom','stairs');
+
+i.set_names('x', x);
+i.set_title('Artifact thresholding: Distribution of trial z score extremes');
+i.draw();
+
+figure;
+i= gramm('x', abs(data.(x)), 'color', data.subject);
+
+i.stat_bin('geom','stairs');
+
+i.set_names('x', x);
+i.set_title('Artifact thresholding: Distribution of trial z score extremes');
+i.draw();
+
+
+%% MIN z: peri cue vs peri PE
+
+%--DS trials
+y= 'DSpurple';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+
+%subset data to viz
+data= zSummary;
+
+% col to viz
+x= strcat("min_",y);
+
+figure;
+i(1,1)= gramm('x', data.(x), 'color', data.subject);
+
+i(1,1).stat_bin('geom','stairs');
+
+i(1,1).set_names('x', x);
+i(1,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
+
+i(1,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+
+%--pox timelock (expect more extreme artifacts than DS timelock)
+
+y= 'DSpurplePox';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+%subset data to viz
+data= zSummary;
+
+% col to viz
+x= strcat("min_",y);
+
+i(2,1)= gramm('x', data.(x), 'color', data.subject);
+
+i(2,1).stat_bin('geom', 'stairs');
+i(2,1).set_names('x', x);
+i(2,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
+
+%overlay line for a few stds (trying to viz good threshold)
+i(2,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+i.draw();
+
+linkaxes();
+
+
+%--DS trials
+y= 'DSpurple';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+
+%subset data to viz
+data= zSummary;
+
+% col to viz
+x= strcat("min_",y);
+
+figure;
+i(1,1)= gramm('x', data.(x), 'color', data.subject);
+
+i(1,1).stat_bin('geom','stairs');
+
+i(1,1).set_names('x', x);
+i(1,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
+
+i(1,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+
+%--pox timelock (expect more extreme artifacts than DS timelock)
+
+y= 'DSpurplePox';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+%subset data to viz
+data= zSummary;
+
+% col to viz
+x= strcat("min_",y);
+
+i(2,1)= gramm('x', data.(x), 'color', data.subject);
+
+i(2,1).stat_bin('geom', 'stairs');
+i(2,1).set_names('x', x);
+i(2,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
+
+%overlay line for a few stds (trying to viz good threshold)
+i(2,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+i.draw();
+
+linkaxes();
+
+%% ABS max/min z: peri cue vs peri PE
+
+%--DS trials
+y= 'DSpurple';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+
+%subset data to viz
+data= zSummary;
+
+%compute absolute max value for each trial
+data(:,strcat("abs_max_",y))= table(max(abs(data.(strcat("max_",y))), abs(data.(strcat("min_",y)))));
+
+% col to viz
+x= strcat("abs_max_",y);
+
+figure;
+i(1,1)= gramm('x', data.(x), 'color', data.subject);
+
+i(1,1).stat_bin('geom','stairs');
+
+i(1,1).set_names('x', x);
+i(1,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
+
+i(1,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+
+%--pox timelock (expect more extreme artifacts than DS timelock)
+
+y= 'DSpurplePox';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+%subset data to viz
+data= zSummary;
+
+%compute absolute max value for each trial
+data(:,strcat("abs_max_",y))= table(max(abs(data.(strcat("max_",y))), abs(data.(strcat("min_",y)))));
+
+% col to viz
+x= strcat("abs_max_",y);
+
+% col to viz
+x= strcat("abs_max_",y);
+
+i(2,1)= gramm('x', data.(x), 'color', data.subject);
+
+i(2,1).stat_bin('geom', 'stairs');
+i(2,1).set_names('x', x);
+i(2,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
+
+%overlay line for a few stds (trying to viz good threshold)
+i(2,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+i.draw();
+
+linkaxes();
+
+
+%--DS trials
+y= 'DSpurple';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+
+%subset data to viz
+data= zSummary;
+
+%compute absolute max value for each trial
+data(:,strcat("abs_max_",y))= table(max(abs(data.(strcat("max_",y))), abs(data.(strcat("min_",y)))));
+
+% col to viz
+x= strcat("abs_max_",y);
+
+% col to viz
+x= strcat("max_",y);
+
+figure;
+i(1,1)= gramm('x', data.(x), 'color', data.subject);
+
+i(1,1).stat_bin('geom','stairs');
+
+i(1,1).set_names('x', x);
+i(1,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
+
+i(1,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+
+%--pox timelock (expect more extreme artifacts than DS timelock)
+
+y= 'DSpurplePox';
+
+zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+
+%subset data to viz
+data= zSummary;
+
+%compute absolute max value for each trial
+data(:,strcat("abs_max_",y))= table(max(abs(data.(strcat("max_",y))), abs(data.(strcat("min_",y)))));
+
+% col to viz
+x= strcat("abs_max_",y);
+
+% col to viz
+x= strcat("max_",y);
+
+i(2,1)= gramm('x', data.(x), 'color', data.subject);
+
+i(2,1).stat_bin('geom', 'stairs');
+i(2,1).set_names('x', x);
+i(2,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
+
+%overlay line for a few stds (trying to viz good threshold)
+i(2,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+i.draw();
+
+linkaxes();
+
+%% Viz 'Artifact' trials before excluding
+
+%z score max beyond which to exclude
+artifactThreshold= 15;
+
+%- DS trials
+y= 'DSpurple';
+
+zSummary= table;
+zSummary= groupsummary(periEventTable,["DStrialIDcum"],'all', y);
+
+%find unique trialIDs where z max or min exceed threshold
+ind= []; 
+ind= abs(table2array(zSummary(:,strcat("max_"+y)))) >= artifactThreshold;
+
+ind= ind | abs(table2array(zSummary(:,strcat("min_"+y)))) >= artifactThreshold;
+
+trialsToExclude= zSummary(ind,'DStrialIDcum');
+
+
+
+trialsToExclude= table2array(trialsToExclude);
+
+data= periEventTable;
+%Replace data with nan for these trials
+for trial= 1:numel(trialsToExclude)
+    signalCol= ["DSblue", "DSbluePox", "DSblueLox", "DSpurple", "DSpurplePox", "DSpurpleLox"];
+    
+    data(data.DStrialIDcum== trialsToExclude(trial), signalCol)= table(nan);
+end
+
+figure();
+
+
+% melt different signal columns into one based on eventType (easy plotting/faceting)
+data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
+
+i=gramm('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType);
+
+
+%facet by stage
+i.facet_wrap(data.subject);
+
+%means
+% i.stat_summary('type','sem','geom','area');
+
+i.geom_line();
+
+i.geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
+
+%label and draw
+% i.axe_property('YLim',[-5, 10]);
+i.set_names('x','time from event (s)','y','z-score','color','eventType', 'column', 'subject');
+i.set_title(strcat(subjects{subj},'peri-event-allStages'));
+
+i.draw();
+
+
 %% Exclude artifacts
 
 %z score max beyond which to just exclude
