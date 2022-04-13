@@ -1,339 +1,10 @@
 %% --Artifact exclusion from periEventTable
 
-%% checking traces... seems like incongruous bleedthrough somewhere when ind trials are plotted
-figure;
-stackedplot(periEventTable, ["timeLock","DStrialIDcum","NStrialIDcum"]);
+artifactThreshold=15;
 
-figure;
-plot(periEventTable.timeLock);
+%% ----Histograms of extreme Z values by trial to establish threshold criteria-----
 
-figure;
-% hist(periEventTable.NStrialID, periEventTable.timeLock);
-hist(periEventTable.NStrialID);
-hist(periEventTable.DStrialID);
-
-
-%% viz summary stats of z score
-%summary stats of z score 
-y= 'DSpurple';
-
-% zSummary= groupsummary(periEventTable,["subject","stage","DStrialID"],'all', y);
-
-
-zSummary= groupsummary(periEventTable,["DStrialIDcum"],'all', y);
-
-%viz 
-figure;
-stackedplot(zSummary, [strcat("max_",y), strcat("min_",y), strcat("var_",y)]);
-
-figure;
-stackedplot(zSummary, [strcat("max_",y), strcat("min_",y)]);
-
-
-%% try to find example
-data= periEventTable(contains(periEventTable.subject,'rat13'),:);
-
-data= data(data.stage == 7, :);
-
-figure();
-
-i= gramm('x', data.timeLock, 'y', data.DSbluePox,'color', data.DStrialID);
-
-i.geom_line();
-
-i.draw();
-
-%
-figure();
-
-i= gramm('x', data.timeLock, 'y', data.DSbluePox,'color', data.DStrialID);
-
-
-i.facet_wrap(data.DStrialID);
-
-i.geom_line();
-
-i.draw()
-%trial by trial facet looks fine... agian could be unique values of
-%timeLock (small differences between trials that are causing stats to be
-%off?)
-
-figure();
-
-i= gramm('x', data.timeLock, 'y', data.DSbluePox,'color', data.DStrialIDcum);
-
-i.facet_wrap(data.DStrialIDcum);
-
-i.geom_line();
-
-i.draw()
-
-%should only have 601 unique values...looks good
-test= unique(data.timeLock);
-
-
-%related to how trialID is being treated? subsets looks fine but whole
-%dataset plotted looks very off...
-
-%seems like a gramm bug...
-figure();
-
-i= gramm('x', data.timeLock, 'y', data.DSbluePox,'color', data.DStrialID);
-
-i.geom_line();
-
-i.draw()
-
-% see subset fine
-
-%seems to happen when color map changes. when selection is too large to fit
-%within discrete cmap. once continuous cmap used lines appear that shouldnt
-%exist. why?? think it is a bug in gramm, not the dataset itself.
-data2= data(data.DStrialID>=15 & data.DStrialID <= 29 ,:);
-
-figure();
-
-i= gramm('x', data2.timeLock, 'y', data2.DSbluePox,'color', data2.DStrialID);
-
-i.geom_line();
-i.stat_summary('type','sem','geom','area');
-
-i.draw();
-
-data2= data(data.DStrialID>=15 ,:);
-
-figure();
-
-%adding stat line makes very clear grouping is wrong... but why only on
-%this subset?
-figure();
-i= gramm('x', data2.timeLock, 'y', data2.DSbluePox,'color', data2.DStrialID);
-
-i.geom_line();
-i.stat_summary('type','sem','geom','area');
-
-
-i.draw()
-
-% try another geom? raw data in points is fine...
-data2= data(data.DStrialID>=15,:);
-
-figure();
-
-i= gramm('x', data2.timeLock, 'y', data2.DSbluePox,'color', data2.DStrialID);
-
-i.geom_point();
-
-i.draw()
-
-data2= data(data.DStrialID>=15 ,:);
-
-%without color facet: bad
-figure();
-i= gramm('x', data2.timeLock, 'y', data2.DSbluePox);
-
-i.geom_line();
-i.stat_summary('type','sem','geom','area');
-
-
-i.draw()
-
-%group maybe?
-%~~~ this is it. fixed.
-figure();
-i= gramm('x', data2.timeLock, 'y', data2.DSbluePox, 'group', data2.DStrialID);
-
-i.geom_line();
-i.stat_summary('type','sem','geom','area');
-
-
-i.draw()
-
-%group + color
-figure();
-i= gramm('x', data2.timeLock, 'y', data2.DSbluePox, 'group', data2.DStrialID, 'color', data2.DStrialID);
-
-i.geom_line();
-% i.stat_summary('type','sem','geom','area');
-
-
-i.draw()
-
-
-%% -- Viz distribution of z stats
-
-%--DS trials
-y= 'DSpurple';
-
-zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
-
-
-%subset data to viz
-data= zSummary;
-
-% col to viz
-x= strcat("max_",y);
-
-figure;
-i= gramm('x', data.(x));
-
-i.stat_bin();
-
-i.set_names('x', x);
-i.set_title('Artifact thresholding: Distribution of trial z score extremes');
-i.draw();
-
-
-%--pox timelock (expect more extreme artifacts than DS timelock)
-
-y= 'DSpurplePox';
-
-zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
-
-%subset data to viz
-data= zSummary;
-
-% col to viz
-x= strcat("max_",y);
-
-figure;
-i= gramm('x', data.(x), 'color', data.subject);
-
-i.stat_bin('geom', 'stairs');
-
-i.set_names('x', x);
-i.set_title('Artifact thresholding: Distribution of trial z score extremes');
-i.draw();
-
-x= strcat("max_",y);
-
-figure;
-i= gramm('x', data.(x), 'color', data.subject);
-
-i.stat_bin('normalization','cumcount');
-
-i.set_names('x', x);
-i.set_title('Artifact thresholding: Distribution of trial z score extremes');
-i.draw();
-
-%--abs val
-x= strcat("var_",y);
-
-figure;
-i= gramm('x', abs(data.(x)), 'color', data.subject);
-
-i.stat_bin('geom','stairs');
-
-i.set_names('x', x);
-i.set_title('Artifact thresholding: Distribution of trial z score extremes');
-i.draw();
-
-figure;
-i= gramm('x', abs(data.(x)), 'color', data.subject);
-
-i.stat_bin('geom','stairs');
-
-i.set_names('x', x);
-i.set_title('Artifact thresholding: Distribution of trial z score extremes');
-i.draw();
-
-
-%% MIN z: peri cue vs peri PE
-
-%--DS trials
-y= 'DSpurple';
-
-zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
-
-
-%subset data to viz
-data= zSummary;
-
-% col to viz
-x= strcat("min_",y);
-
-figure;
-i(1,1)= gramm('x', data.(x), 'color', data.subject);
-
-i(1,1).stat_bin('geom','stairs');
-
-i(1,1).set_names('x', x);
-i(1,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
-
-i(1,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
-
-%--pox timelock (expect more extreme artifacts than DS timelock)
-
-y= 'DSpurplePox';
-
-zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
-
-%subset data to viz
-data= zSummary;
-
-% col to viz
-x= strcat("min_",y);
-
-i(2,1)= gramm('x', data.(x), 'color', data.subject);
-
-i(2,1).stat_bin('geom', 'stairs');
-i(2,1).set_names('x', x);
-i(2,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
-
-%overlay line for a few stds (trying to viz good threshold)
-i(2,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
-i.draw();
-
-linkaxes();
-
-
-%--DS trials
-y= 'DSpurple';
-
-zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
-
-
-%subset data to viz
-data= zSummary;
-
-% col to viz
-x= strcat("min_",y);
-
-figure;
-i(1,1)= gramm('x', data.(x), 'color', data.subject);
-
-i(1,1).stat_bin('geom','stairs');
-
-i(1,1).set_names('x', x);
-i(1,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
-
-i(1,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
-
-%--pox timelock (expect more extreme artifacts than DS timelock)
-
-y= 'DSpurplePox';
-
-zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
-
-%subset data to viz
-data= zSummary;
-
-% col to viz
-x= strcat("min_",y);
-
-i(2,1)= gramm('x', data.(x), 'color', data.subject);
-
-i(2,1).stat_bin('geom', 'stairs');
-i(2,1).set_names('x', x);
-i(2,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
-
-%overlay line for a few stds (trying to viz good threshold)
-i(2,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
-i.draw();
-
-linkaxes();
-
-%% ABS max/min z: peri cue vs peri PE
+% ABS max/min z: peri cue vs peri PE
 
 %--DS trials
 y= 'DSpurple';
@@ -351,6 +22,7 @@ data(:,strcat("abs_max_",y))= table(max(abs(data.(strcat("max_",y))), abs(data.(
 x= strcat("abs_max_",y);
 
 figure;
+
 i(1,1)= gramm('x', data.(x), 'color', data.subject);
 
 i(1,1).stat_bin('geom','stairs');
@@ -390,66 +62,50 @@ i.draw();
 
 linkaxes();
 
+%% box plot may help?
 
-%--DS trials
-y= 'DSpurple';
+figure();
+clear i;
 
-zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
+% i(2,1)= gramm('y', data.(x), 'x', data.stage, 'color', data.subject);
+i= gramm('y', data.(x), 'x', data.subject, 'color', data.stage);
 
-
-%subset data to viz
-data= zSummary;
-
-%compute absolute max value for each trial
-data(:,strcat("abs_max_",y))= table(max(abs(data.(strcat("max_",y))), abs(data.(strcat("min_",y)))));
-
-% col to viz
-x= strcat("abs_max_",y);
-
-% col to viz
-x= strcat("max_",y);
-
-figure;
-i(1,1)= gramm('x', data.(x), 'color', data.subject);
-
-i(1,1).stat_bin('geom','stairs');
-
-i(1,1).set_names('x', x);
-i(1,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
-
-i(1,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
-
-%--pox timelock (expect more extreme artifacts than DS timelock)
-
-y= 'DSpurplePox';
-
-zSummary= groupsummary(periEventTable,["subject","stage","DStrialID", "DStrialIDcum"],'all', y);
-
-%subset data to viz
-data= zSummary;
-
-%compute absolute max value for each trial
-data(:,strcat("abs_max_",y))= table(max(abs(data.(strcat("max_",y))), abs(data.(strcat("min_",y)))));
-
-% col to viz
-x= strcat("abs_max_",y);
-
-% col to viz
-x= strcat("max_",y);
-
-i(2,1)= gramm('x', data.(x), 'color', data.subject);
-
-i(2,1).stat_bin('geom', 'stairs');
-i(2,1).set_names('x', x);
-i(2,1).set_title('Artifact thresholding: Distribution of trial z score extremes');
+i.stat_boxplot();
+% i(2,1).set_names('x', x);
+i.set_title('Artifact thresholding: Distribution of trial z score extremes');
 
 %overlay line for a few stds (trying to viz good threshold)
-i(2,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+% i(2,1).geom_vline('xintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+i().geom_hline('yintercept', artifactThreshold, 'style', 'k--');
 i.draw();
 
-linkaxes();
 
-%% Viz 'Artifact' trials before excluding
+figure();
+clear i;
+
+% i(2,1)= gramm('y', data.(x), 'x', data.stage, 'color', data.subject);
+i= gramm('y', data.(x), 'x', data.subject);%, 'color', data.stage);
+
+i.stat_boxplot();
+% i(2,1).set_names('x', x);
+i.set_title('Artifact thresholding: Distribution of trial z score extremes');
+
+%overlay line for a few stds (trying to viz good threshold)
+% i().geom_hline('yintercept', 3*nanstd(data.(x)), 'style', 'k--'); 
+i().geom_hline('yintercept', artifactThreshold, 'style', 'k--'); 
+
+i.draw();
+
+
+%% Mark 'artifact' trials for exclusion
+
+%initialize new column
+periEventTable(:, "artifact")= table(nan);
+
+
+%melt into single signal column (check timelock to all event types, dont restrict to one)
+% data= stack(data, {'DSpurple', 'DSpurplePox', 'DSpurpleLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventDSpurple');
+
 
 %z score max beyond which to exclude
 artifactThreshold= 15;
@@ -473,78 +129,28 @@ trialsToExclude= zSummary(ind,'DStrialIDcum');
 trialsToExclude= table2array(trialsToExclude);
 
 data= periEventTable;
-%Replace data with nan for these trials
+
+%Mark artifact trials
 for trial= 1:numel(trialsToExclude)
     signalCol= ["DSblue", "DSbluePox", "DSblueLox", "DSpurple", "DSpurplePox", "DSpurpleLox"];
     
-    data(data.DStrialIDcum== trialsToExclude(trial), signalCol)= table(nan);
-end
+%     ind= find((data.DStrialIDcum== trialsToExclude(trial))==0);
+    ind= find((data.DStrialIDcum== trialsToExclude(trial)));
 
-figure();
-
-
-% melt different signal columns into one based on eventType (easy plotting/faceting)
-data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
-
-%group= 1 unique cumulative trialID per trial plotted seems to fix the incorrect line issue.
-i=gramm('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType, 'group', data.DStrialIDcum);
-
-
-%facet by stage
-i.facet_wrap(data.subject);
-
-%means
-% i.stat_summary('type','sem','geom','area');
-
-i.geom_line();
-
-i.geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
-
-%label and draw
-% i.axe_property('YLim',[-5, 10]);
-i.set_names('x','time from event (s)','y','z-score','color','eventType', 'column', 'subject');
-i.set_title(strcat(subjects{subj},'peri-event-allStages'));
-
-i.draw();
-
-
-%% Exclude artifacts
-
-%z score max beyond which to just exclude
-artifactThreshold= 15;
-
-%- DS trials
-y= 'DSpurple';
-
-zSummary= table;
-zSummary= groupsummary(periEventTable,["DStrialIDcum"],'all', y);
-
-%find unique trialIDs where z max or min exceed threshold
-ind= []; 
-ind= abs(table2array(zSummary(:,strcat("max_"+y)))) >= artifactThreshold;
-
-ind= ind | abs(table2array(zSummary(:,strcat("min_"+y)))) >= artifactThreshold;
-
-trialsToExclude= zSummary(ind,'DStrialIDcum');
-
-
-trialsToExclude= table2array(trialsToExclude);
-%Replace data with nan for these trials
-for trial= 1:numel(trialsToExclude)
-    signalCol= ["DSblue", "DSbluePox", "DSblueLox", "DSpurple", "DSpurplePox", "DSpurpleLox"];
+    data(ind, "artifact")= table(1);
     
-    periEventTable(periEventTable.DStrialIDcum== trialsToExclude(trial), signalCol)= table(nan);
 end
 
-%-NS trials
+periEventTable= data; %assign back to table
+
+%- NS trials
 y= 'NSpurple';
 
 zSummary= table;
 zSummary= groupsummary(periEventTable,["NStrialIDcum"],'all', y);
 
-
-%find unique trialIDs where z max or min exceed threshold
-ind= [];
+%find unique trialINS where z max or min exceed threshold
+ind= []; 
 ind= abs(table2array(zSummary(:,strcat("max_"+y)))) >= artifactThreshold;
 
 ind= ind | abs(table2array(zSummary(:,strcat("min_"+y)))) >= artifactThreshold;
@@ -552,13 +158,232 @@ ind= ind | abs(table2array(zSummary(:,strcat("min_"+y)))) >= artifactThreshold;
 trialsToExclude= zSummary(ind,'NStrialIDcum');
 
 
+
 trialsToExclude= table2array(trialsToExclude);
-%Replace data with nan for these trials
+
+data= periEventTable;
+
+%Mark artifact trials
 for trial= 1:numel(trialsToExclude)
     signalCol= ["NSblue", "NSbluePox", "NSblueLox", "NSpurple", "NSpurplePox", "NSpurpleLox"];
     
-    periEventTable(periEventTable.NStrialIDcum== trialsToExclude(trial), signalCol)= table(nan);
+%     ind= find((data.NStrialIDcum== trialsToExclude(trial))==0);
+    ind= find((data.NStrialIDcum== trialsToExclude(trial)));
+
+    data(ind, "artifact")= table(1);
+    
 end
 
+periEventTable= data; %assign back to table
 
 
+%% ---- Review artifact trials ----
+%% individual artifact trial review
+
+%% - peri cue
+
+
+%subset artifact trials
+data= periEventTable(periEventTable.artifact==1,:);
+
+y= "DSblue"; % column to plot
+
+clear i;
+
+figure();
+i(1,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.DStrialIDcum, 'group', data.DStrialIDcum);
+i(1,1).set_names('x','time from event (s)','y','z-score');
+i(1,1).set_title('Artifact trials: 465nm');
+
+i(1,1).geom_line(); 
+% i(1,1).stat_summary('type','sem','geom','area');
+
+i(1,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+
+y= "DSpurple"; % column to plot
+i(2,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.DStrialIDcum, 'group', data.DStrialIDcum);
+% i(2,1).stat_summary('type','sem','geom','area');
+i(2,1).geom_line();
+i(2,1).set_names('x','time from event (s)','y','z-score');
+i(2,1).set_title('Artifact trials: 405nm');
+i(2,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+
+i.draw();
+linkaxes();
+
+
+%--NS trials
+ clear i;
+    
+ y= "NSblue"; % column to plot
+
+    figure();
+    i(1,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.NStrialIDcum, 'group', data.NStrialIDcum);
+    i(1,1).set_names('x','time from event (s)','y','z-score');
+    i(1,1).set_title('Artifact trials: 465nm');
+    
+    i(1,1).geom_line(); 
+    
+    i(1,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+y= "NSpurple"; % column to plot
+
+    i(2,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.NStrialIDcum, 'group', data.NStrialIDcum);
+    i(2,1).geom_line();
+    i(2,1).set_names('x','time from event (s)','y','z-score');
+    i(2,1).set_title('Artifact trials: 405nm');
+    i(2,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+    
+    i.draw();
+    linkaxes();
+
+
+%% - peri pox
+%subset artifact trials
+data= periEventTable(periEventTable.artifact==1,:);
+
+y= "DSbluePox"; % column to plot
+
+clear i;
+
+figure();
+i(1,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.DStrialIDcum, 'group', data.DStrialIDcum);
+i(1,1).set_names('x','time from event (s)','y','z-score');
+i(1,1).set_title('Artifact trials: 465nm');
+
+i(1,1).geom_line(); 
+% i(1,1).stat_summary('type','sem','geom','area');
+
+i(1,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+
+y= "DSpurplePox"; % column to plot
+i(2,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.DStrialIDcum, 'group', data.DStrialIDcum);
+% i(2,1).stat_summary('type','sem','geom','area');
+i(2,1).geom_line();
+i(2,1).set_names('x','time from event (s)','y','z-score');
+i(2,1).set_title('Artifact trials: 405nm');
+i(2,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+
+i.draw();
+linkaxes();
+
+
+%--NS trials
+ clear i;
+    
+ y= "NSbluePox"; % column to plot
+
+    figure();
+    i(1,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.NStrialIDcum, 'group', data.NStrialIDcum);
+    i(1,1).set_names('x','time from event (s)','y','z-score');
+    i(1,1).set_title('Artifact trials: 465nm');
+    
+    i(1,1).geom_line(); 
+    
+    i(1,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+y= "NSpurplePox"; % column to plot
+
+    i(2,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.NStrialIDcum, 'group', data.NStrialIDcum);
+    i(2,1).geom_line();
+    i(2,1).set_names('x','time from event (s)','y','z-score');
+    i(2,1).set_title('Artifact trials: 405nm');
+    i(2,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+    
+    i.draw();
+    linkaxes();
+    
+%% - view remaining trials
+data= periEventTable(periEventTable.artifact~=1,:);
+
+y= "DSbluePox"; % column to plot
+
+clear i;
+
+figure();
+i(1,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.DStrialIDcum, 'group', data.DStrialIDcum);
+i(1,1).set_names('x','time from event (s)','y','z-score');
+i(1,1).set_title('Non-artifact trials: 465nm');
+
+i(1,1).geom_line(); 
+% i(1,1).stat_summary('type','sem','geom','area');
+
+i(1,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+
+y= "DSpurplePox"; % column to plot
+i(2,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.DStrialIDcum, 'group', data.DStrialIDcum);
+% i(2,1).stat_summary('type','sem','geom','area');
+i(2,1).geom_line();
+i(2,1).set_names('x','time from event (s)','y','z-score');
+i(2,1).set_title('Non-artifact trials: 405nm');
+i(2,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+
+i.draw();
+linkaxes();
+
+
+%--NS trials
+ clear i;
+    
+ y= "NSbluePox"; % column to plot
+
+    figure();
+    i(1,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.NStrialIDcum, 'group', data.NStrialIDcum);
+    i(1,1).set_names('x','time from event (s)','y','z-score');
+    i(1,1).set_title('Artifact trials: 465nm');
+    
+    i(1,1).geom_line(); 
+    
+    i(1,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+y= "NSpurplePox"; % column to plot
+
+    i(2,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.NStrialIDcum, 'group', data.NStrialIDcum);
+    i(2,1).geom_line();
+    i(2,1).set_names('x','time from event (s)','y','z-score');
+    i(2,1).set_title('Artifact trials: 405nm');
+    i(2,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+    
+    i.draw();
+    linkaxes();
+
+
+%% ---- Exclude artifacts ----
+
+signalCol= ["DSblue", "DSbluePox", "DSblueLox", "DSpurple", "DSpurplePox", "DSpurpleLox"
+    "NSblue", "NSbluePox", "NSblueLox", "NSpurple", "NSpurplePox", "NSpurpleLox"];
+
+periEventTable(periEventTable.artifact==1, signalCol)= table(nan);
+
+
+%% %confirm w viz:
+% data= periEventTable(periEventTable.artifact==1,:);
+% 
+%   figure();
+%     i(1,1)=gramm('x',data.timeLock,'y',data.DSbluePox, 'color', data.DStrialIDcum, 'group', data.DStrialIDcum);
+%     i(1,1).set_names('x','time from pox (s)','y','z-score');
+%     i(1,1).set_title('Artifact trials: 465nm');
+%     
+%     i(1,1).geom_line(); 
+%     % i(1,1).stat_summary('type','sem','geom','area');
+%     
+%     i(1,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+% 
+%     i(2,1)=gramm('x',data.timeLock,'y',data.DSpurplePox, 'color', data.DStrialIDcum, 'group', data.DStrialIDcum);
+%     % i(2,1).stat_summary('type','sem','geom','area');
+%     i(2,1).geom_line();
+%     i(2,1).set_names('x','time from pox (s)','y','z-score');
+%     i(2,1).set_title('Artifact trials: 405nm');
+%     i(2,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+% 
+%     
+%     i.draw();

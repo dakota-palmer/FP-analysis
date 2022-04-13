@@ -1248,18 +1248,71 @@ dfTemp= dfTemp.drop(eventVars,axis=1)
 #threshold absolute value z score beyond which entire trial should be excluded (replace w nan)
 thresholdArtifact= 15
 
+
+#--DS
 groupHierarchyTimeLockTrialID= ['fileID','trialIDtimeLock-z-periDS']
 
-#DS then NS
-#
 y= dfTemp.columns[dfTemp.columns.str.contains('repurple-z-periDS')]
 
 #find trials exceeding threshold
-# sumd= dfTemp.groupby(groupHierarchyTimeLockTrialID,as_index=False)[y].max()
-sumd= dfTemp.groupby(groupHierarchyTimeLockTrialID,as_index=False)[y].transform('max')
+
+dfTemp2= pd.DataFrame()
+
+#get max, min for each trial then compare absolute value of these extremes against threshold 
+dfTemp2['maxZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('max').copy()
+
+dfTemp2['minZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('min').copy()
+
+dfTemp2['tresholdArtifact']= thresholdArtifact
+
+dfTemp2= dfTemp2.abs()
 
 
+ind= ((dfTemp2.minZ>=thresholdArtifact) | (dfTemp2.maxZ>= thresholdArtifact))
 
+#mark index as artifact if exceed threshold
+dfTemp2.loc[ind,'artifact']= 1
+
+
+#mark for exclusion in main df
+dfTemp.loc[ind, 'exclude']= 1
+
+
+#--NS
+groupHierarchyTimeLockTrialID= ['fileID','trialIDtimeLock-z-periNS']
+
+y= dfTemp.columns[dfTemp.columns.str.contains('repurple-z-periNS')]
+
+#find trials exceeding threshold
+dfTemp2= pd.DataFrame()
+
+#get max, min for each trial then compare absolute value of these extremes against threshold 
+dfTemp2['maxZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('max').copy()
+
+dfTemp2['minZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('min').copy()
+
+dfTemp2['tresholdArtifact']= thresholdArtifact
+
+dfTemp2= dfTemp2.abs()
+
+
+ind= ((dfTemp2.minZ>=thresholdArtifact) | (dfTemp2.maxZ>= thresholdArtifact))
+
+#mark index as artifact if exceed threshold
+dfTemp2.loc[ind,'artifact']= 1
+
+
+#mark for exclusion in main df
+dfTemp.loc[ind, 'exclude']= 1
+
+
+#%%--- Remove excluded trials (artifacts)
+
+#update list of contVars to include normalized fp signals
+contVars= list(dfTemp.columns[(dfTemp.columns.str.contains('reblue') | dfTemp.columns.str.contains('repurple'))])
+
+#replace continuous signals with nan
+dfTemp.loc[dfTemp.exclude==1,contVars]= None
 
 #%% Isolate DS & NS data, SAVE as separate datasets
 #Restrict analysis to specific trialType

@@ -596,7 +596,7 @@ dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','tria
 
 dfTidy.eventType= dfTidy.eventType.astype(str)
 
-dfTemp= dfTidy.loc[dfTidy.eventType.str.contains('lick')].copy()
+dfTemp= dfTidy.loc[dfTidy.eventType.str.contains('lick')==True].copy()
 
 
 #TODO: NS licks should have another name?
