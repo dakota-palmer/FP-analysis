@@ -828,6 +828,85 @@ for subj= 1:numel(subjects)
     saveFig(gcf, figPath, strcat(subjects{subj},'-periEvent-allStages'), figFormats)
 end
 
+%% Close examination of sessions prior to encoding model
+
+stagesToPlot= [7];
+
+%subset specific data to plot
+data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+for subj= 1:numel(subjects)
+    
+    data2= data(strcmp(data.subject, subjects{subj})==1,:);
+
+    %transform to have trialType variable
+    data2= stack(data2, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
+
+
+    %mean between sessions
+    i= gramm('x',data2.timeLock,'y',data2.periCueBlue, 'color', data2.trialType);
+
+    i.facet_wrap(data2.stage);
+
+    i.stat_summary('type','sem','geom','area');
+
+    i().set_line_options('base_size',2)
+
+    i().set_color_options('lightness', 60)
+
+    i.draw();
+
+    %define variables to plot and grouping 
+    %ind sessions
+    i.update('x',data2.timeLock,'y',data2.periCueBlue, 'color', data2.trialType, 'lightness', data2.date);
+    % i=gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType);
+
+
+    %define stats to show
+    % Mean line for individual ses w/o SEM
+    % i.stat_summary('type','sem','geom','area'); %mean + sem shade
+    i.stat_summary('type','sem','geom','line'); %mean line only?
+
+    %TODO: i think ind subjects x trialtype may require separate, sequential
+    %subplotting? ideally low alpha idk how to do this with gramm without
+    %manually calculating mean
+
+    %just do in illustrator later!
+
+    % i().set_color_options('chroma',0,'lightness',30); % define color for ind subjs
+
+    %color_options : Lower chroma = darker, lower lightness= darker
+    %lightness 0:100 (white) , color range unclear, beyond 255 possible
+    %chroma 10, lightness 90 = very dull, kinda similar to a low alpha?
+    %chroma 40, lightness 90/60 good
+
+    % The values are Hue (defines the color, [0-360]), Chroma (defines the colorness; restricted to [0-100] here) and Luminance (defines the brightness, [0-100]). 
+
+    % i().set_color_options('chroma', 40, 'lightness',60); % define color for ind subjs
+
+    % flat range of lightness? still has some variability. Just tune later in
+    % illustrator
+%     i().set_color_options('lightness_range', [20,20])
+
+    i().set_line_options('base_size',0.5)
+
+    %define labels for plot axes
+    i.set_names('x','time from event (s)','y','z-score','color','trialType','lightness','date');
+    i.set_title('Peri-Cue');
+
+    %set y axes limits manually
+    i.axe_property('YLim',[-2,5]);
+
+    %draw the actual plot
+    i.draw();
+
+    % 
+    % i.update('x',data.timeLock,'y',data.NSblue);
+    % i.stat_summary('type','sem','geom','area');
+    % i.draw();
+
+    saveFig(gcf, figPath, strcat('subject-',subjects{subj},'-periDSvsNS-stagesToPlot-allSess'), figFormats)
+end
 
 
 %% Plotting specific subj to compare with kernels

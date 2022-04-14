@@ -4,7 +4,7 @@
 periEventTable.exclude= nan(size(periEventTable,1),1);
 
 %% Exclude data from specific subjects
-subjToExclude= {'rat17'};
+subjToExclude= {'rat17', 'rat10', 'rat20'};
 
 
 for subj= 1:numel(subjToExclude)
@@ -15,17 +15,17 @@ for subj= 1:numel(subjToExclude)
 end
 
 %% Exclue sessions based on PE ratio
-criteriaDS= 0.6;
-
-criteriaNS= 0.4;
-
-ind=[];
-
-ind= periEventTable.DSpeRatio <= criteriaDS;
-
-ind= ind & (periEventTable.NSpeRatio >= criteriaNS);
-
-periEventTable(ind, 'exclude')= table(1);
+% criteriaDS= 0.6;
+% 
+% criteriaNS= 0.4;
+% 
+% ind=[];
+% 
+% ind= periEventTable.DSpeRatio <= criteriaDS;
+% 
+% ind= ind & (periEventTable.NSpeRatio >= criteriaNS);
+% 
+% periEventTable(ind, 'exclude')= table(1);
 
 
 %% Remove data marked for exclusion

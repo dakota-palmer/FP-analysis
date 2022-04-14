@@ -22,11 +22,12 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_
 %% Create periEventTable
 fp_manuscript_tidyTable();
 
+%% Remove data based on behavioral criteria (& subject)
+fp_manuscript_dataExclusion();
+
 %% ID and remove artifacts
 fp_manuscript_artifactExclusion();
 
-%% Remove data based on behavioral criteria (or subject)
-fp_manuscript_dataExclusion();
 
 %% make peri-event 465nm plots
 fp_manuscript_periEventTraces();

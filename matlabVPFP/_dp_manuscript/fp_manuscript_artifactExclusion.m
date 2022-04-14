@@ -104,17 +104,17 @@ periEventTable(:, "artifact")= table(nan);
 
 
 %melt into single signal column (check timelock to all event types, dont restrict to one)
-% data= stack(data, {'DSpurple', 'DSpurplePox', 'DSpurpleLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventDSpurple');
+data= stack(periEventTable, {'DSpurple', 'DSpurplePox', 'DSpurpleLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventDSpurple');
 
 
 %z score max beyond which to exclude
 artifactThreshold= 15;
 
 %- DS trials
-y= 'DSpurple';
+y= 'periEventDSpurple';
 
 zSummary= table;
-zSummary= groupsummary(periEventTable,["DStrialIDcum"],'all', y);
+zSummary= groupsummary(data,["DStrialIDcum"],'all', y);
 
 %find unique trialIDs where z max or min exceed threshold
 ind= []; 
@@ -144,10 +144,15 @@ end
 periEventTable= data; %assign back to table
 
 %- NS trials
-y= 'NSpurple';
+
+%melt into single signal column (check timelock to all event types, dont restrict to one)
+data= stack(periEventTable, {'NSpurple', 'NSpurplePox', 'NSpurpleLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventNSpurple');
+
+
+y= 'periEventNSpurple';
 
 zSummary= table;
-zSummary= groupsummary(periEventTable,["NStrialIDcum"],'all', y);
+zSummary= groupsummary(data,["NStrialIDcum"],'all', y);
 
 %find unique trialINS where z max or min exceed threshold
 ind= []; 
@@ -338,7 +343,7 @@ linkaxes();
     figure();
     i(1,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.NStrialIDcum, 'group', data.NStrialIDcum);
     i(1,1).set_names('x','time from event (s)','y','z-score');
-    i(1,1).set_title('Artifact trials: 465nm');
+    i(1,1).set_title('Non-Artifact trials: 465nm');
     
     i(1,1).geom_line(); 
     
@@ -349,14 +354,52 @@ y= "NSpurplePox"; % column to plot
     i(2,1)=gramm('x',data.timeLock,'y',data.(y), 'color', data.NStrialIDcum, 'group', data.NStrialIDcum);
     i(2,1).geom_line();
     i(2,1).set_names('x','time from event (s)','y','z-score');
-    i(2,1).set_title('Artifact trials: 405nm');
+    i(2,1).set_title('Non-Artifact trials: 405nm');
     i(2,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
 
     
     i.draw();
     linkaxes();
 
+%% -Means with & without artifacts 
 
+%subset specific stages
+stagesToPlot= [4,5,7];
+
+data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+%All- with artifacts
+data2= data;
+
+
+y= "DSbluePox"; % column to plot
+color= "subject";
+
+clear i;
+
+figure();
+i(1,1)=gramm('x',data2.timeLock,'y',data2.(y), 'color', data2.(color));%, 'group', data.DStrialIDcum);
+i(1,1).set_names('x','time from event (s)','y',y, 'color', color);
+i(1,1).set_title('Mean - Including artifact trials');
+i(1,1).stat_summary('type','sem','geom','area');
+
+i(1,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+% All- with artifacts
+data2= data(data.artifact~=1,:);
+
+y= "DSbluePox"; % column to plot
+i(2,1)=gramm('x',data2.timeLock,'y',data2.(y), 'color', data2.(color)); %, 'group', data.DStrialIDcum);
+i(2,1).stat_summary('type','sem','geom','area');
+i(2,1).set_names('x','time from event (s)','y', y, 'color', color);
+i(2,1).set_title('Mean without artifact trials');
+i(2,1).geom_hline('y',artifactThreshold, 'linewidth', 2);
+
+
+i.draw();
+linkaxes();
+    
+    
 %% ---- Exclude artifacts ----
 
 signalCol= ["DSblue", "DSbluePox", "DSblueLox", "DSpurple", "DSpurplePox", "DSpurpleLox"

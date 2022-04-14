@@ -107,9 +107,9 @@ for subj= 1:numel(subjects)
 
         trialInd= 1:periCueFrames;%numel(timeLock); %index for adding to photometry signal trial by trial
 
-        %DP 2022-01-7 limiting to final session of stage 7 (to match
-        %encoding model input 
-        includedSessions= max(includedSessions);
+%         %DP 2022-01-7 limiting to final session of stage 7 (to match
+%         %encoding model input 
+%         includedSessions= max(includedSessions);
         
         for includedSession= includedSessions %loop through only sessions that match this stage
             
@@ -164,8 +164,12 @@ for subj= 1:numel(subjects)
             for cue=1:numel(currentSubj(includedSession).periNS.NS)
                 NSblue(trialInd,cue)= currentSubj(includedSession).periNS.NSzblue(:,:,cue);
                 NSpurple(trialInd,cue)= currentSubj(includedSession).periNS.NSzpurple(:,:,cue);
-                NSbluePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSzpoxblue(:,:,cue);
-                NSpurplePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSzpoxpurple(:,:,cue);
+                
+                if~isempty(currentSubj(includedSession).periNSpox.NSzpoxblue) %lazy exception for now
+                    NSbluePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSzpoxblue(:,:,cue);
+                    NSpurplePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSzpoxpurple(:,:,cue);
+                end
+                
                 if~isempty(currentSubj(includedSession).periNSlox.NSzloxblue) %lazy exception for now
                     NSblueLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxblue(:,:,cue);
                     NSpurpleLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxpurple(:,:,cue);
