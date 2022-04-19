@@ -482,201 +482,308 @@ i.stat_boxplot();
 
 i.draw();
 
+%% bin peri-event r raw and facet
 
 
+%convert into 10 bins 
+y,e= [];
+[y, e]= discretize(periEventTable.rDStrialRaw, 10);
 
-%% viz ind trials peri-event (color=r)
+periEventTable.rDStrialRawBin= y;
 
-for subj= 1:numel(subjects)
-        
-   data1= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-   
-    for thisStage= 1:numel(unique(data1.stage))
-
-        clear data2 data3 data
-        
-        data= data1(data1.stage==thisStage,:);
-        
-%        figure();
-%         clear i;
-% 
-% 
-%         i(1,1)= gramm('x', data2.timeLock, 'y', data2.DSblue, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
-% 
-%         i(1,1).geom_line();
-% 
-%         
-%         i(2,1)= gramm('x', data2.timeLock, 'y', data2.DSpurple, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
-% 
-%         i(2,1).geom_line();
-%         
-%         i.draw();
-
-
-       figure();
-       clear i; 
-
-        y= "DSblueRaw";
-
-       data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
-
-       data3= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', "rDStrialRaw");
-         
-
-   
-        i(1,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSblueRaw, 'group', data2.fileID, 'color', data3.mean_rDStrialRaw);
-
-        i(1,1).geom_line();
-%         i(1,1).stat_summary('type','sem','geom','line');
-
-
-        y= "DSpurpleRaw";
-
-       data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
-        
-        i(2,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSpurpleRaw, 'group', data2.fileID, 'color', data3.mean_rDStrialRaw);
-               
-        i(2,1).geom_line();
-
-%         i(2,1).stat_summary('type','sem','geom','line');
-
-        
-        i.draw();
-
-    end
-end
-
-
-
-
-%% -------- Trial by trial corr z scored, periEventTable ------ Z 
-
-
-r= [];
-
-allFiles= unique(periEventTable.fileID);
-
-for file= 1:numel(allFiles)
-
+%save labels of bin edges too 
+for bin= 1:numel(e)-1
+    
     ind= [];
-    ind= (periEventTable.fileID==(allFiles(file)));
+    ind= periEventTable.rDStrialRawBin== bin;
     
-    trials= [];
-    
-    
-    trials= unique(periEventTable(ind,"DStrialID"));
-    trials= table2array(trials);
-    
-    trials= trials(~isnan(trials));
-    
-    for trial = 1:numel(trials)
-        ind2= [];
-
-        ind2= find(ind & (periEventTable.DStrialID== trials(trial)));
-
-
-        y1= periEventTable(ind2,"DSblue");
-        y2= periEventTable(ind2,"DSpurple");
-
-        y1= table2array(y1);
-        y2= table2array(y2);
-
-
-        %remove nans prior to corr()
-        y1= y1(~isnan(y1));
-        y2= y2(~isnan(y2));
-
-
-    %     y1= y1(isnan(y1));
-
-    %     periEventTable(ind,"r")= xcorr(y1, y2);
-
-
-        periEventTable(ind2, "rDStrial")= table(nan);
-
-        %fill only first per fileID with ses corr
-    %     periEventTable(ind(1),"r")= table(corr(y1, y2));
-
-        %fill all
-        %will throw error if artifacts removed before this (e.g. all nan)
-        periEventTable(ind2,"rDStrial")= table(corr(y1, y2));
-    end
-
-
-% 
+   periEventTable(ind, "rDStrialRawBinEdge")= table(e(bin)); 
 end
 
 
-figure();
-clear i;
-
-i= gramm('x', periEventTable.subject, 'y', periEventTable.rDStrial);
-
-i.stat_boxplot();
-
-i.draw();
+%% facet by bin -- good facet!
 
 
-%% viz ind trials peri-event (color=r)
+stagesToPlot= [4,5,7]
 
 for subj= 1:numel(subjects)
-        
-   data1= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
+   data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
+       
+   for stage= 1:numel(stagesToPlot)
    
-    for thisStage= 1:numel(unique(data1.stage))
+       data2= data(data.stage==stagesToPlot(stage),:);
 
-        clear data2 data3 data
-        
-        data= data1(data1.stage==thisStage,:);
-        
-%        figure();
-%         clear i;
-% 
-% 
-%         i(1,1)= gramm('x', data2.timeLock, 'y', data2.DSblue, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
-% 
-%         i(1,1).geom_line();
-% 
-%         
-%         i(2,1)= gramm('x', data2.timeLock, 'y', data2.DSpurple, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
-% 
-%         i(2,1).geom_line();
-%         
-%         i.draw();
+        figure();
+        clear i;
 
+        i= gramm('x', data2.timeLock, 'y', data2.DSpurpleRaw, 'color', data2.rDStrialRaw, 'group', data2.DStrialIDcum);
 
-       figure();
-       clear i; 
+        i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
 
-        y= "DSblue";
+        i().geom_line();
 
-       data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
+        i.draw();
 
-       data3= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', "rDStrial");
-         
+        %405
 
+   end 
+end
+
+%% good facet, but now plot z score better for interpretability
+
+stagesToPlot= [4,5,7]
+
+for subj= 1:numel(subjects)
+   data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
+       
+   for stage= 1:numel(stagesToPlot)
    
-        i(1,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSblue, 'group', data2.fileID, 'color', data3.mean_rDStrial);
+       data2= data(data.stage==stagesToPlot(stage),:);
 
-        i(1,1).geom_line();
-%         i(1,1).stat_summary('type','sem','geom','line');
+        figure();
+        clear i;
+
+        i= gramm('x', data2.timeLock, 'y', data2.DSblue, 'color', data2.rDStrialRaw, 'group', data2.DStrialIDcum);
+
+        i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
+
+        i().geom_line();
+
+        i.draw();
+
+        %405
+
+   end 
+end
 
 
-        y= "DSpurple";
+%% Final improvement: 465 vs 405 z score with r facet
+stagesToPlot= [4,5,7]
 
-       data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
+for subj= 1:numel(subjects)
+   data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
+       
+   for stage= 1:numel(stagesToPlot)
+   
+       data2= data(data.stage==stagesToPlot(stage),:);
+
+        figure();
+        clear i;
+
+        i= gramm('x', data2.timeLock, 'y', data2.DSblue, 'group', data2.DStrialIDcum);
+
+        i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
+
+        i().geom_line();
         
-        i(2,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSpurple, 'group', data2.fileID, 'color', data3.mean_rDStrial);
-               
-        i(2,1).geom_line();
+        i.set_color_options('map', 'brewer3');
 
-%         i(2,1).stat_summary('type','sem','geom','line');
+        i.draw();
 
+        %405
+        i.update('x', data2.timeLock, 'y', data2.DSpurple, 'group', data2.DStrialIDcum);
+
+        i().geom_line();
+
+        i.set_color_options('map', 'brewer1');
         
         i.draw();
 
-    end
+   end 
 end
+
+%% viz ind trials peri-event (color=r)
+
+% for subj= 1:numel(subjects)
+%         
+%    data1= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
+%    
+%     for thisStage= 1:numel(unique(data1.stage))
+% 
+%         clear data2 data3 data
+%         
+%         data= data1(data1.stage==thisStage,:);
+%         
+% %        figure();
+% %         clear i;
+% % 
+% % 
+% %         i(1,1)= gramm('x', data2.timeLock, 'y', data2.DSblue, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
+% % 
+% %         i(1,1).geom_line();
+% % 
+% %         
+% %         i(2,1)= gramm('x', data2.timeLock, 'y', data2.DSpurple, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
+% % 
+% %         i(2,1).geom_line();
+% %         
+% %         i.draw();
+% 
+% 
+%        figure();
+%        clear i; 
+% 
+%         y= "DSblueRaw";
+% 
+%        data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
+% 
+%        data3= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', "rDStrialRaw");
+%          
+% 
+%    
+%         i(1,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSblueRaw, 'group', data2.fileID, 'color', data3.mean_rDStrialRaw);
+% 
+%         i(1,1).geom_line();
+% %         i(1,1).stat_summary('type','sem','geom','line');
+% 
+% 
+%         y= "DSpurpleRaw";
+% 
+%        data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
+%         
+%         i(2,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSpurpleRaw, 'group', data2.fileID, 'color', data3.mean_rDStrialRaw);
+%                
+%         i(2,1).geom_line();
+% 
+% %         i(2,1).stat_summary('type','sem','geom','line');
+% 
+%         
+%         i.draw();
+% 
+%     end
+% end
+% 
+% 
+% 
+% 
+% %% -------- Trial by trial corr z scored, periEventTable ------ Z 
+% 
+% 
+% r= [];
+% 
+% allFiles= unique(periEventTable.fileID);
+% 
+% for file= 1:numel(allFiles)
+% 
+%     ind= [];
+%     ind= (periEventTable.fileID==(allFiles(file)));
+%     
+%     trials= [];
+%     
+%     
+%     trials= unique(periEventTable(ind,"DStrialID"));
+%     trials= table2array(trials);
+%     
+%     trials= trials(~isnan(trials));
+%     
+%     for trial = 1:numel(trials)
+%         ind2= [];
+% 
+%         ind2= find(ind & (periEventTable.DStrialID== trials(trial)));
+% 
+% 
+%         y1= periEventTable(ind2,"DSblue");
+%         y2= periEventTable(ind2,"DSpurple");
+% 
+%         y1= table2array(y1);
+%         y2= table2array(y2);
+% 
+% 
+%         %remove nans prior to corr()
+%         y1= y1(~isnan(y1));
+%         y2= y2(~isnan(y2));
+% 
+% 
+%     %     y1= y1(isnan(y1));
+% 
+%     %     periEventTable(ind,"r")= xcorr(y1, y2);
+% 
+% 
+%         periEventTable(ind2, "rDStrial")= table(nan);
+% 
+%         %fill only first per fileID with ses corr
+%     %     periEventTable(ind(1),"r")= table(corr(y1, y2));
+% 
+%         %fill all
+%         %will throw error if artifacts removed before this (e.g. all nan)
+%         periEventTable(ind2,"rDStrial")= table(corr(y1, y2));
+%     end
+% 
+% 
+% % 
+% end
+% 
+% 
+% figure();
+% clear i;
+% 
+% i= gramm('x', periEventTable.subject, 'y', periEventTable.rDStrial);
+% 
+% i.stat_boxplot();
+% 
+% i.draw();
+% 
+% 
+% %% viz ind trials peri-event (color=r)
+% 
+% for subj= 1:numel(subjects)
+%         
+%    data1= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
+%    
+%     for thisStage= 1:numel(unique(data1.stage))
+% 
+%         clear data2 data3 data
+%         
+%         data= data1(data1.stage==thisStage,:);
+%         
+% %        figure();
+% %         clear i;
+% % 
+% % 
+% %         i(1,1)= gramm('x', data2.timeLock, 'y', data2.DSblue, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
+% % 
+% %         i(1,1).geom_line();
+% % 
+% %         
+% %         i(2,1)= gramm('x', data2.timeLock, 'y', data2.DSpurple, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
+% % 
+% %         i(2,1).geom_line();
+% %         
+% %         i.draw();
+% 
+% 
+%        figure();
+%        clear i; 
+% 
+%         y= "DSblue";
+% 
+%        data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
+% 
+%        data3= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', "rDStrial");
+%          
+% 
+%    
+%         i(1,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSblue, 'group', data2.fileID, 'color', data3.mean_rDStrial);
+% 
+%         i(1,1).geom_line();
+% %         i(1,1).stat_summary('type','sem','geom','line');
+% 
+% 
+%         y= "DSpurple";
+% 
+%        data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
+%         
+%         i(2,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSpurple, 'group', data2.fileID, 'color', data3.mean_rDStrial);
+%                
+%         i(2,1).geom_line();
+% 
+% %         i(2,1).stat_summary('type','sem','geom','line');
+% 
+%         
+%         i.draw();
+% 
+%     end
+% end
 
 %% manual mean calc then session viz (necessary for color mapping to be correct?)
 %clim giving errors when grouping by fileID
