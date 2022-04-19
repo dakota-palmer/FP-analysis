@@ -570,28 +570,255 @@ for subj= 1:numel(subjects)
         figure();
         clear i;
 
-        i= gramm('x', data2.timeLock, 'y', data2.DSblue, 'group', data2.DStrialIDcum);
+        %-465
+        y= data2.DSblue;
+        map= 'brewer3';
+%         map= [0.5,0.3,0.6] % could use manual 'map' of single color for precise control
+
+%custom map here light blue, dark blue, light purple, dark purple
+%using RBG codes from rapidtables.com/web/color/RGB_color then /255 to get
+%values for matlab
+        mapCustom= [
+            131, 208, 240 ;
+            72, 144, 175 ;
+            176, 151, 243 ;
+            114, 89, 181]
+
+        mapCustom= mapCustom/255;
+
+
+        %-ind trials
+        i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
 
         i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
 
         i().geom_line();
         
-        i.set_color_options('map', 'brewer3');
+%         i().set_color_options('lightness_range', [20,20], 'map', map); 
+
+        i().set_color_options('map', mapCustom(1,:));        
+
+        i().set_line_options('base_size',0.5); 
+
 
         i.draw();
-
+        
+            %-session means
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+        i().stat_summary('type','sem', 'geom','line');
+        
+        i().set_color_options('lightness_range', [100,100], 'map', map)
+        i().set_line_options('base_size',1.5)        
+   
+        i.draw();
+        
+            %-grand mean
+        i.update('x', data2.timeLock, 'y', y);
+        i().stat_summary('type','sem', 'geom','area');
+        
+        i().set_color_options('lightness_range', [200,200], 'map', map)
+        i().set_line_options('base_size',2.5)        
+   
+        i.draw();
+        
         %405
-        i.update('x', data2.timeLock, 'y', data2.DSpurple, 'group', data2.DStrialIDcum);
+        y= data2.DSpurple;
+        map= 'brewer1';
+             
+            %-ind trials
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
 
         i().geom_line();
-
-        i.set_color_options('map', 'brewer1');
         
-        i.draw();
+        
+        i().set_color_options('lightness_range', [20,20], 'map', map)
+        i().set_line_options('base_size',0.5)        
 
+
+        i.draw();
+        
+            %-session means
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+        i().stat_summary('type','sem', 'geom','line');
+        
+        i().set_color_options('lightness_range', [100,100], 'map', map)
+        i().set_line_options('base_size',1.5)        
+   
+        i.draw();
+        
+            %-grand mean
+        i.update('x', data2.timeLock, 'y', y);
+        i().stat_summary('type','sem', 'geom','area');
+        
+        i().set_color_options('lightness_range', [200,200], 'map', map)
+        i().set_line_options('base_size',2.5)        
+   
+        
+        
+      i.axe_property('YLim',[-5,10]);
+
+      title= strcat('subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
+           
+      i.set_title(title);
+      
+      i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef raw >');
+
+      i.draw();
+
+      
+      saveFig(gcf, figPath, title, figFormats)
+      
    end 
+   
+   
+   %Between-subj figs
+       data2= periEventTable(periEventTable.stage==stagesToPlot(stage),:);
+   
+        figure();
+        clear i;
+
+        %-465
+        y= data2.DSblue;
+        map= 'brewer3';
+    
+        
+%             %-session means
+        i=gramm('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+        i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
+
+        i().stat_summary('type','sem', 'geom','line');
+        
+        i().set_color_options('lightness_range', [20,20], 'map', map)
+        i().set_line_options('base_size',0.5)        
+   
+        i.draw();
+        
+            %-grand mean
+        i.update('x', data2.timeLock, 'y', y);
+        i().stat_summary('type','sem', 'geom','area');
+        
+        i().set_color_options('lightness_range', [200,200], 'map', map)
+        i().set_line_options('base_size',2.5)        
+   
+        i.draw();
+        
+        %405
+        y= data2.DSpurple;
+        map= 'brewer1';
+             
+                  
+            %-session means
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+        i().stat_summary('type','sem', 'geom','line');
+        
+        i().set_color_options('lightness_range', [100,100], 'map', map)
+        i().set_line_options('base_size',0.5)        
+   
+        i.draw();
+        
+            %-grand mean
+        i.update('x', data2.timeLock, 'y', y);
+        i().stat_summary('type','sem', 'geom','area');
+        
+        i().set_color_options('lightness_range', [200,200], 'map', map)
+        i().set_line_options('base_size',2.5)        
+   
+        
+        
+      i.axe_property('YLim',[-5,10]);
+
+      title= strcat('allSubjects-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
+           
+      i.set_title(title);
+      
+      i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef raw >');
+
+      i.draw();
+
+      
+      saveFig(gcf, figPath, title, figFormats)
+      
+   
 end
 
+%% Count of trials per corrcoef bin per session
+
+data= periEventTable;
+
+%use groupsummary() to compute count
+data2= groupsummary(data, ["stage", "subject", "fileID", "rDStrialRawBinEdge"]);%, 'count', "DStrialIDcum");
+
+%divide count by num tBins per trial to get count of trials
+data2.GroupCount= data2.GroupCount/numel(unique(data.timeLock));
+
+
+figure();
+clear i;
+
+i= gramm('x', data2.rDStrialRawBinEdge, 'y', data2.GroupCount, 'color', data2.subject);
+
+i.facet_wrap(data2.stage);
+
+i.geom_point();
+
+i.draw();
+
+%%
+figure();
+clear i;
+
+i= gramm('x', data2.rDStrialRawBinEdge, 'y', data2.GroupCount, 'color', data2.subject);
+
+i.facet_wrap(data2.stage);
+
+i.geom_b();
+
+i.draw();
+
+
+%% viz distro of this trial by trial corrCoef by subj (and across stages)
+%this distro viz doesn't seem to make sense with discrete bins
+
+data= periEventTable;
+%use groupsummary() to reduce to one observation per trial
+data2= groupsummary(data, ["stage", "subject", "fileID", "DStrialIDcum"], 'mean', "rDStrialRaw");
+
+
+figure;
+clear i;
+
+i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialRaw"));
+
+i.stat_boxplot();
+
+
+title= strcat('allSubject-trialCorrRaw-distribution-DS');
+
+i.set_title(title);
+
+i.draw()
+
+saveFig(gcf, figPath, title, figFormats);
+
+i.draw();
+
+
+
+figure;
+clear i;
+
+i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialRaw"), 'color', data2.stage);
+
+
+i.stat_boxplot();
+
+title= strcat('allSubject-trialCorrRaw-distributionByStage-DS');
+
+i.set_title(title);
+
+i.draw()
+
+saveFig(gcf, figPath, title, figFormats);
 %% viz ind trials peri-event (color=r)
 
 % for subj= 1:numel(subjects)

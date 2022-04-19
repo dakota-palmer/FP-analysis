@@ -171,7 +171,7 @@ subjects= dfTemp.subject.unique()
 
 #run only specific subjects
 # subjects= [8,9]
-subjects= [11,12,13, 15, 19]
+subjects= [8,9,11,12,13, 15, 19]
 
 
 #intialize a df to combine all data?

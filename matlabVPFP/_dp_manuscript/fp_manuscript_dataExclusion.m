@@ -4,6 +4,9 @@
 periEventTable.exclude= nan(size(periEventTable,1),1);
 
 %% Exclude data from specific subjects
+
+%TODO: mark 'control' subject type (GFP/no expression)
+
 subjToExclude= {'rat17', 'rat10', 'rat20'};
 
 
