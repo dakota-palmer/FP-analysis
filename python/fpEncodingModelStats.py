@@ -140,7 +140,9 @@ elif modeSignal=='repurple':
 #pd.shift() timeshift introduced nans at beginning and end of session 
 #(since there were no observations to fill with); Exclude these timestamps
 #regression inputs should not have any nan & should be finite; else  will throw error
-# --shouldn't happen now since fill_values=0
+# --shouldn't happen now since fill_values=
+
+#artifact removal introduces nans tho
 # dfTemp= dfTemp.loc[~dfTemp.isin([np.nan, np.inf, -np.inf]).any(1),:]
     
 #define predictor and response variables:
@@ -154,9 +156,16 @@ elif modeSignal=='repurple':
 y= 'reblue-z-periDS'
 
 # Remove invalid observations (nan, inf) in these columns
-# shouldn't be any. at this point not sure where they come from?
-# dfTemp= dfTemp.loc[~dfTemp.loc[:,col].isin([np.nan, np.inf, -np.inf]).any(1),:]
+# since artifact removal introduces nans 
+# ind= dfTemp[y].isnull()
 
+# dfTemp= dfTemp.loc[~ind,:]
+
+#remove observations previously marked for exclusion
+ind= dfTemp.exclude==1
+dfTemp= dfTemp.loc[~ind,:]
+
+# dfTemp= dfTemp.loc[~dfTemp.loc[:,col].isin([np.nan, np.inf, -np.inf]).any(1),:]
 
 subjects= dfTemp.subject.unique()
 

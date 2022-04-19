@@ -113,8 +113,12 @@ for subj= 1:numel(subjects)
         
         for includedSession= includedSessions %loop through only sessions that match this stage
             
-            %reset btwn sessions
+            %reset btwn sessions            
             DStrialID= nan(periCueFrames, numTrials); %unique ID for each DS trial within session
+            
+            DSblueRaw= nan(periCueFrames, numTrials);
+            DSpurpleRaw= nan(periCueFrames, numTrials);
+            
             DSblue= nan(periCueFrames, numTrials);
             DSpurple=  nan(periCueFrames, numTrials);
             DSbluePox= nan(periCueFrames, numTrials);
@@ -143,6 +147,10 @@ for subj= 1:numel(subjects)
             thisTrial=1; %cumulative counter for trialID within session
             %going trial by trial like this is inefficient but it works
             for cue= 1:numel(currentSubj(includedSession).periDS.DS)
+                    %save raw signals for easy trial by trial corr() & artifact/noise ID
+                DSblueRaw(trialInd, cue)= currentSubj(includedSession).periDS.DSblue(:,:,cue);
+                DSpurpleRaw(trialInd, cue)= currentSubj(includedSession).periDS.DSpurple(:,:,cue);
+                
                 DSblue(trialInd,cue)= currentSubj(includedSession).periDS.DSzblue(:,:,cue); 
                 DSpurple(trialInd,cue)= currentSubj(includedSession).periDS.DSzpurple(:,:,cue);
                 DSbluePox(trialInd,cue)= currentSubj(includedSession).periDSpox.DSzpoxblue(:,:,cue);
@@ -208,7 +216,13 @@ for subj= 1:numel(subjects)
            
             
             %Save data into table
+            periEventTable.fileID(tsInd)= sesCount;
+            
             periEventTable.DStrialID(tsInd)= DStrialID(:);
+            
+            periEventTable.DSblueRaw(tsInd)= DSblueRaw(:);
+            periEventTable.DSpurpleRaw(tsInd)= DSpurpleRaw(:);
+            
             periEventTable.DSblue(tsInd)= DSblue(:);
             periEventTable.DSpurple(tsInd)= DSpurple(:);
             periEventTable.DSbluePox(tsInd)= DSbluePox(:);

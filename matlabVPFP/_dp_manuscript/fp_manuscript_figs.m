@@ -22,6 +22,9 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_
 %% Create periEventTable
 fp_manuscript_tidyTable();
 
+%% ID and remove bad sessions
+fp_manuscript_session_correlation();
+
 %% Remove data based on behavioral criteria (& subject)
 fp_manuscript_dataExclusion();
 

@@ -1305,13 +1305,102 @@ dfTemp2.loc[ind,'artifact']= 1
 #mark for exclusion in main df
 dfTemp.loc[ind, 'exclude']= 1
 
+#%% Convert trialIDtimeLock to true unique trialID for timeLock epochs (not shared between files)
+
+
+#-DS
+groupHierarchyTimeLockTrialID= ['fileID','trialIDtimeLock-z-periDS']
+
+dfTemp2= pd.DataFrame()
+
+
+# simple setting and reset_index for unique count
+dfTemp2['trialIDshared']= dfTemp.groupby(groupHierarchyTimeLockTrialID)['trialIDtimeLock-z-periDS'].first()
+
+#this index now has count we want. could merge back
+dfTemp2['trialIDunique']= dfTemp2.reset_index(drop=False).index
+
+dfTemp= dfTemp.set_index(groupHierarchyTimeLockTrialID, drop=False)
+
+# dfTemp= dfTemp.merge(dfTemp2, how='left', left_index=True, right_index=True)
+
+dfTemp['trialIDtimeLock-z-periDS']= dfTemp2['trialIDunique']
+
+dfTemp= dfTemp.reset_index(drop=True)
+
+#- NS
+groupHierarchyTimeLockTrialID= ['fileID','trialIDtimeLock-z-periNS']
+
+dfTemp2= pd.DataFrame()
+
+
+# simple setting and reset_index for unique count
+dfTemp2['trialIDshared']= dfTemp.groupby(groupHierarchyTimeLockTrialID)['trialIDtimeLock-z-periNS'].first()
+
+#this index now has count we want. could merge back
+dfTemp2['trialIDunique']= dfTemp2.reset_index(drop=False).index
+
+dfTemp= dfTemp.set_index(groupHierarchyTimeLockTrialID, drop=False)
+
+# dfTemp= dfTemp.merge(dfTemp2, how='left', left_index=True, right_index=True)
+
+dfTemp['trialIDtimeLock-z-periNS']= dfTemp2['trialIDunique']
+
+dfTemp= dfTemp.reset_index(drop=True)
+
+
+
+# #try setting index before reseting to do without merging
+# #try simple reset_index
+# # dfTemp2= dfTemp.set_index(groupHierarchyTimeLockTrialID).copy()
+
+# # dfTemp2['trialIDunique']= dfTemp2.reset_index().index
+
+# # #this index now has count we want. could merge back
+# # dfTemp2= dfTemp2.reset_index(drop=False)
+
+# #try groupby stuff
+
+# dfTemp2['trialIDshared']= dfTemp.groupby(groupHierarchyTimeLockTrialID)['trialIDtimeLock-z-periDS'].transform('first')
+
+# # dfTemp2['trialIDunique']= dfTemp.groupby(groupHierarchyTimeLockTrialID)['trialIDtimeLock-z-periDS'].transform('cumcount')
+
+
+# # dfTemp2['trialIDshared']= dfTemp.groupby(groupHierarchyTimeLockTrialID)['trialIDtimeLock-z-periDS'].first()
+
+# #indices corresponding to first value in each unique trialIDtimeLock, cumcount() of these between files and replace these values
+# dfTemp2['cumCount']= dfTemp.groupby(groupHierarchyTimeLockTrialID)['trialIDtimeLock-z-periDS'].cumcount()
+
+# ind= dfTemp2.cumCount==0
+
+
+# # dfTemp2['trialIDunique']= dfTemp.groupby(groupHierarchyTimeLockTrialID)['trialIDtimeLock-z-periDS'].cumsum()
+
+# # dfTemp2['trialIDunique']= dfTemp.groupby(groupHierarchyTimeLockTrialID)['trialIDtimeLock-z-periDS'].cumcount()
+
+
+
+#%% Viz artifact trials
+
+dfPlot= dfTemp.loc[dfTemp.exclude==1].copy()
+
+fig, ax= plt.subplots(2,1)
+
+g= sns.lineplot(ax= ax[0], data=dfPlot, units='trialIDtimeLock-z-periDS', estimator=None, x='timeLock-z-periDS-DStime', y='reblue-z-periDS', hue='trialIDtimeLock-z-periDS')
+
+plt.axhline(y=thresholdArtifact, color='black', dashes=(3,1), linewidth=2)
+
+g= sns.lineplot(ax= ax[1], data=dfPlot, units='trialIDtimeLock-z-periDS', estimator=None, x='timeLock-z-periDS-DStime', y='repurple-z-periDS', hue='trialIDtimeLock-z-periDS')
+
+plt.axhline(y=thresholdArtifact, color='black', dashes=(3,1), linewidth=2)
+
 
 #%%--- Remove excluded trials (artifacts)
 
+#Remove artifacts: replace continuous signals with nan
+
 #update list of contVars to include normalized fp signals
 contVars= list(dfTemp.columns[(dfTemp.columns.str.contains('reblue') | dfTemp.columns.str.contains('repurple'))])
-
-#replace continuous signals with nan
 dfTemp.loc[dfTemp.exclude==1,contVars]= None
 
 #%% Isolate DS & NS data, SAVE as separate datasets
