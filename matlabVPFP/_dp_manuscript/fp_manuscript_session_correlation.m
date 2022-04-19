@@ -557,6 +557,25 @@ for subj= 1:numel(subjects)
 end
 
 
+%% Custom colormap
+
+%custom map here using colorbrewer 
+
+%green and purple %3 levels each, dark to light extremes + neutral middle
+mapCustom= [ 27,120,55;
+            127,191,123;
+            217,240,211;
+            247,247,247
+            231,212,232
+            175,141,195;
+            118,42,131;
+
+           ];
+
+
+        mapCustom= mapCustom/255;
+
+
 %% Final improvement: 465 vs 405 z score with r facet
 stagesToPlot= [4,5,7]
 
@@ -572,87 +591,78 @@ for subj= 1:numel(subjects)
 
         %-465
         y= data2.DSblue;
-        map= 'brewer3';
-%         map= [0.5,0.3,0.6] % could use manual 'map' of single color for precise control
-
-%custom map here light blue, dark blue, light purple, dark purple
-%using RBG codes from rapidtables.com/web/color/RGB_color then /255 to get
-%values for matlab
-        mapCustom= [
-            131, 208, 240 ;
-            72, 144, 175 ;
-            176, 151, 243 ;
-            114, 89, 181]
-
-        mapCustom= mapCustom/255;
-
-
-        %-ind trials
-        i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-
+       
+        
+            %-grand mean %manually declare group between updates() or gramm will assume they carry over
+        i= gramm('x', data2.timeLock, 'y', y, 'group', []);
+        
         i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
+        
+        i().stat_summary('type','sem', 'geom','area');
+        
+        i().set_color_options('map', mapCustom(1,:));        
+        i().set_line_options('base_size',2)        
+   
+        i.draw();
+        
+          %-session means
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+        i().stat_summary('type','sem', 'geom','line');
+        
+        i().set_color_options('map', mapCustom(2,:));        
+        i().set_line_options('base_size',1)        
+   
+        i.draw();
+        
+            %-ind trials
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+
 
         i().geom_line();
         
-%         i().set_color_options('lightness_range', [20,20], 'map', map); 
-
-        i().set_color_options('map', mapCustom(1,:));        
+        i().set_color_options('map', mapCustom(3,:));        
 
         i().set_line_options('base_size',0.5); 
 
 
         i.draw();
         
-            %-session means
-        i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-        i().stat_summary('type','sem', 'geom','line');
+          
         
-        i().set_color_options('lightness_range', [100,100], 'map', map)
-        i().set_line_options('base_size',1.5)        
-   
-        i.draw();
-        
-            %-grand mean
-        i.update('x', data2.timeLock, 'y', y);
-        i().stat_summary('type','sem', 'geom','area');
-        
-        i().set_color_options('lightness_range', [200,200], 'map', map)
-        i().set_line_options('base_size',2.5)        
-   
-        i.draw();
         
         %405
         y= data2.DSpurple;
-        map= 'brewer1';
              
-            %-ind trials
-        i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-
-        i().geom_line();
+           
+            %-grand mean
+        i.update('x', data2.timeLock, 'y', y, 'group', []);
+               
+        i().stat_summary('type','sem', 'geom','area');
         
-        
-        i().set_color_options('lightness_range', [20,20], 'map', map)
-        i().set_line_options('base_size',0.5)        
-
-
+        i().set_color_options('map', mapCustom(7,:));        
+        i().set_line_options('base_size',2)        
+   
         i.draw();
         
-            %-session means
+          %-session means
         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
         i().stat_summary('type','sem', 'geom','line');
         
-        i().set_color_options('lightness_range', [100,100], 'map', map)
-        i().set_line_options('base_size',1.5)        
+        i().set_color_options('map', mapCustom(6,:));        
+        i().set_line_options('base_size',1)        
    
         i.draw();
         
-            %-grand mean
-        i.update('x', data2.timeLock, 'y', y);
-        i().stat_summary('type','sem', 'geom','area');
+            %-ind trials
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+
+
+        i().geom_line();
         
-        i().set_color_options('lightness_range', [200,200], 'map', map)
-        i().set_line_options('base_size',2.5)        
-   
+        i().set_color_options('map', mapCustom(5,:));        
+
+        i().set_line_options('base_size',0.5); 
+  
         
         
       i.axe_property('YLim',[-5,10]);
