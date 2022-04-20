@@ -141,9 +141,9 @@ for subj in dfEncoding.subject.unique():
     model= dfTemp['model_lasso'][0] 
     
     
-    group= dfTemp['modelInput'][0]
+    group= dfTemp['modelInput'][0][0]
      
-    X= dfTemp['X'][0][0]
+    X= dfTemp['X'][0][0][0]
     y= dfTemp['y']
     
     eventVars= dfTemp['eventVars']
@@ -339,13 +339,13 @@ for subj in dfEncoding.subject.unique():
     model= dfTemp['model_lasso'][0] 
     
     
-    group= dfTemp['modelInput'][0]
+    group= dfTemp['modelInput'][0][0]
      
-    X= dfTemp['X'][0][0]
+    X= dfTemp['X'][0][0][0]
     y= dfTemp['y']
     
     eventVars= dfTemp['eventVars']
-    eventVars= eventVars[0]
+    eventVars= eventVars[0][0]
     
     # X= dfEncoding.loc[ind, 'X']
     
@@ -382,12 +382,12 @@ for subj in dfEncoding.subject.unique():
     for eventCol in range(len(eventVars)):
         indEvent= group.columns[X].str.contains(eventVars[eventCol])
         
-        # if ((eventVars[eventCol]== 'DStime' )|(eventVars[eventCol]=='NStime')):
-        #     postEventShift= cueTimeOfInfluence
-        # else:
-        #     postEventShift= postEventTime
+        if ((eventVars[eventCol]== 'DStime' )|(eventVars[eventCol]=='NStime')):
+            postEventShift= cueTimeOfInfluence
+        else:
+            postEventShift= postEventTime
         
-        postEventShift= postEventTime
+        # postEventShift= postEventTime
 
         kernels.loc[indEvent,'eventType']= eventVars[eventCol]
         kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventShift)/fs
@@ -444,9 +444,9 @@ for subj in dfEncoding.subject.unique():
     model= dfTemp['model_lasso'][0] 
     
     
-    group= dfTemp['modelInput'][0]
+    group= dfTemp['modelInput'][0][0]
      
-    X= dfTemp['X'][0][0]
+    X= dfTemp['X'][0][0][0]
     y= dfTemp['y']
     
     eventVars= dfTemp['eventVars']
@@ -474,7 +474,7 @@ for subj in dfEncoding.subject.unique():
     
     dfPredicted['y']= group.loc[:,y]
 
-    dfPredicted['timeLock']= group.loc[:,group.columns.str.contains('timeLock')]
+    dfPredicted['timeLock']= group.loc[:,((group.columns.str.contains('timeLock') & (~group.columns.str.contains('trialID'))))]
     
     dfPredicted['intercept']= model.intercept_
     

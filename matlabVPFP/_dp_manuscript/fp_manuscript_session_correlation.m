@@ -6,8 +6,7 @@
 
 %or some kind of spectral analysis? (frequency, forier transform?)
 
-%trial-by-trial correlation coefs may work too
-
+%trial-by-trial correlation coefs may work too - this seems to work great actually
 
 
 %% -- Correlation coefficient methods below: 465 & 405
@@ -559,8 +558,6 @@ end
 
 %% Custom colormap
 
-%custom map here using colorbrewer 
-
 %green and purple %3 levels each, dark to light extremes + neutral middle
 mapCustom= [ 27,120,55;
             127,191,123;
@@ -575,37 +572,62 @@ mapCustom= [ 27,120,55;
 
         mapCustom= mapCustom/255;
 
-
 %% Final improvement: 465 vs 405 z score with r facet
-stagesToPlot= [4,5,7]
+% stagesToPlot= [4,5,7]
+
+stagesToPlot= unique(periEventTable.stage);
 
 for subj= 1:numel(subjects)
    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
        
    for stage= 1:numel(stagesToPlot)
    
+       
+        %TODO: much more efficient method would be to stack() and form
+        %signalType column to facet color= 405 or 465
+           
+       
        data2= data(data.stage==stagesToPlot(stage),:);
 
         figure();
         clear i;
 
-        %-465
-        y= data2.DSblue;
-       
         
-            %-grand mean %manually declare group between updates() or gramm will assume they carry over
-        i= gramm('x', data2.timeLock, 'y', y, 'group', []);
+        % draw in order of background-> foreground
+         %individual trials -> sessions -> grand mean
+         
+         %- individual trials; 465
+        y= data2.DSblue; 
+
         
+        i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+
         i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
+
+        i().geom_line();
         
-        i().stat_summary('type','sem', 'geom','area');
+        i().set_color_options('map', mapCustom(3,:));        
+
+        i().set_line_options('base_size',0.5); 
         
-        i().set_color_options('map', mapCustom(1,:));        
-        i().set_line_options('base_size',2)        
-   
         i.draw();
         
-          %-session means
+        %- individual trials; 405
+        y= data2.DSpurple; 
+
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+
+        i().geom_line();
+        
+        i().set_color_options('map', mapCustom(5,:));        
+
+        i().set_line_options('base_size',0.5); 
+       
+        i.draw();
+        
+        %- sessions, 465
+        y= data2.DSblue; 
+
         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
         i().stat_summary('type','sem', 'geom','line');
         
@@ -614,37 +636,9 @@ for subj= 1:numel(subjects)
    
         i.draw();
         
-            %-ind trials
-        i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+       %- sessions, 405
+        y= data2.DSpurple; 
 
-
-        i().geom_line();
-        
-        i().set_color_options('map', mapCustom(3,:));        
-
-        i().set_line_options('base_size',0.5); 
-
-
-        i.draw();
-        
-          
-        
-        
-        %405
-        y= data2.DSpurple;
-             
-           
-            %-grand mean
-        i.update('x', data2.timeLock, 'y', y, 'group', []);
-               
-        i().stat_summary('type','sem', 'geom','area');
-        
-        i().set_color_options('map', mapCustom(7,:));        
-        i().set_line_options('base_size',2)        
-   
-        i.draw();
-        
-          %-session means
         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
         i().stat_summary('type','sem', 'geom','line');
         
@@ -653,29 +647,36 @@ for subj= 1:numel(subjects)
    
         i.draw();
         
-            %-ind trials
-        i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+        %- Grand mean, 465
+        y= data2.DSblue; 
 
+        i.update('x', data2.timeLock, 'y', y, 'group', []);
+                
+        i().stat_summary('type','sem', 'geom','area');
+        
+        i().set_color_options('map', mapCustom(1,:));        
+        i().set_line_options('base_size',2)        
+   
+        i.draw();
+        
+        
+          %- Grand mean, 405
+        y= data2.DSpurple; 
 
-        i().geom_line();
+        i.update('x', data2.timeLock, 'y', y, 'group', []);
+                
+        i().stat_summary('type','sem', 'geom','area');
         
-        i().set_color_options('map', mapCustom(5,:));        
-
-        i().set_line_options('base_size',0.5); 
-  
-        
-        
+        i().set_color_options('map', mapCustom(7,:));        
+        i().set_line_options('base_size',2)        
+         
       i.axe_property('YLim',[-5,10]);
-
-      title= strcat('subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
-           
+      title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
       i.set_title(title);
-      
       i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef raw >');
 
       i.draw();
 
-      
       saveFig(gcf, figPath, title, figFormats)
       
    end 
@@ -684,70 +685,97 @@ for subj= 1:numel(subjects)
    %Between-subj figs
        data2= periEventTable(periEventTable.stage==stagesToPlot(stage),:);
    
+       
         figure();
         clear i;
 
-        %-465
-        y= data2.DSblue;
-        map= 'brewer3';
-    
         
-%             %-session means
-        i=gramm('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+        % draw in order of background-> foreground
+         %individual trials -> sessions -> grand mean
+         
+         %- individual trials; 465
+        y= data2.DSblue; 
+
+        
+        i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+
         i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
 
-        i().stat_summary('type','sem', 'geom','line');
+        i().geom_line();
         
-        i().set_color_options('lightness_range', [20,20], 'map', map)
-        i().set_line_options('base_size',0.5)        
-   
+        i().set_color_options('map', mapCustom(3,:));        
+
+        i().set_line_options('base_size',0.5); 
+        
         i.draw();
         
-            %-grand mean
-        i.update('x', data2.timeLock, 'y', y);
-        i().stat_summary('type','sem', 'geom','area');
+        %- individual trials; 405
+        y= data2.DSpurple; 
+
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+
+        i().geom_line();
         
-        i().set_color_options('lightness_range', [200,200], 'map', map)
-        i().set_line_options('base_size',2.5)        
-   
+        i().set_color_options('map', mapCustom(5,:));        
+
+        i().set_line_options('base_size',0.5); 
+       
         i.draw();
         
-        %405
-        y= data2.DSpurple;
-        map= 'brewer1';
-             
-                  
-            %-session means
+        %- sessions, 465
+        y= data2.DSblue; 
+
         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
         i().stat_summary('type','sem', 'geom','line');
         
-        i().set_color_options('lightness_range', [100,100], 'map', map)
-        i().set_line_options('base_size',0.5)        
+        i().set_color_options('map', mapCustom(2,:));        
+        i().set_line_options('base_size',1)        
    
         i.draw();
         
-            %-grand mean
-        i.update('x', data2.timeLock, 'y', y);
+       %- sessions, 405
+        y= data2.DSpurple; 
+
+        i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+        i().stat_summary('type','sem', 'geom','line');
+        
+        i().set_color_options('map', mapCustom(6,:));        
+        i().set_line_options('base_size',1)        
+   
+        i.draw();
+        
+        %- Grand mean, 465
+        y= data2.DSblue; 
+
+        i.update('x', data2.timeLock, 'y', y, 'group', []);
+                
         i().stat_summary('type','sem', 'geom','area');
         
-        i().set_color_options('lightness_range', [200,200], 'map', map)
-        i().set_line_options('base_size',2.5)        
+        i().set_color_options('map', mapCustom(1,:));        
+        i().set_line_options('base_size',2)        
    
+        i.draw();
         
         
-      i.axe_property('YLim',[-5,10]);
+          %- Grand mean, 405
+        y= data2.DSpurple; 
 
-      title= strcat('allSubjects-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
-           
+        i.update('x', data2.timeLock, 'y', y, 'group', []);
+                
+        i().stat_summary('type','sem', 'geom','area');
+        
+        i().set_color_options('map', mapCustom(7,:));        
+        i().set_line_options('base_size',2)        
+         
+      i.axe_property('YLim',[-5,10]);
+      title= strcat(subjMode,'-allSubj-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
       i.set_title(title);
-      
       i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef raw >');
 
       i.draw();
 
-      
       saveFig(gcf, figPath, title, figFormats)
-      
+       
    
 end
 
@@ -774,16 +802,16 @@ i.geom_point();
 i.draw();
 
 %%
-figure();
-clear i;
-
-i= gramm('x', data2.rDStrialRawBinEdge, 'y', data2.GroupCount, 'color', data2.subject);
-
-i.facet_wrap(data2.stage);
-
-i.geom_b();
-
-i.draw();
+% figure();
+% clear i;
+% 
+% i= gramm('x', data2.rDStrialRawBinEdge, 'y', data2.GroupCount, 'color', data2.subject);
+% 
+% i.facet_wrap(data2.stage);
+% 
+% i.geom_b();
+% 
+% i.draw();
 
 
 %% viz distro of this trial by trial corrCoef by subj (and across stages)
@@ -802,7 +830,7 @@ i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialRaw"));
 i.stat_boxplot();
 
 
-title= strcat('allSubject-trialCorrRaw-distribution-DS');
+title= strcat(subjMode,'-allSubject-trialCorrRaw-distribution-DS');
 
 i.set_title(title);
 
@@ -822,7 +850,7 @@ i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialRaw"), 'color', data2.sta
 
 i.stat_boxplot();
 
-title= strcat('allSubject-trialCorrRaw-distributionByStage-DS');
+title= strcat(subjMode,'-allSubject-trialCorrRaw-distributionByStage-DS');
 
 i.set_title(title);
 

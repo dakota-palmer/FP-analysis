@@ -19,14 +19,24 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_
 % %ally no artifacts (bu"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat"t all trials)
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat")
 
+%% Choose whether to plot experimental or control subjects
+
+% subjMode= 'experimental' or 'control
+subjMode='control';
+
 %% Create periEventTable
-fp_manuscript_tidyTable();
+fp_manuscript_tidyTable
+
+%% Isolate / exclude data based on behavioral criteria (& subject)
+% will define periEventTable for subsequent scripts (control v experimental based on flag above)
+
+fp_manuscript_dataExclusion();
+
 
 %% ID and remove bad sessions
 fp_manuscript_session_correlation();
 
-%% Remove data based on behavioral criteria (& subject)
-fp_manuscript_dataExclusion();
+
 
 %% ID and remove artifacts
 fp_manuscript_artifactExclusion();
