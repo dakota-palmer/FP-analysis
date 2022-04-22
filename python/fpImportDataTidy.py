@@ -13,7 +13,7 @@ import numpy as np
 import shelve
 import seaborn as sns
 
-import dask.dataframe as dd
+# import dask.dataframe as dd
 
 #%% About:
 
@@ -43,11 +43,13 @@ import dask.dataframe as dd
 # experimentType= 'OptoInstrumentalTransfer'
 experimentType= 'photometry'
 
-# datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp-07-Jan-2022.parquet"
-datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_input\vp-vta-fp-03-Mar-2022.parquet"
+# # datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp-07-Jan-2022.parquet"
+# datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_input\vp-vta-fp-03-Mar-2022.parquet"
 
-#noartifact 
-datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_input\noartifact-vp-vta-fp-05-Apr-2022.parquet"
+# #noartifact 
+# datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_input\noartifact-vp-vta-fp-05-Apr-2022.parquet"
+
+datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp-20-Apr-2022.parquet"
 
 #%% ID and import Parquet file 
 df= pd.read_parquet(datapath)

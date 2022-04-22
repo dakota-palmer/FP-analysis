@@ -5,10 +5,13 @@ periEventTable.exclude= nan(size(periEventTable,1),1);
 
 %% Mark data from specific subjects for 'control' and/or 'exclusion'
 
+%- TODO: more specific exclusion based on session? rat10 is fine before
+%stage 6. even some stage 7 trials look real.
+
 %mark 'control' subject type (GFP/no expression)
 
 periEventTable(:,'controlSubj')= table(nan);
-controlSubj= {'rat20', 'rat10', 'rat16'};
+controlSubj= {'rat20', 'rat16'};
 
 for subj= 1:numel(controlSubj)
     ind=[];
@@ -63,8 +66,12 @@ end
 subjects= unique(periEventTable.subject);
 
 %% Remove data marked for exclusion
-% 
-% ind= [];
-% ind= (periEventTable.exclude~=1);
-% 
-% periEventTable= periEventTable(ind,:);
+
+if strcmp(subjMode,'experimental')
+    
+    ind= [];
+    ind= (periEventTable.exclude~=1);
+
+    periEventTable= periEventTable(ind,:);
+    
+end

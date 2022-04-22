@@ -225,10 +225,10 @@ contVars= ['reblue','repurple']
 
 #% #TODO: collect all events, save, and move event exclusion to regression script
 
-stagesToInclude= [7]
+stagesToInclude= [5]
 
 #number of sessions to include, 0 includes final session of this stage+n
-nSessionsToInclude= 0 
+nSessionsToInclude= 1
 
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
@@ -1395,6 +1395,63 @@ g= sns.lineplot(ax= ax[1], data=dfPlot, units='trialIDtimeLock-z-periDS', estima
 plt.axhline(y=thresholdArtifact, color='black', dashes=(3,1), linewidth=2)
 
 
+
+#%% -- Plot fp input of model (with artifact trials)
+
+#peri-DS and periNS traces subplot for each subj (465 & 405)
+
+for subj in dfTemp.subject.unique():
+    
+    f, ax= plt.subplots(1,2, sharex=True, sharey=True) 
+    
+    dfPlot= dfTemp.loc[dfTemp.subject==subj,:].copy()
+    
+    y= 'reblue-z-periDS'
+    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
+    
+    g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
+    
+    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+
+
+    y= 'repurple-z-periDS'
+    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
+    
+    g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', linewidth=1.5)
+    
+    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+    
+    
+    #- NS
+    
+    y= 'reblue-z-periNS'
+    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periNS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periNS')))][0]
+    
+    g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
+    
+    # g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+
+
+    y= 'repurple-z-periNS'
+    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periNS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periNS')))][0]
+    
+    g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='purple', linewidth=1.5)
+    
+    # g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+    
+    g.set(title=('subj-'+str(subj)+'peri-Cue encoding model input'))
+    g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+    
+    g.set(ylim=(-4,10))
+    
+    saveFigCustom(f, 'subj-'+str(subj)+'modelInput-periCue-withArtifact',savePath)
+
+    
+
 #%%--- Remove excluded trials (artifacts)
 
 #Remove artifacts: replace continuous signals with nan
@@ -1402,6 +1459,63 @@ plt.axhline(y=thresholdArtifact, color='black', dashes=(3,1), linewidth=2)
 #update list of contVars to include normalized fp signals
 contVars= list(dfTemp.columns[(dfTemp.columns.str.contains('reblue') | dfTemp.columns.str.contains('repurple'))])
 dfTemp.loc[dfTemp.exclude==1,contVars]= None
+
+
+#%% -- Plot fp input of model (without artifact trials)
+
+#peri-DS and periNS traces subplot for each subj (465 & 405)
+
+for subj in dfTemp.subject.unique():
+    
+    f, ax= plt.subplots(1,2, sharex=True, sharey=True) 
+    
+    dfPlot= dfTemp.loc[dfTemp.subject==subj,:].copy()
+    
+    y= 'reblue-z-periDS'
+    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
+    
+    g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
+    
+    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+
+
+    y= 'repurple-z-periDS'
+    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
+    
+    g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', linewidth=1.5)
+    
+    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+    
+    
+    #- NS
+    
+    y= 'reblue-z-periNS'
+    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periNS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periNS')))][0]
+    
+    g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
+    
+    # g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+
+
+    y= 'repurple-z-periNS'
+    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periNS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periNS')))][0]
+    
+    g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='purple', linewidth=1.5)
+    
+    # g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+    
+    g.set(title=('subj-'+str(subj)+'peri-Cue encoding model input'))
+    g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
+    
+    g.set(ylim=(-4,10))
+    
+    saveFigCustom(f, 'subj-'+str(subj)+'modelInput-periCue-noArtifact',savePath)
+
+
 
 #%% Isolate DS & NS data, SAVE as separate datasets
 #Restrict analysis to specific trialType

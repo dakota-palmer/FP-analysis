@@ -35,8 +35,7 @@ import time
 # x_basic= 148829 x 1803... # timestamps entire session x (# time shifts in peri-Trial window * num events). binary coded
 # gcamp_y = 148829 x 1 ; entire session signal predicted by regression . z scored photometry signal currently nan during ITI & only valid values during peri-DS
 
-    
-    
+        
 #%% Plot settings
 sns.set_style("darkgrid")
 sns.set_context('notebook')
@@ -121,6 +120,13 @@ if modeSignal=='reblue':
 elif modeSignal=='repurple':
     dfTemp= dfTemp.drop(['reblue-z-periDS'],axis=1)
 
+#%% Exclude subjects
+
+subjToExclude= [10, 16, 17, 20]
+
+dfTemp= dfTemp.loc[~dfTemp.subject.isin(subjToExclude)]
+
+
 #%% Run regression model & save output
 #TODO: How to handle different subjects? should run separately in loop or use as predictor?
 #unlike matlab version of code this is one big table with everything
@@ -170,8 +176,7 @@ dfTemp= dfTemp.loc[~ind,:]
 subjects= dfTemp.subject.unique()
 
 #run only specific subjects
-# subjects= [8,9]
-subjects= [8,9,11,12,13, 15, 19]
+# subjects= [19]
 
 
 #intialize a df to combine all data?

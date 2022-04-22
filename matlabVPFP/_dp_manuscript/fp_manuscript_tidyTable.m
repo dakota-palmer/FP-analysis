@@ -218,6 +218,8 @@ for subj= 1:numel(subjects)
             %Save data into table
             periEventTable.fileID(tsInd)= sesCount;
             
+            periEventTable.trainDay(tsInd)= currentSubj(includedSession).trainDay;
+            
             periEventTable.DStrialID(tsInd)= DStrialID(:);
             
             periEventTable.DSblueRaw(tsInd)= DSblueRaw(:);
