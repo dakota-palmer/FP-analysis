@@ -228,7 +228,7 @@ contVars= ['reblue','repurple']
 stagesToInclude= [5]
 
 #number of sessions to include, 0 includes final session of this stage+n
-nSessionsToInclude= 1
+nSessionsToInclude= 0
 
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))

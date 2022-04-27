@@ -33,14 +33,14 @@ fp_manuscript_tidyTable
 
 fp_manuscript_dataExclusion();
 
+%% ID and remove artifacts
+fp_manuscript_artifactExclusion();
 
 %% ID and remove bad sessions
 fp_manuscript_session_correlation();
 
 
 
-%% ID and remove artifacts
-fp_manuscript_artifactExclusion();
 
 
 %% make peri-event 465nm plots
@@ -385,6 +385,7 @@ for file=1:length(mat)
 
     saveFig(gcf, figPath, strcat(mat(file).name,'_encoding_kernels_w_periEvent'),figFormats);
 end
+
 
 %% old
 % %% Kernels + peri-event plot

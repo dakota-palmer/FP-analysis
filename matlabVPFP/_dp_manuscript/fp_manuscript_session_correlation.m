@@ -1,23 +1,9 @@
-% %% Might a better metric be something like variability in the 405 and 465nm channels?
-% 
-% %big artifacts = big correlation coefficients session-wide
-% 
-% %but noise might manifest as big baseline variability?
-% 
-% %or some kind of spectral analysis? (frequency, forier transform?)
-% 
-% %trial-by-trial correlation coefs may work too - this seems to work great actually
-% 
-% 
-% %% -- Correlation coefficient methods below: 465 & 405
+%% CROSS CORRELATION OF PHOTOMETRY SIGNALS
+
 % %% Try to ID bad/noisy sessions through simple correlation of 465nm and 405nm fp signals
 % 
-% 
-% fs=40;
-% 
-% 
 
-%% Custom colormap
+%% Custom colormap for plots
 
 %green and purple %3 levels each, dark to light extremes + neutral middle
 mapCustom= [ 27,120,55;
@@ -33,7 +19,11 @@ mapCustom= [ 27,120,55;
 
         mapCustom= mapCustom/255;
 
-%% CROSS CORRELATION OF PHOTOMETRY SIGNALS
+
+%% ----------------- Session Correlation -----------------------------------
+% ------ Instead of whole raw trace, run Corr of concatenated trial-by-trial data  ------
+
+
 r= []; %collect coeffs
 
 rPeriCue= [];
@@ -67,18 +57,90 @@ for subj= 1:numel(subjects) %for each subject
 
          r= nan(1,1);
          r= currentSubj(session).signalCorrelation(1,1);
-         
+                 
+        
+        %dp 2022-04-26 remove artifact trials
+               
+        
+        y1= []; y2=[];
+        y1= squeeze(currentSubj(session).periDS.DSzblue(:,:,:));
+        y2= squeeze(currentSubj(session).periDS.DSzpurple(:,:,:));
+        
+        ind= [];
+        ind=((any((y1>= artifactThreshold),1)) |(any((y2>= artifactThreshold),1)));
+        
+        y1(ind)= nan;
+        y2(ind)=nan;
+        
+        currentSubj(session).periDS.DSzblue(:,:,ind)= nan;
+        currentSubj(session).periDS.DSzpurple(:,:,ind)= nan;
+        currentSubj(session).periDS.DSblue(:,:,ind)= nan;
+        currentSubj(session).periDS.DSpurple(:,:,ind)= nan;
+        
+        %dp 2022-04-26 instead of corrCoef, calculate AUC of 465 and 405
+        %for comparison
+        
+                
+        %include only time after cue onset in correlation
+        tsInd= [];
+        tsInd= currentSubj(session).periDS.timeLock>=0;
+        
+       
+        y1= squeeze(currentSubj(session).periDS.DSzblue(tsInd,:,:));
+        y2= squeeze(currentSubj(session).periDS.DSzpurple(tsInd,:,:));
+       
+        auc=[]; aucAbs=[]; aucCum= []; aucCumAbs=[];
+        [auc, aucAbs, aucCum, aucCumAbs] = fp_AUC(y1);
+        
+        %make sure table has equal sized cells or gramm will be upset (fill empty w nan)
+        if numel(auc) ~= 30
+           auc(numel(auc)+1:30)= nan; 
+        end
+
+        corrTable(sesInd, "aucDSblueAll")= {{auc}};
+        corrTable(sesInd, "aucDSblue")= table(nanmean(auc));
+        
+        auc=[]; aucAbs=[]; aucCum= []; aucCumAbs=[];
+        [auc, aucAbs, aucCum, aucCumAbs] = fp_AUC(y2);
+        
+        %make sure table has equal sized cells or gramm will be upset (fill empty w nan)
+        if numel(auc) ~= 30
+           auc(numel(auc)+1:30)= nan; 
+        end
+        
+        corrTable(sesInd, "aucDSpurpleAll")= {{auc}};
+        corrTable(sesInd, "aucDSpurple")= table(nanmean(auc));
+        
+        
+        %calculate delta in AUCs
+        y1=[]; y2=[];
+
+        y1= corrTable(sesInd,:).aucDSblueAll;
+        y2= corrTable(sesInd,:).aucDSpurpleAll;
+
+        corrTable(sesInd, "aucDSdeltaAll")= {{y1{:}-y2{:}}};
+        
+        corrTable(sesInd, "aucDSdelta")= table(nanmean(y1{:}-y2{:}));
+        
+        
          %PERI-EVENT correlation- collapsed, single value for all
         y1= [];
         y2= [];
         
-        y1= squeeze(currentSubj(session).periDS.DSblue);
-        y2= squeeze(currentSubj(session).periDS.DSpurple);
-
+        %include only time after cue onset in correlation
+        tsInd= [];
+        tsInd= currentSubj(session).periDS.timeLock>=0;
+        
+        %dp 2022-04-25 single corrCoef per session of cat() peri-cue Z score
+        y1= squeeze(currentSubj(session).periDS.DSzblue(tsInd,:,:));
+        y2= squeeze(currentSubj(session).periDS.DSzpurple(tsInd,:,:));
+        
+%         test= corr(y1,y2);
         
         y1= y1(:);
         y2= y2(:);
-
+        
+%         test2= corr(y1,y2);
         
         currentSubj(session).periCueCorrelation= corr(y1,y2);
 
@@ -89,8 +151,11 @@ for subj= 1:numel(subjects) %for each subject
          
          corrTable(sesInd, "rPeriCue")= table(rPeriCue);
          
-         corrTable(sesInd,"r")= table(r);
+%          corrTable(sesInd,"r")= table(r);
+         corrTable(sesInd, "r")= table(rPeriCue);
          
+
+
          corrTable(sesInd,"fileID")= table(sesInd);
          
          corrTable(sesInd,"trainDay")= table(currentSubj(session).trainDay);
@@ -121,134 +186,212 @@ for subj= 1:numel(subjects) %for each subject
          corrTable(sesInd,"periDSzpurpleAll")= {currentSubj(session).periDS.DSzpurple};
 
          
-%         cutTime = currentSubj(session).raw.cutTime;
-%         r= [];
-%         p= [];
-% 
-%         
-% %         Try sliding corrcoef calc
-%         slideFrames= 10*fs;
-%         for ts = 1:numel(cutTime) %for each timestamp
-%             
-%             if ts-slideFrames> 0 && ts+slideFrames<numel(cutTime)
-%                 startTime= ts-slideFrames;
-%                 endTime= ts+slideFrames;
-% 
-%                 [R,P] = corrcoef(currentSubj(session).raw.reblue(startTime:endTime), currentSubj(session).raw.repurple(startTime:endTime));
-%                 r(ts)= R(2);
-%                 p(ts)= P(2);
-%             end
-%         end
-%         
-%         plot(r);
-% figure;
-% 
-%         currentSubj(session).signalCorrelation= corrcoef(currentSubj(session).raw.reblue,currentSubj(session).raw.repurple);
-%         [r, lags]= xcorr(currentSubj(session).raw.reblue, currentSubj(session).raw.repurple, 'unbiased');
-%         hold on;
-%         
-%         [r, lags]= xcorr(currentSubj(session).raw.reblue, currentSubj(session).raw.repurple, 'coeff');
-% 
-% 
-% %         xcorr on the raw signals returns a triangle shaped plot with a
-% %         peak at 0, possibly due to DC offset component in signals... Will
-% %         try to remove this by subtracting mean
-% 
-%         
-%         [r, lags]= xcorr(currentSubj(session).raw.reblue-nanmean(currentSubj(session).raw.reblue), currentSubj(session).raw.repurple-nanmean(currentSubj(session).raw.repurple), 'coeff');
-%         stem(lags, r);
-
-%         still getting a weird shape, let's try this on a rolling z score?
-               
-% %trying movcorr function
-% r2= [];
-% p2=[];
-%     [r2, p2, n]=movcorr(currentSubj(session).raw.reblue, currentSubj(session).raw.repurple, 400); %sliding 10s pearson
-% 
-%     subplot(4,1,1);
-%     plot(cutTime, currentSubj(session).raw.reblue, 'b');
-%     subplot(4,1,2);
-%     plot(cutTime, currentSubj(session).raw.repurple, 'm');
-%     subplot(4,1,3);
-%     plot(cutTime, r2, 'k');
-%     title('sliding r')
-%     hold on
-%     plot([1, cutTime(end)], [0, 0], 'k--');
-%     hold off
-%     subplot(4,1,4);
-%     plot(cutTime,p2, 'r');
-%     title('p value');
-%     hold on
-%     plot([1, cutTime(end)], [0.05, 0.05], 'k--');
-%     hold off
-%            
-%     figure;
-%     plot(r2);
-%     scatter(currentSubj(session).trainDay,currentSubj(session).signalCorrelation(2));
-   
    sesInd= sesInd+1;
    
    end %end session loop
 end %end subject loop
 
-% figure();
-% 
-% x= zeros(numel(r),1);
-% 
-% clear i;
-% i= gramm('x', x, 'y', r); 
-% 
-% i.stat_boxplot();
-% 
-% i.draw();
-% 
+%% Viz AUC 465 v 405nm across sessions
 
-% 
-figure();
+% individual subj
+for subj= 1:numel(subjects)
+   data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
+       
+   data2= data;
+%    for stage= 1:numel(stagesToPlot)         
+       
+%       data2= data(data.stage==stagesToPlot(stage),:);
+
+      figure;
+      clear i;
+      
+      i= gramm('x', data2.trainDay, 'y', data2.aucDSblueAll);
+      
+%       i.facet_wrap(data2.stage);
+      
+      i.geom_point();
+%       i.geom_line();
+
+      i().set_color_options('map', mapCustom(3,:));        
+      i().set_line_options('base_size',0.5)
+      
+      i.draw();
+      
+      i.update('x', data2.trainDay, 'y', data2.aucDSblue);
+      
+%       i.geom_point();
+%       i.geom_line();
+      i.stat_summary('type','sem','geom','area');
+      i().set_color_options('map', mapCustom(2,:));        
+      i().set_line_options('base_size',1)    
+
+      i.draw();
+      
+      %--405
+       i.update('x', data2.trainDay, 'y', data2.aucDSpurpleAll);
+      
+      i.geom_point();
+%       i.geom_line();
+
+      i().set_color_options('map', mapCustom(5,:));        
+      i().set_line_options('base_size',0.5)
+      i.draw();
+      
+      i.update('x', data2.trainDay, 'y', data2.aucDSpurple);
+      
+%       i.geom_point();
+%       i.geom_line();
+      i.stat_summary('type','sem','geom','area');
+      i().set_color_options('map', mapCustom(6,:));        
+      i().set_line_options('base_size',1)    
+      
+      
+      i.axe_property('YLim',[-20,20]);
+      title= strcat(subjMode,'-subject-',subjects{subj},'allStages-','-auc-sessions-DS');
+      i.set_title(title);
+      i.set_names('x','train day','y','AUC zscore','color','signal type');
+
+      i.draw();
+
+      saveFig(gcf, figPath, title, figFormats)
+      
+       
+%    end
+
+
+% by stage
+ data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
+       
+   data2= data;
+%    for stage= 1:numel(stagesToPlot)         
+       
+%       data2= data(data.stage==stagesToPlot(stage),:);
+
+      figure;
+      clear i;
+      
+      i= gramm('x', data2.trainDay, 'y', data2.aucDSblueAll);
+      
+      i.facet_wrap(data2.stage);
+      
+      i.geom_point();
+%       i.geom_line();
+
+      i().set_color_options('map', mapCustom(3,:));        
+      i().set_line_options('base_size',0.5)
+      
+      i.draw();
+      
+      i.update('x', data2.trainDay, 'y', data2.aucDSblue);
+      
+%       i.geom_point();
+%       i.geom_line();
+      i.stat_summary('type','sem','geom','area');
+      i().set_color_options('map', mapCustom(2,:));        
+      i().set_line_options('base_size',1)    
+
+      i.draw();
+      
+      %--405
+       i.update('x', data2.trainDay, 'y', data2.aucDSpurpleAll);
+      
+      i.geom_point();
+%       i.geom_line();
+
+      i().set_color_options('map', mapCustom(5,:));        
+      i().set_line_options('base_size',0.5)
+      
+      i.draw();
+      
+      i.update('x', data2.trainDay, 'y', data2.aucDSpurple);
+      
+%       i.geom_point();
+%       i.geom_line();
+      i.stat_summary('type','sem','geom','area');
+      i().set_color_options('map', mapCustom(6,:));        
+      i().set_line_options('base_size',1)    
+      
+      
+      i.axe_property('YLim',[-20,20]);
+      title= strcat(subjMode,'-subject-',subjects{subj},'-byStage-','-auc-sessions-DS');
+      i.set_title(title);
+      i.set_names('x','train day','y','AUC zscore','color','signal type');
+
+      i.axe_property('YLim',[-20,20]);
+
+      i.draw();
+
+      saveFig(gcf, figPath, title, figFormats)
+      
+
+end
+
+
+%% viz auc distribution
+
+data= corrTable;
+
+
+figure;
 clear i;
 
-i= gramm('x', corrTable.subject, 'y', corrTable.r);
+i= gramm('x', data.subject, 'y', data.aucDSdeltaAll, 'group', data.subject);
+
 
 i.stat_boxplot();
 
-i.draw();
+title= strcat(subjMode,'-allSubject-aucZ-distributionAllStages-DS');
 
-figure();
+i.set_title(title);
+
+i.axe_property('YLim',[-20,40]);
+
+i.draw()
+
+saveFig(gcf, figPath, title, figFormats);
+
+%stages
+
+figure;
 clear i;
 
-i= gramm('x', corrTable.subject, 'y', corrTable.r, 'color', corrTable.stage);
+i= gramm('x', data.subject, 'y', data.aucDSdeltaAll, 'color', data.stage);
+
 
 i.stat_boxplot();
 
-i.draw();
+title= strcat(subjMode,'-allSubject-aucZ-distributionByStage-DS');
 
+i.set_title(title);
 
-%
-%% bin corrcoef and facet periEventTraces by this
+i.axe_property('YLim',[-20,40]);
 
+i.draw()
 
-%convert into 10 bins 
+saveFig(gcf, figPath, title, figFormats);
+
+%% Facet peri-cue z by AUC delta
+
+% bin auc and facet periEventTraces by this
+
+% convert into 10 bins 
 y= [];
 e= [];
 
-%this method is not making even bins, some are even empty...
-%dataset is pretty heavily skewed toward +1 with some extreme negative
-%exceptions
-[y, e]= discretize(corrTable.r, 10);
+[y, e]= discretize(corrTable.aucDSdelta, 10);
 
-corrTable.rBin= y;
+corrTable.aucBin= y;
 
-%save labels of bin edges too 
+% save labels of bin edges too 
 for bin= 1:numel(e)-1
     
     ind= [];
-    ind= corrTable.rBin== bin;
+    ind= corrTable.aucBin== bin;
     
-   corrTable(ind, "rBinEdge")= table(e(bin)); 
+   corrTable(ind, "aucBinEdge")= table(e(bin)); 
 end
 
-%% Final improvement: 465 vs 405 z score with r facet
-% stagesToPlot= [4,5,7]
+% Final improvement: 465 vs 405 z score with r facet
 
 stagesToPlot= unique(corrTable.stage);
 
@@ -258,8 +401,8 @@ for subj= 1:numel(subjects)
    for stage= 1:numel(stagesToPlot)
    
        
-        %TODO: much more efficient method would be to stack() and form
-        %signalType column to facet color= 405 or 465
+%         TODO: much more efficient method would be to stack() and form
+%         signalType column to facet color= 405 or 465
            
        
        data2= data(data.stage==stagesToPlot(stage),:);
@@ -267,66 +410,39 @@ for subj= 1:numel(subjects)
         figure();
         clear i;
 
-        
-        % draw in order of background-> foreground
-         %individual trials -> sessions -> grand mean
+%         
+%         draw in order of background-> foreground
+%          individual trials -> sessions -> grand mean
          
-         %- individual trials; 465
-%         y= data2.periDSzblueAll; 
-
-        
-% %         i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-%         i= gramm('x', data2.timeLock, 'y', y);
-% 
-%         i().facet_wrap(data2.rBinEdge, 'ncols', 5);
-% 
-%         i().geom_line();
-%         
-%         i().set_color_options('map', mapCustom(3,:));        
-% 
-%         i().set_line_options('base_size',0.5); 
-%         
-%         i.draw();
-%         
-%         %- individual trials; 405
-%         y= data2.DSpurple; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-% 
-%         i().geom_line();
-%         
-%         i().set_color_options('map', mapCustom(5,:));        
-% 
-%         i().set_line_options('base_size',0.5); 
-%        
-%         i.draw();
-        
-        %- sessions, 465
-%         y= data2.periDSzblueAll;
+%         - sessions, 465
+        y= data2.periDSzblueAll;
         y= data2.periDSzblue; 
         i= gramm('x', data2.timeLock, 'y', y, 'group', data2.fileID);
         
-        i.facet_wrap(data2.rBinEdge, 'ncols', 5);
+        i.facet_wrap(data2.aucBinEdge, 'ncols', 5);
         
         i().stat_summary('type','sem', 'geom','line');
+        
+        i.geom_line();
         
         i().set_color_options('map', mapCustom(2,:));        
         i().set_line_options('base_size',1)        
    
         i.draw();
         
-       %- sessions, 405
+%        - sessions, 405
         y= data2.periDSzpurple; 
 
         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
         i().stat_summary('type','sem', 'geom','line');
+        i.geom_line();
         
         i().set_color_options('map', mapCustom(6,:));        
         i().set_line_options('base_size',1)        
    
         i.draw();
         
-        %- Grand mean, 465
+%         - Grand mean, 465
         y= data2.periDSzblue; 
 
         i.update('x', data2.timeLock, 'y', y, 'group', []);
@@ -339,7 +455,7 @@ for subj= 1:numel(subjects)
         i.draw();
         
         
-          %- Grand mean, 405
+%           - Grand mean, 405
         y= data2.periDSzpurple; 
 
         i.update('x', data2.timeLock, 'y', y, 'group', []);
@@ -350,9 +466,9 @@ for subj= 1:numel(subjects)
         i().set_line_options('base_size',2)        
          
       i.axe_property('YLim',[-5,10]);
-      title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-sessionCorrRaw-zTraces-DS');
+      title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-aucDelta-zTraces-DS');
       i.set_title(title);
-      i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'sessionCorrRaw raw >');
+      i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'aucDeltaBinEdge >');
 
       i.draw();
 
@@ -363,694 +479,13 @@ for subj= 1:numel(subjects)
 end
 
 
-%% - between subjects z plots
+% - between subjects z plots
 
 data= corrTable;
 
 for stage= 1:numel(stagesToPlot)
 
-    %Between-subj figs
-        data2= data(data.stage==stagesToPlot(stage),:);
-
-
-            figure();
-            clear i;
-
-
-%             % draw in order of background-> foreground
-%              %individual trials -> sessions -> grand mean
-% 
-%              %- individual trials; 465
-%             y= data2.DSblue; 
-% 
-% 
-%             i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-% 
-%             i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
-% 
-%             i().geom_line();
-% 
-%             i().set_color_options('map', mapCustom(3,:));        
-% 
-%             i().set_line_options('base_size',0.5); 
-% 
-%             i.draw();
-% 
-%             %- individual trials; 405
-%             y= data2.DSpurple; 
-% 
-%             i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-% 
-%             i().geom_line();
-% 
-%             i().set_color_options('map', mapCustom(5,:));        
-% 
-%             i().set_line_options('base_size',0.5); 
-% 
-%             i.draw();
-
-            %- sessions, 465
-            y= data2.periDSzblue; 
-
-%             i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-            i= gramm('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-            i.facet_wrap(data2.rBinEdge, 'ncols', 5);
-
-            i().stat_summary('type','sem', 'geom','line');
-
-            i().set_color_options('map', mapCustom(2,:));        
-            i().set_line_options('base_size',1)        
-
-            i.draw();
-
-           %- sessions, 405
-            y= data2.periDSzpurple; 
-
-            i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-            i().stat_summary('type','sem', 'geom','line');
-
-            i().set_color_options('map', mapCustom(6,:));        
-            i().set_line_options('base_size',1)        
-
-            i.draw();
-
-            %- Grand mean, 465
-            y= data2.periDSzblue; 
-
-            i.update('x', data2.timeLock, 'y', y, 'group', []);
-
-            i().stat_summary('type','sem', 'geom','area');
-
-            i().set_color_options('map', mapCustom(1,:));        
-            i().set_line_options('base_size',2)        
-
-            i.draw();
-
-
-              %- Grand mean, 405
-            y= data2.periDSzpurple; 
-
-            i.update('x', data2.timeLock, 'y', y, 'group', []);
-
-            i().stat_summary('type','sem', 'geom','area');
-
-            i().set_color_options('map', mapCustom(7,:));        
-            i().set_line_options('base_size',2)        
-
-          i.axe_property('YLim',[-5,10]);
-          title= strcat(subjMode,'-allSubj-stage-',num2str(stagesToPlot(stage)),'-sessionCorrCoef-zTraces-DS');
-          i.set_title(title);
-          i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'sessionCorrCoef raw >');
-
-          i.draw();
-
-          saveFig(gcf, figPath, title, figFormats)
-end
-
-% %% Count of trials per corrcoef bin per session
-% 
-% data= corrTable;
-% 
-% %use groupsummary() to compute count
-% data2= groupsummary(data, ["stage", "subject", "fileID", "rBinEdge"]);%, 'count', "DStrialIDcum");
-% 
-% %divide count by num tBins per trial to get count of trials
-% % data2.GroupCount= data2.GroupCount/numel(unique(data.timeLock));
-% 
-% 
-% figure();
-% clear i;
-% 
-% i= gramm('x', data2.rDStrialRawBinEdge, 'y', data2.GroupCount, 'color', data2.subject);
-% 
-% i.facet_wrap(data2.stage);
-% 
-% i.geom_point();
-% 
-% 
-% title= strcat(subjMode,'-allSubject-trialCorrRaw-binCountByStage-DS');
-% i.set_title(title);
-% i.set_names('x','corrCoefBin','y','trial count','color','subject', 'column', 'stage');
-% 
-% i.draw();
-% 
-% saveFig(gcf, figPath, title, figFormats);
-
-
-%% Establish some corrcoef threshold beyond which to call "noisy" or "nosignal" trial
-
-thresholdCorrCoef= 0.5;
-
-
-%% Count of trials beyond threshold per session
-
-corrTable(:,'corrThresholdTrial')= table(nan);
-
-ind=[];
-ind= corrTable.r >= thresholdCorrCoef;
-
-corrTable(ind, "rThreshold")= table(1);
-
-data= corrTable(corrTable.rThreshold==1,:);
-
-%use groupsummary() to compute count
-% data2= groupsummary(data, ["stage", "subject", "fileID", "trainDay", "rThreshold"]);
-
-%divide count by num tBins per trial to get count of trials
-% data2.GroupCount= data2.GroupCount/numel(unique(data.timeLock));
-
-
-figure();
-clear i;
-
-% i= gramm('x', data2.trainDay, 'y', data2.GroupCount, 'group', data2.subject, 'color', data2.subject);
-
-i= gramm('x', data.trainDay, 'y', data.rThreshold, 'group', data.subject, 'color', data.subject);
-
-i.facet_wrap(data.subject);
-
-i.geom_line();
-i.geom_point();
-
-
-title= strcat(subjMode,'-allSubject-sessionCorrRaw-corrThresholdCount-DS');
-i.set_title(title);
-% i.set_names('x','corrCoefBin','y','trial count','color','subject', 'column', 'stage');
-
-i.draw();
-
-saveFig(gcf, figPath, title, figFormats);
-
-%% viz distro of this trial by trial corrCoef by subj (and across stages)
-%this distro viz doesn't seem to make sense with discrete bins
-
-data= corrTable;
-%use groupsummary() to reduce to one observation per trial
-% data2= groupsummary(data, ["stage", "subject", "fileID", "DStrialIDcum"], 'mean', "rDStrialRaw");
-
-
-figure;
-clear i;
-
-i= gramm('x', data.subject, 'y', data.("r"));
-
-i.stat_boxplot();
-
-
-title= strcat(subjMode,'-allSubject-sessionCorrRaw-distribution-DS');
-
-i.set_title(title);
-
-i.draw()
-
-saveFig(gcf, figPath, title, figFormats);
-
-
-
-
-figure;
-clear i;
-
-i= gramm('x', data.subject, 'y', data.("r"), 'color', data.stage);
-
-
-i.stat_boxplot();
-
-title= strcat(subjMode,'-allSubject-sessionCorrRaw-distributionByStage-DS');
-
-i.set_title(title);
-
-i.draw()
-
-saveFig(gcf, figPath, title, figFormats);
-
-%% 
-% %examine fp traces from sessions with different r values
-% 
-% %subset based on r
-% % data=corrTable(corrTable.r>0.9,:);
-% data=corrTable(corrTable.r<0.5,:);
-% 
-% 
-% figure();
-% clear i;
-% 
-% i(1,1)= gramm('x', data.cutTime, 'y', data.reblue, 'color', data.r);
-% 
-% i(1,1).geom_line();
-% 
-% i(2,1)= gramm('x', data.cutTime, 'y', data.repurple, 'color', data.r);
-% 
-% i(2,1).geom_line();
-% 
-% i.draw();
-% 
-% %% perhaps split up 'r' into bins and facet by r
-% 
-% threshA= 0.9;
-% threshB= 0.7;
-% threshC= 0.5;
-% 
-% 
-% corrTable(:,"rBin")= {''};
-% 
-% corrTable(corrTable.r>= threshA, "rBin")= {'hi-A'};
-% 
-% corrTable(((corrTable.r >= threshB) &(corrTable.r < threshA)), "rBin")= {'hi-B'};
-% 
-% corrTable(((corrTable.r >= threshC) &(corrTable.r < threshB)), "rBin")= {'med-C'};
-% 
-% corrTable(((corrTable.r < threshC)), "rBin")= {'low-D'};
-% % 
-% 
-% 
-% % figure();
-% % clear i;
-% % 
-% % data= corrTable;
-% % 
-% % i= gramm('x', data.cutTime, 'y', data.reblue, 'color', data.r);
-% % 
-% % i().facet_wrap(data.rBin);
-% % 
-% % i().geom_line();
-% % 
-% % i.draw();
-% %% maybe viz delta between 465 and 405 for comparison?
-% 
-% 
-% figure();
-% clear i;
-% 
-% data= corrTable;
-% 
-% i= gramm('x', data.cutTime, 'y', data.reDelta, 'color', data.r);
-% 
-% i().facet_wrap(data.rBin);
-% 
-% i().geom_line();
-% 
-% i.draw();
-% 
-% 
-% %% Plot whole sess traces by stage (color=r)
-% 
-% % 
-% for subj= 1:numel(subjects)
-%    data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
-%        
-%     figure();
-%     clear i;
-%     
-%      
-%     i= gramm('x', data.cutTime, 'y', data.reblue, 'color', data.r);
-% 
-% 
-%     i().facet_wrap(data.stage);
-% 
-%     i.geom_line();
-%    
-% 
-%     i.draw();
-%     
-%     i.set_names('x','time (s)','y','signal','color','corrCoef', 'column', 'stage');
-%     i.set_title(strcat('subject-',subjects{subj},'-sessionCorr-rawTraces'));
-%     
-%     
-% 
-% end
-% 
-% %%  seems large r corresponds to ses with big artifacts/baseline shifts...
-% % to be expected tho i wonder if largest artifacts are highly biasing the
-% % correlation coefficient (not necessarily a good measure of signal:noise)?
-% 
-% %maybe should run corr on trial by trial raw data?
-% 
-% % might a better metric be something like variability in the 405? or some
-% % comparison between trial by trial z score 405 & 465?
-% 
-% 
-% %% --
-% %% Plot session mean peri event data (color=r)
-% 
-% % 
-% % for subj= 1:numel(subjects)
-% %    data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
-% %        
-% %     figure();
-% %     clear i;
-% %     
-% %      
-% %     i= gramm('x', data.timeLock, 'y', data.periDSblue, 'color', data.r);
-% % 
-% % 
-% %     i().facet_wrap(data.stage);
-% % 
-% %     i.geom_line();
-% %    
-% % 
-% %     i.draw();
-% %     
-% % 
-% % end
-% 
-% 
-% % -z score peri event
-% for subj= 1:numel(subjects)
-%    data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
-%        
-%     figure();
-%     clear i;
-%     
-%      
-%     i= gramm('x', data.timeLock, 'y', data.periDSzpurple, 'color', data.r);
-% 
-% 
-%     i().facet_wrap(data.stage);
-% 
-%     i.geom_line();
-%    
-% 
-%     i.draw();
-%     
-% end
-% 
-% %% 
-% 
-% for subj= 1:numel(subjects)
-%    data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
-%        
-%     figure();
-%     clear i;
-%     
-%      
-%     i= gramm('x', data.timeLock, 'y', data.periDSzblue, 'color', data.rPeriCue);
-% 
-% 
-%     i().facet_wrap(data.stage);
-% 
-%     i.geom_line();
-%    
-% 
-%     i.draw();
-%     
-% end
-% 
-% 
-% 
-% %% 
-% % 
-% % stagesToPlot= [4,5,7]
-% % 
-% % for subj= 1:numel(subjects)
-% %    data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
-% %        
-% %    for stage= 1:numel(stagesToPlot)
-% %    
-% %        data2= data(data.stage==stagesToPlot(stage),:);
-% %        
-% %         figure();
-% %         clear i;
-% % 
-% % 
-% %         i(1,1)= gramm('x', data2.timeLock, 'y', data2.periDSzblue, 'group', data2.fileID, 'color', data2.r);
-% %         i(1,1).geom_line();
-% %         
-% % 
-% %         i(1,2)= gramm('x', data2.timeLock, 'y', data2.periDSzpurple, 'group', data2.fileID, 'color', data2.r);
-% %         i(1,2).geom_line();
-% % 
-% %         i.draw();
-% %         linkaxes();
-% %    end
-% % 
-% % end
-
-%% -- trial by triall corr raw , periEventTable
-
-%very interesting... much different distro
-
-r= [];
-
-allFiles= unique(periEventTable.fileID);
-
-for file= 1:numel(allFiles)
-
-    ind= [];
-    ind= (periEventTable.fileID==(allFiles(file)));
-    
-    trials= [];
-    
-    
-    trials= unique(periEventTable(ind,"DStrialID"));
-    trials= table2array(trials);
-    
-    trials= trials(~isnan(trials));
-    
-    for trial = 1:numel(trials)
-        ind2= [];
-
-        ind2= find(ind & (periEventTable.DStrialID== trials(trial)));
-
-
-        y1= periEventTable(ind2,"DSblueRaw");
-        y2= periEventTable(ind2,"DSpurpleRaw");
-
-        y1= table2array(y1);
-        y2= table2array(y2);
-
-
-        %remove nans prior to corr()
-        y1= y1(~isnan(y1));
-        y2= y2(~isnan(y2));
-
-
-    %     y1= y1(isnan(y1));
-
-    %     periEventTable(ind,"r")= xcorr(y1, y2);
-
-
-        periEventTable(ind2, "rDStrialRaw")= table(nan);
-
-        %fill only first per fileID with ses corr
-    %     periEventTable(ind(1),"r")= table(corr(y1, y2));
-
-        %fill all
-        %will throw error if artifacts removed before this (e.g. all nan)
-        periEventTable(ind2,"rDStrialRaw")= table(corr(y1, y2));
-    end
-
-
-% 
-end
-
-
-figure();
-clear i;
-
-i= gramm('x', periEventTable.subject, 'y', periEventTable.rDStrialRaw);
-
-i.stat_boxplot();
-
-i.draw();
-
-%% bin peri-event r raw and facet
-
-
-%convert into 10 bins 
-y= [];
-e= [];
-[y, e]= discretize(periEventTable.rDStrialRaw, 10);
-
-periEventTable.rDStrialRawBin= y;
-
-%save labels of bin edges too 
-for bin= 1:numel(e)-1
-    
-    ind= [];
-    ind= periEventTable.rDStrialRawBin== bin;
-    
-   periEventTable(ind, "rDStrialRawBinEdge")= table(e(bin)); 
-end
-
-
-% %% facet by bin -- good facet!
-% 
-% 
-% stagesToPlot= [4,5,7]
-% 
-% for subj= 1:numel(subjects)
-%    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-%        
-%    for stage= 1:numel(stagesToPlot)
-%    
-%        data2= data(data.stage==stagesToPlot(stage),:);
-% 
-%         figure();
-%         clear i;
-% 
-%         i= gramm('x', data2.timeLock, 'y', data2.DSpurpleRaw, 'color', data2.rDStrialRaw, 'group', data2.DStrialIDcum);
-% 
-%         i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
-% 
-%         i().geom_line();
-% 
-%         i.draw();
-% 
-%         %405
-% 
-%    end 
-% end
-% 
-% %% good facet, but now plot z score better for interpretability
-% 
-% stagesToPlot= [4,5,7]
-% 
-% for subj= 1:numel(subjects)
-%    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-%        
-%    for stage= 1:numel(stagesToPlot)
-%    
-%        data2= data(data.stage==stagesToPlot(stage),:);
-% 
-%         figure();
-%         clear i;
-% 
-%         i= gramm('x', data2.timeLock, 'y', data2.DSblue, 'color', data2.rDStrialRaw, 'group', data2.DStrialIDcum);
-% 
-%         i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
-% 
-%         i().geom_line();
-% 
-%         i.draw();
-% 
-%         %405
-% 
-%    end 
-% end
-
-
-
-
-%% Final improvement: 465 vs 405 z score with r facet
-% stagesToPlot= [4,5,7]
-
-stagesToPlot= unique(periEventTable.stage);
-
-for subj= 1:numel(subjects)
-   data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-       
-   for stage= 1:numel(stagesToPlot)
-   
-       
-        %TODO: much more efficient method would be to stack() and form
-        %signalType column to facet color= 405 or 465
-           
-       
-       data2= data(data.stage==stagesToPlot(stage),:);
-
-        figure();
-        clear i;
-
-        
-        % draw in order of background-> foreground
-         %individual trials -> sessions -> grand mean
-         
-         %- individual trials; 465
-        y= data2.DSblue; 
-
-        
-        i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-
-        i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
-
-        i().geom_line();
-        
-        i().set_color_options('map', mapCustom(3,:));        
-
-        i().set_line_options('base_size',0.5); 
-        
-        i.draw();
-        
-        %- individual trials; 405
-        y= data2.DSpurple; 
-
-        i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-
-        i().geom_line();
-        
-        i().set_color_options('map', mapCustom(5,:));        
-
-        i().set_line_options('base_size',0.5); 
-       
-        i.draw();
-        
-        %- sessions, 465
-        y= data2.DSblue; 
-
-        i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-        i().stat_summary('type','sem', 'geom','line');
-        
-        i().set_color_options('map', mapCustom(2,:));        
-        i().set_line_options('base_size',1)        
-   
-        i.draw();
-        
-       %- sessions, 405
-        y= data2.DSpurple; 
-
-        i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-        i().stat_summary('type','sem', 'geom','line');
-        
-        i().set_color_options('map', mapCustom(6,:));        
-        i().set_line_options('base_size',1)        
-   
-        i.draw();
-        
-        %- Grand mean, 465
-        y= data2.DSblue; 
-
-        i.update('x', data2.timeLock, 'y', y, 'group', []);
-                
-        i().stat_summary('type','sem', 'geom','area');
-        
-        i().set_color_options('map', mapCustom(1,:));        
-        i().set_line_options('base_size',2)        
-   
-        i.draw();
-        
-        
-          %- Grand mean, 405
-        y= data2.DSpurple; 
-
-        i.update('x', data2.timeLock, 'y', y, 'group', []);
-                
-        i().stat_summary('type','sem', 'geom','area');
-        
-        i().set_color_options('map', mapCustom(7,:));        
-        i().set_line_options('base_size',2)        
-         
-      i.axe_property('YLim',[-5,10]);
-      title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
-      i.set_title(title);
-      i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef raw >');
-
-      i.draw();
-
-      saveFig(gcf, figPath, title, figFormats)
-      
-   end 
-         
-end
-
-
-%% - between subjects z plots
-
-data= periEventTable;
-
-for stage= 1:numel(stagesToPlot)
-
-    %Between-subj figs
+%     Between-subj figs
         data2= data(data.stage==stagesToPlot(stage),:);
 
 
@@ -1061,59 +496,35 @@ for stage= 1:numel(stagesToPlot)
             % draw in order of background-> foreground
              %individual trials -> sessions -> grand mean
 
-             %- individual trials; 465
-            y= data2.DSblue; 
+%             - sessions, 465
+            y= data2.periDSzblue; 
 
+%             i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+            i= gramm('x', data2.timeLock, 'y', y, 'group', data2.subject);
+            i.facet_wrap(data2.aucBinEdge, 'ncols', 5);
 
-            i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-
-            i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
-
-            i().geom_line();
-
-            i().set_color_options('map', mapCustom(3,:));        
-
-            i().set_line_options('base_size',0.5); 
-
-            i.draw();
-
-            %- individual trials; 405
-            y= data2.DSpurple; 
-
-            i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-
-            i().geom_line();
-
-            i().set_color_options('map', mapCustom(5,:));        
-
-            i().set_line_options('base_size',0.5); 
-
-            i.draw();
-
-            %- sessions, 465
-            y= data2.DSblue; 
-
-            i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
             i().stat_summary('type','sem', 'geom','line');
+            i.geom_line();
 
             i().set_color_options('map', mapCustom(2,:));        
             i().set_line_options('base_size',1)        
 
             i.draw();
 
-           %- sessions, 405
-            y= data2.DSpurple; 
+%            - sessions, 405
+            y= data2.periDSzpurple; 
 
-            i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+            i.update('x', data2.timeLock, 'y', y, 'group', data2.subject);
             i().stat_summary('type','sem', 'geom','line');
+            i.geom_line();
 
             i().set_color_options('map', mapCustom(6,:));        
             i().set_line_options('base_size',1)        
 
             i.draw();
 
-            %- Grand mean, 465
-            y= data2.DSblue; 
+%             - Grand mean, 465
+            y= data2.periDSzblue; 
 
             i.update('x', data2.timeLock, 'y', y, 'group', []);
 
@@ -1125,8 +536,8 @@ for stage= 1:numel(stagesToPlot)
             i.draw();
 
 
-              %- Grand mean, 405
-            y= data2.DSpurple; 
+%               - Grand mean, 405
+            y= data2.periDSzpurple; 
 
             i.update('x', data2.timeLock, 'y', y, 'group', []);
 
@@ -1136,849 +547,319 @@ for stage= 1:numel(stagesToPlot)
             i().set_line_options('base_size',2)        
 
           i.axe_property('YLim',[-5,10]);
-          title= strcat(subjMode,'-allSubj-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
+          title= strcat(subjMode,'-allSubj-stage-',num2str(stagesToPlot(stage)),'-aucDelta-zTraces-DS');
           i.set_title(title);
-          i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef raw >');
+          i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'aucBinEdge >');
 
           i.draw();
 
           saveFig(gcf, figPath, title, figFormats)
 end
 
-%% Count of trials per corrcoef bin per session
-
-data= periEventTable;
-
-%use groupsummary() to compute count
-data2= groupsummary(data, ["stage", "subject", "fileID", "rDStrialRawBinEdge"]);%, 'count', "DStrialIDcum");
-
-%divide count by num tBins per trial to get count of trials
-data2.GroupCount= data2.GroupCount/numel(unique(data.timeLock));
 
 
-figure();
-clear i;
-
-i= gramm('x', data2.rDStrialRawBinEdge, 'y', data2.GroupCount, 'color', data2.subject);
-
-i.facet_wrap(data2.stage);
-
-i.geom_point();
-
-
-title= strcat(subjMode,'-allSubject-trialCorrRaw-binCountByStage-DS');
-i.set_title(title);
-i.set_names('x','corrCoefBin','y','trial count','color','subject', 'column', 'stage');
-
-i.draw();
-
-saveFig(gcf, figPath, title, figFormats);
-
-
-%% Establish some corrcoef threshold beyond which to call "noisy" or "nosignal" trial
-
-thresholdCorrCoef= 0.5;
-
-
-%% Count of trials beyond threshold per session
-
-periEventTable(:,'corrThresholdTrial')= table(nan);
-
-ind=[];
-ind= periEventTable.rDStrialRaw >= thresholdCorrCoef;
-
-periEventTable(ind, "rThreshold")= table(1);
-
-data= periEventTable(periEventTable.rThreshold==1,:);
-
-%use groupsummary() to compute count
-data2= groupsummary(data, ["stage", "subject", "fileID", "trainDay", "rThreshold"]);
-
-%divide count by num tBins per trial to get count of trials
-data2.GroupCount= data2.GroupCount/numel(unique(data.timeLock));
-
-
-figure();
-clear i;
-
-i= gramm('x', data2.trainDay, 'y', data2.GroupCount, 'group', data2.subject, 'color', data2.subject);
-
-% i.facet_wrap(data2.stage);
-
-i.geom_line();
-i.geom_point();
-
-
-title= strcat(subjMode,'-allSubject-trialCorrRaw-corrThresholdCount-DS');
-i.set_title(title);
-% i.set_names('x','corrCoefBin','y','trial count','color','subject', 'column', 'stage');
-
-i.draw();
-
-saveFig(gcf, figPath, title, figFormats);
-
-%% viz distro of this trial by trial corrCoef by subj (and across stages)
-%this distro viz doesn't seem to make sense with discrete bins
-
-data= periEventTable;
-%use groupsummary() to reduce to one observation per trial
-data2= groupsummary(data, ["stage", "subject", "fileID", "DStrialIDcum"], 'mean', "rDStrialRaw");
-
-
-figure;
-clear i;
-
-i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialRaw"));
-
-i.stat_boxplot();
-
-
-title= strcat(subjMode,'-allSubject-trialCorrRaw-distribution-DS');
-
-i.set_title(title);
-
-i.draw()
-
-saveFig(gcf, figPath, title, figFormats);
-
-
-
-
-figure;
-clear i;
-
-i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialRaw"), 'color', data2.stage);
-
-
-i.stat_boxplot();
-
-title= strcat(subjMode,'-allSubject-trialCorrRaw-distributionByStage-DS');
-
-i.set_title(title);
-
-i.draw()
-
-saveFig(gcf, figPath, title, figFormats);
-
-
-%% ---- RAW peri-event traces faceted by rBin ---------
-% 
-% % useless without fitted 405
-% 
-% stagesToPlot= unique(periEventTable.stage);
-% 
-% for subj= 1:numel(subjects)
-%    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-%        
-%    for stage= 1:numel(stagesToPlot)
-%    
-%        
-%         %TODO: much more efficient method would be to stack() and form
-%         %signalType column to facet color= 405 or 465
-%            
-%        
-%        data2= data(data.stage==stagesToPlot(stage),:);
-% 
-%         figure();
-%         clear i;
-% 
-%         
-%         % draw in order of background-> foreground
-%          %individual trials -> sessions -> grand mean
-%          
-%          %- individual trials; 465
-%         y= data2.DSblueRaw; 
-% 
-%         
-%         i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-% 
-%         i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
-% 
-%         i().geom_line();
-%         
-%         i().set_color_options('map', mapCustom(3,:));        
-% 
-%         i().set_line_options('base_size',0.5); 
-%         
-%         i.draw();
-%         
-%         %- individual trials; 405
-%         y= data2.DSpurpleRaw; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-% 
-%         i().geom_line();
-%         
-%         i().set_color_options('map', mapCustom(5,:));        
-% 
-%         i().set_line_options('base_size',0.5); 
-%        
-%         i.draw();
-%         
-%         %- sessions, 465
-%         y= data2.DSblueRaw; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-%         i().stat_summary('type','sem', 'geom','line');
-%         
-%         i().set_color_options('map', mapCustom(2,:));        
-%         i().set_line_options('base_size',1)        
-%    
-%         i.draw();
-%         
-%        %- sessions, 405
-%         y= data2.DSpurpleRaw; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-%         i().stat_summary('type','sem', 'geom','line');
-%         
-%         i().set_color_options('map', mapCustom(6,:));        
-%         i().set_line_options('base_size',1)        
-%    
-%         i.draw();
-%         
-%         %- Grand mean, 465
-%         y= data2.DSblueRaw; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', []);
-%                 
-%         i().stat_summary('type','sem', 'geom','area');
-%         
-%         i().set_color_options('map', mapCustom(1,:));        
-%         i().set_line_options('base_size',2)        
-%    
-%         i.draw();
-%         
-%         
-%           %- Grand mean, 405
-%         y= data2.DSpurpleRaw; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', []);
-%                 
-%         i().stat_summary('type','sem', 'geom','area');
-%         
-%         i().set_color_options('map', mapCustom(7,:));        
-%         i().set_line_options('base_size',2)        
-%          
-%       i.axe_property('YLim',[-5,10]);
-%       title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-rawTraces-DS');
-%       i.set_title(title);
-%       i.set_names('x','time from DS (s)','y','raw fp','color','signal type', 'column', 'trialCorrCoef raw >');
-% 
-%       i.draw();
-% 
-%       saveFig(gcf, figPath, title, figFormats)
-%       
-%    end 
-%          
-% end
-
-%% -------------------------trial Z score corr coef ------------------------------
-
-% %coefficients are exactly the same as raw signal. no point in running
-% 
-% %% compute z corr coef 
-% r= [];
-% 
-% allFiles= unique(periEventTable.fileID);
-% 
-% for file= 1:numel(allFiles)
-% 
-%     ind= [];
-%     ind= (periEventTable.fileID==(allFiles(file)));
-%     
-%     trials= [];
-%     
-%     
-%     trials= unique(periEventTable(ind,"DStrialID"));
-%     trials= table2array(trials);
-%     
-%     trials= trials(~isnan(trials));
-%     
-%     for trial = 1:numel(trials)
-%         ind2= [];
-% 
-%         ind2= find(ind & (periEventTable.DStrialID== trials(trial)));
-% 
-% 
-%         y1= periEventTable(ind2,"DSblue");
-%         y2= periEventTable(ind2,"DSpurple");
-% 
-%         y1= table2array(y1);
-%         y2= table2array(y2);
-% 
-% 
-%         %remove nans prior to corr()
-%         y1= y1(~isnan(y1));
-%         y2= y2(~isnan(y2));
-% 
-% 
-%     %     y1= y1(isnan(y1));
-% 
-%     %     periEventTable(ind,"r")= xcorr(y1, y2);
-% 
-% 
-%         periEventTable(ind2, "rDStrialZ")= table(nan);
-% 
-%         %fill only first per fileID with ses corr
-%     %     periEventTable(ind(1),"r")= table(corr(y1, y2));
-% 
-%         %fill all
-%         %will throw error if artifacts removed before this (e.g. all nan)
-%         periEventTable(ind2,"rDStrialZ")= table(corr(y1, y2));
-%     end
-% 
-% 
+%% Session corrcoef stuff
+% %% ----- session corrCoef stuff:
 % % 
-% end
+% % % bin corrcoef and facet periEventTraces by this
+% % 
+% % 
+% % convert into 10 bins 
+% % y= [];
+% % e= [];
+% % 
+% % this method is not making even bins, some are even empty...
+% % dataset is pretty heavily skewed toward +1 with some extreme negative
+% % exceptions
+% % [y, e]= discretize(corrTable.r, 10);
+% % 
+% % corrTable.rBin= y;
+% % 
+% % save labels of bin edges too 
+% % for bin= 1:numel(e)-1
+% %     
+% %     ind= [];
+% %     ind= corrTable.rBin== bin;
+% %     
+% %    corrTable(ind, "rBinEdge")= table(e(bin)); 
+% % end
+% % 
+% % % Final improvement: 465 vs 405 z score with r facet
+% % 
+% % stagesToPlot= unique(corrTable.stage);
+% % 
+% % for subj= 1:numel(subjects)
+% %    data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
+% %        
+% %    for stage= 1:numel(stagesToPlot)
+% %    
+% %        
+% %         TODO: much more efficient method would be to stack() and form
+% %         signalType column to facet color= 405 or 465
+% %            
+% %        
+% %        data2= data(data.stage==stagesToPlot(stage),:);
+% % 
+% %         figure();
+% %         clear i;
+% % 
+% %         
+% %         draw in order of background-> foreground
+% %          individual trials -> sessions -> grand mean
+% %          
+% %         - sessions, 465
+% %         y= data2.periDSzblueAll;
+% %         y= data2.periDSzblue; 
+% %         i= gramm('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+% %         
+% %         i.facet_wrap(data2.rBinEdge, 'ncols', 5);
+% %         
+% %         i().stat_summary('type','sem', 'geom','line');
+% %         
+% %         i.geom_line();
+% %         
+% %         i().set_color_options('map', mapCustom(2,:));        
+% %         i().set_line_options('base_size',1)        
+% %    
+% %         i.draw();
+% %         
+% %        - sessions, 405
+% %         y= data2.periDSzpurple; 
+% % 
+% %         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+% %         i().stat_summary('type','sem', 'geom','line');
+% %         i.geom_line();
+% %         
+% %         i().set_color_options('map', mapCustom(6,:));        
+% %         i().set_line_options('base_size',1)        
+% %    
+% %         i.draw();
+% %         
+% %         - Grand mean, 465
+% %         y= data2.periDSzblue; 
+% % 
+% %         i.update('x', data2.timeLock, 'y', y, 'group', []);
+% %                 
+% %         i().stat_summary('type','sem', 'geom','area');
+% %         
+% %         i().set_color_options('map', mapCustom(1,:));        
+% %         i().set_line_options('base_size',2)        
+% %    
+% %         i.draw();
+% %         
+% %         
+% %           - Grand mean, 405
+% %         y= data2.periDSzpurple; 
+% % 
+% %         i.update('x', data2.timeLock, 'y', y, 'group', []);
+% %                 
+% %         i().stat_summary('type','sem', 'geom','area');
+% %         
+% %         i().set_color_options('map', mapCustom(7,:));        
+% %         i().set_line_options('base_size',2)        
+% %          
+% %       i.axe_property('YLim',[-5,10]);
+% %       title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-sessionCorrRaw-zTraces-DS');
+% %       i.set_title(title);
+% %       i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'sessionCorrRaw raw >');
+% % 
+% %       i.draw();
+% % 
+% %       saveFig(gcf, figPath, title, figFormats)
+% %       
+% %    end 
+% %          
+% % end
+% % 
+% % 
+% % % - between subjects z plots
+% % 
+% % data= corrTable;
+% % 
+% % for stage= 1:numel(stagesToPlot)
+% % 
+% %     Between-subj figs
+% %         data2= data(data.stage==stagesToPlot(stage),:);
+% % 
+% % 
+% %             figure();
+% %             clear i;
+% % 
+% % 
+% %             % draw in order of background-> foreground
+% %              %individual trials -> sessions -> grand mean
+% % 
+% %             - sessions, 465
+% %             y= data2.periDSzblue; 
+% % 
+% %             i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+% %             i= gramm('x', data2.timeLock, 'y', y, 'group', data2.subject);
+% %             i.facet_wrap(data2.rBinEdge, 'ncols', 5);
+% % 
+% %             i().stat_summary('type','sem', 'geom','line');
+% %             i.geom_line();
+% % 
+% %             i().set_color_options('map', mapCustom(2,:));        
+% %             i().set_line_options('base_size',1)        
+% % 
+% %             i.draw();
+% % 
+% %            - sessions, 405
+% %             y= data2.periDSzpurple; 
+% % 
+% %             i.update('x', data2.timeLock, 'y', y, 'group', data2.subject);
+% %             i().stat_summary('type','sem', 'geom','line');
+% %             i.geom_line();
+% % 
+% %             i().set_color_options('map', mapCustom(6,:));        
+% %             i().set_line_options('base_size',1)        
+% % 
+% %             i.draw();
+% % 
+% %             - Grand mean, 465
+% %             y= data2.periDSzblue; 
+% % 
+% %             i.update('x', data2.timeLock, 'y', y, 'group', []);
+% % 
+% %             i().stat_summary('type','sem', 'geom','area');
+% % 
+% %             i().set_color_options('map', mapCustom(1,:));        
+% %             i().set_line_options('base_size',2)        
+% % 
+% %             i.draw();
+% % 
+% % 
+% %               - Grand mean, 405
+% %             y= data2.periDSzpurple; 
+% % 
+% %             i.update('x', data2.timeLock, 'y', y, 'group', []);
+% % 
+% %             i().stat_summary('type','sem', 'geom','area');
+% % 
+% %             i().set_color_options('map', mapCustom(7,:));        
+% %             i().set_line_options('base_size',2)        
+% % 
+% %           i.axe_property('YLim',[-5,10]);
+% %           title= strcat(subjMode,'-allSubj-stage-',num2str(stagesToPlot(stage)),'-sessionCorrCoef-zTraces-DS');
+% %           i.set_title(title);
+% %           i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'sessionCorrCoef raw >');
+% % 
+% %           i.draw();
+% % 
+% %           saveFig(gcf, figPath, title, figFormats)
+% % end
+% % 
+% % 
+% % %% Establish some corrcoef threshold beyond which to call "noisy" or "nosignal" trial
+% % 
+% % thresholdCorrCoef= 0.5;
+% % 
+% % 
+% % %% Count of trials beyond threshold per session
+% % 
+% % corrTable(:,'corrThresholdTrial')= table(nan);
+% % 
+% % ind=[];
+% % ind= corrTable.r >= thresholdCorrCoef;
+% % 
+% % corrTable(ind, "rThreshold")= table(1);
+% % 
+% % data= corrTable(corrTable.rThreshold==1,:);
+% % 
+% % figure();
+% % clear i;
+% % 
+% % 
+% % i= gramm('x', data.trainDay, 'y', data.rThreshold, 'group', data.subject, 'color', data.subject);
+% % 
+% % i.facet_wrap(data.subject);
+% % 
+% % i.geom_line();
+% % i.geom_point();
+% % 
+% % 
+% % title= strcat(subjMode,'-allSubject-sessionCorrRaw-corrThresholdCount-DS');
+% % i.set_title(title);
+% % 
+% % i.draw();
+% % 
+% % saveFig(gcf, figPath, title, figFormats);
+% 
+% %% Set a threshold of session corrCoef
+% 
+% thresholdCorrCoef= 0.5;
 % 
-% 
-% figure();
-% clear i;
-% 
-% i= gramm('x', periEventTable.subject, 'y', periEventTable.rDStrialZ);
-% 
-% i.stat_boxplot();
-% 
-% i.draw();
-% 
-% %% bin peri-event r z and facet
-% %convert into 10 bins 
-% y,e= [];
-% [y, e]= discretize(periEventTable.rDStrialZ, 10);
-% 
-% periEventTable.rDStrialZBin= y;
-% 
-% %save labels of bin edges too 
-% for bin= 1:numel(e)-1
-%     
-%     ind= [];
-%     ind= periEventTable.rDStrialZBin== bin;
-%     
-%    periEventTable(ind, "rDStrialZBinEdge")= table(e(bin)); 
-% end
-% 
-% %% Final improvement: 465 vs 405 z score with r facet
-% % stagesToPlot= [4,5,7]
-% 
-% stagesToPlot= unique(periEventTable.stage);
-% 
-% for subj= 1:numel(subjects)
-%    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-%        
-%    for stage= 1:numel(stagesToPlot)
-%    
-%        
-%         %TODO: much more efficient method would be to stack() and form
-%         %signalType column to facet color= 405 or 465
-%            
-%        
-%        data2= data(data.stage==stagesToPlot(stage),:);
-% 
-%         figure();
-%         clear i;
-% 
-%         
-%         % draw in order of background-> foreground
-%          %individual trials -> sessions -> grand mean
-%          
-%          %- individual trials; 465
-%         y= data2.DSblue; 
-% 
-%         
-%         i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-% 
-%         i().facet_wrap(data2.rDStrialZBinEdge, 'ncols', 5);
-% 
-%         i().geom_line();
-%         
-%         i().set_color_options('map', mapCustom(3,:));        
-% 
-%         i().set_line_options('base_size',0.5); 
-%         
-%         i.draw();
-%         
-%         %- individual trials; 405
-%         y= data2.DSpurple; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-% 
-%         i().geom_line();
-%         
-%         i().set_color_options('map', mapCustom(5,:));        
-% 
-%         i().set_line_options('base_size',0.5); 
-%        
-%         i.draw();
-%         
-%         %- sessions, 465
-%         y= data2.DSblue; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-%         i().stat_summary('type','sem', 'geom','line');
-%         
-%         i().set_color_options('map', mapCustom(2,:));        
-%         i().set_line_options('base_size',1)        
-%    
-%         i.draw();
-%         
-%        %- sessions, 405
-%         y= data2.DSpurple; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-%         i().stat_summary('type','sem', 'geom','line');
-%         
-%         i().set_color_options('map', mapCustom(6,:));        
-%         i().set_line_options('base_size',1)        
-%    
-%         i.draw();
-%         
-%         %- Grand mean, 465
-%         y= data2.DSblue; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', []);
-%                 
-%         i().stat_summary('type','sem', 'geom','area');
-%         
-%         i().set_color_options('map', mapCustom(1,:));        
-%         i().set_line_options('base_size',2)        
-%    
-%         i.draw();
-%         
-%         
-%           %- Grand mean, 405
-%         y= data2.DSpurple; 
-% 
-%         i.update('x', data2.timeLock, 'y', y, 'group', []);
-%                 
-%         i().stat_summary('type','sem', 'geom','area');
-%         
-%         i().set_color_options('map', mapCustom(7,:));        
-%         i().set_line_options('base_size',2)        
-%          
-%       i.axe_property('YLim',[-5,10]);
-%       title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-trialCorrZ-zTraces-DS');
-%       i.set_title(title);
-%       i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef Z >');
-% 
-%       i.draw();
-% 
-%       saveFig(gcf, figPath, title, figFormats)
-%       
-%    end 
-%          
-% end
-% 
-% 
-% %% - between subjects z plots
-% 
-% data= periEventTable;
-% 
-% for stage= 1:numel(stagesToPlot)
-% 
-%     %Between-subj figs
-%         data2= data(data.stage==stagesToPlot(stage),:);
-% 
-% 
-%             figure();
-%             clear i;
-% 
-% 
-%             % draw in order of background-> foreground
-%              %individual trials -> sessions -> grand mean
-% 
-%              %- individual trials; 465
-%             y= data2.DSblue; 
-% 
-% 
-%             i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-% 
-%             i().facet_wrap(data2.rDStrialZBinEdge, 'ncols', 5);
-% 
-%             i().geom_line();
-% 
-%             i().set_color_options('map', mapCustom(3,:));        
-% 
-%             i().set_line_options('base_size',0.5); 
-% 
-%             i.draw();
-% 
-%             %- individual trials; 405
-%             y= data2.DSpurple; 
-% 
-%             i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
-% 
-%             i().geom_line();
-% 
-%             i().set_color_options('map', mapCustom(5,:));        
-% 
-%             i().set_line_options('base_size',0.5); 
-% 
-%             i.draw();
-% 
-%             %- sessions, 465
-%             y= data2.DSblue; 
-% 
-%             i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-%             i().stat_summary('type','sem', 'geom','line');
-% 
-%             i().set_color_options('map', mapCustom(2,:));        
-%             i().set_line_options('base_size',1)        
-% 
-%             i.draw();
-% 
-%            %- sessions, 405
-%             y= data2.DSpurple; 
-% 
-%             i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-%             i().stat_summary('type','sem', 'geom','line');
-% 
-%             i().set_color_options('map', mapCustom(6,:));        
-%             i().set_line_options('base_size',1)        
-% 
-%             i.draw();
-% 
-%             %- Grand mean, 465
-%             y= data2.DSblue; 
-% 
-%             i.update('x', data2.timeLock, 'y', y, 'group', []);
-% 
-%             i().stat_summary('type','sem', 'geom','area');
-% 
-%             i().set_color_options('map', mapCustom(1,:));        
-%             i().set_line_options('base_size',2)        
-% 
-%             i.draw();
-% 
-% 
-%               %- Grand mean, 405
-%             y= data2.DSpurple; 
-% 
-%             i.update('x', data2.timeLock, 'y', y, 'group', []);
-% 
-%             i().stat_summary('type','sem', 'geom','area');
-% 
-%             i().set_color_options('map', mapCustom(7,:));        
-%             i().set_line_options('base_size',2)        
-% 
-%           i.axe_property('YLim',[-5,10]);
-%           title= strcat(subjMode,'-allSubj-stage-',num2str(stagesToPlot(stage)),'-trialCorrZ-zTraces-DS');
-%           i.set_title(title);
-%           i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef Z >');
-% 
-%           i.draw();
-% 
-%           saveFig(gcf, figPath, title, figFormats)
-% end
-% 
-% %% Count of trials per corrcoef bin per session
-% 
-% data= periEventTable;
-% 
-% %use groupsummary() to compute count
-% data2= groupsummary(data, ["stage", "subject", "fileID", "rDStrialZBinEdge"]);%, 'count', "DStrialIDcum");
-% 
-% %divide count by num tBins per trial to get count of trials
-% data2.GroupCount= data2.GroupCount/numel(unique(data.timeLock));
-% 
-% 
-% figure();
-% clear i;
-% 
-% i= gramm('x', data2.rDStrialZBinEdge, 'y', data2.GroupCount, 'color', data2.subject);
-% 
-% i.facet_wrap(data2.stage);
-% 
-% i.geom_point();
-% 
-% 
-% title= strcat(subjMode,'-allSubject-trialCorrZ-binCountByStage-DS');
-% i.set_title(title);
-% i.set_names('x','corrCoefBin','y','trial count','color','subject', 'column', 'stage');
-% 
-% i.draw();
-% 
-% saveFig(gcf, figPath, title, figFormats);
 % 
 % %% viz distro of this trial by trial corrCoef by subj (and across stages)
 % %this distro viz doesn't seem to make sense with discrete bins
 % 
-% data= periEventTable;
-% %use groupsummary() to reduce to one observation per trial
-% data2= groupsummary(data, ["stage", "subject", "fileID", "DStrialIDcum"], 'mean', "rDStrialZ");
-% 
+% data= corrTable;
 % 
 % figure;
 % clear i;
 % 
-% i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialZ"));
+% i= gramm('x', data.subject, 'y', data.("r"));
 % 
 % i.stat_boxplot();
 % 
 % 
-% title= strcat(subjMode,'-allSubject-trialCorrZ-distribution-DS');
+% title= strcat(subjMode,'-allSubject-sessionCorrRaw-distribution-DS');
 % 
 % i.set_title(title);
 % 
 % i.draw()
 % 
 % saveFig(gcf, figPath, title, figFormats);
+% 
+% 
+% 
+% 
+% figure;
+% clear i;
+% 
+% i= gramm('x', data.subject, 'y', data.("r"), 'color', data.stage);
+% 
+% 
+% i.stat_boxplot();
+% 
+% title= strcat(subjMode,'-allSubject-sessionCorrRaw-distributionByStage-DS');
+% 
+% i.set_title(title);
+% 
+% i.draw()
+% 
+% saveFig(gcf, figPath, title, figFormats);
+% 
+% 
+% %% plot session corrCoef over time
+% data= corrTable;
+% 
+% figure;
+% clear i;
+% 
+% i= gramm('x', data.trainDay, 'y', data.("r"), 'color', data.subject);
+% 
+% i.facet_wrap(data.stage, 'ncol', 6);
+% 
+% i.geom_point();
+% i.geom_line();
+% 
+% i().geom_hline('yintercept', thresholdCorrCoef, 'style', 'k--');
+% 
+% title= strcat(subjMode,'-allSubject-sessionCorrRaw-byDate-DS');
+% 
+% i.set_title(title);
 % 
 % i.draw();
 % 
-% 
-% 
-% figure;
-% clear i;
-% 
-% i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialZ"), 'color', data2.stage);
-% 
-% 
-% i.stat_boxplot();
-% 
-% title= strcat(subjMode,'-allSubject-trialCorrZ-distributionByStage-DS');
-% 
-% i.set_title(title);
-% 
-% i.draw()
-% 
 % saveFig(gcf, figPath, title, figFormats);
 % 
-% %% ---------------------------- Old -----------------------------------
-% %% 
-% % %% viz ind trials peri-event (color=r)
+% 
+% 
+% %% ---------- Trial by Trial Correlation -----
+% % %% -- trial by triall corr raw , periEventTable
 % % 
-% % % for subj= 1:numel(subjects)
-% % %         
-% % %    data1= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-% % %    
-% % %     for thisStage= 1:numel(unique(data1.stage))
-% % % 
-% % %         clear data2 data3 data
-% % %         
-% % %         data= data1(data1.stage==thisStage,:);
-% % %         
-% % % %        figure();
-% % % %         clear i;
-% % % % 
-% % % % 
-% % % %         i(1,1)= gramm('x', data2.timeLock, 'y', data2.DSblue, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
-% % % % 
-% % % %         i(1,1).geom_line();
-% % % % 
-% % % %         
-% % % %         i(2,1)= gramm('x', data2.timeLock, 'y', data2.DSpurple, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
-% % % % 
-% % % %         i(2,1).geom_line();
-% % % %         
-% % % %         i.draw();
-% % % 
-% % % 
-% % %        figure();
-% % %        clear i; 
-% % % 
-% % %         y= "DSblueRaw";
-% % % 
-% % %        data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
-% % % 
-% % %        data3= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', "rDStrialRaw");
-% % %          
-% % % 
-% % %    
-% % %         i(1,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSblueRaw, 'group', data2.fileID, 'color', data3.mean_rDStrialRaw);
-% % % 
-% % %         i(1,1).geom_line();
-% % % %         i(1,1).stat_summary('type','sem','geom','line');
-% % % 
-% % % 
-% % %         y= "DSpurpleRaw";
-% % % 
-% % %        data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
-% % %         
-% % %         i(2,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSpurpleRaw, 'group', data2.fileID, 'color', data3.mean_rDStrialRaw);
-% % %                
-% % %         i(2,1).geom_line();
-% % % 
-% % % %         i(2,1).stat_summary('type','sem','geom','line');
-% % % 
-% % %         
-% % %         i.draw();
-% % % 
-% % %     end
-% % % end
-% % % 
-% % % 
-% % % 
-% % % 
-% % % %% -------- Trial by trial corr z scored, periEventTable ------ Z 
-% % % 
-% % % 
-% % % r= [];
-% % % 
-% % % allFiles= unique(periEventTable.fileID);
-% % % 
-% % % for file= 1:numel(allFiles)
-% % % 
-% % %     ind= [];
-% % %     ind= (periEventTable.fileID==(allFiles(file)));
-% % %     
-% % %     trials= [];
-% % %     
-% % %     
-% % %     trials= unique(periEventTable(ind,"DStrialID"));
-% % %     trials= table2array(trials);
-% % %     
-% % %     trials= trials(~isnan(trials));
-% % %     
-% % %     for trial = 1:numel(trials)
-% % %         ind2= [];
-% % % 
-% % %         ind2= find(ind & (periEventTable.DStrialID== trials(trial)));
-% % % 
-% % % 
-% % %         y1= periEventTable(ind2,"DSblue");
-% % %         y2= periEventTable(ind2,"DSpurple");
-% % % 
-% % %         y1= table2array(y1);
-% % %         y2= table2array(y2);
-% % % 
-% % % 
-% % %         %remove nans prior to corr()
-% % %         y1= y1(~isnan(y1));
-% % %         y2= y2(~isnan(y2));
-% % % 
-% % % 
-% % %     %     y1= y1(isnan(y1));
-% % % 
-% % %     %     periEventTable(ind,"r")= xcorr(y1, y2);
-% % % 
-% % % 
-% % %         periEventTable(ind2, "rDStrial")= table(nan);
-% % % 
-% % %         %fill only first per fileID with ses corr
-% % %     %     periEventTable(ind(1),"r")= table(corr(y1, y2));
-% % % 
-% % %         %fill all
-% % %         %will throw error if artifacts removed before this (e.g. all nan)
-% % %         periEventTable(ind2,"rDStrial")= table(corr(y1, y2));
-% % %     end
-% % % 
-% % % 
-% % % % 
-% % % end
-% % % 
-% % % 
-% % % figure();
-% % % clear i;
-% % % 
-% % % i= gramm('x', periEventTable.subject, 'y', periEventTable.rDStrial);
-% % % 
-% % % i.stat_boxplot();
-% % % 
-% % % i.draw();
-% % % 
-% % % 
-% % % %% viz ind trials peri-event (color=r)
-% % % 
-% % % for subj= 1:numel(subjects)
-% % %         
-% % %    data1= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-% % %    
-% % %     for thisStage= 1:numel(unique(data1.stage))
-% % % 
-% % %         clear data2 data3 data
-% % %         
-% % %         data= data1(data1.stage==thisStage,:);
-% % %         
-% % % %        figure();
-% % % %         clear i;
-% % % % 
-% % % % 
-% % % %         i(1,1)= gramm('x', data2.timeLock, 'y', data2.DSblue, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
-% % % % 
-% % % %         i(1,1).geom_line();
-% % % % 
-% % % %         
-% % % %         i(2,1)= gramm('x', data2.timeLock, 'y', data2.DSpurple, 'group', data2.DStrialIDcum, 'color', data2.rDStrial);
-% % % % 
-% % % %         i(2,1).geom_line();
-% % % %         
-% % % %         i.draw();
-% % % 
-% % % 
-% % %        figure();
-% % %        clear i; 
-% % % 
-% % %         y= "DSblue";
-% % % 
-% % %        data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
-% % % 
-% % %        data3= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', "rDStrial");
-% % %          
-% % % 
-% % %    
-% % %         i(1,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSblue, 'group', data2.fileID, 'color', data3.mean_rDStrial);
-% % % 
-% % %         i(1,1).geom_line();
-% % % %         i(1,1).stat_summary('type','sem','geom','line');
-% % % 
-% % % 
-% % %         y= "DSpurple";
-% % % 
-% % %        data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
-% % %         
-% % %         i(2,1)= gramm('x', data2.timeLock, 'y', data2.mean_DSpurple, 'group', data2.fileID, 'color', data3.mean_rDStrial);
-% % %                
-% % %         i(2,1).geom_line();
-% % % 
-% % % %         i(2,1).stat_summary('type','sem','geom','line');
-% % % 
-% % %         
-% % %         i.draw();
-% % % 
-% % %     end
-% % % end
-% % 
-% % %% manual mean calc then session viz (necessary for color mapping to be correct?)
-% % %clim giving errors when grouping by fileID
-% % %so just plot means
-% % 
-% % for subj= 1:numel(subjects)
-% %    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-% %        
-% %    y= "DSpurple";
-% %    
-% %    data2= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', y);
-% %    
-% %    data3= groupsummary(data, ["stage", "fileID", "timeLock"], 'mean', "rDStrial");
-% %       
-% %    ind=[];
-% %    ind= (strcmp(periEventTable.subject, subjects{subj}));
-% %    
-% %     figure();
-% %     clear i;
-% %    
-% % 
-% %     i= gramm('x', data2.timeLock, 'y', data2.mean_DSpurple, 'group', data2.fileID, 'color', data3.mean_rDStrial);
-% % 
-% %     i().facet_wrap(data2.stage);
-% % 
-% %     i.geom_line();
-% % 
-% % %     i.stat_summary('type','sem','geom','area');
-% %     
-% %     i.draw();
-% %     
-% % end
-% % 
-% % 
-% % %% ---- corr() of trial by trial z score , not wanted -------
-% % 
-% % 
-% % %% Try corr of trial-by-trial z scored signal??
-% % 
-% % %this distro looks quite different, not sure what is most effective
-% % % this way it does seem subj 20 (GFP) and 10 (no signal) are close to 1)
+% % %very interesting... much different distro
 % % 
 % % r= [];
 % % 
@@ -1987,36 +868,48 @@ saveFig(gcf, figPath, title, figFormats);
 % % for file= 1:numel(allFiles)
 % % 
 % %     ind= [];
-% %     ind= find(periEventTable.fileID==(allFiles(file)));
+% %     ind= (periEventTable.fileID==(allFiles(file)));
 % %     
-% % %     periEventTable(ind,"r")= xcorr(periEventTable(ind,"DSblue"), periEventTable(ind,"DSpurple"));
+% %     trials= [];
+% %     
+% %     
+% %     trials= unique(periEventTable(ind,"DStrialID"));
+% %     trials= table2array(trials);
+% %     
+% %     trials= trials(~isnan(trials));
+% %     
+% %     for trial = 1:numel(trials)
+% %         ind2= [];
 % % 
-% %     
-% %     y1= periEventTable(ind,"DSblue");
-% %     y2= periEventTable(ind,"DSpurple");
-% %     
-% %     y1= table2array(y1);
-% %     y2= table2array(y2);
-% %     
-% %     
-% %     %remove nans prior to corr()
-% %     y1= y1(~isnan(y1));
-% %     y2= y2(~isnan(y2));
-% %     
-% %     
-% % %     y1= y1(isnan(y1));
-% %     
-% % %     periEventTable(ind,"r")= xcorr(y1, y2);
+% %         ind2= find(ind & (periEventTable.DStrialID== trials(trial)));
 % % 
 % % 
-% %     periEventTable(ind, "r")= table(nan);
-% %     
-% %     %fill only first per fileID with ses corr
-% % %     periEventTable(ind(1),"r")= table(corr(y1, y2));
+% %         y1= periEventTable(ind2,"DSblueRaw");
+% %         y2= periEventTable(ind2,"DSpurpleRaw");
 % % 
-% %     %fill all
-% %     periEventTable(ind,"r")= table(corr(y1, y2));
+% %         y1= table2array(y1);
+% %         y2= table2array(y2);
 % % 
+% % 
+% %         %remove nans prior to corr()
+% %         y1= y1(~isnan(y1));
+% %         y2= y2(~isnan(y2));
+% % 
+% % 
+% %     %     y1= y1(isnan(y1));
+% % 
+% %     %     periEventTable(ind,"r")= xcorr(y1, y2);
+% % 
+% % 
+% %         periEventTable(ind2, "rDStrialRaw")= table(nan);
+% % 
+% %         %fill only first per fileID with ses corr
+% %     %     periEventTable(ind(1),"r")= table(corr(y1, y2));
+% % 
+% %         %fill all
+% %         %will throw error if artifacts removed before this (e.g. all nan)
+% %         periEventTable(ind2,"rDStrialRaw")= table(corr(y1, y2));
+% %     end
 % % 
 % % 
 % % % 
@@ -2026,280 +919,359 @@ saveFig(gcf, figPath, title, figFormats);
 % % figure();
 % % clear i;
 % % 
-% % i= gramm('x', periEventTable.subject, 'y', periEventTable.r);
+% % i= gramm('x', periEventTable.subject, 'y', periEventTable.rDStrialRaw);
 % % 
 % % i.stat_boxplot();
 % % 
 % % i.draw();
 % % 
-% % %% again, bin based on r and facet 
+% % 
+% % %% bin peri-event r raw and facet
 % % 
 % % 
-% % threshA= 0.9;
-% % threshB= 0.7;
-% % threshC= 0.5;
+% % %convert into 10 bins 
+% % y= [];
+% % e= [];
+% % [y, e]= discretize(periEventTable.rDStrialRaw, 10);
 % % 
+% % periEventTable.rDStrialRawBin= y;
 % % 
-% % periEventTable(:,"rBin")= {''};
-% % 
-% % periEventTable(periEventTable.r>= threshA, "rBin")= {'hi-A'};
-% % 
-% % periEventTable(((periEventTable.r >= threshB) &(periEventTable.r < threshA)), "rBin")= {'hi-B'};
-% % 
-% % periEventTable(((periEventTable.r >= threshC) &(periEventTable.r < threshB)), "rBin")= {'med-C'};
-% % 
-% % periEventTable(((periEventTable.r < threshC)), "rBin")= {'low-D'};
-% % 
-% % % figure();
-% % % clear i;
-% % % 
-% % % data= periEventTable;
-% % % 
-% % % i= gramm('x', data.timeLock, 'y', data.DSblue, 'color', data.r, 'group', data.DStrialIDcum);
-% % % 
-% % % i().facet_wrap(data.rBin);
-% % % 
-% % % i().geom_line();
-% % % 
-% % % i.draw();
-% % % 
-% % % %405
-% % % i= gramm('x', data.timeLock, 'y', data.DSpurple, 'color', data.r, 'group', data.DStrialIDcum);
-% % % 
-% % % i().facet_wrap(data.rBin);
-% % % 
-% % % i().geom_line();
-% % % 
-% % % i.draw();
-% % 
-% % 
-% % %% very hard to viz this... trying to get at noisy/bad sessions 
-% % %but viewing whole traces not really informative. 
-% % 
-% % % %Try individual subj peri-event so  465 vs 405 diff is more clear?
-% % % 
-% % % for subj= 1:numel(subjects)
-% % %    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-% % %     
-% % %     figure();
-% % %     clear i;
-% % %    
-% % % %     i= gramm('x', data.timeLock, 'y', data.DSblue, 'color', data.r, 'group', data.DStrialIDcum);
-% % % 
-% % %     i= gramm('x', data.timeLock, 'y', data.DSblue, 'group', data.DStrialIDcum);
-% % % 
-% % % 
-% % %     i().facet_wrap(data.rBin);
-% % % 
-% % %     i().geom_line();
-% % %     
-% % %     i.set_color_options('map','brewer3');
-% % % 
-% % %     i.draw();
-% % %     
-% % %     i.update('x', data.timeLock, 'y', data.DSpurple, 'group', data.DStrialIDcum);
-% % %     i().geom_line();
-% % %     i.set_color_options('map','brewer1');
-% % %     
-% % %     i.draw();
-% % % 
-% % %    
-% % % end
-% % %% session means?
-% % 
-% % %as expected, sess with high corrCoef have less distinct peri- 465 and 405
-% % 
-% % %but, doesn't appear totally consistent and hard to tell with this faceting
-% % for subj= 1:numel(subjects)
-% %    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
+% % %save labels of bin edges too 
+% % for bin= 1:numel(e)-1
 % %     
-% %     figure();
-% %     clear i;
-% %   
-% %     i= gramm('x', data.timeLock, 'y', data.DSblue, 'group', data.fileID);
-% % 
-% % 
-% %     i().facet_wrap(data.rBin);
-% % 
-% %     i().stat_summary('type','sem','geom','area');
+% %     ind= [];
+% %     ind= periEventTable.rDStrialRawBin== bin;
 % %     
-% %     i.set_color_options('map','brewer3');
-% % 
-% %     i.draw();
-% %     
-% %     i.update('x', data.timeLock, 'y', data.DSpurple, 'group', data.fileID);
-% %     i().stat_summary('type','sem','geom','area');
-% %     i.set_color_options('map','brewer1');
-% %     
-% %     
-% %     i.set_names('x','time from event (s)','y','z score (ses mean)','color','signal type', 'column', 'corrCoef');
-% %     i.set_title(strcat('subject-',subjects{subj},'-sessionCorr-meanPeriEvent'));
-% %     
-% %     i.draw();
-% %    
-% % 
-% %    
+% %    periEventTable(ind, "rDStrialRawBinEdge")= table(e(bin)); 
 % % end
 % % 
-% % %% all subj
+% % 
+% % 
+% % %% Final improvement: 465 vs 405 z score with r facet
+% % % stagesToPlot= [4,5,7]
+% % 
+% % stagesToPlot= unique(periEventTable.stage);
+% % 
+% % for subj= 1:numel(subjects)
+% %    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
+% %        
+% %    for stage= 1:numel(stagesToPlot)
+% %    
+% %        
+% %         %TODO: much more efficient method would be to stack() and form
+% %         %signalType column to facet color= 405 or 465
+% %            
+% %        
+% %        data2= data(data.stage==stagesToPlot(stage),:);
+% % 
+% %         figure();
+% %         clear i;
+% % 
+% %         
+% %         % draw in order of background-> foreground
+% %          %individual trials -> sessions -> grand mean
+% %          
+% %          %- individual trials; 465
+% %         y= data2.DSblue; 
+% % 
+% %         
+% %         i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+% % 
+% %         i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
+% % 
+% %         i().geom_line();
+% %         
+% %         i().set_color_options('map', mapCustom(3,:));        
+% % 
+% %         i().set_line_options('base_size',0.5); 
+% %         
+% %         i.draw();
+% %         
+% %         %- individual trials; 405
+% %         y= data2.DSpurple; 
+% % 
+% %         i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+% % 
+% %         i().geom_line();
+% %         
+% %         i().set_color_options('map', mapCustom(5,:));        
+% % 
+% %         i().set_line_options('base_size',0.5); 
+% %        
+% %         i.draw();
+% %         
+% %         %- sessions, 465
+% %         y= data2.DSblue; 
+% % 
+% %         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+% %         i().stat_summary('type','sem', 'geom','line');
+% %         
+% %         i().set_color_options('map', mapCustom(2,:));        
+% %         i().set_line_options('base_size',1)        
+% %    
+% %         i.draw();
+% %         
+% %        %- sessions, 405
+% %         y= data2.DSpurple; 
+% % 
+% %         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+% %         i().stat_summary('type','sem', 'geom','line');
+% %         
+% %         i().set_color_options('map', mapCustom(6,:));        
+% %         i().set_line_options('base_size',1)        
+% %    
+% %         i.draw();
+% %         
+% %         %- Grand mean, 465
+% %         y= data2.DSblue; 
+% % 
+% %         i.update('x', data2.timeLock, 'y', y, 'group', []);
+% %                 
+% %         i().stat_summary('type','sem', 'geom','area');
+% %         
+% %         i().set_color_options('map', mapCustom(1,:));        
+% %         i().set_line_options('base_size',2)        
+% %    
+% %         i.draw();
+% %         
+% %         
+% %           %- Grand mean, 405
+% %         y= data2.DSpurple; 
+% % 
+% %         i.update('x', data2.timeLock, 'y', y, 'group', []);
+% %                 
+% %         i().stat_summary('type','sem', 'geom','area');
+% %         
+% %         i().set_color_options('map', mapCustom(7,:));        
+% %         i().set_line_options('base_size',2)        
+% %          
+% %       i.axe_property('YLim',[-5,10]);
+% %       title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
+% %       i.set_title(title);
+% %       i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef raw >');
+% % 
+% %       i.draw();
+% % 
+% %       saveFig(gcf, figPath, title, figFormats)
+% %       
+% %    end 
+% %          
+% % end
+% % 
+% % 
+% % %% - between subjects z plots
+% % 
 % % data= periEventTable;
-% %     
+% % 
+% % for stage= 1:numel(stagesToPlot)
+% % 
+% %     %Between-subj figs
+% %         data2= data(data.stage==stagesToPlot(stage),:);
+% % 
+% % 
+% %             figure();
+% %             clear i;
+% % 
+% % 
+% %             % draw in order of background-> foreground
+% %              %individual trials -> sessions -> grand mean
+% % 
+% %              %- individual trials; 465
+% %             y= data2.DSblue; 
+% % 
+% % 
+% %             i= gramm('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+% % 
+% %             i().facet_wrap(data2.rDStrialRawBinEdge, 'ncols', 5);
+% % 
+% %             i().geom_line();
+% % 
+% %             i().set_color_options('map', mapCustom(3,:));        
+% % 
+% %             i().set_line_options('base_size',0.5); 
+% % 
+% %             i.draw();
+% % 
+% %             %- individual trials; 405
+% %             y= data2.DSpurple; 
+% % 
+% %             i.update('x', data2.timeLock, 'y', y, 'group', data2.DStrialIDcum);
+% % 
+% %             i().geom_line();
+% % 
+% %             i().set_color_options('map', mapCustom(5,:));        
+% % 
+% %             i().set_line_options('base_size',0.5); 
+% % 
+% %             i.draw();
+% % 
+% %             %- sessions, 465
+% %             y= data2.DSblue; 
+% % 
+% %             i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+% %             i().stat_summary('type','sem', 'geom','line');
+% % 
+% %             i().set_color_options('map', mapCustom(2,:));        
+% %             i().set_line_options('base_size',1)        
+% % 
+% %             i.draw();
+% % 
+% %            %- sessions, 405
+% %             y= data2.DSpurple; 
+% % 
+% %             i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+% %             i().stat_summary('type','sem', 'geom','line');
+% % 
+% %             i().set_color_options('map', mapCustom(6,:));        
+% %             i().set_line_options('base_size',1)        
+% % 
+% %             i.draw();
+% % 
+% %             %- Grand mean, 465
+% %             y= data2.DSblue; 
+% % 
+% %             i.update('x', data2.timeLock, 'y', y, 'group', []);
+% % 
+% %             i().stat_summary('type','sem', 'geom','area');
+% % 
+% %             i().set_color_options('map', mapCustom(1,:));        
+% %             i().set_line_options('base_size',2)        
+% % 
+% %             i.draw();
+% % 
+% % 
+% %               %- Grand mean, 405
+% %             y= data2.DSpurple; 
+% % 
+% %             i.update('x', data2.timeLock, 'y', y, 'group', []);
+% % 
+% %             i().stat_summary('type','sem', 'geom','area');
+% % 
+% %             i().set_color_options('map', mapCustom(7,:));        
+% %             i().set_line_options('base_size',2)        
+% % 
+% %           i.axe_property('YLim',[-5,10]);
+% %           title= strcat(subjMode,'-allSubj-stage-',num2str(stagesToPlot(stage)),'-trialCorrRaw-zTraces-DS');
+% %           i.set_title(title);
+% %           i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'trialCorrCoef raw >');
+% % 
+% %           i.draw();
+% % 
+% %           saveFig(gcf, figPath, title, figFormats)
+% % end
+% % 
+% % %% Count of trials per corrcoef bin per session
+% % 
+% % data= periEventTable;
+% % 
+% % %use groupsummary() to compute count
+% % data2= groupsummary(data, ["stage", "subject", "fileID", "rDStrialRawBinEdge"]);%, 'count', "DStrialIDcum");
+% % 
+% % %divide count by num tBins per trial to get count of trials
+% % data2.GroupCount= data2.GroupCount/numel(unique(data.timeLock));
+% % 
+% % 
 % % figure();
 % % clear i;
 % % 
-% % i= gramm('x', data.timeLock, 'y', data.DSblue, 'group', data.fileID);
+% % i= gramm('x', data2.rDStrialRawBinEdge, 'y', data2.GroupCount, 'color', data2.subject);
+% % 
+% % i.facet_wrap(data2.stage);
+% % 
+% % i.geom_point();
 % % 
 % % 
-% % i().facet_wrap(data.rBin);
-% % 
-% % i().stat_summary('type','sem','geom','area');
-% % 
-% % i.set_color_options('map','brewer3');
-% % 
-% % i.draw();
-% % 
-% % i.update('x', data.timeLock, 'y', data.DSpurple, 'group', data.fileID);
-% % i().stat_summary('type','sem','geom','area');
-% % i.set_color_options('map','brewer1');
-% % 
-% % 
-% % i.set_names('x','time from event (s)','y','z score (ses mean)','color','signal type', 'column', 'corrCoef');
-% % i.set_title(strcat('allSubjects','-sessionCorr-meanPeriEvent'));
+% % title= strcat(subjMode,'-allSubject-trialCorrRaw-binCountByStage-DS');
+% % i.set_title(title);
+% % i.set_names('x','corrCoefBin','y','trial count','color','subject', 'column', 'stage');
 % % 
 % % i.draw();
 % % 
-% % %% session means facet by stage, color=r ?
-% % 
-% % % for subj= 1:numel(subjects)
-% % %    data= periEventTable(strcmp(periEventTable.subject, subjects{subj}),:);
-% % %        
-% % %    ind=[];
-% % %    ind= (strcmp(periEventTable.subject, subjects{subj}));
-% % %    
-% % %     figure();
-% % %     clear i;
-% % %     
-% % %      
-% % % %     i= gramm('x', data.timeLock, 'y', data.DSblue, 'group', data.DStrialIDcum, 'color', data.r);
-% % % %     i= gramm('x', data.timeLock, 'y', data.DSblue, 'group', data.fileID, 'color', data.r);
-% % % %     i= gramm('x', data.timeLock, 'y', data.DSblue, 'color', data.r);
-% % % 
-% % %     %cLim error, try with manual subset of whole table?
-% % % %     i= gramm('x', data.timeLock, 'y', data.DSblue, 'group', data.fileID, 'color', data.r);
-% % % 
-% % %     i= gramm('x', data.timeLock, 'y', data.DSblue, 'group', data.fileID, 'color', data.r);
-% % % 
-% % % 
-% % % %     i().facet_wrap(data.stage);
-% % % 
-% % % %     i.geom_line();
-% % %     
-% % % %color not working with stat_summary here?
-% % %     i.stat_summary('type','sem','geom','line');
-% % %     
-% % % 
-% % %     i.draw();
-% % %     
-% % % %     
-% % % %       %cLim error, try with manual subset of whole table?
-% % % %     clear i;
-% % % %     figure();
-% % % %     i= gramm('subset', ind, 'x', periEventTable.timeLock, 'y', periEventTable.DSblue, 'group', periEventTable.fileID, 'color', periEventTable.r);
-% % % % 
-% % % %     i().facet_wrap(periEventTable.stage);
-% % % %     
-% % % %     %     i.geom_line();
-% % % % 
-% % % %     i.stat_summary('type','sem','geom','line');
-% % % %     
-% % % % 
-% % % %     i.draw();
-% % % 
-% % % end
+% % saveFig(gcf, figPath, title, figFormats);
 % % 
 % % 
-% % %% Trying correlation with dff calculated in previous section
-% % % for subj= 1:numel(subjects)
-% % %     for session= 1:numel(subjDataAnalyzed.(subjects{subj}))
-% % %         
-% % %         cutTime= subjData.(subjects{subj})(session).cutTime;
-% % %         currentSubj= subjDataAnalyzed.(subjects{subj}); %easy indexing into subject
-% % % %               going to try on dff calculated by previous section
-% % %         [r, lags]= xcorr(currentSubj(session).photometry.bluedff,currentSubj(session).photometry.purpledff, 'coeff');
-% % %         stem(lags, r);
-% % %         
-% % %        
-% % %         
-% % %         %trying movcorr function
-% % %     [r, p, n]=movcorr(currentSubj(session).photometry.bluedff, currentSubj(session).photometry.purpledff, 400); %sliding 10s pearson
-% % % 
-% % %     figure(figureCount);
-% % %     figureCount= figureCount+1;
-% % %     
-% % %     subplot(4,1,1);
-% % %     plot(cutTime, currentSubj(session).photometry.bluedff, 'b');
-% % %     hold on;
-% % %     title('blue dff');
-% % %     subplot(4,1,2);
-% % %     plot(cutTime, currentSubj(session).photometry.purpledff, 'm');
-% % %     hold on;
-% % %     title('purple dff');
-% % %     subplot(4,1,3);
-% % %     plot(cutTime, r, 'k');
-% % %     title('sliding r')
-% % %     hold on
-% % %     plot([1, cutTime(end)], [0, 0], 'k--');
-% % %     hold off
-% % %     subplot(4,1,4);
-% % %     plot(cutTime,p, 'r');
-% % %     title('p value');
-% % %     hold on
-% % %     plot([1, cutTime(end)], [0.05, 0.05], 'k--');
-% % %     hold off
-% % %     
-% % %     set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving/closing
-% % %     waitforbuttonpress;
-% % %     close;
-% % % 
-% % %     end %end session loop
-% % % end %end subj loop
+% % %% Establish some corrcoef threshold beyond which to call "noisy" or "nosignal" trial
+% % 
+% % thresholdCorrCoef= 0.5;
 % % 
 % % 
-% % %% Create subjDataAnalyzed struct to hold analyzed data
-% % %In this section, we'll initialize a subjDataAnalyzed struct to hold any
-% % %relevant analyzed data separately from raw data. We will populate it with
-% % %some metadata before doing any analyses. This metadata all originates from
-% % %the metadata.xlsx file and the subjData struct generated by
-% % %fpExtractData.m
+% % %% Count of trials beyond threshold per session
 % % 
-% % %Fill with metadata
-% %  for subj= 1:numel(subjects) %for each subject
-% %    for session = 1:numel(subjData.(subjects{subj})) %for each training session this subject completed
-% %        currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-% %        
-% %        experimentName= currentSubj(session).experiment; 
-% %        
-% %        subjDataAnalyzed.(subjects{subj})(session).experiment= currentSubj(session).experiment;
-% %        
-% %        subjDataAnalyzed.(subjects{subj})(session).date= currentSubj(session).date;
-% %        
-% %        subjDataAnalyzed.(subjects{subj})(session).rat= currentSubj(session).rat;
-% %        subjDataAnalyzed.(subjects{subj})(session).fileName= currentSubj(session).fileName;
-% %        subjDataAnalyzed.(subjects{subj})(session).trainDay= currentSubj(session).trainDay;
-% %        subjDataAnalyzed.(subjects{subj})(session).trainStage= currentSubj(session).trainStage;
-% %        subjDataAnalyzed.(subjects{subj})(session).box= currentSubj(session).box;     
-% %        
-% %        %saving raw data here probably makes variable too big/slows things
-% %        %save raw event timestamps too- will be useful for deconvolution later
-% %        subjDataAnalyzed.(subjects{subj})(session).raw.pox= currentSubj(session).pox;
-% %        subjDataAnalyzed.(subjects{subj})(session).raw.out= currentSubj(session).out;
-% %        subjDataAnalyzed.(subjects{subj})(session).raw.lox= currentSubj(session).lox;
-% %        
-% %        %save photometry signals- will be useful for deconvolution later
-% %        subjDataAnalyzed.(subjects{subj})(session).raw.cutTime= currentSubj(session).cutTime;
-% %        subjDataAnalyzed.(subjects{subj})(session).raw.reblue= currentSubj(session).reblue;
-% %        subjDataAnalyzed.(subjects{subj})(session).raw.repurple= currentSubj(session).repurple;
+% % periEventTable(:,'corrThresholdTrial')= table(nan);
 % % 
-% %        
-% %    end %end session loop
-% % end %end subject loop
+% % ind=[];
+% % ind= periEventTable.rDStrialRaw >= thresholdCorrCoef;
+% % 
+% % periEventTable(ind, "rThreshold")= table(1);
+% % 
+% % data= periEventTable(periEventTable.rThreshold==1,:);
+% % 
+% % %use groupsummary() to compute count
+% % data2= groupsummary(data, ["stage", "subject", "fileID", "trainDay", "rThreshold"]);
+% % 
+% % %divide count by num tBins per trial to get count of trials
+% % data2.GroupCount= data2.GroupCount/numel(unique(data.timeLock));
+% % 
+% % 
+% % figure();
+% % clear i;
+% % 
+% % i= gramm('x', data2.trainDay, 'y', data2.GroupCount, 'group', data2.subject, 'color', data2.subject);
+% % 
+% % % i.facet_wrap(data2.stage);
+% % 
+% % i.geom_line();
+% % i.geom_point();
+% % 
+% % 
+% % title= strcat(subjMode,'-allSubject-trialCorrRaw-corrThresholdCount-DS');
+% % i.set_title(title);
+% % % i.set_names('x','corrCoefBin','y','trial count','color','subject', 'column', 'stage');
+% % 
+% % i.draw();
+% % 
+% % saveFig(gcf, figPath, title, figFormats);
+% % 
+% % %% viz distro of this trial by trial corrCoef by subj (and across stages)
+% % %this distro viz doesn't seem to make sense with discrete bins
+% % 
+% % data= periEventTable;
+% % %use groupsummary() to reduce to one observation per trial
+% % data2= groupsummary(data, ["stage", "subject", "fileID", "DStrialIDcum"], 'mean', "rDStrialRaw");
+% % 
+% % 
+% % figure;
+% % clear i;
+% % 
+% % i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialRaw"));
+% % 
+% % i.stat_boxplot();
+% % 
+% % 
+% % title= strcat(subjMode,'-allSubject-trialCorrRaw-distribution-DS');
+% % 
+% % i.set_title(title);
+% % 
+% % i.draw()
+% % 
+% % saveFig(gcf, figPath, title, figFormats);
+% % 
+% % 
+% % 
+% % 
+% % figure;
+% % clear i;
+% % 
+% % i= gramm('x', data2.subject, 'y', data2.("mean_rDStrialRaw"), 'color', data2.stage);
+% % 
+% % 
+% % i.stat_boxplot();
+% % 
+% % title= strcat(subjMode,'-allSubject-trialCorrRaw-distributionByStage-DS');
+% % 
+% % i.set_title(title);
+% % 
+% % i.draw()
+% % 
+% % saveFig(gcf, figPath, title, figFormats);
+% % 

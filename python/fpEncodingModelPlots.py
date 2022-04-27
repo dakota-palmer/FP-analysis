@@ -117,206 +117,207 @@ dfEncoding= dfEncoding.reset_index()
 
 #%% Plot entire cross validation (CV) path (MSE + coefficients)
 
+## commenting out for now due to error with sparse format 
 
-#initialize dfs to collect data between subjs
-msePathAll= pd.DataFrame()
-modelPathAll= pd.DataFrame()
+# #initialize dfs to collect data between subjs
+# msePathAll= pd.DataFrame()
+# modelPathAll= pd.DataFrame()
 
-alphaAll= []
+# alphaAll= []
 
-for subj in dfEncoding.subject.unique():
+# for subj in dfEncoding.subject.unique():
 
     
-    #get data for this subj from df
-    ind= np.where(dfEncoding.subject==subj)
+#     #get data for this subj from df
+#     ind= np.where(dfEncoding.subject==subj)
     
-    dfTemp= dfEncoding.loc[ind].reset_index().copy() #reset index so can just retrieve values with [0]
+#     dfTemp= dfEncoding.loc[ind].reset_index().copy() #reset index so can just retrieve values with [0]
     
-    # model= dfEncoding.loc[ind, 'model_lasso'][0]
+#     # model= dfEncoding.loc[ind, 'model_lasso'][0]
     
-    # group= dfEncoding.loc[ind, 'modelInput'][0]
+#     # group= dfEncoding.loc[ind, 'modelInput'][0]
     
-    # X= dfEncoding.loc[ind, 'X']
+#     # X= dfEncoding.loc[ind, 'X']
     
-    model= dfTemp['model_lasso'][0] 
+#     model= dfTemp['model_lasso'][0] 
     
     
-    group= dfTemp['modelInput'][0][0]
+#     group= dfTemp['modelInput'][0][0]
      
-    X= dfTemp['X'][0][0][0]
-    y= dfTemp['y']
+#     X= dfTemp['X'][0][0][0]
+#     y= dfTemp['y']
     
-    eventVars= dfTemp['eventVars']
-    eventVars= eventVars[0]
+#     eventVars= dfTemp['eventVars']
+#     eventVars= eventVars[0]
 
-    eventVars= eventVars[0]
+#     eventVars= eventVars[0]
     
 
     
-    #collect data from path for this subj, combin single dataset
+#     #collect data from path for this subj, combin single dataset
     
-    #doesn't seem to be giving the full path across all cv's just a mean I guess?
-    #these two give identical results:
+#     #doesn't seem to be giving the full path across all cv's just a mean I guess?
+#     #these two give identical results:
             
-            #error happens when calling model.path
-        #getting sparse error for X? idk why exact same code runs fine in stats script
-    #TODO: fix this?~~~~~~ dense is wasting time ~~~~ this seems VERY slow with dense data
-    #idk why the data look identical between 2 kernels
-    #subj 11 was dtype int32 i think...      
-    #specifically hitting errro with subj 12, 11 was fine (also first)
+#             #error happens when calling model.path
+#         #getting sparse error for X? idk why exact same code runs fine in stats script
+#     #TODO: fix this?~~~~~~ dense is wasting time ~~~~ this seems VERY slow with dense data
+#     #idk why the data look identical between 2 kernels
+#     #subj 11 was dtype int32 i think...      
+#     #specifically hitting errro with subj 12, 11 was fine (also first)
    
-    #could it be due to saving/loading as pkl?
+#     #could it be due to saving/loading as pkl?
     
-    # group.loc[:,X]= group.loc[:,X].sparse.to_dense()
+#     # group.loc[:,X]= group.loc[:,X].sparse.to_dense()
             
             
-    pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y])
-    # pathAlphas, pathCoefs, pathDualGaps= model.path(group.loc[:,X],group.loc[:,y], cv=cv)
+#     pathAlphas, pathCoefs, pathDualGaps = model.path(group.loc[:,X],group.loc[:,y])
+#     # pathAlphas, pathCoefs, pathDualGaps= model.path(group.loc[:,X],group.loc[:,y], cv=cv)
     
-    #ConvergenceWarning:
-  #   C:\Users\Dakota\anaconda3\lib\site-packages\sklearn\linear_model\_coordinate_descent.py:625: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Duality gap: 7.928517767191806, tolerance: 4.217718462234285
-  # model = cd_fast.enet_coordinate_descent_multi_task(
+#     #ConvergenceWarning:
+#   #   C:\Users\Dakota\anaconda3\lib\site-packages\sklearn\linear_model\_coordinate_descent.py:625: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations. Duality gap: 7.928517767191806, tolerance: 4.217718462234285
+#   # model = cd_fast.enet_coordinate_descent_multi_task(
     
-    #nested for some reason in this script?? not an issue in stats script...
-    pathCoefs= pathCoefs[0] 
+#     #nested for some reason in this script?? not an issue in stats script...
+#     pathCoefs= pathCoefs[0] 
     
-    msePath= pd.DataFrame(model.mse_path_)
-    msePath= msePath.reset_index().melt(id_vars= 'index', value_vars=msePath.columns, var_name='cvIteration', value_name='MSE')
-    msePath= msePath.rename(columns={"index": "alphaCount"})
+#     msePath= pd.DataFrame(model.mse_path_)
+#     msePath= msePath.reset_index().melt(id_vars= 'index', value_vars=msePath.columns, var_name='cvIteration', value_name='MSE')
+#     msePath= msePath.rename(columns={"index": "alphaCount"})
     
-    msePath['alpha']= np.nan
+#     msePath['alpha']= np.nan
     
-    msePath['alpha']= model.alphas_[msePath.alphaCount]
+#     msePath['alpha']= model.alphas_[msePath.alphaCount]
     
     
-    #initialize df to store path
-    modelPath= pd.DataFrame()
-    modelPath['alpha']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['coef']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['dualGap']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['modelCount']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['predictor']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath['eventType']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
-    modelPath[:]= np.nan
+#     #initialize df to store path
+#     modelPath= pd.DataFrame()
+#     modelPath['alpha']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['coef']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['dualGap']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['modelCount']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['predictor']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath['eventType']= np.empty(pathCoefs.shape[1]*(pathCoefs.shape[0]))
+#     modelPath[:]= np.nan
     
        
-    #fill df with data from each iteration along the path
-    ind= np.arange(0,(pathCoefs.shape[0]))
-    for thisModel in range(0,len(pathAlphas)):
+#     #fill df with data from each iteration along the path
+#     ind= np.arange(0,(pathCoefs.shape[0]))
+#     for thisModel in range(0,len(pathAlphas)):
     
-        pathAlphas_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
-        pathAlphas_lasso[:]= pathAlphas[thisModel]
+#         pathAlphas_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
+#         pathAlphas_lasso[:]= pathAlphas[thisModel]
     
-        pathDualGaps_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
-        pathDualGaps_lasso[:]= pathDualGaps[thisModel]
+#         pathDualGaps_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
+#         pathDualGaps_lasso[:]= pathDualGaps[thisModel]
         
-        modelCount_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
-        modelCount_lasso[:]= thisModel
+#         modelCount_lasso = np.empty(pathCoefs.shape[0]) #repeat array so each coef has corresponding alpha
+#         modelCount_lasso[:]= thisModel
         
-        predictor_lasso= group.columns[X] #np.arange(0,len(pathCoefs[:,thisModel]))
-        
-    
-        pathCoefs_lasso= pathCoefs[:,thisModel]
+#         predictor_lasso= group.columns[X] #np.arange(0,len(pathCoefs[:,thisModel]))
         
     
-        modelPath.loc[ind,'alpha']= pathAlphas_lasso
-        modelPath.loc[ind,'coef']= pathCoefs_lasso
-        modelPath.loc[ind,'dualGap']= pathDualGaps_lasso
-        modelPath.loc[ind, 'modelCount']= modelCount_lasso
-        modelPath.loc[ind, 'predictor']= predictor_lasso
+#         pathCoefs_lasso= pathCoefs[:,thisModel]
         
-        #go through more specifically and label eventType of each predictor
-        eventType_lasso= np.empty(pathCoefs.shape[0])
-        eventType_lasso= pd.Series(eventType_lasso)#,index=predictor_lasso)
+    
+#         modelPath.loc[ind,'alpha']= pathAlphas_lasso
+#         modelPath.loc[ind,'coef']= pathCoefs_lasso
+#         modelPath.loc[ind,'dualGap']= pathDualGaps_lasso
+#         modelPath.loc[ind, 'modelCount']= modelCount_lasso
+#         modelPath.loc[ind, 'predictor']= predictor_lasso
+        
+#         #go through more specifically and label eventType of each predictor
+#         eventType_lasso= np.empty(pathCoefs.shape[0])
+#         eventType_lasso= pd.Series(eventType_lasso)#,index=predictor_lasso)
     
     
-        for eventCol in range(len(eventVars)):
-            indEvent= group.columns[X].str.contains(eventVars[eventCol])
+#         for eventCol in range(len(eventVars)):
+#             indEvent= group.columns[X].str.contains(eventVars[eventCol])
             
-            # indEvent= group[X].columns.str.contains(eventVars[eventCol])
+#             # indEvent= group[X].columns.str.contains(eventVars[eventCol])
 
     
-            eventType_lasso[indEvent]= eventVars[eventCol]
+#             eventType_lasso[indEvent]= eventVars[eventCol]
     
-            #assigning .values since i made this a series and index doesn't align
-        modelPath.loc[ind, 'eventType']= eventType_lasso.values
+#             #assigning .values since i made this a series and index doesn't align
+#         modelPath.loc[ind, 'eventType']= eventType_lasso.values
     
-        ind= ind+(pathCoefs.shape[0])
-    
-    
-    #save data from this subj into single df using concat()
-    
-    msePath['subject']= subj
-    
-    msePathAll= pd.concat([msePathAll, msePath], axis=0)
-    
-    modelPath['subject']= subj
-    
-    modelPathAll= pd.concat([modelPathAll, modelPath], axis=0)
-    
-    alphaAll.append(model.alpha_)
-    
-    #reset index for unique
-    msePathAll= msePathAll.reset_index()
-    modelPathAll= modelPathAll.reset_index()
+#         ind= ind+(pathCoefs.shape[0])
     
     
-#%% --plot after combining data between subjs
+#     #save data from this subj into single df using concat()
+    
+#     msePath['subject']= subj
+    
+#     msePathAll= pd.concat([msePathAll, msePath], axis=0)
+    
+#     modelPath['subject']= subj
+    
+#     modelPathAll= pd.concat([modelPathAll, modelPath], axis=0)
+    
+#     alphaAll.append(model.alpha_)
+    
+#     #reset index for unique
+#     msePathAll= msePathAll.reset_index()
+#     modelPathAll= modelPathAll.reset_index()
+    
+    
+# #%% --plot after combining data between subjs
 
- # #-MSE path + coefficient path
-f, ax = plt.subplots(2,1)
+#  # #-MSE path + coefficient path
+# f, ax = plt.subplots(2,1)
 
-#mse
-g=sns.scatterplot(ax=ax[0], data=msePathAll, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
-g=sns.lineplot(ax=ax[0], data=msePathAll, x='alpha', y='MSE', hue='subject') #subj mean
+# #mse
+# g=sns.scatterplot(ax=ax[0], data=msePathAll, x='alpha', y='MSE', hue='cvIteration', palette='Blues')
+# g=sns.lineplot(ax=ax[0], data=msePathAll, x='alpha', y='MSE', hue='subject') #subj mean
 
-# g=sns.lineplot(ax=ax[0], data=msePathAll, x='alpha', y='MSE', color='black')
-# plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+# # g=sns.lineplot(ax=ax[0], data=msePathAll, x='alpha', y='MSE', color='black')
+# # plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
 
-# plt.axvline(alphaAll, color='black', linestyle="--", linewidth=3, alpha=0.5) # TODO: chosen alpha line for each subj
+# # plt.axvline(alphaAll, color='black', linestyle="--", linewidth=3, alpha=0.5) # TODO: chosen alpha line for each subj
 
-ax[0].set_xscale('log')
-ax[0].set_xlabel('log alpha')
-
-
-g.set_xlabel('alpha')
-g.set_ylabel('MSE')
-# g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
-g.set(xlabel='alpha', ylabel='MSE')
-
-#coef path
-# g=sns.lineplot(ax= ax[1], data=modelPathAll, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
-# g=sns.lineplot(ax= ax[1], data=modelPathAll,  x='alpha', y='coef', hue='eventType', palette='dark')
-# g=sns.lineplot(ax= ax[1], data=modelPathAll, estimator=None, units='predictor', x='alpha', y='coef', style='subject', hue='eventType', alpha=0.05)
-
-g=sns.lineplot(ax= ax[1], data=modelPathAll,  x='alpha', y='coef', hue='eventType', style='subject') #, palette='dark')
+# ax[0].set_xscale('log')
+# ax[0].set_xlabel('log alpha')
 
 
-# plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
-ax[1].set_xscale('log')
-ax[1].set_xlabel('log alpha')
+# g.set_xlabel('alpha')
+# g.set_ylabel('MSE')
+# # g.set(title=('subj-'+str(subj)+'-LASSO MSE across CV folds-'+modeCue+'-trials-'+modeSignal))
+# g.set(xlabel='alpha', ylabel='MSE')
 
-# g.set(title=('allSubj-'+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
-g.set(ylabel='coef')
-# ax.set_xscale('log') #log scale if wanted
+# #coef path
+# # g=sns.lineplot(ax= ax[1], data=modelPathAll, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
+# # g=sns.lineplot(ax= ax[1], data=modelPathAll,  x='alpha', y='coef', hue='eventType', palette='dark')
+# # g=sns.lineplot(ax= ax[1], data=modelPathAll, estimator=None, units='predictor', x='alpha', y='coef', style='subject', hue='eventType', alpha=0.05)
 
-saveFigCustom(f, 'allSubj-'+'-lassoValidation-',savePath)#+modeCue+'-trials-'+modeSignal, savePath)
+# g=sns.lineplot(ax= ax[1], data=modelPathAll,  x='alpha', y='coef', hue='eventType', style='subject') #, palette='dark')
 
-#%% - Side by side plot of coefficient path by event type 
 
-#TODO: add a timeShift for coefficients? unclear if early vs late effects
+# # plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
+# ax[1].set_xscale('log')
+# ax[1].set_xlabel('log alpha')
 
-#%% Side by side plot of kernels
+# # g.set(title=('allSubj-'+'-LASSO Coef. Path-'+modeCue+'-trials-'+modeSignal))
+# g.set(ylabel='coef')
+# # ax.set_xscale('log') #log scale if wanted
 
-# g= sns.FacetGrid(data= modelPathAll, row= 'eventType', hue='eventType')
+# saveFigCustom(f, 'allSubj-'+'-lassoValidation-',savePath)#+modeCue+'-trials-'+modeSignal, savePath)
 
-# g.map_dataframe(sns.lineplot, x='alpha', y='coef', style='subject', alpha=0.5)    
+# #%% - Side by side plot of coefficient path by event type 
 
-# g.map_dataframe(sns.lineplot, x='alpha', y='coef', linewidth=2)            
+# #TODO: add a timeShift for coefficients? unclear if early vs late effects
 
-# g.axes[0][0].legend(kernelsAll.subject.unique())
+# #%% Side by side plot of kernels
 
-# g.add_legend()
+# # g= sns.FacetGrid(data= modelPathAll, row= 'eventType', hue='eventType')
+
+# # g.map_dataframe(sns.lineplot, x='alpha', y='coef', style='subject', alpha=0.5)    
+
+# # g.map_dataframe(sns.lineplot, x='alpha', y='coef', linewidth=2)            
+
+# # g.axes[0][0].legend(kernelsAll.subject.unique())
+
+# # g.add_legend()
 
 
 #%%-- Retrieve Kernels 

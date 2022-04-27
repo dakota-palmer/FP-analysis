@@ -75,3 +75,5 @@ if strcmp(subjMode,'experimental')
     periEventTable= periEventTable(ind,:);
     
 end
+
+subjects= unique(periEventTable.subject);
