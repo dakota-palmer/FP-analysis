@@ -137,6 +137,11 @@ for subj= 1:numel(subjects)
             NStrialIDcum= nan(periCueFrames, numTrials); 
 
             
+            %behavior during trial
+                %PE latency relative to cue onset
+            poxDSrel= nan(periCueFrames, numTrials);
+            poxNSrel= nan(periCueFrames, numTrials);
+            
             %reward info
             pumpID= nan(periCueFrames, numTrials);
             rewardID= cell(periCueFrames, numTrials);
@@ -159,6 +164,13 @@ for subj= 1:numel(subjects)
                 DSpurpleLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxpurple(:,:,cue);
                 DStrialID(trialInd,cue)= cue;
                 
+                    %saving first PE only (mainly just for latency correlation analysis)
+                if ~isempty( currentSubj(includedSession).behavior.poxDSrel{cue})
+                    poxDSrel(trialInd, cue)= currentSubj(includedSession).behavior.poxDSrel{cue}(1);
+                else
+                     poxDSrel(trialInd, cue)= nan;
+                end
+                    
                 DStrialIDcum(trialInd,cue)= DStrialCountCum;
                 DStrialCountCum= DStrialCountCum+1;
                 
@@ -182,6 +194,15 @@ for subj= 1:numel(subjects)
                     NSblueLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxblue(:,:,cue);
                     NSpurpleLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxpurple(:,:,cue);
                 end
+                
+                    %get first NS pox only for latency corr
+                if ~isempty( currentSubj(includedSession).behavior.poxNSrel{cue})
+                    poxNSrel(trialInd, cue)= currentSubj(includedSession).behavior.poxNSrel{cue}(1);
+                else
+                     poxNSrel(trialInd, cue)= nan;
+                end
+                    
+                
                 NStrialID(trialInd,cue)= cue;
                 
                 NStrialIDcum(trialInd,cue)= NStrialCountCum;
@@ -232,6 +253,8 @@ for subj= 1:numel(subjects)
             periEventTable.DSblueLox(tsInd)= DSblueLox(:);
             periEventTable.DSpurpleLox(tsInd)= DSpurpleLox(:);
             
+            periEventTable.poxDSrel(tsInd)= poxDSrel(:);
+            
             periEventTable.pumpID(tsInd)= pumpID(:);
             periEventTable.rewardID(tsInd)= rewardID(:);
 
@@ -247,6 +270,9 @@ for subj= 1:numel(subjects)
             periEventTable.NSpurplePox(tsInd)= NSpurplePox(:);
             periEventTable.NSblueLox(tsInd)= NSblueLox(:);
             periEventTable.NSpurpleLox(tsInd)= NSpurpleLox(:);
+            
+            periEventTable.poxNSrel(tsInd)= poxNSrel(:);
+
             
             time= repmat(currentSubj(includedSession).periDS.timeLock(:),[1,size(DSblue,2)]);
             periEventTable.timeLock(tsInd)= time(:); 
