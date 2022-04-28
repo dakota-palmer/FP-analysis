@@ -557,6 +557,159 @@ for stage= 1:numel(stagesToPlot)
 end
 
 
+%% Statistical comparison of 465nm and 405nm AUC
+
+%Run a T-Test for each session comparing 465nm and 405nm AUCs from all
+%trials.
+
+%Easy prediction should lend itself to straightforward exclusion:
+%if no signal, mean 465 and 405 AUC are not *significantly* different (delta= 0)
+
+%initialize new col with nan
+corrTable(:, "aucTtestH")= {nan};
+
+corrTable(:, "aucTtestP")= {nan};
+
+allSessions= unique(corrTable.fileID);  
+
+for session = 1:numel(allSessions)
+
+    %subset data by fileID
+    ind= [];
+    ind= corrTable.fileID== allSessions(session);
+    
+    data= corrTable(ind, :);
+    
+    %Paired samples t test (same subject, same session so not independent samples)
+    
+    y1=[]; y2=[];
+    
+    y1= data.aucDSblueAll{:};
+    y2= data.aucDSpurpleAll{:};
+    
+
+    h=[]; p=[]; ci=[]; stats=[];
+    
+    alpha= 0.05;
+    
+    [h,p,ci,stats]= ttest(y1,y2, 'Alpha', alpha);
+         
+%      The result h is 1 if the test rejects the null hypothesis
+    
+    corrTable(ind, "aucTtestH")= {h};
+    
+    corrTable(ind, "aucTtestP")= {p};
+    
+    
+end
+
+
+%% Plot AUC ttest results
+
+
+% individual subj
+for subj= 1:numel(subjects)
+   data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
+       
+   data2= data;
+%    for stage= 1:numel(stagesToPlot)         
+       
+%       data2= data(data.stage==stagesToPlot(stage),:);
+
+      figure;
+      clear i;
+      
+      i= gramm('x', data2.trainDay, 'y', data2.aucTtestP);
+            
+      i.geom_point();
+
+      i().geom_hline('yintercept', alpha, 'style', 'k--'); 
+      
+      i.draw();      
+      
+      
+      i.axe_property('YLim',[0,1]);
+      title= strcat(subjMode,'-subject-',subjects{subj},'allStages-','-auc-tTestP-sessions-DS');
+      i.set_title(title);
+      i.set_names('x','train day','y','AUC 465v405 p','color','signal type');
+
+      i.draw();
+
+      saveFig(gcf, figPath, title, figFormats)
+      
+       
+%    end
+
+
+% by stage
+ data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
+       
+   data2= data;
+%    for stage= 1:numel(stagesToPlot)         
+       
+%       data2= data(data.stage==stagesToPlot(stage),:);
+
+      figure;
+      clear i;
+      
+      i= gramm('x', data2.trainDay, 'y', data2.aucTtestP);
+      
+      i.facet_wrap(data2.stage);
+      
+      i.geom_point();
+%       i.geom_line();
+      i().geom_hline('yintercept', alpha, 'style', 'k--'); 
+      
+      i.draw();
+     
+      
+      i.axe_property('YLim',[0,1]);
+      title= strcat(subjMode,'-subject-',subjects{subj},'-byStage-','-auc-tTest-sessions-DS');
+      i.set_title(title);
+      i.set_names('x','train day','y','AUC 465v405 p','color','signal type');
+
+%       i.axe_property('YLim',[-20,20]);
+
+      i.draw();
+
+      saveFig(gcf, figPath, title, figFormats)
+      
+
+end
+
+%% plot AUC ttest between subj 
+
+data= corrTable;
+
+
+figure;
+  clear i;
+
+  i= gramm('x', data.trainDay, 'y', data.aucTtestP, 'color', data.subject);
+
+%       i.facet_wrap(data2.stage);
+
+  i.geom_point();
+  i.geom_line();
+  i().geom_hline('yintercept', alpha, 'style', 'k--'); 
+
+  i.draw();
+
+  %mean btwn subj
+  i.update('x', data.trainDay, 'y', data.aucTtestP, 'color', []);
+
+  i.stat_summary('type', 'sem', 'geom', 'area');
+  
+  i().set_color_options('chroma', 2);        
+
+  i.axe_property('YLim',[0,1]);
+  title= strcat(subjMode,'-allSubj-byStage-','-auc-tTest-sessions-DS');
+  i.set_title(title);
+  i.set_names('x','train day','y','AUC 465v405 p','color','signal type');
+
+  i.draw();
+
+  saveFig(gcf, figPath, title, figFormats)
 
 %% Session corrcoef stuff
 % %% ----- session corrCoef stuff:

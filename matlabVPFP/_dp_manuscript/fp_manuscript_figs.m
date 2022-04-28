@@ -22,8 +22,8 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_
 %% Choose whether to plot experimental or control subjects
 
 % subjMode= 'experimental' or 'control
-subjMode='experimental';
-% subjMode='control';
+% subjMode='experimental';
+subjMode='control';
 
 %% Create periEventTable
 fp_manuscript_tidyTable
@@ -54,6 +54,9 @@ fp_manuscript_periEventTraces();
 
 %% make variable reward plots
 fp_manuscript_variableReward();
+
+
+%% ------------------ older stuff follows: --------------
 
 %% load encoding model output 
 

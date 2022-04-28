@@ -1,5 +1,15 @@
 %
 
+%% Fig format change
+
+%dp 2022-04-28 suddenly hitting errors when saving .figs
+% Error using save
+% Error closing file
+
+%could save as  mat v 7.3 but seems to makes very large files and takes forever
+
+figFormats = {'.png'}
+
 %% Use GRAMM to make plots
 
 %% Mean peri-DS by stage
@@ -27,7 +37,10 @@ i.axe_property('YLim',[-1,4]);
 %draw the actual plot
 i.draw();
 
-saveFig(gcf, figPath, 'allSubj-periDS-allStages', figFormats)
+title= strcat(subjMode, 'allSubj-periDS-allStages');
+
+saveFig(gcf, figPath, title, figFormats);
+
 
 %% Mean DS vs NS by stage
 %subset specific data to plot
@@ -105,7 +118,12 @@ i.draw();
 % i.stat_summary('type','sem','geom','area');
 % i.draw();
 
-saveFig(gcf, figPath, 'allSubj-periDSvsNS-allStages', figFormats)
+title= strcat(subjMode, 'allSubj-periDSvsNS-allStages');
+
+% hitting error specifically with this fig 4/27/22
+saveFig(gcf, figPath, title, figFormats); 
+
+
 
 
 %% DS vs NS AUC (Figure 1)s
@@ -467,7 +485,9 @@ i.axe_property('XLim',[0,max(data.timeLock)]);
 %draw the actual plot
 i.draw();
 
-saveFig(gcf, figPath, 'allSubj-periCueAucCum', figFormats);
+title= strcat(subjMode, '-allSubj-periCueAucCum');
+
+saveFig(gcf, figPath, title, figFormats);
 
 %% ------------------------------PLOT of AUC data
 
@@ -527,7 +547,9 @@ i.axe_property('XLim',[0,max(data.timeLock)]);
 %draw the actual plot
 i.draw();
 
-saveFig(gcf, figPath, 'allSubj-periCueAucCumAbs', figFormats);
+title= strcat(subjMode, 'allSubj-periCueAucCumAbs');
+
+saveFig(gcf, figPath, title, figFormats);
 
 
 %% --------- Bar plot of single AUC values
@@ -573,13 +595,14 @@ i.set_names('x','time from event (s)','y','AUC (of z-score)','color','trialType'
 i.set_title('Peri-Cue: AUC');
 
 %set y axes limits manually
-i.axe_property('YLim',[-1,5]);
+i.axe_property('YLim',[-2,10]);
 
 %draw the actual plot
 i.draw();
 
-saveFig(gcf, figPath, 'allSubj-periCueAucCum-Bar', figFormats);
+title= strcat(subjMode, 'allSubj-periCueAucCum-Bar');
 
+saveFig(gcf, figPath, title, figFormats);
 
 
 %% Stage 7 peri-Cue vs peri-Pox vs peri-Lox
@@ -621,8 +644,9 @@ i.set_title('stage 7');
 
 i.draw();
 
+title= strcat(subjMode, 'allSubj-periEvent-stage7');
 
-saveFig(gcf, figPath, 'allSubj-periEvent-stage7', figFormats)
+saveFig(gcf, figPath, title, figFormats);
 
 %% Figure 2: DS vs NS Peri event Z + AUC bar
 
@@ -718,7 +742,10 @@ i(2,1).axe_property('YLim',[-1,5]);
 %draw the actual plot
 i.draw();
 
-saveFig(gcf, figPath, '_figure2-allSubj-periCue', figFormats)
+title= strcat(subjMode, '_figure2-allSubj-periCue');
+
+saveFig(gcf, figPath, title, figFormats);
+
 
 %% Stat comparison of auc conditions
 stagesToPlot= [5];
@@ -825,7 +852,13 @@ for subj= 1:numel(subjects)
 %     i.set_title('stage 7');
 
 %     i.draw();
-    saveFig(gcf, figPath, strcat(subjects{subj},'-periEvent-allStages'), figFormats)
+
+
+
+    title= strcat(subjMode,'-subject-', subjects{subj},'-periEvent-allStages');
+
+    saveFig(gcf, figPath, title, figFormats);
+
 end
 
 %% Close examination of sessions prior to encoding model
@@ -905,7 +938,11 @@ for subj= 1:numel(subjects)
     % i.stat_summary('type','sem','geom','area');
     % i.draw();
 
-    saveFig(gcf, figPath, strcat('subject-',subjects{subj},'-periDSvsNS-stagesToPlot-allSess'), figFormats)
+    title= strcat(subjMode,'-subject-', subjects{subj},'-periDSvsNS-stagesToPlot-allSess');
+
+    saveFig(gcf, figPath, title, figFormats);
+
+    
 end
 
 
