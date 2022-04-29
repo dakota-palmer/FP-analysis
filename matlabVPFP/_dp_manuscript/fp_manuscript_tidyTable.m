@@ -289,4 +289,7 @@ for subj= 1:numel(subjects)
 end %end subj loop
 
 
+%save an 'index' column for easy reassignment of new values into table
+periEventTable(:,"index")= table([1:size(periEventTable,1)]');
+
 
