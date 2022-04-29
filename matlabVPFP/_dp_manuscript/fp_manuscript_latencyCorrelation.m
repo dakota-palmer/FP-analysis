@@ -345,21 +345,77 @@ saveFig(gcf, figPath, title, figFormats);
 %% -- Statistical comparison (ANOVA) 
 
 ind=[];
-ind= (latencyCorrOutputTable.stage==stagesToPlot);
+ind= (latencyCorrInputTable.stage==stagesToPlot);
 
-data= latencyCorrOutputTable(ind,:);
+data= latencyCorrInputTable(ind,:);
 
 % 2 way anova or lmm for shuffled vs real signal 
 % (is there interaction with time; if not then no need for single timestamp comparisons) 
 
-%Fit 
+%--Fit lme of y=latency with fixed effects 1)time 2) ordered fp 3) shuffled fp
+%also interaction of time*fp signals
 
-% lme= fitlme(data, '
+lme1= fitlme(data, 'poxDSrel~ (timeLock:DSblue) + (timeLock:DSblueShuffled)');
 
-Fit a linear mixed-effects model for miles per gallon in the city, with fixed effects for horsepower, and uncorrelated random effect for intercept and horsepower grouped by the engine type.
+lme1
 
-lme = fitlme(tbl,'CityMPG~Horsepower+(1|EngineType)+(Horsepower-1|EngineType)');
+% 
+% Formula:
+%     poxDSrel ~ 1 + DSblue:timeLock + timeLock:DSblueShuffled
+% 
+% Model fit statistics:
+%     AIC           BIC           LogLikelihood    Deviance  
+%     1.1695e+06    1.1695e+06    -5.8474e+05      1.1695e+06
+% 
+% Fixed effects coefficients (95% CIs):
+%     Name                               Estimate     SE           tStat     DF            pValue        Lower         Upper    
+%     {'(Intercept)'            }           4.1096    0.0060098    683.81    2.3504e+05             0*        4.0978       4.1214
+%     {'DSblue:timeLock'        }         0.015901    0.0013139    12.102    2.3504e+05    1.0508e-33*      0.013326     0.018476
+%     {'timeLock:DSblueShuffled'}        0.0014651    0.0014075    1.0409    2.3504e+05       0.29791    -0.0012936    0.0042237
+    
+    
+% --add random intercept for subject
+lme2= fitlme(data, 'poxDSrel~ (timeLock:DSblue) + (timeLock:DSblueShuffled) + (1|subject)');
 
+lme2
+
+% Formula:
+%     poxDSrel ~ 1 + DSblue:timeLock + timeLock:DSblueShuffled + (1 | subject)
+% 
+% Model fit statistics:
+%     AIC           BIC           LogLikelihood    Deviance  
+%     1.1316e+06    1.1317e+06    -5.658e+05       1.1316e+06
+% 
+% Fixed effects coefficients (95% CIs):
+%     Name                               Estimate     SE           tStat     DF            pValue        Lower          Upper    
+%     {'(Intercept)'            }           4.0929      0.39609    10.333    2.3504e+05    5.0498e-25*         3.3166       4.8692
+%     {'DSblue:timeLock'        }         0.015392    0.0012126    12.693    2.3504e+05    6.6099e-37*       0.013015     0.017768
+%     {'timeLock:DSblueShuffled'}        0.0023068    0.0012986    1.7764    2.3504e+05      0.075669    -0.00023839    0.0048519
+
+
+%-- add fp signal and time as independent effects
+lme3= fitlme(data, 'poxDSrel~ timeLock + DSblue + DSblueShuffled + (timeLock:DSblue) + (timeLock:DSblueShuffled) + (1|subject)');
+
+lme3
+
+% Formula:
+%     poxDSrel ~ 1 + DSblue*timeLock + timeLock*DSblueShuffled + (1 | subject)
+% 
+% Model fit statistics:
+%     AIC           BIC           LogLikelihood    Deviance  
+%     1.0819e+06    1.0819e+06    -5.4092e+05      1.0818e+06
+% 
+% Fixed effects coefficients (95% CIs):
+%     Name                               Estimate      SE           tStat       DF            pValue        Lower         Upper     
+%     {'(Intercept)'            }            4.2644      0.32086      13.291    2.3504e+05    2.7172e-40*        3.6355        4.8932
+%     {'DSblue'                 }        -0.0010542    0.0042038    -0.25077    2.3504e+05       0.80199    -0.0092936     0.0071852
+%     {'timeLock'               }           0.38197    0.0016252      235.03    2.3504e+05             0*       0.37878       0.38515
+%     {'DSblueShuffled'         }          0.042788    0.0039676      10.784    2.3504e+05    4.1409e-27*      0.035012      0.050565
+%     {'DSblue:timeLock'        }         0.0038051    0.0011641      3.2687    2.3504e+05     0.0010807*     0.0015235     0.0060868
+%     {'timeLock:DSblueShuffled'}        -0.0063584    0.0011748     -5.4126    2.3504e+05    6.2191e-08*   -0.0086609    -0.0040559
+
+
+%% -- There is a time x fp interaction, so follow-up with individual timestamp comparisons?
 
 %% TODO: Time from PE ? (is there ramping prior to PE that is significant? as opposed to cue-elicited?)
 
