@@ -5,20 +5,20 @@
 
 %% Custom colormap for plots
 
-%green and purple %3 levels each, dark to light extremes + neutral middle
-mapCustom= [ 27,120,55;
-            127,191,123;
-            217,240,211;
-            247,247,247
-            231,212,232
-            175,141,195;
-            118,42,131;
-
-           ];
-
-
-        mapCustom= mapCustom/255;
-
+% %green and purple %3 levels each, dark to light extremes + neutral middle
+% mapCustom= [ 27,120,55;
+%             127,191,123;
+%             217,240,211;
+%             247,247,247
+%             231,212,232
+%             175,141,195;
+%             118,42,131;
+% 
+%            ];
+% 
+% 
+%         mapCustom= mapCustom/255;
+% 
 
 %% ----------------- Session Correlation -----------------------------------
 % ------ Instead of whole raw trace, run Corr of concatenated trial-by-trial data  ------
@@ -142,7 +142,7 @@ for subj= 1:numel(subjects) %for each subject
         
 %         test2= corr(y1,y2);
         
-        currentSubj(session).periCueCorrelation= corr(y1,y2);
+        currentSubj(session).periCueCorrelation= corr(y1,y2, 'rows','complete'); %complete rows will drop rows w nan
 
          rPeriCue= [rPeriCue, currentSubj(session).periCueCorrelation(1,1)];
 
@@ -163,6 +163,12 @@ for subj= 1:numel(subjects) %for each subject
          corrTable(sesInd,"stage")= table(currentSubj(session).trainStage);
          
          corrTable(sesInd,'subject')= {subjects{subj}};
+         
+         if any(strcmp(subjects{subj},controlSubj))
+             corrTable(sesInd,'subjType')= {'control'};
+         else
+             corrTable(sesInd,'subjType')= {'experimental'};
+         end
          
          corrTable(sesInd, 'reblue')= {currentSubj(session).raw.reblue};
          corrTable(sesInd, 'repurple')= {currentSubj(session).raw.repurple};
@@ -190,6 +196,128 @@ for subj= 1:numel(subjects) %for each subject
    
    end %end session loop
 end %end subject loop
+
+
+%% -- New session corrCoef stuff -----------------
+
+%% ----- session corrCoef stuff:
+
+%% Plot CDF of session coefficients  
+% viz distro of this trial by trial corrCoef by subj (and across stages)
+
+data= corrTable;
+
+figure;
+clear i;
+
+% - Individual subjects
+i= gramm('x', data.("r"), 'color', data.subjType, 'lightness', data.subject);
+
+% i.facet_wrap(data.stage);
+
+i.stat_bin('normalization','cdf','geom','stairs');
+
+i().set_color_options('lightness_range', lightnessRangeSubj) 
+i().set_line_options('base_size', linewidthSubj)
+
+i.draw();
+
+% -Between subject mean
+i.update('x', data.("r"), 'color', data.subjType, 'lightness', []);
+
+i.stat_bin('normalization','cdf','geom','stairs');
+
+i().set_color_options('lightness_range', lightnessRangeGrand) 
+i().set_line_options('base_size', linewidthGrand)
+
+title= strcat(subjMode,'-sessionCorr-Distribution-cdf-DS');
+
+i.set_title(title);
+
+i.set_names('x','session corrCoef(peri-DS concat)', 'color','subj type');
+
+i.draw();
+
+saveFig(gcf, figPath, title, figFormats);
+
+%% Facet by stage
+
+data= corrTable;
+
+figure;
+clear i;
+
+% - Individual subjects
+i= gramm('x', data.("r"), 'color', data.subjType, 'lightness', data.subject);
+
+i.facet_wrap(data.stage);
+
+i.stat_bin('normalization','cdf','geom','stairs');
+
+i().set_color_options('lightness_range', lightnessRangeSubj) 
+i().set_line_options('base_size', linewidthSubj)
+
+i.draw();
+
+% -Between subject mean
+i.update('x', data.("r"), 'color', data.subjType, 'lightness', []);
+
+i.stat_bin('normalization','cdf','geom','stairs');
+
+i().set_color_options('lightness_range', lightnessRangeGrand) 
+i().set_line_options('base_size', linewidthGrand)
+
+title= strcat(subjMode,'-sessionCorr-Distribution-byStage-cdf-DS');
+
+i.set_title(title);
+
+i.set_names('x','session corrCoef(peri-DS concat)', 'color','subj type');
+
+i.draw();
+
+saveFig(gcf, figPath, title, figFormats);
+
+
+%% -- hist
+
+figure;
+clear i;
+
+% - Individual subjects
+i= gramm('x', data.("r"), 'color', data.subjType, 'lightness', data.subject);
+
+% i.facet_wrap(data.stage);
+
+i.stat_bin('normalization','probability','fill','transparent');
+
+% i.stat_bin('fill','transparent');
+
+
+i().set_color_options('lightness_range', lightnessRangeSubj) 
+i().set_line_options('base_size', linewidthSubj)
+
+i.draw();
+
+% -Between subject mean
+i.update('x', data.("r"), 'color', data.subjType, 'lightness', []);
+
+i.stat_bin('normalization','probability','fill','transparent');
+% i.stat_bin('fill','transparent');
+
+
+i().set_color_options('lightness_range', lightnessRangeGrand) 
+i().set_line_options('base_size', linewidthGrand)
+
+title= strcat(subjMode,'-sessionCorr-Distribution-Hist-DS');
+i.set_title(title);
+i.set_names('x','session corrCoef(peri-DS concat)', 'color','subj type');
+
+i.draw();
+
+saveFig(gcf, figPath, title, figFormats);
+
+
+%% -- AUC stuff
 
 %% Viz AUC 465 v 405nm across sessions
 
@@ -578,6 +706,7 @@ for session = 1:numel(allSessions)
     ind= [];
     ind= corrTable.fileID== allSessions(session);
     
+    data=[];
     data= corrTable(ind, :);
     
     %Paired samples t test (same subject, same session so not independent samples)
@@ -711,238 +840,238 @@ figure;
 
   saveFig(gcf, figPath, title, figFormats)
 
-%% Session corrcoef stuff
-% %% ----- session corrCoef stuff:
-% % 
-% % % bin corrcoef and facet periEventTraces by this
-% % 
-% % 
+% Session corrcoef stuff
+
+%% -----Old sess corrCoef stuff--------------
+%% bin corrcoef and facet periEventTraces by this
+
+% 
 % % convert into 10 bins 
-% % y= [];
-% % e= [];
-% % 
+% y= [];
+% e= [];
+% 
 % % this method is not making even bins, some are even empty...
 % % dataset is pretty heavily skewed toward +1 with some extreme negative
-% % exceptions
-% % [y, e]= discretize(corrTable.r, 10);
-% % 
-% % corrTable.rBin= y;
-% % 
+% exceptions
+% [y, e]= discretize(corrTable.r, 10);
+% 
+% corrTable.rBin= y;
+% 
 % % save labels of bin edges too 
-% % for bin= 1:numel(e)-1
-% %     
-% %     ind= [];
-% %     ind= corrTable.rBin== bin;
-% %     
-% %    corrTable(ind, "rBinEdge")= table(e(bin)); 
-% % end
-% % 
-% % % Final improvement: 465 vs 405 z score with r facet
-% % 
-% % stagesToPlot= unique(corrTable.stage);
-% % 
-% % for subj= 1:numel(subjects)
-% %    data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
-% %        
-% %    for stage= 1:numel(stagesToPlot)
-% %    
-% %        
+% for bin= 1:numel(e)-1
+%     
+%     ind= [];
+%     ind= corrTable.rBin== bin;
+%     
+%    corrTable(ind, "rBinEdge")= table(e(bin)); 
+% end
+% 
+% %% Final improvement: 465 vs 405 z score with r facet
+% 
+% stagesToPlot= unique(corrTable.stage);
+% 
+% for subj= 1:numel(subjects)
+%    data= corrTable(strcmp(corrTable.subject, subjects{subj}),:);
+%        
+%    for stage= 1:numel(stagesToPlot)
+%    
+%        
 % %         TODO: much more efficient method would be to stack() and form
 % %         signalType column to facet color= 405 or 465
-% %            
-% %        
-% %        data2= data(data.stage==stagesToPlot(stage),:);
-% % 
-% %         figure();
-% %         clear i;
-% % 
-% %         
+%            
+%        
+%        data2= data(data.stage==stagesToPlot(stage),:);
+% 
+%         figure();
+%         clear i;
+% 
+%         
 % %         draw in order of background-> foreground
 % %          individual trials -> sessions -> grand mean
-% %          
-% %         - sessions, 465
-% %         y= data2.periDSzblueAll;
-% %         y= data2.periDSzblue; 
-% %         i= gramm('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-% %         
-% %         i.facet_wrap(data2.rBinEdge, 'ncols', 5);
-% %         
-% %         i().stat_summary('type','sem', 'geom','line');
-% %         
-% %         i.geom_line();
-% %         
-% %         i().set_color_options('map', mapCustom(2,:));        
-% %         i().set_line_options('base_size',1)        
-% %    
-% %         i.draw();
-% %         
+%          
+%         - sessions, 465
+%         y= data2.periDSzblueAll;
+%         y= data2.periDSzblue; 
+%         i= gramm('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+%         
+%         i.facet_wrap(data2.rBinEdge, 'ncols', 5);
+%         
+%         i().stat_summary('type','sem', 'geom','line');
+%         
+%         i.geom_line();
+%         
+%         i().set_color_options('map', mapCustom(2,:));        
+%         i().set_line_options('base_size',1)        
+%    
+%         i.draw();
+%         
 % %        - sessions, 405
-% %         y= data2.periDSzpurple; 
-% % 
-% %         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-% %         i().stat_summary('type','sem', 'geom','line');
-% %         i.geom_line();
-% %         
-% %         i().set_color_options('map', mapCustom(6,:));        
-% %         i().set_line_options('base_size',1)        
-% %    
-% %         i.draw();
-% %         
-% %         - Grand mean, 465
-% %         y= data2.periDSzblue; 
-% % 
-% %         i.update('x', data2.timeLock, 'y', y, 'group', []);
-% %                 
-% %         i().stat_summary('type','sem', 'geom','area');
-% %         
-% %         i().set_color_options('map', mapCustom(1,:));        
-% %         i().set_line_options('base_size',2)        
-% %    
-% %         i.draw();
-% %         
-% %         
-% %           - Grand mean, 405
-% %         y= data2.periDSzpurple; 
-% % 
-% %         i.update('x', data2.timeLock, 'y', y, 'group', []);
-% %                 
-% %         i().stat_summary('type','sem', 'geom','area');
-% %         
-% %         i().set_color_options('map', mapCustom(7,:));        
-% %         i().set_line_options('base_size',2)        
-% %          
-% %       i.axe_property('YLim',[-5,10]);
-% %       title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-sessionCorrRaw-zTraces-DS');
-% %       i.set_title(title);
-% %       i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'sessionCorrRaw raw >');
-% % 
-% %       i.draw();
-% % 
-% %       saveFig(gcf, figPath, title, figFormats)
-% %       
-% %    end 
-% %          
-% % end
-% % 
-% % 
-% % % - between subjects z plots
-% % 
-% % data= corrTable;
-% % 
-% % for stage= 1:numel(stagesToPlot)
-% % 
-% %     Between-subj figs
-% %         data2= data(data.stage==stagesToPlot(stage),:);
-% % 
-% % 
-% %             figure();
-% %             clear i;
-% % 
-% % 
-% %             % draw in order of background-> foreground
-% %              %individual trials -> sessions -> grand mean
-% % 
-% %             - sessions, 465
-% %             y= data2.periDSzblue; 
-% % 
-% %             i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
-% %             i= gramm('x', data2.timeLock, 'y', y, 'group', data2.subject);
-% %             i.facet_wrap(data2.rBinEdge, 'ncols', 5);
-% % 
-% %             i().stat_summary('type','sem', 'geom','line');
-% %             i.geom_line();
-% % 
-% %             i().set_color_options('map', mapCustom(2,:));        
-% %             i().set_line_options('base_size',1)        
-% % 
-% %             i.draw();
-% % 
-% %            - sessions, 405
-% %             y= data2.periDSzpurple; 
-% % 
-% %             i.update('x', data2.timeLock, 'y', y, 'group', data2.subject);
-% %             i().stat_summary('type','sem', 'geom','line');
-% %             i.geom_line();
-% % 
-% %             i().set_color_options('map', mapCustom(6,:));        
-% %             i().set_line_options('base_size',1)        
-% % 
-% %             i.draw();
-% % 
-% %             - Grand mean, 465
-% %             y= data2.periDSzblue; 
-% % 
-% %             i.update('x', data2.timeLock, 'y', y, 'group', []);
-% % 
-% %             i().stat_summary('type','sem', 'geom','area');
-% % 
-% %             i().set_color_options('map', mapCustom(1,:));        
-% %             i().set_line_options('base_size',2)        
-% % 
-% %             i.draw();
-% % 
-% % 
-% %               - Grand mean, 405
-% %             y= data2.periDSzpurple; 
-% % 
-% %             i.update('x', data2.timeLock, 'y', y, 'group', []);
-% % 
-% %             i().stat_summary('type','sem', 'geom','area');
-% % 
-% %             i().set_color_options('map', mapCustom(7,:));        
-% %             i().set_line_options('base_size',2)        
-% % 
-% %           i.axe_property('YLim',[-5,10]);
-% %           title= strcat(subjMode,'-allSubj-stage-',num2str(stagesToPlot(stage)),'-sessionCorrCoef-zTraces-DS');
-% %           i.set_title(title);
-% %           i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'sessionCorrCoef raw >');
-% % 
-% %           i.draw();
-% % 
-% %           saveFig(gcf, figPath, title, figFormats)
-% % end
-% % 
-% % 
-% % %% Establish some corrcoef threshold beyond which to call "noisy" or "nosignal" trial
-% % 
-% % thresholdCorrCoef= 0.5;
-% % 
-% % 
-% % %% Count of trials beyond threshold per session
-% % 
-% % corrTable(:,'corrThresholdTrial')= table(nan);
-% % 
-% % ind=[];
-% % ind= corrTable.r >= thresholdCorrCoef;
-% % 
-% % corrTable(ind, "rThreshold")= table(1);
-% % 
-% % data= corrTable(corrTable.rThreshold==1,:);
-% % 
-% % figure();
-% % clear i;
-% % 
-% % 
-% % i= gramm('x', data.trainDay, 'y', data.rThreshold, 'group', data.subject, 'color', data.subject);
-% % 
-% % i.facet_wrap(data.subject);
-% % 
-% % i.geom_line();
-% % i.geom_point();
-% % 
-% % 
-% % title= strcat(subjMode,'-allSubject-sessionCorrRaw-corrThresholdCount-DS');
-% % i.set_title(title);
-% % 
-% % i.draw();
-% % 
-% % saveFig(gcf, figPath, title, figFormats);
+%         y= data2.periDSzpurple; 
 % 
-% %% Set a threshold of session corrCoef
+%         i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+%         i().stat_summary('type','sem', 'geom','line');
+%         i.geom_line();
+%         
+%         i().set_color_options('map', mapCustom(6,:));        
+%         i().set_line_options('base_size',1)        
+%    
+%         i.draw();
+%         
+% %         - Grand mean, 465
+%         y= data2.periDSzblue; 
+% 
+%         i.update('x', data2.timeLock, 'y', y, 'group', []);
+%                 
+%         i().stat_summary('type','sem', 'geom','area');
+%         
+%         i().set_color_options('map', mapCustom(1,:));        
+%         i().set_line_options('base_size',2)        
+%    
+%         i.draw();
+%         
+%         
+% %           - Grand mean, 405
+%         y= data2.periDSzpurple; 
+% 
+%         i.update('x', data2.timeLock, 'y', y, 'group', []);
+%                 
+%         i().stat_summary('type','sem', 'geom','area');
+%         
+%         i().set_color_options('map', mapCustom(7,:));        
+%         i().set_line_options('base_size',2)        
+%          
+%       i.axe_property('YLim',[-5,10]);
+%       title= strcat(subjMode,'-subject-',subjects{subj},'-stage-',num2str(stagesToPlot(stage)),'-sessionCorrRaw-zTraces-DS');
+%       i.set_title(title);
+%       i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'sessionCorrRaw raw >');
+% 
+%       i.draw();
+% 
+%       saveFig(gcf, figPath, title, figFormats)
+%       
+%    end 
+%          
+% end
+% 
+% 
+% %% - between subjects z plots
+% 
+% data= corrTable;
+% 
+% for stage= 1:numel(stagesToPlot)
+% 
+% %     Between-subj figs
+%         data2= data(data.stage==stagesToPlot(stage),:);
+% 
+% 
+%             figure();
+%             clear i;
+% 
+% 
+%             % draw in order of background-> foreground
+%              %individual trials -> sessions -> grand mean
+% 
+%             - sessions, 465
+%             y= data2.periDSzblue; 
+% 
+%             i.update('x', data2.timeLock, 'y', y, 'group', data2.fileID);
+%             i= gramm('x', data2.timeLock, 'y', y, 'group', data2.subject);
+%             i.facet_wrap(data2.rBinEdge, 'ncols', 5);
+% 
+%             i().stat_summary('type','sem', 'geom','line');
+%             i.geom_line();
+% 
+%             i().set_color_options('map', mapCustom(2,:));        
+%             i().set_line_options('base_size',1)        
+% 
+%             i.draw();
+% 
+%            - sessions, 405
+%             y= data2.periDSzpurple; 
+% 
+%             i.update('x', data2.timeLock, 'y', y, 'group', data2.subject);
+%             i().stat_summary('type','sem', 'geom','line');
+%             i.geom_line();
+% 
+%             i().set_color_options('map', mapCustom(6,:));        
+%             i().set_line_options('base_size',1)        
+% 
+%             i.draw();
+% 
+% %             - Grand mean, 465
+%             y= data2.periDSzblue; 
+% 
+%             i.update('x', data2.timeLock, 'y', y, 'group', []);
+% 
+%             i().stat_summary('type','sem', 'geom','area');
+% 
+%             i().set_color_options('map', mapCustom(1,:));        
+%             i().set_line_options('base_size',2)        
+% 
+%             i.draw();
+% 
+% 
+% %               - Grand mean, 405
+%             y= data2.periDSzpurple; 
+% 
+%             i.update('x', data2.timeLock, 'y', y, 'group', []);
+% 
+%             i().stat_summary('type','sem', 'geom','area');
+% 
+%             i().set_color_options('map', mapCustom(7,:));        
+%             i().set_line_options('base_size',2)        
+% 
+%           i.axe_property('YLim',[-5,10]);
+%           title= strcat(subjMode,'-allSubj-stage-',num2str(stagesToPlot(stage)),'-sessionCorrCoef-zTraces-DS');
+%           i.set_title(title);
+%           i.set_names('x','time from DS (s)','y','z score','color','signal type', 'column', 'sessionCorrCoef raw >');
+% 
+%           i.draw();
+% 
+%           saveFig(gcf, figPath, title, figFormats)
+% end
+
+% 
+% %% Establish some corrcoef threshold beyond which to call "noisy" or "nosignal" trial
 % 
 % thresholdCorrCoef= 0.5;
 % 
 % 
+% %% Count of trials beyond threshold per session
+% 
+% corrTable(:,'corrThresholdTrial')= table(nan);
+% 
+% ind=[];
+% ind= corrTable.r >= thresholdCorrCoef;
+% 
+% corrTable(ind, "rThreshold")= table(1);
+% 
+% data= corrTable(corrTable.rThreshold==1,:);
+% 
+% figure();
+% clear i;
+% 
+% 
+% i= gramm('x', data.trainDay, 'y', data.rThreshold, 'group', data.subject, 'color', data.subject);
+% 
+% i.facet_wrap(data.subject);
+% 
+% i.geom_line();
+% i.geom_point();
+% 
+% 
+% title= strcat(subjMode,'-allSubject-sessionCorrRaw-corrThresholdCount-DS');
+% i.set_title(title);
+% 
+% i.draw();
+% 
+% saveFig(gcf, figPath, title, figFormats);
+
+%% Set a threshold of session corrCoef
+
+% thresholdCorrCoef= 0.5;
+
+
 % %% viz distro of this trial by trial corrCoef by subj (and across stages)
 % %this distro viz doesn't seem to make sense with discrete bins
 % 

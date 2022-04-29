@@ -1,15 +1,5 @@
 % replicate fp_latencyCorrelation with periEventTable
 
-%% Plot settings 
-
-%thin, light lines for individual subj
-linewidthSubj= 0.5;
-lightnessRangeSubj= [100,100];
-
-%dark, thick lines for between subj grand mean
-linewidthGrand= 1.5;
-lightnessRangeGrand= [10,10];
-
 
 %% TODO: subset sessions for analysis
 
@@ -32,44 +22,52 @@ ind= data.timeLock > data.poxDSrel;
 
 latencyCorrInputTable(ind, y) = table(nan);
 
-%% TODO: Add Shuffled Data to set (shuffled 465nm per trial)
+%% Add Shuffled Data to set (shuffled 465nm per trial)
   %-- DS trials
   
 %signal columns (what to shuffle)
 y=[];
 y= ["DSblue"];
 
+%TODO: just shuffle latencies
+
 % shuffle independently for each trial
 data= latencyCorrInputTable;
 
 allTrials= unique(data.DStrialIDcum);
 
-for trial= 1:numel(allTrials)
+% this works but is pretty slow?
+% speeding up by just shuffling everything for now
+ind= randperm(numel(data.(y)));
+data(:,"DSblueShuffled")= data(ind,y);
+latencyCorrInputTable(:,"DSblueShuffled")= data(:, "DSblueShuffled");
+% 
+% 
+% for trial= 1:numel(allTrials)
+%     
+%     ind= [];
+%     ind= data.DStrialIDcum==allTrials(trial);
+%     
+%     data2= data(ind, :);
+%     
+%     % after subsetting data for this trial, shuffle using randperm to make
+%     % random index
+%     ind= [];
+%     ind= randperm(numel(data2.(y)));
+%     
+%     data2(:,"DSblueShuffled")= data2(ind,y);
+%     
+%     
+%     %assign back to original table
+%     ind= [];
+% %     ind= find(data.index==data2.index);
+%     ind= ismember(data.index,data2.index);
+% 
+%     latencyCorrInputTable(ind,"DSblueShuffled")= data2(:, "DSblueShuffled");
+% 
+% end
     
-    ind= [];
-    ind= data.DStrialIDcum==allTrials(trial);
-    
-    data2= data(ind, :);
-    
-    % after subsetting data for this trial, shuffle using randperm to make
-    % random index
-    ind= [];
-    ind= randperm(numel(data2.(y)));
-    
-    data2(:,"DSblueShuffled")= data2(ind,y);
-    
-    
-    %assign back to original table
-    ind= [];
-%     ind= find(data.index==data2.index);
-    ind= ismember(data.index,data2.index);
-
-    
-    latencyCorrInputTable(ind,"DSblueShuffled")= data2(:, "DSblueShuffled");
-
-end
-    
-%% Run correlation for each timestamp
+%% Run correlation of pooled data for each timestamp
 
 %If we want to relate Z scored fluorescence with PE latency, one way to do
 %it would be to pool the Z score values for an individual timestamp
@@ -342,7 +340,14 @@ i.set_names('x','time from DS (s)','y','rho (465nm)','color','signalType');
 i.draw();
 saveFig(gcf, figPath, title, figFormats);
 
-%% -- Statistical comparison (ANOVA) 
+%% -- Statistical comparison LME to see if rho differs between shuffled/ordered
+
+%stack for real vs shuffled
+
+%-- Rho ~Time , signalType, (1|subject)
+
+
+%% -- Statistical comparison
 
 ind=[];
 ind= (latencyCorrInputTable.stage==stagesToPlot);
@@ -354,6 +359,7 @@ data= latencyCorrInputTable(ind,:);
 
 %--Fit lme of y=latency with fixed effects 1)time 2) ordered fp 3) shuffled fp
 %also interaction of time*fp signals
+
 
 lme1= fitlme(data, 'poxDSrel~ (timeLock:DSblue) + (timeLock:DSblueShuffled)');
 
@@ -416,6 +422,10 @@ lme3
 
 
 %% -- There is a time x fp interaction, so follow-up with individual timestamp comparisons?
+
+
+
+
 
 %% TODO: Time from PE ? (is there ramping prior to PE that is significant? as opposed to cue-elicited?)
 

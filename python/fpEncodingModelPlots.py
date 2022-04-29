@@ -95,6 +95,8 @@ for file in range(len(files)):
     dfEncoding.loc[file,'modelStage']= dfTemp.loc[0, 'modelStage']
     dfEncoding.loc[file,'nSessions']= dfTemp.loc[0, 'nSessions']
     
+    dfEncoding.loc[file,'modeCue']= dfTemp.loc[0,'modeCue']
+    dfEncoding.loc[file,'modeSignal']= dfTemp.loc[0,'modeSignal']
     
     dfEncoding.loc[file,'modelInput']= [dfTemp.loc[0, 'modelInput']]
     
@@ -114,6 +116,19 @@ for file in range(len(files)):
 dfEncoding= dfEncoding.loc[~dfEncoding.subject.isin(subjectsToExclude)]
 
 dfEncoding= dfEncoding.reset_index()
+
+#%% Save model metadata to string for informative output filenames 
+
+dfTemp= dfEncoding.copy()
+
+dfTemp.modelStage= dfTemp.modelStage.astype(int)
+dfTemp.nSessions= dfTemp.nSessions.astype(int)
+
+dfTemp.nSessions= dfTemp.nSessions+1
+
+dfTemp= dfTemp.astype('str').copy()
+
+modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-sessions-'+ dfTemp.loc[0,'modeCue']+ '-'+ dfTemp.loc[0,'modeSignal']
 
 #%% Plot entire cross validation (CV) path (MSE + coefficients)
 
@@ -669,7 +684,7 @@ g.axes[0][0].legend(kernelsAll.subject.unique())
 
 g.add_legend()
 
-saveFigCustom(f, 'allSubj-'+'kernels', savePath)
+saveFigCustom(f, modelStr+'allSubj-'+'kernels', savePath)
 
             
 #%% Plot kernels & predicted data
@@ -706,7 +721,7 @@ g.legend(['predicted (model.fit())','actual'])
 g.set(title=('allSubj-'+'-periCueModelPrediction-'))#+modeCue+'-trials-'+modeSignal))
 g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
 
-saveFigCustom(f, 'allSubj-'+'model-prediction', savePath)
+saveFigCustom(f, modelStr+'allSubj-'+'model-prediction', savePath)
 
 # saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal, savePath)
 
@@ -716,7 +731,7 @@ f, ax = plt.subplots(1,1)
 g= sns.barplot(ax=ax,data= dfPredictedAll,  y='r2')
 g= sns.barplot(ax=ax,data= dfPredictedAll, x='subject',  y='r2', hue='subject')
 
-saveFigCustom(f, 'allSubj-'+'r2-', savePath)
+saveFigCustom(f, modelStr+'allSubj-'+'r2-', savePath)
 
 
 #swarmplot here seems very slow

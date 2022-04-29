@@ -1,19 +1,49 @@
 %% Initialize variables
-figPath= 'C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\'
+
+
+%% Plot Settings
+figPath= strcat('pwd','\_figures\');
+
 figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
+
+%-- Master plot linestyles and colors
+
+%thin, light lines for individual subj
+linewidthSubj= 0.5;
+lightnessRangeSubj= [100,100];
+
+%dark, thick lines for between subj grand mean
+linewidthGrand= 1.5;
+lightnessRangeGrand= [10,10];
+
+
+%-- Custom colormap for plots
+
+%green and purple %3 levels each, dark to light extremes + neutral middle
+mapCustom= [ 27,120,55;
+            127,191,123;
+            217,240,211;
+            247,247,247
+            231,212,232
+            175,141,195;
+            118,42,131;
+           ];
+
+        mapCustom= mapCustom/255;
+
 
 %% Load fpAnalyzedData struct
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
 
 % % with artifacts
-% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_vta_fp-13-Apr-2022subjDataAnalyzed.mat");
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_vta_fp-13-Apr-2022subjDataAnalyzed.mat");
 
 % no artifact version
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-14-Feb-2022subjDataAnalyzedNoArtifacts.mat")
 
 % dp workstation
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-noArtifact-21-Mar-2022subjDataAnalyzed.mat")
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-24-Mar-2022subjDataAnalyzed.mat")
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-24-Mar-2022subjDataAnalyzed.mat")
 
 
 % %ally no artifacts (bu"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat"t all trials)
@@ -21,9 +51,16 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-
 
 %% Choose whether to plot experimental or control subjects
 
-% subjMode= 'experimental' or 'control
-subjMode='experimental';
+% subjMode= 'experimental' or 'control or 'all'
+% subjMode='experimental';
 % subjMode='control';
+
+subjMode= 'all'
+
+%% Choose whether to include all sessions or only Criteria sessions in analyses
+% criteriaMode= 'allSes' or 'criteriaSes
+criteriaMode= 'allSes';
+% criteriaMode= 'criteriaSes';
 
 %% Create periEventTable
 fp_manuscript_tidyTable
