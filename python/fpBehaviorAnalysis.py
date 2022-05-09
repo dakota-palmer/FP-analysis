@@ -179,7 +179,10 @@ trialOutcomeBeh.loc[outcome>0]=trialOutcomeBeh.loc[outcome>0]+ '+' + 'lick'
 #fill in matching file,trial with trialOutcomeBeh
 #TODO: I think there is a more efficient way to do this assignment, doens't take too long tho
 
-dfTidy= dfTidy.reset_index().set_index(['fileID','trialID'])
+# dfTidy= dfTidy.reset_index().set_index(['fileID','trialID'])
+
+dfTidy= dfTidy.set_index(['fileID','trialID'])
+
 
 dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
 
@@ -510,6 +513,9 @@ ax.legend()
 #%% Count events within 10s of cue onset (cue duration in final stage)  
 #this is mainly for comparing progression/learning between stages since cueDuration varies by stage
 
+
+#TODO: dp 2022-05-06 consider changing to latency >= 0 since PEs in early DS training resulted in reinforcement and should count?
+     #problem is more complex tho bc if they were in the port at all they would be reinforced. 
 dfTemp=  dfTidy.loc[((dfTidy.eventLatency<= 10) & (dfTidy.eventLatency>0))].copy()
 
 dfTidy['trialPE10s'] = dfTemp.loc[(dfTemp.eventType == 'PEtime')].groupby([
@@ -582,6 +588,31 @@ dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='
 # dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
 
 dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
+
+
+#%% dp 2022-05-04 10s PE probablility 
+
+
+#% Calculate PE probability for each trialType
+#(combines all outcomes with PE vs all outcomes with no PE)
+
+dfTemp= dfTidy.copy()
+
+
+# declare hierarchical grouping variables (how should the observations be separated)
+groupHierarchy = groupHierarchyTrialType
+
+
+# here want percentage of each behavioral outcome per trialType per above groupers
+colToCalc = 'trialOutcomeBeh10s'
+
+dfTemp= percentPortEntryCalc(dfTemp, groupHierarchy, colToCalc)
+
+dfTemp= dfTemp.reset_index()
+
+dfTemp= dfTemp.rename(columns= {'PE':'trialTypePEProb10s'})
+
+dfTidy= dfTidy.merge(dfTemp, how='left', on=groupHierarchy)
 
 
 #%%-- Refine eventTypes after trial analyses
@@ -705,9 +736,28 @@ my_shelf.close()
 # g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
 # g.fig.suptitle('Total event count across sessions by type- check for outliers')
 # g.set_ylabels('# of events')
-# g.set_ylabels('session')
+# g.set_xlabels('session')
 
 # saveFigCustom(g, 'individual_eventCounts_line')
+
+ #view boxplot of eventType counts per fileID for session outliers
+# dfPlot= dfTidy.groupby(['subject', 'fileID', 'eventType'])['eventTime'].count().reset_index()
+
+# g= sns.catplot(data=dfPlot, x='eventType', y='eventTime', kind='box', hue='subject',
+#                 facet_kws={'sharey': False, 'sharex': True})
+# g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
+# g.fig.suptitle('Total event count across sessions by type- check for outliers')
+# g.set_ylabels('# of events')
+# g.set_xlabels('session')
+
+#  #view distro of eventType counts per fileID for session outliers
+# dfPlot= dfTidy.groupby(['subject', 'fileID', 'eventType'])['eventTime'].count().reset_index()
+
+# g= sns.displot(data=dfPlot, col='eventType', x='eventTime', kind='hist', hue='eventType', multiple='dodge')
+#                 # facet_kws={'sharey': False, 'sharex': True})
+# g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
+# g.fig.suptitle('Total event count across sessions by type- check for outliers')
+
 
 # #%% Plot PE probability by trialType (within 10s of trial start)
 # sns.set_palette('Paired') #default  #tab10
@@ -1377,26 +1427,115 @@ my_shelf.close()
 # # dfTidyAnalyzed.to_csv('dfTidyAnalyzed.csv')
 
 
-# #%% Use pandas profiling on event counts
-# ##This might be a decent way to quickly view behavior session results/outliers if automated
-# ## note- if you are getting errors with ProfileReport() and you installed using conda, remove and reinstall using pip install
+#%% Use pandas profiling on event counts
+##This might be a decent way to quickly view behavior session results/outliers if automated
+## note- if you are getting errors with ProfileReport() and you installed using conda, remove and reinstall using pip install
 
-# # from pandas_profiling import ProfileReport
+# from pandas_profiling import ProfileReport
 
-# # #Unstack() the groupby output for a dataframe we can profile
-# # dfPlot= dfTidy.copy()
-# # dfPlot= dfPlot.groupby(['subject','date','eventType'])['eventTime'].count().unstack()
-# # #add trialType counts
+# #Unstack() the groupby output for a dataframe we can profile
+# dfPlot= dfTidy.copy()
+# dfPlot= dfPlot.groupby(['stage', 'subject', 'fileID','eventType'], observed=True)['eventTime'].count().unstack()
+# #add trialType counts
 # # dfPlot= dfPlot.merge(dfTidy.loc[(dfTidy.eventType=='NStime') | (dfTidy.eventType=='DStime')].groupby(['subject','date','trialType'])['eventTime'].count().unstack(),left_index=True,right_index=True)
 
 
-# # profile = ProfileReport(dfPlot, title='Event Count by Session Pandas Profiling Report', explorative = True)
+# profile = ProfileReport(dfPlot, title='Event Count by Session Pandas Profiling Report', explorative = True)
 
-# # # save profile report as html
-# # profile.to_file('pandasProfileEventCounts.html')
+# # save profile report as html
+# profile.to_file('pandasProfile-EventCounts.html')
 
-# #%% all done
-print('all done')
+# # #%% all done
+# print('all done')
+
+
+ #%% ID, mark, and vizualize sessions with abnormal event counts
+  
+ 
+#Unstack() the groupby output for a dataframe we can profile
+dfPlot= dfTidy.copy()
+dfPlot= dfPlot.groupby(['stage', 'subject', 'fileID','eventType'], observed=True)['eventTime'].count().unstack()
+#add trialType counts
+# dfPlot= dfPlot.merge(dfTidy.loc[(dfTidy.eventType=='NStime') | (dfTidy.eventType=='DStime')].groupby(['subject','date','trialType'])['eventTime'].count().unstack(),left_index=True,right_index=True)
+
+
+dfPlot.boxplot()
+
+dfPlot= dfPlot.stack().reset_index(name='count')
+
+dfPlot.plot(kind='scatter', x='fileID', y='count', c='eventType', colormap='tab10')
+# dfPlot.plot.scatter()
+ 
+
+#ind subj distros
+
+def fixed_boxplot(*args, label=None, **kwargs):
+    sns.boxplot(*args, **kwargs, labels=[label])
+
+# for subj in dfPlot.subject.unique():
+    
+#     dfPlot2= dfPlot.loc[dfPlot.subject==subj]
+    
+#     g= sns.FacetGrid(data=dfPlot2, col='eventType', sharex=True, sharey=False, hue='eventType')
+    
+#     g.map_dataframe(fixed_boxplot, y='count')
+    
+#     g.map_dataframe(sns.stripplot, y='count')
+    
+#     #line facet
+#     # g= sns.FacetGrid(data=dfPlot, col='eventType', hue='eventType')#, sharex=False, sharey=False)
+
+#     # g.map_dataframe(sns.scatterplot, x='fileID', y='count')
+
+
+    
+# # subj facet
+# g= sns.FacetGrid(data=dfPlot, col='subject', col_wrap=4, hue='eventType')
+
+# g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+
+# g.map_dataframe(sns.stripplot, x='eventType', y='count')
+
+# #all subj
+g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType', sharex=False, sharey=False)
+
+g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+
+g.map_dataframe(sns.stripplot, x='eventType', y='count')
+
+
+
+# #with fileID (to actually pinpoint outliers)
+g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
+
+g.map_dataframe(sns.lineplot, x='fileID', y='count')
+g.map_dataframe(sns.scatterplot, x='fileID', y='count')
+
+
+
+# #STAGE FACET 
+# g= sns.FacetGrid(data=dfPlot, row='stage', hue='eventType')#, sharex=False, sharey=False)
+
+# g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+
+# g.map_dataframe(sns.stripplot, x='eventType', y='count')
+
+
+# #line stage facet
+# g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
+
+# g.map_dataframe(sns.lineplot, x='fileID', y='count')
+
+
+ #%% view distro of eventType counts per fileID for session outliers
+  
+dfPlot= dfTidy.groupby(['subject', 'fileID', 'eventType'])['eventTime'].count().reset_index()
+
+
+g= sns.displot(data=dfPlot, col='eventType', x='eventTime', kind='hist', hue='eventType', multiple='dodge')
+                # facet_kws={'sharey': False, 'sharex': True})
+g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
+g.fig.suptitle('Total event count across sessions by type- check for outliers')
 
 
 

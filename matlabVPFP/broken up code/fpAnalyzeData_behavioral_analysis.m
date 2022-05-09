@@ -795,3 +795,43 @@ for subj= 1:numel(subjects) %for each subject
    end %end session loop
       
 end %end subj loop
+
+
+%% Determine if behavioral criteria met for each session
+
+criteriaDS= 0.6;
+criteriaNS= 0.4;
+
+for subj= 1:numel(subjects)
+    
+ currentSubj= subjDataAnalyzed.(subjects{subj});
+    
+    for session= 1:numel(currentSubj)
+        
+        currentSubj(session).behavior.criteriaSes= 0;
+            
+        
+        %if meet criteria, make 1. else, 0
+        if currentSubj(session).trainStage<5
+            
+            if currentSubj(session).behavior.DSpeRatio >= criteriaDS
+                currentSubj(session).behavior.criteriaSes= 1;
+            end
+            
+            
+        elseif currentSubj(session).trainStage>=5
+            
+            if currentSubj(session).behavior.DSpeRatio >= criteriaDS & currentSubj(session).behavior.NSpeRatio <= criteriaNS
+                currentSubj(session).behavior.criteriaSes= 1;
+            end
+        end
+        
+        subjDataAnalyzed.(subjects{subj})(session).behavior.criteriaSes= currentSubj(session).behavior.criteriaSes;
+
+        
+    end %end ses loop
+   
+    
+end %end subj loop
+
+            

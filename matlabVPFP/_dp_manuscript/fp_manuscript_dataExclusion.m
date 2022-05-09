@@ -53,16 +53,19 @@ periEventTable.exclude= nan(size(periEventTable,1),1);
     
 
 %% Exclue sessions based on PE ratio
-criteriaDS= 0.6;
 
-criteriaNS= 0.4;
+% criteriaDS= 0.6;
+% 
+% criteriaNS= 0.4;
 
 ind=[];
 
 if strcmp(criteriaMode, 'criteriaSes')
-    ind= periEventTable.DSpeRatio <= criteriaDS;
+%     ind= periEventTable.DSpeRatio <= criteriaDS; %dp 5/6/22 moved this to tidyTable and behaviorAnalysis script
+% 
+%     ind= ind & (periEventTable.NSpeRatio >= criteriaNS);
 
-    ind= ind & (periEventTable.NSpeRatio >= criteriaNS);
+    ind= periEventTable.criteriaSes ~=1;
 
     periEventTable(ind, 'exclude')= table(1);
     
@@ -98,10 +101,10 @@ subjects= unique(periEventTable.subject);
 
 % if strcmp(subjMode,'experimental')
     
-    ind= [];
-    ind= (periEventTable.exclude~=1);
+ind= [];
+ind= (periEventTable.exclude~=1); 
 
-    periEventTable= periEventTable(ind,:);
+periEventTable= periEventTable(ind,:);
     
 % end
 

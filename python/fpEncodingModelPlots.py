@@ -45,6 +45,7 @@ sns.set_context('notebook')
 
 savePath= r'./_output/fpEncodingModelPlots/'
 
+
 #%% Declare data to exclude from plots
 
 subjectsToExclude= [17]
@@ -116,6 +117,15 @@ for file in range(len(files)):
 dfEncoding= dfEncoding.loc[~dfEncoding.subject.isin(subjectsToExclude)]
 
 dfEncoding= dfEncoding.reset_index()
+
+#%% Set fixed order of eventVars for consistent hue/color faceting
+
+
+#- Manual; DS events specifically
+
+eventOrder= ['DStime','PEcue','lickPreUS','lickUS']
+
+# - TODO: default should be pd categorical order if categorical dtype
 
 #%% Save model metadata to string for informative output filenames 
 
@@ -301,11 +311,11 @@ modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-
 # g.set(xlabel='alpha', ylabel='MSE')
 
 # #coef path
-# # g=sns.lineplot(ax= ax[1], data=modelPathAll, estimator=None, units='predictor', x='alpha', y='coef', hue='eventType', alpha=0.05)
-# # g=sns.lineplot(ax= ax[1], data=modelPathAll,  x='alpha', y='coef', hue='eventType', palette='dark')
-# # g=sns.lineplot(ax= ax[1], data=modelPathAll, estimator=None, units='predictor', x='alpha', y='coef', style='subject', hue='eventType', alpha=0.05)
+# # g=sns.lineplot(ax= ax[1], data=modelPathAll, estimator=None, units='predictor', x='alpha', y='coef', hue= 'eventType', hue_order=eventOrder, alpha=0.05)
+# # g=sns.lineplot(ax= ax[1], data=modelPathAll,  x='alpha', y='coef', hue= 'eventType', hue_order=eventOrder, palette='dark')
+# # g=sns.lineplot(ax= ax[1], data=modelPathAll, estimator=None, units='predictor', x='alpha', y='coef', style='subject', hue= 'eventType', hue_order=eventOrder, alpha=0.05)
 
-# g=sns.lineplot(ax= ax[1], data=modelPathAll,  x='alpha', y='coef', hue='eventType', style='subject') #, palette='dark')
+# g=sns.lineplot(ax= ax[1], data=modelPathAll,  x='alpha', y='coef', hue= 'eventType', hue_order=eventOrder, style='subject') #, palette='dark')
 
 
 # # plt.axvline(model.alpha_, color='black', linestyle="--", linewidth=3, alpha=0.5)
@@ -324,7 +334,7 @@ modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-
 
 # #%% Side by side plot of kernels
 
-# # g= sns.FacetGrid(data= modelPathAll, row= 'eventType', hue='eventType')
+# # g= sns.FacetGrid(data= modelPathAll, row= 'eventType', row_order=eventOrder, hue= 'eventType', hue_order=eventOrder)
 
 # # g.map_dataframe(sns.lineplot, x='alpha', y='coef', style='subject', alpha=0.5)    
 
@@ -432,10 +442,10 @@ kernelsAll= kernelsAll.reset_index()
         
     # #compare scikitlearn vs statsmodels output
     # f, ax = plt.subplots(2, 1)
-    # g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue='eventType')
+    # g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder)
     # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
     # g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef. statsModels')
-    # g= sns.lineplot(ax=ax[1,], data=kernels, x='timeShift',y='betaStatsModels',hue='eventType')
+    # g= sns.lineplot(ax=ax[1,], data=kernels, x='timeShift',y='betaStatsModels',hue= 'eventType', hue_order=eventOrder)
     # g.set(title=('subj-'+str(subj)+'-StatsModels-kernels-'+modeCue+'-trials-'+modeSignal))
 
 
@@ -486,6 +496,9 @@ for subj in dfEncoding.subject.unique():
     # yPredicted= model.predict(group.loc[:,col])
 
     
+#output of dfPredicted here is 18030... 30 trials x each timestamp?
+#so one predicted value per trial (not 1 per file like previously thought)
+
     dfPredicted['yPredicted']= yPredicted
     
     dfPredicted['y']= group.loc[:,y]
@@ -493,6 +506,8 @@ for subj in dfEncoding.subject.unique():
     dfPredicted['timeLock']= group.loc[:,((group.columns.str.contains('timeLock') & (~group.columns.str.contains('trialID'))))]
     
     dfPredicted['intercept']= model.intercept_
+    
+    dfPredicted['trialIDtimeLock']= group.loc[:,group.columns.str.contains('trialIDtimeLock')]
     
     #get r2 as well (model.score())
     #TODO: double check r2 calc
@@ -674,7 +689,7 @@ g= sns.barplot(ax=ax[3],data= dfPredictedAll, x='subject', y='r2', hue='subject'
 
 #%% Side by side plot of kernels
 
-g= sns.FacetGrid(data= kernelsAll, row= 'eventType', hue='eventType')
+g= sns.FacetGrid(data= kernelsAll, row= 'eventType', row_order=eventOrder, hue= 'eventType', hue_order=eventOrder)
 
 g.map_dataframe(sns.lineplot, x='timeShift', y='beta', style='subject', alpha=0.5)    
 
@@ -692,9 +707,9 @@ saveFigCustom(f, modelStr+'allSubj-'+'kernels', savePath)
  
 f, ax = plt.subplots(3, 1)
 
-g= sns.lineplot(ax=ax[0,], data=kernelsAll, x='timeShift',y='beta',hue='eventType', style='subject', alpha=0.3)
+g= sns.lineplot(ax=ax[0,], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, style='subject', alpha=0.3)
 
-g= sns.lineplot(ax=ax[0,], data=kernelsAll, x='timeShift',y='beta',hue='eventType', linewidth=2, palette='dark') #mean
+g= sns.lineplot(ax=ax[0,], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2, palette='dark') #mean
 
 
 g.set(title=('allSubj-kernels-'))#+modeCue+'-trials-'+modeSignal))
@@ -734,6 +749,83 @@ g= sns.barplot(ax=ax,data= dfPredictedAll, x='subject',  y='r2', hue='subject')
 saveFigCustom(f, modelStr+'allSubj-'+'r2-', savePath)
 
 
+#%% 
+
+# #dp new plots 2022-05-02
+
+# # Figure with subplot of 1) kernels, 2) modeled v predicted fp signal
+# f, ax = plt.subplots(2, 1)
+
+# g= sns.lineplot(ax=ax[0,], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+
+# g= sns.lineplot(ax=ax[0,], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2, palette='dark') #mean
+
+
+# g.set(title=('allSubj-kernels-'))#+modeCue+'-trials-'+modeSignal))
+# g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
+# # place a text box in bottom left in axes coords with more model info
+# # these are matplotlib.patch.Patch properties
+# # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+# # textstr= 'alpha with lowest MSE='+str(model.alpha_)+'(0=no penalty, OLS)'
+# # g.text(0.05, .1, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+# # textstr= 'intercept='+str(model.intercept_)
+# # g.text(0.05, 0.2, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+# # textstr= 'R2='+str(model.score(group.loc[:,X],group.loc[:,y], sample_weight=None))
+# # g.text(0.05, 0.3, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+
+# # currently this df has 1 observation per timestamp per trial
+# g= sns.lineplot(ax=ax[1,], data= dfPredictedAll, x='timeLock', y='yPredicted', color='black')
+# # g= sns.lineplot(ax=ax[1,], data= dfPredictedAll, units= 'subject', estimator=None, x='timeLock', y='yPredicted', style='subject', color='black', alpha=0.3)
+# g= sns.lineplot(ax=ax[1,], data= dfPredictedAll, units= 'trialIDtimeLock', estimator=None, x='timeLock', y='yPredicted', style='subject', color='black', alpha=0.3)
+
+
+
+# # g= sns.lineplot(ax=ax[1,], data=dfPredictedAll, x='timeLock', y='y', color='blue')
+# # g= sns.lineplot(ax=ax[1,], data= dfPredictedAll, units= 'subject', estimator=None, x='timeLock', y='y', style='subject', color='blue', alpha=0.3)
+
+
+# g.legend(['predicted (model.fit())','actual'])
+# g.set(title=('allSubj-'+'-periCueModelPrediction-'))#+modeCue+'-trials-'+modeSignal))
+# g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
+
+
+
+#%% correcting above by using mean() across all trials for each subj
+
+# Figure with subplot of 1) kernels, 2) modeled v predicted fp signal
+f, ax = plt.subplots(2, 1)
+
+g= sns.lineplot(ax=ax[0,], data=kernelsAll, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha=0.3)
+
+g= sns.lineplot(ax=ax[0,], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+
+
+g.set(title=('allSubj-kernels-'))#+modeCue+'-trials-'+modeSignal))
+g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
+
+# currently dfPredictedAll has 1 observation per timestamp per trial
+# reduce to mean across all trials per subj
+
+dfPlot= dfPredictedAll.groupby(['subject','timeLock'], as_index=False).mean()
+
+g= sns.lineplot(ax=ax[1,], data= dfPlot, x='timeLock', y='yPredicted', color='black')
+g= sns.lineplot(ax=ax[1,], data= dfPlot, units= 'subject', estimator=None, x='timeLock', y='yPredicted', color='black', alpha=0.3)
+
+g= sns.lineplot(ax=ax[1,], data= dfPlot, x='timeLock', y='y', color='blue')
+g= sns.lineplot(ax=ax[1,], data= dfPlot, units= 'subject', estimator=None, x='timeLock', y='y', color='blue', alpha=0.3)
+
+
+g.legend(['predicted (model.fit())','actual'])
+g.set(title=('allSubj-'+'-periCueModelPrediction-'))#+modeCue+'-trials-'+modeSignal))
+g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
+
+saveFigCustom(f, modelStr+'-allSubj-'+'model-prediction', savePath)
+
+#%% TODO: Retrieve other peri-event data 
+
+
+#%%  old
+
 #swarmplot here seems very slow
 # g= sns.swarmplot(ax=ax[2,],data= dfPredictedAll, y='r2', hue='subject')
 
@@ -741,7 +833,7 @@ saveFigCustom(f, modelStr+'allSubj-'+'r2-', savePath)
 # #single subj
 # f, ax = plt.subplots(2, 1)
 
-# g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue='eventType')
+# g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder)
 # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
 # g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
 # # place a text box in bottom left in axes coords with more model info
@@ -769,7 +861,7 @@ saveFigCustom(f, modelStr+'allSubj-'+'r2-', savePath)
 # # sns.FacetGrid(eventCol,1)
 # # sns.relplot(data= kernels.iloc[:,eventCol], kind='line')
 
-# g=sns.relplot(data=kernels, x='timeShift', y='beta', hue='eventType', style= 'subject', kind='line')
+# g=sns.relplot(data=kernels, x='timeShift', y='beta', hue= 'eventType', hue_order=eventOrder, style= 'subject', kind='line')
 # g.set(title=('allSubj-kernels')#+modeCue+'-trials-'+modeSignal))
 # g.set_ylabels('beta coef.')
 # g.set_xlabels('timeShift from event onset (s)')
@@ -786,7 +878,7 @@ saveFigCustom(f, modelStr+'allSubj-'+'r2-', savePath)
 
 
 # ## single subj: 
-# # g=sns.relplot(data=kernels, x='timeShift', y='beta', hue='eventType', kind='line')
+# # g=sns.relplot(data=kernels, x='timeShift', y='beta', hue= 'eventType', hue_order=eventOrder, kind='line')
 # # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
 # # g.set_ylabels('beta coef.')
 # # g.set_xlabels('timeShift from event onset (s)')

@@ -595,12 +595,12 @@ i.set_names('x','time from event (s)','y','AUC (of z-score)','color','trialType'
 i.set_title('Peri-Cue: AUC');
 
 %set y axes limits manually
-i.axe_property('YLim',[-2,10]);
+% i.axe_property('YLim',[-6,10]);
 
 %draw the actual plot
 i.draw();
 
-title= strcat(subjMode, 'allSubj-periCueAucCum-Bar');
+title= strcat(subjMode, 'allSubj-periCueAuc-Bar');
 
 saveFig(gcf, figPath, title, figFormats);
 
@@ -649,6 +649,7 @@ title= strcat(subjMode, 'allSubj-periEvent-stage7');
 saveFig(gcf, figPath, title, figFormats);
 
 %% Figure 2: DS vs NS Peri event Z + AUC bar
+% dp 2022-05-02 updating w new colormap and aesthetics
 
 stagesToPlot= [5];
 
@@ -659,23 +660,40 @@ data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
 %transform to have trialType variable
 data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
 
+figure();
 clear i
 
-%mean between subj
-i(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType);
+% individual subjects means
+i(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'group', data.subject);
+
+i(1,1).stat_summary('type','sem','geom','line');
+
+i(1,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+i(1,1).set_line_options('base_size',linewidthSubj);
+i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+i(1,1).draw();
+
+%mean between subj + sem
+i(1,1).update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'group',[]);
 
 i(1,1).stat_summary('type','sem','geom','area');
 
-i(1,1).set_line_options('base_size',2)
+i(1,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
 
-i(1,1).set_color_options('lightness', 60)
+i(1,1).set_line_options('base_size',linewidthGrand)
 
-i.draw();
+i(1,1).axe_property('YLim',[-5,10]);
+title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zTraces');   
+i(1,1).set_title(title);    
+i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
 
 
-%draw the actual plot
-i.draw();
+% i(1,1).draw();
 
+%when making subplots gramm likes a collective i.draw() after creating
+%each subplot before updating?
 
 %---- i(2) bar AUC
 data2= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
@@ -683,68 +701,138 @@ data2= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
 data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
 
 
-%mean between subj
-i(2,1)= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType);
+%ind subj mean points
+i(2,1)= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', data2.subject);
 
-% i.facet_wrap(data.stage);
+i(2,1).stat_summary('type','sem','geom','point');
+
+i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+i().draw()
+
+%mean between subj
+i(2,1).update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', []);
+
+i(2,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
 
 %mean bar for trialType
 i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
 
-i(2,1).set_line_options('base_size',2)
+i(2,1).set_line_options('base_size',linewidthGrand)
 
-i(2,1).set_color_options('lightness', 60)
+i(2,1).axe_property('YLim',[-10,10]);
+title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zAUC');   
+i(2,1).set_title(title);    
+i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
 
-i.draw();
+%horz line @ zero
+i(2,1).geom_hline('yintercept', 0, 'style', 'k--'); 
 
-
-%-- Subplotting requires single draw call then single update call, Update:
-
-%define variables to plot and grouping 
-%ind subjects
-i(1,1).update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'lightness', data.subject);
-
-
-%define stats to show
-% Mean line for individual subj w/o SEM
-i(1,1).stat_summary('type','sem','geom','line'); %mean line only
-
-i(1,1).set_color_options('lightness_range', [20,20])
-
-i(1,1).set_line_options('base_size',0.5)
-
-%define labels for plot axes
-i(1,1).set_names('x','time from event (s)','y','z-score','color','trialType','lightness','subject');
-i(1,1).set_title('Peri-Cue');
-
-%set y axes limits manually
-i(1,1).axe_property('YLim',[-2,5]);
-
-%ind subjects
-i(2,1).update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'lightness', data2.subject);
-
-
-%define stats to show
-% Mean point for ind subjects
-i(2,1).stat_summary('type','sem','geom','line'); %mean line only
-
-i(2,1).set_color_options('lightness_range', [20,20])
-
-i(2,1).set_line_options('base_size',0.5)
-
-%define labels for plot axes
-i(2,1).set_names('x','time from event (s)','y','AUC (of z-score)','color','trialType','lightness','subject');
-i(2,1).set_title('Peri-Cue: AUC');
-
-%set y axes limits manually
-i(2,1).axe_property('YLim',[-1,5]);
-
-%draw the actual plot
-i.draw();
-
-title= strcat(subjMode, '_figure2-allSubj-periCue');
+i(2,1).draw();
 
 saveFig(gcf, figPath, title, figFormats);
+
+
+ %% old fig 2
+% stagesToPlot= [5];
+% 
+% %---- i(1) pericue z trace
+% %subset specific data to plot
+% data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+% 
+% %transform to have trialType variable
+% data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
+% 
+% figure();
+% clear i
+% 
+% 
+% %mean between subj
+% i(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType);
+% 
+% i(1,1).stat_summary('type','sem','geom','area');
+% 
+% i(1,1).set_line_options('base_size',2)
+% 
+% i(1,1).set_color_options('lightness', 60)
+% 
+% i.draw();
+% 
+% 
+% %draw the actual plot
+% i.draw();
+% 
+% 
+% %---- i(2) bar AUC
+% data2= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+% 
+% data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
+% 
+% 
+% %mean between subj
+% i(2,1)= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType);
+% 
+% % i.facet_wrap(data.stage);
+% 
+% %mean bar for trialType
+% i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+% 
+% i(2,1).set_line_options('base_size',2)
+% 
+% i(2,1).set_color_options('lightness', 60)
+% 
+% i.draw();
+% 
+% 
+% %-- Subplotting requires single draw call then single update call, Update:
+% 
+% %define variables to plot and grouping 
+% %ind subjects
+% i(1,1).update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'lightness', data.subject);
+% 
+% 
+% %define stats to show
+% % Mean line for individual subj w/o SEM
+% i(1,1).stat_summary('type','sem','geom','line'); %mean line only
+% 
+% i(1,1).set_color_options('lightness_range', [20,20])
+% 
+% i(1,1).set_line_options('base_size',0.5)
+% 
+% %define labels for plot axes
+% i(1,1).set_names('x','time from event (s)','y','z-score','color','trialType','lightness','subject');
+% i(1,1).set_title('Peri-Cue');
+% 
+% %set y axes limits manually
+% i(1,1).axe_property('YLim',[-2,5]);
+% 
+% %ind subjects
+% i(2,1).update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'lightness', data2.subject);
+% 
+% 
+% %define stats to show
+% % Mean point for ind subjects
+% i(2,1).stat_summary('type','sem','geom','line'); %mean line only
+% 
+% i(2,1).set_color_options('lightness_range', [20,20])
+% 
+% i(2,1).set_line_options('base_size',0.5)
+% 
+% %define labels for plot axes
+% i(2,1).set_names('x','time from event (s)','y','AUC (of z-score)','color','trialType','lightness','subject');
+% i(2,1).set_title('Peri-Cue: AUC');
+% 
+% %set y axes limits manually
+% i(2,1).axe_property('YLim',[-1,5]);
+% 
+% %draw the actual plot
+% i.draw();
+% 
+% title= strcat(subjMode, '_figure2-allSubj-periCue');
+% 
+% % saveFig(gcf, figPath, title, figFormats);
 
 
 %% Stat comparison of auc conditions
@@ -759,9 +847,9 @@ data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
 data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
 
 %run anova
-% [p, table, stats, terms]= anovan(data.periCueBlue, {data.trialType, data.subject});
+% [p, tableAnova, stats, terms]= anovan(data.periCueBlue, {data.trialType, data.subject});
 
-[p, table, stats, terms]= anovan(data.periCueBlue, {data.trialType});
+[p, tableAnova, stats, terms]= anovan(data.periCueBlue, {data.trialType});
 
 
 %% individual subj all stages: peri-Cue vs peri-Pox vs peri-Lox

@@ -860,6 +860,7 @@ for subj in subjects:
     
     dfEncoding['model_lasso']= model
     
+    #TODO: make sure eventVars saved as categorical for automatically consistent faceting
     dfEncoding['eventVars']= [eventVars]
 
     dfEncoding['modeSignal']= modeSignal

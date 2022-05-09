@@ -283,6 +283,9 @@ for subj= 1:numel(subjects)
             periEventTable.DSpeRatio(tsInd)= currentSubj(includedSession).behavior.DSpeRatio;
             periEventTable.NSpeRatio(tsInd)= currentSubj(includedSession).behavior.NSpeRatio;
             
+            %label if this ses met behavioral criteria
+            periEventTable.criteriaSes(tsInd)= currentSubj(includedSession).behavior.criteriaSes;
+            
             sesCount=sesCount+1;
         end %end session loop
     end %end stage loop

@@ -1,8 +1,42 @@
 %% Initialize variables
+clear; close all; clc;
+
+%% Load fpAnalyzedData struct
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
+
+% % with artifacts
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-06-May-2022subjDataAnalyzed.mat");
+
+% no artifact version
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-14-Feb-2022subjDataAnalyzedNoArtifacts.mat")
+
+% dp workstation
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-noArtifact-21-Mar-2022subjDataAnalyzed.mat")
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-24-Mar-2022subjDataAnalyzed.mat")
+
+
+% %ally no artifacts (bu"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat"t all trials)
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat")
+
+experimentName= 'vp-vta-fp'
+
+%% Choose whether to plot experimental or control subjects
+
+% subjMode= 'experimental' or 'control or 'all'
+% subjMode='experimental';
+% subjMode='control';
+
+subjMode= 'all'
+
+%% Choose whether to include all sessions or only Criteria sessions in analyses
+% criteriaMode= 'allSes' or 'criteriaSes
+% criteriaMode= 'allSes';
+criteriaMode= 'criteriaSes';
+
 
 
 %% Plot Settings
-figPath= strcat('pwd','\_figures\');
+figPath= strcat(pwd,'\_figures\');
 
 figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
 
@@ -19,8 +53,9 @@ lightnessRangeGrand= [10,10];
 
 %-- Custom colormap for plots
 
+% - Colormap for 465nm vs 405nm comparisons (7 class PRGn, purple vs green)
 %green and purple %3 levels each, dark to light extremes + neutral middle
-mapCustom= [ 27,120,55;
+mapCustomFP= [ 27,120,55;
             127,191,123;
             217,240,211;
             247,247,247
@@ -29,38 +64,22 @@ mapCustom= [ 27,120,55;
             118,42,131;
            ];
 
-        mapCustom= mapCustom/255;
+        mapCustomFP= mapCustomFP/255;
 
 
-%% Load fpAnalyzedData struct
-% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
+% - Colormap for DS vs NS comparisons (7 class BrBG; teal blue vs. brown orange)
+mapCustomCue= [90,180,172;
+            199,234,229;
+            245,245,245;
+            1,102,94
+            246,232,195;
+            216,179,101;
+            140,81,10;   
+            ];
+            
+        mapCustomCue= mapCustomCue/255;
 
-% % with artifacts
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_vta_fp-13-Apr-2022subjDataAnalyzed.mat");
 
-% no artifact version
-% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-14-Feb-2022subjDataAnalyzedNoArtifacts.mat")
-
-% dp workstation
-% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-noArtifact-21-Mar-2022subjDataAnalyzed.mat")
-% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-24-Mar-2022subjDataAnalyzed.mat")
-
-
-% %ally no artifacts (bu"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat"t all trials)
-% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat")
-
-%% Choose whether to plot experimental or control subjects
-
-% subjMode= 'experimental' or 'control or 'all'
-% subjMode='experimental';
-% subjMode='control';
-
-subjMode= 'all'
-
-%% Choose whether to include all sessions or only Criteria sessions in analyses
-% criteriaMode= 'allSes' or 'criteriaSes
-criteriaMode= 'allSes';
-% criteriaMode= 'criteriaSes';
 
 %% Create periEventTable
 fp_manuscript_tidyTable
@@ -73,12 +92,15 @@ fp_manuscript_dataExclusion();
 %% ID and remove artifacts
 fp_manuscript_artifactExclusion();
 
+
+%% ID and remove bad sessions
+fp_manuscript_session_correlation();
+
 %% Latency correlation
 
 fp_manuscript_latencyCorrelation();
 
-%% ID and remove bad sessions
-fp_manuscript_session_correlation();
+
 
 
 

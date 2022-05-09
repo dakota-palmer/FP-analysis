@@ -66,7 +66,9 @@ excludeDate= [] # ['20210604']
 df= df[~df.date.isin(excludeDate)]
 
 # #hitting memory cap, going to subset specific stages to reduce data (shouldn't really need anything below stage 3)
-stagesToInclude= [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
+stagesToInclude= [1.,2.,3., 4., 5.0]#, 6.0, 7.0, 8., 11.0, 12.0]
+# 
+# stagesToInclude= [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
 # stagesToInclude= df.stage.unique()
 df= df.loc[df.stage.isin(stagesToInclude)]
 
@@ -196,7 +198,7 @@ if experimentType.__contains__('Opto'):
     
 #change stage to str dtype
 #this is memory intensive I think so skipping
-# df.stage= df.stage.astype('str')
+# df.stage= df.stage.astype('str')azsx
 
 
 #%% Tidying: All events in single column, add trialID and trialType that matches trial 1-60 through each session.
