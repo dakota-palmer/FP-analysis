@@ -84,6 +84,9 @@ mapCustomCue= [90,180,172;
 %% Create periEventTable
 fp_manuscript_tidyTable
 
+%% make training plots
+fp_manuscript_behaviorPlots();
+
 %% Isolate / exclude data based on behavioral criteria (& subject)
 % will define periEventTable for subsequent scripts (control v experimental based on flag above)
 
@@ -101,13 +104,9 @@ fp_manuscript_session_correlation();
 fp_manuscript_latencyCorrelation();
 
 
-
-
-
-
-
 %% make peri-event 465nm plots
 fp_manuscript_periEventTraces();
+
 
 %% FIGURE 2
 
