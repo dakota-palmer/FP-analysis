@@ -2,11 +2,17 @@
 
 criteriaDS= 0.6;
 
+criteriaLatency= 10;
+
+stagesToPlot= [1:7];
+
+%% todo: subset n days from criteria?
+
+
 %% Figure 1: DS vs NS PE Ratio across sessions
 
 %subplot of DS pe ratio, subplot of NS pe ratio
 
-stagesToPlot= [1:5];
 
 %- subset specific data to plot
 data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
@@ -17,6 +23,13 @@ data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
 groupers= ["stage","subject","trainDay", "fileID"];
     %simplfy to one observation (using mean)
 data2= groupsummary(data, [groupers],'mean', ["DSpeRatio", "NSpeRatio"]);
+
+
+
+% -make fig
+figure();
+clear i
+
 
  % -DS 
 y= "mean_DSpeRatio";
@@ -134,7 +147,6 @@ i(1,1).draw()
     
     %subplot of DS pe ratio, subplot of NS pe ratio
 
-stagesToPlot= [1:5];
 
 %- subset specific data to plot
 data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
@@ -145,6 +157,13 @@ data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
 groupers= ["stage","subject","trainDay", "fileID"];
     %simplfy to one observation (using mean)
 data2= groupsummary(data, [groupers],'mean', ["poxDSrel", "poxNSrel"]);
+
+
+
+% -make fig
+figure();
+clear i
+
 
  % -DS 
 y= "mean_poxDSrel";
@@ -160,7 +179,7 @@ i(1,1).set_color_options('map',mapCustomCue([2],:)); %subselecting the specific 
 i(1,1).set_line_options('base_size',linewidthSubj);
 i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
 
-i(1,1).geom_hline('yintercept', criteriaDS, 'style', 'k--'); 
+% i(1,1).geom_hline('yintercept', criteriaDS, 'style', 'k--'); 
 
 i(1,1).draw();
 
@@ -196,7 +215,7 @@ i(2,1).set_color_options('map',mapCustomCue([6],:)); %subselecting the specific 
 i(2,1).set_line_options('base_size',linewidthSubj);
 i(2,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
 
-i(2,1).geom_hline('yintercept', criteriaDS, 'style', 'k--'); 
+% i(2,1).geom_hline('yintercept', criteriaDS, 'style', 'k--'); 
 
 i().draw();
 

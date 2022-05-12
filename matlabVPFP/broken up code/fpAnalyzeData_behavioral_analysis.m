@@ -800,7 +800,7 @@ end %end subj loop
 %% Determine if behavioral criteria met for each session
 
 criteriaDS= 0.6;
-criteriaNS= 0.4;
+criteriaNS= 0.5;
 
 for subj= 1:numel(subjects)
     
