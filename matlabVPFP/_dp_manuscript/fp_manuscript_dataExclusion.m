@@ -13,7 +13,7 @@ periEventTable.exclude= nan(size(periEventTable,1),1);
 
     %mark subjects for exclusion
 %     subjToExclude= {'rat17', 'rat10', 'rat20', 'rat16'};
-    subjToExclude= {'rat17', 'rat10'}; %exclude these due to either dynamic loss of signal or behavior
+%     subjToExclude= {'rat17', 'rat10', 'rat16'}; %exclude these due to either dynamic loss of signal or behavior
 
 
     for subj= 1:numel(subjToExclude)
@@ -29,7 +29,7 @@ periEventTable.exclude= nan(size(periEventTable,1),1);
     %mark 'control' subject type (GFP/no expression)
 
     periEventTable(:,'controlSubj')= table(nan);
-    controlSubj= {'rat20', 'rat16'}; %exclude these due to no signal ever or GFP control
+%     controlSubj= {'rat20'}; %exclude these due to no signal ever or GFP control
 
     for subj= 1:numel(controlSubj)
         ind=[];
@@ -77,6 +77,19 @@ elseif strcmp(criteriaMode, 'allSes')
     
 end
 
+
+%% Mark sessions for exclusion based on sesCorr
+
+thresholdSesCorr= 0.7; 
+
+if strcmp(sesCorrExcludeMode, 'sesCorr')
+
+    ind= [];
+    ind= periEventTable.sesCorr > thresholdSesCorr;
+
+    periEventTable(ind, 'exclude')= table(1);
+end
+
 %% Define periEventTable based on subjects included (subjMode flag set in fp_manuscript_figs.m)
 ind=[];
 
@@ -96,6 +109,7 @@ end
 
 %update subj list
 subjects= unique(periEventTable.subject);
+
 
 %% Remove data marked for exclusion
 

@@ -684,7 +684,7 @@ i(1,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 speci
 
 i(1,1).set_line_options('base_size',linewidthGrand)
 
-i(1,1).axe_property('YLim',[-5,10]);
+i(1,1).axe_property('YLim',[-5,5]);
 title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zTraces');   
 i(1,1).set_title(title);    
 i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
@@ -722,7 +722,7 @@ i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
 
 i(2,1).set_line_options('base_size',linewidthGrand)
 
-i(2,1).axe_property('YLim',[-10,10]);
+i(2,1).axe_property('YLim',[-10,5]);
 title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zAUC');   
 i(2,1).set_title(title);    
 i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');

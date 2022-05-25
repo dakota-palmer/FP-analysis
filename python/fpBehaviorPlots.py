@@ -55,14 +55,24 @@ sns.set_context('notebook')
 #for comparison of trial types (e.g. laser on vs laser off, good to have these in paired order for paired color palettes)
 trialOrder= ['DStime','NStime','Pre-Cue', 'ITI']
 
-#DS PE probability criteria (for visualization)
+savePath= r'./_output/fpBehaviorPlots/'
+
+#%% Establish behavioral criteria for training stage advancement
+
+#DS PE probability (above this)
 criteriaDS= 0.6
+
+# NS PE probability (below this)
+criteriaNS= 0.5
+
+
+
 
 #%% Exclude subjects
 
-subjectsToExclude= [10, 17]
+subjectsToExclude= [17]#[10, 17]
 
-subjectsControl= [16, 20]
+subjectsControl= []#[16, 20]
 
 dfTidy= dfTidy[~dfTidy.subject.isin(subjectsToExclude)]
 
@@ -97,7 +107,9 @@ groupHierarchyEventType = ['stage',
 #%% Probability of 10s PE (by trialType)
 
 # #subset with customFunction
+# stagesToPlot= [5]#[1,2,3,4,5,6,7]#dfTidy.stage.unique()
 stagesToPlot= [1,2,3,4,5,6,7]#dfTidy.stage.unique()
+
 trialTypesToPlot= ['DStime', 'NStime']
 eventsToPlot= dfTidy.eventType.unique()
 
@@ -277,6 +289,48 @@ for subject in dfRaw.columns:
             #b(24)
             thisFile.loc[:, "mpcNSpeRatio"]= thisFile.loc[24, colInd][0]
             
+            # #% ## TODO: 
+            # #get stage programmatically ~~ 20220512
+            # best solution may be to get the MSN ran, will likely require hcanges to the MPC2excel code
+
+            # # should be able to find out which stage this is of DS training using ITIs & stageParams (don't need to rely on metadata)
+            # colInd= thisFile.columns[np.where(thisFile.columns.str.contains('ITI'))]
+            
+            # #
+            
+            # ITIs=  pd.DataFrame()
+            
+                                    
+            
+            # #1 col for each stage with ITIs to compare against
+            # ITIs.loc[:,'1']= [20, 30, 40, 50, 60, 20, 30, 40, 50, 60 ]
+            # ITIs.loc[:,'2']= [50, 60, 70, 80, 90,50, 60, 70, 80, 90 ]
+            # ITIs.loc[:,'3']= [60, 70, 80, 90, 100, 60, 70, 80, 90, 100]
+            # ITIs.loc[:,'4']= [70, 80, 90, 100, 110, 70, 80, 90, 100, 110]
+            
+            # ITIs.loc[:,'5up']= [10, 20, 30, 40, 50, 10, 20, 30, 40, 50]
+            
+            # # determine stage based on ITI
+            
+            # ITIsThisFile= thisFile.loc[0:9, colInd]
+            
+            # ITIsThisFile= ITIsThisFile.astype('int64')
+    
+            # for col in ITIs.columns:
+            #    if ITIsThisFile.iloc[:,0].equals(ITIs.loc[:,col]):
+            #       thisFile['stage']= col
+               
+            # #% ## TODO: - further define stages 5 and up based on other vars - not sure if possible very quickly wihtout some intermediate calculations...
+            # if thisFile.loc[0,'stage']== '5up'
+                
+            #     # #pumpDur (a(3)) may define but I think it was manually defined in code, not variable
+            #     # pumpDur= pd.DataFrame()
+            #     # pumpDur.loc
+                
+
+
+
+            #save stage label before appending
 
             #add subject label before appending
             thisFile.loc[:,'subject']=subject
@@ -374,9 +428,11 @@ df.columns= labels
 #%% Add unique fileID for each session (subject & date)
 
 #sort by date and subject
-test= df.sort_values(['date','subject'])
+df= df.sort_values(['date','subject'])
 
 df.loc[:,'fileID'] = df.groupby(['date', 'subject']).ngroup()
+
+
 
 # %% Add other variables if necessary before tidying
 
@@ -397,52 +453,221 @@ grouped.stageParams.nth(2)
 df.date= pd.to_datetime(df.date)
 
 
+
+#% Calculate trainDay 
+
+#May be missing some synapse tanks, use cumcount of trainDay within subjects (dont trust metadata sheet)
+
+# Add trainDay variable (cumulative count of sessions within each subject)
+dfGroup= df.loc[df.groupby(['subject','fileID']).cumcount()==0]
+# test= dfGroup.groupby(['subject','fileID']).transform('cumcount')
+df.loc[:,'trainDay']= dfGroup.groupby(['subject'])['fileID'].transform('cumcount')
+df.loc[:,'trainDay']= df.groupby(['subject','fileID']).fillna(method='ffill')
+
+
+#Add cumulative count of training day within-stage (so we can normalize between subjects appropriately)
+##very important consideration!! Different subjects can run different programs on same day, which can throw plots/analysis off when aggregating data by date.
+dfGroup= df.loc[df.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+df['trainDayThisStage']=  dfGroup.groupby(['subject', 'stage']).transform('cumcount')
+df.trainDayThisStage= df.groupby(['fileID'])['trainDayThisStage'].fillna(method='ffill').copy()
+
+
+
+#%% ---- Replace invalid NS pe Ratios for stages <5
+
+#MPC records a 0 but should be nan for plotting & analyses
+df.loc[df.stage<5, 'mpcNSpeRatio']= None
+
+
+#%% -REMOVE NAN STAGE DATA (To be fixed when metadata xlsx fixed or stage is pulled from MPC)
+
+# at least if done here should be visible gap in trainDay
+
+df= df.loc[df.stage.notnull()]
+
+
+#%% - Mark stages which pass behavioral criteria (for DS task, DS and NS PE Ratio)
+
+# df['criteriaSes']= None
+
+#stages 1-4= DS only 
+dfTemp= df.loc[df.stage< 5].copy()
+
+
+ind= dfTemp.mpcDSpeRatio >= criteriaDS 
+
+ind= dfTemp.loc[ind].index
+
+df.loc[ind, 'criteriaSes']= 1
+
+#stage >5 includes NS also
+
+dfTemp= df.loc[df.stage>= 5]
+
+ind= ((dfTemp.mpcDSpeRatio >= criteriaDS ) & (dfTemp.mpcNSpeRatio <= criteriaNS))
+
+ind=dfTemp.loc[ind].index
+
+df.loc[ind,'criteriaSes']= 1
+
+#%% - Mark Early vs. Late training data for comparison
+# n first days vs. n final days (prior to meeting criteria)
+
+
+#number of sessions to include as 'early' and 'late' (n+ 1 for the 0th session so n=4 would be 5 sessions)
+nSes= 4
+
+
+#stage at which to start reverse labelling of 'late' from last day of stage (not currently based on criteria label)
+endStage= 7
+
+#%% Add trainPhase label for early vs. late training days within-subject
+
+# #
+# # dfTemp= df.copy()
+
+# # ind= dfTemp.loc[dfTemp.criteriaSes==1 & (dfTemp.stage == endStage)]
+
+# #mark the absolute criteria point, set criteriaSes=2 (first session in endStage where criteria was met)
+# #this way can find easily and get last n sessions
+# dfTemp= df.copy()
+
+# dfGroup= dfTemp.loc[dfTemp.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+
+# test= dfGroup.groupby(['subject','fileID','criteriaSes'], as_index=False)['trainDay'].count()
+
+
+
+#- mark the absolute criteria point, set criteriaSes=2 (first session in endStage where criteria was met)
+#this way can find easily and get last n sessionsdfTemp= df.copy()
+dfTemp= df.copy()
+
+#instead of limiting to criteria days, simply start last n day count from final day of endStage
+# dfTemp= dfTemp.loc[dfTemp.criteriaSes==1]
+
+dfTemp= dfTemp.loc[dfTemp.stage==endStage]
+
+#first fileIDs for each subject which meet criteria in the endStage
+# dfTemp= dfTemp.groupby(['subject']).first()#.index
+
+#just get last fileID for each subj in endStage
+dfTemp= dfTemp.groupby(['subject']).last()#.index
+
+ind= dfTemp.fileID
+
+
+df.loc[df.fileID.isin(ind),'criteriaSes']= 2
+
+#- now mark last n sessions preceding final criteria day as "late"
+
+#subset data up to absolute criteria session
+
+#get trainDay corresponding to absolute criteria day for each subject, then get n prior sessions and mark as late
+dfTemp2= df.copy()
+
+# dfTemp2=dfTemp2.set_index(['subject'])
+#explicitly saving and setting on original index to prevent mismatching (idk why this was happening but it was, possibly something related to dfTemp having index on subject)
+dfTemp2=dfTemp2.reset_index(drop=False).set_index(['subject'])
+
+
+#-- something wrong here with lastTrainDay assignment
+dfTemp2['lastTrainDay']= dfTemp.trainDay.copy()
+
+dfTemp2= dfTemp2.reset_index().set_index('index')
+
+#get dates within nSes prior to final day 
+ind= ((dfTemp2.trainDay>=dfTemp2.lastTrainDay-nSes) & (dfTemp2.trainDay<=dfTemp2.lastTrainDay))
+
+
+#label trainPhase as late
+dfTemp2.loc[ind,'trainPhase']= 'late'
+
+df['trainPhase']= dfTemp2['trainPhase'].copy()
+
+#add reverse count of training days within late phase (countdown to final day =0)
+dfTemp2.loc[ind,'trainDayThisPhase']= dfTemp2.trainDay-dfTemp2.lastTrainDay
+
+df['trainDayThisPhase']= dfTemp2['trainDayThisPhase'].copy()
+
+#- Now do early trainPhase for first nSes
+#just simply get first nSes starting with 0
+ind= df.trainDay <= nSes
+
+df.loc[ind,'trainPhase']= 'early'
+
+
+#TODO- in progress (indexing match up)
+# add forward cumcount of training day within early phase 
+#only save into early phase subset
+ind= df.trainPhase=='early'
+
+dfGroup= df.loc[df.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+df.loc[ind,'trainDayThisPhase']=  dfGroup.groupby(['subject', 'trainPhase']).transform('cumcount') #add 1 for intuitive count
+df.trainDayThisPhase= df.groupby(['fileID'])['trainDayThisPhase'].fillna(method='ffill').copy()
+
+#old; add corresponding days for each phase for plot x axes- old; simple cumcount
+# dfGroup= df.loc[df.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+# df['trainDayThisPhase']=  dfGroup.groupby(['subject', 'trainPhase']).transform('cumcount')
+# df.trainDayThisPhase= df.groupby(['fileID'])['trainDayThisPhase'].fillna(method='ffill').copy()
+
+
+
+#%% ----  melt() 2 columns of PE probability into one by trialType
+idVars= ['fileID','subject','stage','date', 'trainDay', 'trainDayThisStage', 'trainPhase', 'trainDayThisPhase']
+df= df.melt(id_vars= idVars, value_vars=['mpcDSpeRatio','mpcNSpeRatio'], var_name='trialType', value_name='mpcPEratio')
+
+trialOrder2=['mpcDSpeRatio','mpcNSpeRatio']
+
+#%% ---- change dtypes
+df.subject= df.subject.astype('string')
+df.trialType= df.trialType.astype('category')
+df.stage= df.stage.astype('int64')
+df.trainDay= df.trainDay.astype('int64')
+df.trainPhase= df.trainPhase.astype('category')
+
+# convert subj to number (otherwise getting plot errors)
+#just strip ID from end (last 2 in string)
+subjects= df.subject.unique()
+
+for subj in subjects:
+    
+    df.loc[df.subject==subj, 'subject']=  subj[-2:]
+    
+df.subject= df.subject.astype('int64')
+
+
+
+#%%---- Exclude subjects
+
+subjectsToExclude= [10, 17]
+
+subjectsControl= [16, 20]
+
+df= df[~df.subject.isin(subjectsToExclude)]
+
+df= df[~df.subject.isin(subjectsControl)]
+    
+
 #%% -----Plot MPC calculated values
 
 
 #%% Probability of 10s PE (by trialType)
 
-# subset to one observation per file
-ind= df.groupby(['fileID']).cumcount()==1
+# subset to one observation per trialType per file
+ind= df.groupby(['fileID', 'trialType']).cumcount()==0
 
 dfPlot= df.loc[ind]
 
 # subset stages
-stagesToPlot= [1,2,3,4,5,6,7]
-
+# stagesToPlot= [1,2,3,4,5,6,7]
 dfPlot= dfPlot.loc[dfPlot.stage.isin(stagesToPlot)]
 
 
-# melt() 2 columns of PE probability into one by trialType
-idVars= ['fileID','subject','stage','trainDay']
-dfPlot= dfPlot.melt(id_vars= idVars, value_vars=['mpcDSpeRatio','mpcNSpeRatio'], var_name='trialType', value_name='mpcPEratio')
-
-trialOrder=['mpcDSpeRatio','mpcNSpeRatio']
-
-# change dtypes
-dfPlot.subject= dfPlot.subject.astype('string')
-dfPlot.trialType= dfPlot.trialType.astype('category')
-dfPlot.stage= dfPlot.stage.astype('category')
-dfPlot.trainDay= dfPlot.trainDay.astype('int64')
-
-# convert subj to number (otherwise getting plot errors)
-#just strip ID from end (last 2 in string)
-subjects= dfPlot.subject.unique()
-
-# subjectsID= subjects.copy()
-
-for subj in subjects:
-    # subjectsID[subjectsID==subj]= subj[-2:]
-    
-    dfPlot.loc[dfPlot.subject==subj, 'subject']=  subj[-2:]
-    
-dfPlot.subject= dfPlot.subject.astype('int64')
-
 f, ax = plt.subplots(1, 1)
 
-g= sns.lineplot(data= dfPlot, ax=ax, units='subject', estimator=None, x= 'trainDay', y='mpcPEratio', hue='trialType', hue_order=trialOrder, alpha=0.3)
+g= sns.lineplot(data= dfPlot, ax=ax, units='subject', estimator=None, x= 'trainDay', y='mpcPEratio', hue='trialType', hue_order=trialOrder2, alpha=0.3)
 
-g= sns.lineplot(data= dfPlot, ax=ax, x= 'trainDay', y='mpcPEratio', hue='trialType', hue_order=trialOrder, alpha=0.3)
+g= sns.lineplot(data= dfPlot, ax=ax, x= 'trainDay', y='mpcPEratio', hue='trialType', hue_order=trialOrder2)
 
 plt.axhline(y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
 
@@ -467,6 +692,98 @@ for subj in dfPlot.subject.unique():
     
     g= sns.FacetGrid(data=dfPlot2, row='stage')
 
-    g.map_dataframe(sns.lineplot, units='subject', estimator=None, x= 'trainDay', y='mpcPEratio', hue='trialType', hue_order=trialOrder, alpha=0.3)
+    g.map_dataframe(sns.lineplot, units='subject', estimator=None, x= 'trainDay', y='mpcPEratio', hue='trialType', hue_order=trialOrder2, alpha=0.3)
     g.map(plt.axhline, y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
+
+
+#%% Final draft here - stage 5 only, normalized by trainDayThisStage
+
+# subset to one observation per trialType per file
+ind= df.groupby(['fileID', 'trialType']).cumcount()==1
+
+dfPlot= df.loc[ind]
+
+# subset stages
+# stagesToPlot= [1,2,3,4,5,6,7]
+dfPlot= dfPlot.loc[dfPlot.stage.isin(stagesToPlot)]
+
+
+f, ax = plt.subplots(1, 1)
+
+g= sns.lineplot(data= dfPlot, ax=ax, units='subject', estimator=None, x= 'trainDayThisStage', y='mpcPEratio', hue='trialType', hue_order=trialOrder2, alpha=0.3)
+
+g= sns.lineplot(data= dfPlot, ax=ax, x= 'trainDayThisStage', y='mpcPEratio', hue='trialType', hue_order=trialOrder2)
+
+plt.axhline(y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
+
+# compare to recalculated values
+
+
+#Add cumulative count of training day within-stage (so we can normalize between subjects appropriately)
+##very important consideration!! Different subjects can run different programs on same day, which can throw plots/analysis off when aggregating data by date.
+dfGroup= dfTidy.loc[dfTidy.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+dfTidy['trainDayThisStage']=  dfGroup.groupby(['subject', 'stage']).transform('cumcount')
+dfTidy.trainDayThisStage= dfTidy.groupby(['fileID'])['trainDayThisStage'].fillna(method='ffill').copy()
+
+
+dfPlot= subsetData(dfTidy, stagesToPlot, trialTypesToPlot, eventsToPlot).copy()
+
+#subset one observation per trial
+#subset to 1 obs per trial for counting
+dfPlot= subsetLevelObs(dfPlot, groupHierarchyTrialType)#.copy()
+
+
+f, ax = plt.subplots(1, 1)
+
+g= sns.lineplot(data= dfPlot, ax=ax, units='subject', estimator=None, x= 'trainDayThisStage', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder, alpha=0.3)
+
+g= sns.lineplot(data= dfPlot, ax=ax, x= 'trainDayThisStage', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder)
+
+plt.axhline(y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
+
+
+#%% Plot by trainPhase (early vs late)
+
+# subset to one observation per trialType per file
+ind= df.groupby(['fileID', 'trialType']).cumcount()==0
+
+dfPlot= df.loc[ind]
+
+# subset stages
+# stagesToPlot= [1,2,3,4,5,6,7]
+# dfPlot= dfPlot.loc[dfPlot.stage.isin(stagesToPlot)]
+
+
+g= sns.FacetGrid(data=dfPlot, col='trainPhase', sharex=False)
+
+g.map_dataframe(sns.lineplot,data= dfPlot, ax=ax, units='subject', estimator=None, x= 'trainDayThisPhase', y='mpcPEratio', hue='trialType', hue_order=trialOrder2, alpha=0.3)
+g.map_dataframe(sns.lineplot,data= dfPlot, ax=ax, x= 'trainDayThisPhase', y='mpcPEratio', hue='trialType', hue_order=trialOrder2)
+
+g.map(plt.axhline,y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
+
+g.add_legend()
+
+saveFigCustom(g, 'allSubjects-Figure1_trainData_trainPhase_mpcPEProb', savePath)
+
+
+
+#- Compare to recalculated 10s PE prob
+
+dfPlot= subsetData(dfTidy, stagesToPlot, trialTypesToPlot, eventsToPlot).copy()
+
+#subset one observation per trial
+#subset to 1 obs per trial for counting
+dfPlot= subsetLevelObs(dfPlot, groupHierarchyTrialType)#.copy()
+
+
+g= sns.FacetGrid(data=dfPlot, col='trainPhase')
+
+g.map_dataframe(sns.lineplot,data= dfPlot, units='subject', estimator=None, x= 'trainDayThisPhase', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder, alpha=0.3)
+g.map_dataframe(sns.lineplot,data= dfPlot, x= 'trainDayThisPhase', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder)
+
+g.map(plt.axhline,y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
+
+g.add_legend()
+
+saveFigCustom(g, 'allSubjects-Figure1_trainData_trainPhase_PEProb10s', savePath)
 

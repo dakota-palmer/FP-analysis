@@ -32,6 +32,8 @@ corrTable= table();
 
 sesInd= 1;
 
+periEventTable(:,'sesCorr')= table(nan);
+
 %For a given session, let's get a correlation coefficient of Blue & Purple
 %signal over time
 for subj= 1:numel(subjects) %for each subject
@@ -213,6 +215,21 @@ for subj= 1:numel(subjects) %for each subject
          corrTable(sesInd,"periDSzblueAll")= {currentSubj(session).periDSpox.DSzpoxblue};
          corrTable(sesInd,"periDSzpurpleAll")= {currentSubj(session).periDSpox.DSzpoxpurple};
 
+         %TODO:
+         %save session corr values into periEventTable (for simple session exclusion)
+         ind1=[];
+         ind1= strcmp(periEventTable.subject, corrTable.subject(sesInd));
+         
+         ind2= [];
+%          ind2= contains(periEventTable.trainDay, corrTable(sesInd, 'trainDay'));
+         ind2= periEventTable.trainDay== corrTable.trainDay(sesInd);
+         
+         ind3= [];
+         ind3= ind2 & ind1;
+         
+         periEventTable(ind3, 'sesCorr')= corrTable(sesInd,'r');
+
+         
          
    sesInd= sesInd+1;
    
@@ -337,6 +354,12 @@ i.set_names('x','session corrCoef(peri-DS concat)', 'color','subj type');
 i.draw();
 
 saveFig(gcf, figPath, title, figFormats);
+
+
+%% Mark sessions for exclusion based on threshold
+
+thresholdSesCorr= 0.6
+
 
 
 %% -- AUC stuff

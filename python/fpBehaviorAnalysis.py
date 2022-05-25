@@ -111,6 +111,95 @@ dfTemp= dfTemp.loc[:,groupHierarchyTrialID+['trialCountThisSubj']+['trialCountTh
 
 dfTidy = dfTidy.merge(dfTemp, how='left', on=groupHierarchyTrialID).copy()
 
+#%% - Mark Early vs. Late training data for comparison
+# n first days vs. n final days (prior to meeting criteria)
+
+
+#number of sessions to include as 'early' and 'late' (n+ 1 for the 0th session so n=4 would be 5 sessions)
+nSes= 4
+
+
+#stage at which to start reverse labelling of 'late' from last day of stage (not currently based on criteria label)
+endStage= 7
+
+#%% Add trainPhase label for early vs. late training days within-subject
+
+# #
+# # dfTemp= dfTidy.copy()
+
+# # ind= dfTemp.loc[dfTemp.criteriaSes==1 & (dfTemp.stage == endStage)]
+
+# #mark the absolute criteria point, set criteriaSes=2 (first session in endStage where criteria was met)
+# #this way can find easily and get last n sessions
+# dfTemp= dfTidy.copy()
+
+# dfGroup= dfTemp.loc[dfTemp.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+
+# test= dfGroup.groupby(['subject','fileID','criteriaSes'], as_index=False)['trainDay'].count()
+
+
+
+#- mark the absolute criteria point, set criteriaSes=2 (first session in endStage where criteria was met)
+#this way can find easily and get last n sessionsdfTemp= dfTidy.copy()
+dfTemp= dfTidy.copy()
+
+#instead of limiting to criteria days, simply start last n day count from final day of endStage
+# dfTemp= dfTemp.loc[dfTemp.criteriaSes==1]
+
+dfTemp= dfTemp.loc[dfTemp.stage==endStage]
+
+#first fileIDs for each subject which meet criteria in the endStage
+# dfTemp= dfTemp.groupby(['subject']).first()#.index
+
+#just get last fileID for each subj in endStage
+dfTemp= dfTemp.groupby(['subject']).last()#.index
+
+ind= dfTemp.fileID
+
+
+dfTidy.loc[dfTidy.fileID.isin(ind),'criteriaSes']= 2
+
+#- now mark last n sessions preceding final criteria day as "late"
+
+#subset data up to absolute criteria session
+
+#get trainDay corresponding to absolute criteria day for each subject, then get n prior sessions and mark as late
+dfTemp2= dfTidy.copy()
+
+# dfTemp2=dfTemp2.set_index(['subject'])
+#explicitly saving and setting on original index to prevent mismatching (idk why this was happening but it was, possibly something related to dfTemp having index on subject)
+dfTemp2=dfTemp2.reset_index(drop=False).set_index(['subject'])
+
+
+#-- something wrong here with lastTrainDay assignment
+dfTemp2['lastTrainDay']= dfTemp.trainDay.copy()
+
+dfTemp2= dfTemp2.set_index('index')
+
+#get dates within nSes prior to final day 
+ind= ((dfTemp2.trainDay>=dfTemp2.lastTrainDay-nSes) & (dfTemp2.trainDay<=dfTemp2.lastTrainDay))
+
+
+#label trainPhase as late
+dfTemp2.loc[ind,'trainPhase']= 'late'
+
+dfTidy['trainPhase']= dfTemp2['trainPhase'].copy()
+
+# dfTidy['lastTrainDay']= dfTemp2['lastTrainDay'].copy()
+
+#- Now do early trainPhase for first nSes
+#just simply get first nSes starting with 0
+ind= dfTidy.trainDay <= nSes
+
+dfTidy.loc[ind,'trainPhase']= 'early'
+
+
+#add corresponding days for each phase for plot x axes
+dfGroup= dfTidy.loc[dfTidy.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+dfTidy['trainDayThisPhase']=  dfGroup.groupby(['subject', 'trainPhase']).transform('cumcount')
+dfTidy.trainDayThisPhase= dfTidy.groupby(['fileID'])['trainDayThisPhase'].fillna(method='ffill').copy()
+
+
 
 #%% Event latency, count, and behavioral outcome for each TRIALID
 # want to count all events within a trial (between this cue onset and next cue onset -1 timestamp)

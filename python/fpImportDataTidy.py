@@ -65,8 +65,8 @@ excludeDate= [] # ['20210604']
 # Exclude specific date(s)
 df= df[~df.date.isin(excludeDate)]
 
-# #hitting memory cap, going to subset specific stages to reduce data (shouldn't really need anything below stage 3)
-stagesToInclude= [1.,2.,3., 4., 5.0]#, 6.0, 7.0, 8., 11.0, 12.0]
+# #hitting memory cap, going to subset specific stages to reduce data 
+stagesToInclude= [1.,2.,3., 4., 5.0, 6.0, 7.0]#, 8., 11.0, 12.0]
 # 
 # stagesToInclude= [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
 # stagesToInclude= df.stage.unique()
@@ -89,12 +89,12 @@ df.columns= labels
 # %% Add other variables if necessary before tidying
 
 #add cue duration variable by stage (using dict here)
-stages= [4,5,7]
-cueDur= [10,10,10]
+# stages= [4,5,7]
+# cueDur= [10,10,10]
 # stages= [1,2,3,4,5]
 # cueDur= [60,30,20,10,10]
-# stages= [1,2,3,4,5,6,7,8,9,10,11,12]
-# cueDur= [60,30,20,10,10,10,10,10,10,10,10,10]
+stages= [1,2,3,4,5,6,7,8,9,10,11,12]
+cueDur= [60,30,20,10,10,10,10,10,10,10,10,10]
 
 
 fs= 40 #fp 40hz

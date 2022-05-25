@@ -8,6 +8,13 @@ stagesToPlot= [1:7];
 
 %% todo: subset n days from criteria?
 
+%Compare Early vs. Late training data
+
+% n first days vs. n final days (prior to meeting criteria)
+
+
+
+
 
 %% Figure 1: DS vs NS PE Ratio across sessions
 
@@ -141,6 +148,13 @@ i(1,1).set_title(title);
 i(1,1).set_names('x','training day','y',y,'color','Cue type (grand mean)');
 
 i(1,1).draw()
+
+title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure1-training-peRatio');   
+i(1,1).set_title(title);    
+i(1,1).set_names('x','train day)','y','10s pe Probability','color','Cue type (grand mean)');
+
+saveFig(gcf, figPath, title, figFormats);
+
 
 
     %% Figure 1: DS vs NS PE Latency across sessions

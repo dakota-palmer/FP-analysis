@@ -280,8 +280,8 @@ for subj= 1:numel(subjects)
             periEventTable.date(tsInd)= {num2str(currentSubj(includedSession).date)};
             periEventTable.stage(tsInd)= currentSubj(includedSession).trainStage;
                      
-            periEventTable.DSpeRatio(tsInd)= currentSubj(includedSession).behavior.DSpeRatio;
-            periEventTable.NSpeRatio(tsInd)= currentSubj(includedSession).behavior.NSpeRatio;
+            periEventTable.DSpeRatio(tsInd)= currentSubj(includedSession).behavior.tensecDSpeRatio;
+            periEventTable.NSpeRatio(tsInd)= currentSubj(includedSession).behavior.tensecNSpeRatio;
             
             %label if this ses met behavioral criteria
             periEventTable.criteriaSes(tsInd)= currentSubj(includedSession).behavior.criteriaSes;

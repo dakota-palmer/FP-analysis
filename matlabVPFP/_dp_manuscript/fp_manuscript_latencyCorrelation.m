@@ -431,7 +431,8 @@ data.latencyOrder= latencyOrderDummy(:,1);
 
 %Stack data to have latencyOrder variable
 
-lme1= fitlme(data, 'periCueRho~ (timeLock:latencyOrder)+ (1|subject)');
+% lme1= fitlme(data, 'periCueRho~ (timeLock:latencyOrder)+ (1|subject)');
+lme1= fitlme(data, 'periCueRho~ timeLock*latencyOrder + (1|subject)');
 
 lme1
 

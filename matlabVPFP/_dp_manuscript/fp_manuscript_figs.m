@@ -20,18 +20,31 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-
 
 experimentName= 'vp-vta-fp'
 
+%% ID control/exclusion subj
+
+%mark subjects for exclusion
+subjToExclude= {'rat17', 'rat10', 'rat16'}; %exclude these due to either dynamic loss of signal or behavior
+
+
+controlSubj= {'rat20'}; %exclude these due to no signal ever or GFP control
+
+
 %% Choose whether to plot experimental or control subjects
 
 % subjMode= 'experimental' or 'control or 'all'
-% subjMode='experimental';
+subjMode='experimental';
 % subjMode='control';
 
-subjMode= 'all'
+% subjMode= 'all'
 
 %% Choose whether to include all sessions or only Criteria sessions in analyses
 % criteriaMode= 'allSes' or 'criteriaSes
 % criteriaMode= 'allSes';
 criteriaMode= 'criteriaSes';
+
+%% Choose whether to exclude sessions based on fp signal correlation
+
+sesCorrExcludeMode= 'sesCorr';
 
 
 
@@ -85,19 +98,23 @@ mapCustomCue= [90,180,172;
 fp_manuscript_tidyTable
 
 %% make training plots
+
 fp_manuscript_behaviorPlots();
+
+
+%% ID and remove artifacts
+fp_manuscript_artifactExclusion();
+
+%% ID and bad sessions for exclusion based on fp signal
+fp_manuscript_session_correlation();
 
 %% Isolate / exclude data based on behavioral criteria (& subject)
 % will define periEventTable for subsequent scripts (control v experimental based on flag above)
 
 fp_manuscript_dataExclusion();
 
-%% ID and remove artifacts
-fp_manuscript_artifactExclusion();
 
 
-%% ID and remove bad sessions
-fp_manuscript_session_correlation();
 
 %% Latency correlation
 
