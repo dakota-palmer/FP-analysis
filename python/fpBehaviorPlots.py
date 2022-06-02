@@ -483,7 +483,7 @@ df.loc[df.stage<5, 'mpcNSpeRatio']= None
 
 # at least if done here should be visible gap in trainDay
 
-df= df.loc[df.stage.notnull()]
+# df= df.loc[df.stage.notnull()]
 
 
 #%% - Mark stages which pass behavioral criteria (for DS task, DS and NS PE Ratio)
@@ -639,13 +639,13 @@ df.subject= df.subject.astype('int64')
 
 #%%---- Exclude subjects
 
-subjectsToExclude= [10, 17]
+# subjectsToExclude= [10, 17]
 
-subjectsControl= [16, 20]
+# subjectsControl= [16, 20]
 
 df= df[~df.subject.isin(subjectsToExclude)]
 
-df= df[~df.subject.isin(subjectsControl)]
+# df= df[~df.subject.isin(subjectsControl)]
     
 
 #%% -----Plot MPC calculated values
@@ -765,6 +765,10 @@ g.add_legend()
 
 saveFigCustom(g, 'allSubjects-Figure1_trainData_trainPhase_mpcPEProb', savePath)
 
+
+# g= sns.FacetGrid(data=dfPlot, row='subject', col='trainPhase', sharex=False)
+
+# g.map_dataframe(sns.lineplot,data= dfPlot, ax=ax, units='subject', estimator=None, x= 'trainDayThisPhase', y='mpcPEratio',style='subject', hue='trialType', hue_order=trialOrder2, alpha=0.3)
 
 
 #- Compare to recalculated 10s PE prob

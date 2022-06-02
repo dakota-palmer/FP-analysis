@@ -191,6 +191,7 @@ dfTidy['trainPhase']= dfTemp2['trainPhase'].copy()
 #just simply get first nSes starting with 0
 ind= dfTidy.trainDay <= nSes
 
+
 dfTidy.loc[ind,'trainPhase']= 'early'
 
 
@@ -638,7 +639,10 @@ dfTidy= dfTidy.reset_index().set_index(['fileID','trialID'])
 dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
 
 #reset index to eventID
-dfTidy= dfTidy.reset_index().set_index(['eventID'])
+# dfTidy= dfTidy.reset_index().set_index(['eventID'])
+
+dfTidy.reset_index(inplace=True)
+dfTidy.set_index(['eventID'], inplace=True)
 
 #%% Calculate Probability of behavioral outcome for each trial type. 
 #This is normalized so is more informative than simple count of trials. 
@@ -649,7 +653,11 @@ dfTidy= dfTidy.reset_index().set_index(['eventID'])
    
 #subset data and save as intermediate variable dfGroup
 #get only one entry per trial
-dfGroup= dfTidy.loc[dfTidy.groupby(['fileID','trialID']).cumcount()==0].copy()
+ind= dfTidy.groupby(['fileID','trialID']).cumcount()==0
+
+dfGroup= dfTidy.loc[ind].copy()
+
+# dfGroup= dfTidy.loc[dfTidy.groupby(['fileID','trialID']).cumcount()==0].copy()
 
 #for Lick+laser sessions, retain only trials with PE+lick for comparison (OPTO specific)
 # dfGroup.loc[dfGroup.laserDur=='Lick',:]= dfGroup.loc[(dfGroup.laserDur=='Lick') & (dfGroup.trialOutcomeBeh=='PE+lick')].copy()
@@ -674,9 +682,16 @@ dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='
 
 #assign back to df by merging
 #TODO: can probably be optimized. if this section is run more than once will get errors due to assignment back to dfTidy
-# dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
 
-dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
+# dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
+
+dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
+
+dfTidy= dfTidy.merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s'])#.copy()
+
+
+dfTidy.set_index(['eventID'], inplace=True)
+
 
 
 #%% dp 2022-05-04 10s PE probablility 
