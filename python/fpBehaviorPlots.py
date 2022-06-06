@@ -519,7 +519,9 @@ nSes= 4
 
 
 #stage at which to start reverse labelling of 'late' from last day of stage (not currently based on criteria label)
-endStage= 7
+# endStage= 7
+endStage= 5
+
 
 #%% Add trainPhase label for early vs. late training days within-subject
 
@@ -528,6 +530,8 @@ endStage= 7
 
 # # ind= dfTemp.loc[dfTemp.criteriaSes==1 & (dfTemp.stage == endStage)]
 
+## TODO: Limit "late" training sessions as prior to meeting criteria (not just the last stage) 
+    
 # #mark the absolute criteria point, set criteriaSes=2 (first session in endStage where criteria was met)
 # #this way can find easily and get last n sessions
 # dfTemp= df.copy()
@@ -780,7 +784,7 @@ dfPlot= subsetData(dfTidy, stagesToPlot, trialTypesToPlot, eventsToPlot).copy()
 dfPlot= subsetLevelObs(dfPlot, groupHierarchyTrialType)#.copy()
 
 
-g= sns.FacetGrid(data=dfPlot, col='trainPhase')
+g= sns.FacetGrid(data=dfPlot, col='trainPhase', sharex=False)
 
 g.map_dataframe(sns.lineplot,data= dfPlot, units='subject', estimator=None, x= 'trainDayThisPhase', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder, alpha=0.3)
 g.map_dataframe(sns.lineplot,data= dfPlot, x= 'trainDayThisPhase', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder)
@@ -789,5 +793,13 @@ g.map(plt.axhline,y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
 
 g.add_legend()
 
-saveFigCustom(g, 'allSubjects-Figure1_trainData_trainPhase_PEProb10s', savePath)
+#% Save Figure as SVG
+figName= 'allSubjects-Figure1_trainData_trainPhase_PEProb10s'
+
+sns.set_theme(style="whitegrid")
+
+plt.gcf().tight_layout()
+plt.savefig(savePath+figName+'.svg', bbox_inches='tight')
+
+saveFigCustom(g, figName, savePath)
 

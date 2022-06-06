@@ -40,6 +40,9 @@ my_shelf.close()
 
 
 #%% Plot settings
+savePath= r'./_output/fpBehaviorAnalysis/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+
 sns.set_style("darkgrid")
 sns.set_context('notebook')
 
@@ -121,6 +124,201 @@ nSes= 4
 
 #stage at which to start reverse labelling of 'late' from last day of stage (not currently based on criteria label)
 endStage= 7
+# endStage= 5
+
+ #%% ID, mark, and vizualize sessions with abnormal event counts
+  
+ 
+#Unstack() the groupby output for a dataframe we can profile
+dfPlot= dfTidy.copy()
+dfPlot= dfPlot.groupby(['stage', 'subject', 'fileID', 'eventType'], observed=True)['eventTime'].count().unstack()
+#add trialType counts
+# dfPlot= dfPlot.merge(dfTidy.loc[(dfTidy.eventType=='NStime') | (dfTidy.eventType=='DStime')].groupby(['subject','date','trialType'])['eventTime'].count().unstack(),left_index=True,right_index=True)
+
+
+# dfPlot.boxplot()
+
+dfPlot= dfPlot.stack().reset_index(name='count')
+
+# dfPlot.plot(kind='scatter', x='fileID', y='count', c='eventType', colormap='tab10')
+# # dfPlot.plot.scatter()
+ 
+
+# #ind subj distros
+
+# def fixed_boxplot(*args, label=None, **kwargs):
+#     sns.boxplot(*args, **kwargs, labels=[label])
+
+for subj in dfPlot.subject.unique():
+    
+    dfPlot2= dfPlot.loc[dfPlot.subject==subj]
+    
+    # g= sns.FacetGrid(data=dfPlot2, col='eventType', sharex=True, sharey=False, hue='eventType')
+    
+    # g.map_dataframe(fixed_boxplot, y='count')
+    
+    # g.map_dataframe(sns.stripplot, y='count')
+    
+    # line facet
+    #- want to see for each subject, counts over time across ses
+
+    
+        
+
+    
+    #use stats to find outliers based on z score
+    from scipy import stats
+    
+    #really need to compute z score for each file for each eventType
+    dfGroup= dfPlot2.groupby(['subject','eventType'])
+    z= dfGroup.apply(lambda x: (np.abs(stats.zscore(x['count']))))
+    # ^ returns one z score per eventType (same across files)
+    
+    #instead try pivot() eventType and running z score by columns?
+    dfPlot2= dfPlot2.set_index(['fileID'])
+    dfTemp= dfPlot2.pivot(columns='eventType')['count'].copy()
+    
+    #for zscore fxn, axis should = 0. Note if no variance will return nan even with nan_policy='omit'
+    z= np.abs(stats.zscore(dfTemp,axis=0, nan_policy='omit'))
+    
+    # ind= z > zThresh
+
+    
+    #melt()
+    #reset_index so fileID can be kept in melt
+    z= z.reset_index()
+    z2 = z.melt(id_vars= 'fileID', value_vars=z.columns, var_name='eventType', value_name='count').copy()
+
+    z2= z2.rename(columns= {'count':'zScore'})
+
+
+    #merge z score back into df
+    #merge on fileID, eventType
+    
+    z2= z2.set_index(['fileID','eventType'])
+    dfPlot2= dfPlot2.reset_index().set_index(['fileID','eventType'])
+    
+    dfPlot2['zScore']= z2.zScore
+
+    #mark 'outliers' exceeding zThreshold
+
+    zThresh=2
+
+    ind= dfPlot2.zScore > zThresh   
+
+    dfPlot2.loc[:,'outlier']= 0
+
+    dfPlot2.loc[ind,'outlier']= 1
+    
+    dfPlot2.reset_index(inplace=True)
+    
+    
+    # make event count plots with facet of outlier status
+    # g= sns.FacetGrid(data=dfPlot2, col='eventType', hue='outlier', sharey=False)#, sharex=False, sharey=False)
+    g= sns.FacetGrid(data=dfPlot2, row='eventType', sharey=False)#, sharex=False, sharey=False)
+
+    g.map_dataframe(sns.scatterplot, x='fileID', y='count', hue='outlier', style='outlier')
+    g.map_dataframe(sns.lineplot, x='fileID', y='count', color='blue', alpha=0.3)
+
+
+    title= 'subject-'+str(subj)+'-eventCount-by-session'
+    g.fig.suptitle(title)
+    g.add_legend()
+    
+    saveFigCustom(g.fig, title, savePath)
+    
+    # #==----==-=
+    
+    # # dfPlot2.set_index(['subject','eventType'], inplace=True)
+    
+    # # ind= (np.abs(stats.zscore(dfPlot2)) < 3).all(axis=1)]
+    
+    # ##using groupby.apply()
+    
+    # dfGroup= dfPlot2.groupby(['subject','eventType'])
+    # # dfGroup.apply(lambda x: stats.zscore(x['count']))
+
+
+    # #apply the zscore fxn to each group and check if exceeding threshold (3)    
+    # zThresh= 3
+        
+    # ind= dfGroup.apply(lambda x: (np.abs(stats.zscore(x['count'])) > zThresh))
+    
+    # dfPlot2.set_index(['subject','eventType'],drop=False, inplace=True)
+    
+    # ind= ind.reset_index()
+    
+    # # THESE are outliers for this subject.  
+    # ind2= ind[ind['count']==True]
+    
+    
+    
+    # dfPlot2.loc[ind,'outlier']= 1
+    # # dfTemp.loc[ind,'outlier']= 1
+
+
+    
+    # # this isn't grouping by eventType
+    # ind= (np.abs(stats.zscore(dfPlot2['count'])) < 3)#.all(axis=1)]
+    
+    # dfPlot2.loc[ind, 'outlier']= 1
+    
+    # # dfPlot2[(np.abs(stats.zscore(dfPlot2[0])) < 3), 'outlier']= 1
+
+    # g= sns.FacetGrid(data=dfPlot2, col='eventType', hue='eventType', sharey=False)#, sharex=False, sharey=False)
+
+    # g.map_dataframe(sns.scatterplot, x='fileID', y='count')
+
+    
+# # subj facet
+# g= sns.FacetGrid(data=dfPlot, col='subject', col_wrap=4, hue='eventType')
+
+# g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+
+# g.map_dataframe(sns.stripplot, x='eventType', y='count')
+
+# # #all subj
+# g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType', sharex=False, sharey=False)
+
+# g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+
+# g.map_dataframe(sns.stripplot, x='eventType', y='count')
+
+
+
+# # #with fileID (to actually pinpoint outliers)
+# g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
+
+# g.map_dataframe(sns.lineplot, x='fileID', y='count')
+# g.map_dataframe(sns.scatterplot, x='fileID', y='count')
+
+
+
+# #STAGE FACET 
+# g= sns.FacetGrid(data=dfPlot, row='stage', hue='eventType')#, sharex=False, sharey=False)
+
+# g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+
+# g.map_dataframe(sns.stripplot, x='eventType', y='count')
+
+
+# #line stage facet
+# g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
+
+# g.map_dataframe(sns.lineplot, x='fileID', y='count')
+
+
+ #%% view distro of eventType counts per fileID for session outliers
+  
+dfPlot= dfTidy.groupby(['subject', 'fileID', 'eventType'])['eventTime'].count().reset_index()
+
+
+g= sns.displot(data=dfPlot, col='eventType', x='eventTime', kind='hist', hue='eventType', multiple='dodge')
+                # facet_kws={'sharey': False, 'sharex': True})
+g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
+g.fig.suptitle('Total event count across sessions by type- check for outliers')
+
+
 
 #%% Add trainPhase label for early vs. late training days within-subject
 
@@ -140,7 +338,7 @@ endStage= 7
 
 
 #- mark the absolute criteria point, set criteriaSes=2 (first session in endStage where criteria was met)
-#this way can find easily and get last n sessionsdfTemp= dfTidy.copy()
+#this way can find easily and get last n sessionsdfTemp= df.copy()
 dfTemp= dfTidy.copy()
 
 #instead of limiting to criteria days, simply start last n day count from final day of endStage
@@ -174,7 +372,7 @@ dfTemp2=dfTemp2.reset_index(drop=False).set_index(['subject'])
 #-- something wrong here with lastTrainDay assignment
 dfTemp2['lastTrainDay']= dfTemp.trainDay.copy()
 
-dfTemp2= dfTemp2.set_index('index')
+dfTemp2= dfTemp2.reset_index().set_index('index')
 
 #get dates within nSes prior to final day 
 ind= ((dfTemp2.trainDay>=dfTemp2.lastTrainDay-nSes) & (dfTemp2.trainDay<=dfTemp2.lastTrainDay))
@@ -185,20 +383,31 @@ dfTemp2.loc[ind,'trainPhase']= 'late'
 
 dfTidy['trainPhase']= dfTemp2['trainPhase'].copy()
 
-# dfTidy['lastTrainDay']= dfTemp2['lastTrainDay'].copy()
+#add reverse count of training days within late phase (countdown to final day =0)
+dfTemp2.loc[ind,'trainDayThisPhase']= dfTemp2.trainDay-dfTemp2.lastTrainDay
+
+dfTidy['trainDayThisPhase']= dfTemp2['trainDayThisPhase'].copy()
 
 #- Now do early trainPhase for first nSes
 #just simply get first nSes starting with 0
 ind= dfTidy.trainDay <= nSes
 
-
 dfTidy.loc[ind,'trainPhase']= 'early'
 
 
-#add corresponding days for each phase for plot x axes
+#TODO- in progress (indexing match up)
+# add forward cumcount of training day within early phase 
+#only save into early phase subset
+ind= dfTidy.trainPhase=='early'
+
 dfGroup= dfTidy.loc[dfTidy.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
-dfTidy['trainDayThisPhase']=  dfGroup.groupby(['subject', 'trainPhase']).transform('cumcount')
+dfTidy.loc[ind,'trainDayThisPhase']=  dfGroup.groupby(['subject', 'trainPhase']).transform('cumcount') #add 1 for intuitive count
 dfTidy.trainDayThisPhase= dfTidy.groupby(['fileID'])['trainDayThisPhase'].fillna(method='ffill').copy()
+
+#old; add corresponding days for each phase for plot x axes- old; simple cumcount
+# dfGroup= dfTidy.loc[dfTidy.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+# dfTidy['trainDayThisPhase']=  dfGroup.groupby(['subject', 'trainPhase']).transform('cumcount')
+# dfTidy.trainDayThisPhase= dfTidy.groupby(['fileID'])['trainDayThisPhase'].fillna(method='ffill').copy()
 
 
 
@@ -314,9 +523,12 @@ dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='
 
 #assign back to df by merging
 #TODO: can probably be optimized. if this section is run more than once will get errors due to assignment back to dfTidy
-# dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
+dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
 
-dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
+dfTidy= dfTidy.merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s'])#.copy()
+
+
+# dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
 
 
 
@@ -1553,93 +1765,93 @@ my_shelf.close()
 # print('all done')
 
 
- #%% ID, mark, and vizualize sessions with abnormal event counts
+#  #%% ID, mark, and vizualize sessions with abnormal event counts
   
  
-#Unstack() the groupby output for a dataframe we can profile
-dfPlot= dfTidy.copy()
-dfPlot= dfPlot.groupby(['stage', 'subject', 'fileID','eventType'], observed=True)['eventTime'].count().unstack()
-#add trialType counts
-# dfPlot= dfPlot.merge(dfTidy.loc[(dfTidy.eventType=='NStime') | (dfTidy.eventType=='DStime')].groupby(['subject','date','trialType'])['eventTime'].count().unstack(),left_index=True,right_index=True)
+# #Unstack() the groupby output for a dataframe we can profile
+# dfPlot= dfTidy.copy()
+# dfPlot= dfPlot.groupby(['stage', 'subject', 'fileID','eventType'], observed=True)['eventTime'].count().unstack()
+# #add trialType counts
+# # dfPlot= dfPlot.merge(dfTidy.loc[(dfTidy.eventType=='NStime') | (dfTidy.eventType=='DStime')].groupby(['subject','date','trialType'])['eventTime'].count().unstack(),left_index=True,right_index=True)
 
 
-dfPlot.boxplot()
+# dfPlot.boxplot()
 
-dfPlot= dfPlot.stack().reset_index(name='count')
+# dfPlot= dfPlot.stack().reset_index(name='count')
 
-dfPlot.plot(kind='scatter', x='fileID', y='count', c='eventType', colormap='tab10')
-# dfPlot.plot.scatter()
+# dfPlot.plot(kind='scatter', x='fileID', y='count', c='eventType', colormap='tab10')
+# # dfPlot.plot.scatter()
  
 
-#ind subj distros
+# #ind subj distros
 
-def fixed_boxplot(*args, label=None, **kwargs):
-    sns.boxplot(*args, **kwargs, labels=[label])
+# def fixed_boxplot(*args, label=None, **kwargs):
+#     sns.boxplot(*args, **kwargs, labels=[label])
 
-# for subj in dfPlot.subject.unique():
+# # for subj in dfPlot.subject.unique():
     
-#     dfPlot2= dfPlot.loc[dfPlot.subject==subj]
+# #     dfPlot2= dfPlot.loc[dfPlot.subject==subj]
     
-#     g= sns.FacetGrid(data=dfPlot2, col='eventType', sharex=True, sharey=False, hue='eventType')
+# #     g= sns.FacetGrid(data=dfPlot2, col='eventType', sharex=True, sharey=False, hue='eventType')
     
-#     g.map_dataframe(fixed_boxplot, y='count')
+# #     g.map_dataframe(fixed_boxplot, y='count')
     
-#     g.map_dataframe(sns.stripplot, y='count')
+# #     g.map_dataframe(sns.stripplot, y='count')
     
-#     #line facet
-#     # g= sns.FacetGrid(data=dfPlot, col='eventType', hue='eventType')#, sharex=False, sharey=False)
+# #     #line facet
+# #     # g= sns.FacetGrid(data=dfPlot, col='eventType', hue='eventType')#, sharex=False, sharey=False)
 
-#     # g.map_dataframe(sns.scatterplot, x='fileID', y='count')
+# #     # g.map_dataframe(sns.scatterplot, x='fileID', y='count')
 
 
     
-# # subj facet
-# g= sns.FacetGrid(data=dfPlot, col='subject', col_wrap=4, hue='eventType')
+# # # subj facet
+# # g= sns.FacetGrid(data=dfPlot, col='subject', col_wrap=4, hue='eventType')
 
-# g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+# # g.map_dataframe(fixed_boxplot, x='eventType', y='count')
 
-# g.map_dataframe(sns.stripplot, x='eventType', y='count')
+# # g.map_dataframe(sns.stripplot, x='eventType', y='count')
 
-# #all subj
-g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType', sharex=False, sharey=False)
-
-g.map_dataframe(fixed_boxplot, x='eventType', y='count')
-
-g.map_dataframe(sns.stripplot, x='eventType', y='count')
-
-
-
-# #with fileID (to actually pinpoint outliers)
-g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
-
-g.map_dataframe(sns.lineplot, x='fileID', y='count')
-g.map_dataframe(sns.scatterplot, x='fileID', y='count')
-
-
-
-# #STAGE FACET 
-# g= sns.FacetGrid(data=dfPlot, row='stage', hue='eventType')#, sharex=False, sharey=False)
+# # #all subj
+# g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType', sharex=False, sharey=False)
 
 # g.map_dataframe(fixed_boxplot, x='eventType', y='count')
 
 # g.map_dataframe(sns.stripplot, x='eventType', y='count')
 
 
-# #line stage facet
+
+# # #with fileID (to actually pinpoint outliers)
 # g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
 
 # g.map_dataframe(sns.lineplot, x='fileID', y='count')
+# g.map_dataframe(sns.scatterplot, x='fileID', y='count')
 
 
- #%% view distro of eventType counts per fileID for session outliers
+
+# # #STAGE FACET 
+# # g= sns.FacetGrid(data=dfPlot, row='stage', hue='eventType')#, sharex=False, sharey=False)
+
+# # g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+
+# # g.map_dataframe(sns.stripplot, x='eventType', y='count')
+
+
+# # #line stage facet
+# # g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
+
+# # g.map_dataframe(sns.lineplot, x='fileID', y='count')
+
+
+#  #%% view distro of eventType counts per fileID for session outliers
   
-dfPlot= dfTidy.groupby(['subject', 'fileID', 'eventType'])['eventTime'].count().reset_index()
+# dfPlot= dfTidy.groupby(['subject', 'fileID', 'eventType'])['eventTime'].count().reset_index()
 
 
-g= sns.displot(data=dfPlot, col='eventType', x='eventTime', kind='hist', hue='eventType', multiple='dodge')
-                # facet_kws={'sharey': False, 'sharex': True})
-g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
-g.fig.suptitle('Total event count across sessions by type- check for outliers')
+# g= sns.displot(data=dfPlot, col='eventType', x='eventTime', kind='hist', hue='eventType', multiple='dodge')
+#                 # facet_kws={'sharey': False, 'sharex': True})
+# g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
+# g.fig.suptitle('Total event count across sessions by type- check for outliers')
 
 
 
