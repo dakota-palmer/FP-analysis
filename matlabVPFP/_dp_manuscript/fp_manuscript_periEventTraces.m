@@ -684,7 +684,7 @@ i(1,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 speci
 
 i(1,1).set_line_options('base_size',linewidthGrand)
 
-i(1,1).axe_property('YLim',[-5,5]);
+i(1,1).axe_property('YLim',[-1,5]);
 title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zTraces');   
 i(1,1).set_title(title);    
 i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
@@ -722,7 +722,7 @@ i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
 
 i(2,1).set_line_options('base_size',linewidthGrand)
 
-i(2,1).axe_property('YLim',[-10,5]);
+i(2,1).axe_property('YLim',[-1,10]);
 title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zAUC');   
 i(2,1).set_title(title);    
 i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
@@ -734,6 +734,130 @@ i(2,1).draw();
 
 saveFig(gcf, figPath, title, figFormats);
 
+%% Fig 2 b- Contingency of port entry (PE trial vs noPE trials)
+
+stagesToPlot= [5];
+
+%---- i(1) pericue z trace
+%subset specific data to plot
+data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+%initialize & add binary variable for PE vs noPE
+
+data(:,'poxDSoutcome')= {''};%{'noPEtrial'}; %table(0);
+% ind=[];
+% ind= ~isnan(data.poxDSrel);
+
+%trialOutcome coding: 1= PE, 2= noPE, 3=inPort
+outcomeLabels= {'PEtrial','noPEtrial','inPortTrial'}; %1,2,3 
+
+data(:,'poxDSoutcome')= {outcomeLabels{data.DStrialOutcome}}';
+
+%unstack based on PE outcome
+groupers= ["subject","stage","date","DStrialID","timeLock"];
+data= unstack(data, 'DSblue', 'poxDSoutcome', 'GroupingVariables',groupers);
+
+%transform with stack to have trialOutcome variable
+data= stack(data, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome', 'NewDataVariableName', 'periCueBlue');
+
+figure();
+clear i
+
+% individual subjects means
+i(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome, 'group', data.subject);
+
+i(1,1).stat_summary('type','sem','geom','line');
+
+i(1,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+i(1,1).set_line_options('base_size',linewidthSubj);
+i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+i(1,1).draw();
+
+%mean between subj + sem
+i(1,1).update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome, 'group',[]);
+
+i(1,1).stat_summary('type','sem','geom','area');
+
+i(1,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+
+i(1,1).set_line_options('base_size',linewidthGrand)
+
+i(1,1).axe_property('YLim',[-1,5]);
+title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zTraces');   
+i(1,1).set_title(title);    
+i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
+
+
+% i(1,1).draw();
+
+%when making subplots gramm likes a collective i.draw() after creating
+%each subplot before updating?
+
+%---- i(2) bar AUC
+data2= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+% data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
+
+%initialize & add binary variable for PE vs noPE
+data2(:,'poxDSoutcome')= {''}; %table(0);
+% ind=[];
+% ind= ~isnan(data2.poxDSrel);
+% 
+% data2(ind,'poxDSoutcome')= {'PEtrial'};%table(1);
+%trialOutcome coding: 1= PE, 2= noPE, 3=inPort
+outcomeLabels= {'PEtrial','noPEtrial','inPortTrial'}; %1,2,3 
+
+data2(:,'poxDSoutcome')= {outcomeLabels{data2.DStrialOutcome}}';
+
+%unstack based on PE outcome
+groupers= ["subject","stage","date","DStrialID","timeLock"];
+data2= unstack(data2, 'aucDSblue', 'poxDSoutcome', 'GroupingVariables',groupers);
+
+% 
+% data2(:,'poxDSoutcome')= {''};%{'noPEtrial'}; %table(0);
+% ind=[];
+% ind= ~isnan(data.poxDSrel);
+
+%transform with stack to have trialOutcome variable
+data2= stack(data2, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome', 'NewDataVariableName', 'periCueBlueAuc');
+
+% figure();
+% clear i
+
+%ind subj mean points
+i(2,1)= gramm('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', data2.subject);
+
+i(2,1).stat_summary('type','sem','geom','point');
+
+i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+i().draw()
+
+%mean between subj
+i(2,1).update('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', []);
+
+i(2,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+
+%mean bar for trialType
+i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+
+i(2,1).set_line_options('base_size',linewidthGrand)
+
+i(2,1).axe_property('YLim',[-1,10]);
+title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2b-periCue-byPEoutcome-zAUC');   
+i(2,1).set_title(title);    
+i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
+
+%horz line @ zero
+i(2,1).geom_hline('yintercept', 0, 'style', 'k--'); 
+
+i(2,1).draw();
+
+saveFig(gcf, figPath, title, figFormats);
 
  %% old fig 2
 % stagesToPlot= [5];

@@ -5,7 +5,8 @@
 %% load the subjDataAnalyzed struct
 % data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-23-Mar-2022subjDataAnalyzed.mat")
 
-data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_vta_fp-13-Apr-2022subjDataAnalyzed.mat");
+% data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_vta_fp-13-Apr-2022subjDataAnalyzed.mat");
+data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-16-Jun-2022subjDataAnalyzed.mat")
 
 data=data.subjDataAnalyzed;
 
@@ -91,7 +92,7 @@ for session= 1:size(T,1)
     
     %DS cue
     eventTime=[]; eventInd= [];
-    eventTime= T.periDS(session).DS;
+    eventTime= T.periDS{session}.DS;
         %assign timestamps
     eventInd= sesInd(1:numel(eventTime));
     fpTable.DS(eventInd)= eventTime; 

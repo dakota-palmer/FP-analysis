@@ -116,6 +116,8 @@ for subj= 1:numel(subjects)
             %reset btwn sessions            
             DStrialID= nan(periCueFrames, numTrials); %unique ID for each DS trial within session
             
+            DStrialOutcome= nan(periCueFrames, numTrials);
+            
             DSblueRaw= nan(periCueFrames, numTrials);
             DSpurpleRaw= nan(periCueFrames, numTrials);
             
@@ -125,7 +127,10 @@ for subj= 1:numel(subjects)
             DSpurplePox= nan(periCueFrames, numTrials);
             DSblueLox= nan(periCueFrames, numTrials);
             DSpurpleLox= nan(periCueFrames, numTrials);
+            
+            
             NStrialID= nan(periCueFrames, numTrials); %unique ID for each NS trial within session
+            NStrialOutcome= nan(periCueFrames, numTrials);
             NSblue= nan(periCueFrames, numTrials);
             NSpurple=  nan(periCueFrames, numTrials);
             NSbluePox= nan(periCueFrames, numTrials);
@@ -163,6 +168,8 @@ for subj= 1:numel(subjects)
                 DSblueLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxblue(:,:,cue);
                 DSpurpleLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxpurple(:,:,cue);
                 DStrialID(trialInd,cue)= cue;
+                
+                DStrialOutcome(trialInd,cue)= currentSubj(includedSession).trialOutcome.DSoutcome(cue);
                 
                     %saving first PE only (mainly just for latency correlation analysis)
                 if ~isempty( currentSubj(includedSession).behavior.poxDSrel{cue})
@@ -204,7 +211,8 @@ for subj= 1:numel(subjects)
                     
                 
                 NStrialID(trialInd,cue)= cue;
-                
+                NStrialOutcome(trialInd,cue)= currentSubj(includedSession).trialOutcome.NSoutcome(cue);
+
                 NStrialIDcum(trialInd,cue)= NStrialCountCum;
                 NStrialCountCum= NStrialCountCum+1;
            end
@@ -243,6 +251,8 @@ for subj= 1:numel(subjects)
             
             periEventTable.DStrialID(tsInd)= DStrialID(:);
             
+            periEventTable.DStrialOutcome(tsInd)= DStrialOutcome(:);
+            
             periEventTable.DSblueRaw(tsInd)= DSblueRaw(:);
             periEventTable.DSpurpleRaw(tsInd)= DSpurpleRaw(:);
             
@@ -264,6 +274,9 @@ for subj= 1:numel(subjects)
 
             
             periEventTable.NStrialID(tsInd)= NStrialID(:);
+            
+            periEventTable.NStrialOutcome(tsInd)= NStrialOutcome(:);
+
             periEventTable.NSblue(tsInd)= NSblue(:);
             periEventTable.NSpurple(tsInd)= NSpurple(:);
             periEventTable.NSbluePox(tsInd)= NSbluePox(:);
