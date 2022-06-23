@@ -720,21 +720,9 @@ data2= data2(ind,:);
 data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
 
 
-%ind subj mean points
-i= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', data2.subject);
-
-i= i.facet_grid([],data.sesSpecialLabel);
-
-i.stat_summary('type','sem','geom','point');
-
-i.set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
-
-i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
-
-i().draw()
 
 %mean between subj
-i.update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', []);
+i= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', []);
 
 i.set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
 
@@ -744,14 +732,26 @@ i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
 i.set_line_options('base_size',linewidthGrand)
 
 i.axe_property('YLim',[-1,10]);
-title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-learning-periCue-zAUC');   
+title= strcat(subjMode,'-allSubjects-Figure2-learning-periCue-zAUC');   
 i.set_title(title);    
 i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
+
+
+%ind subj mean points
+i.update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', data2.subject);
+
+i= i.facet_grid([],data.sesSpecialLabel);
+
+i.stat_summary('type','sem','geom','point');
+
+i.set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
 
 %horz line @ zero
 i.geom_hline('yintercept', 0, 'style', 'k--'); 
 
-i.draw();
+i().draw()
 
 saveFig(gcf, figPath, title, figFormats);
 
@@ -812,19 +812,8 @@ data2= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
 data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
 
 
-%ind subj mean points
-i(2,1)= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', data2.subject);
-
-i(2,1).stat_summary('type','sem','geom','point');
-
-i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
-
-i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
-
-i().draw()
-
 %mean between subj
-i(2,1).update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', []);
+i(2,1)=gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', []);
 
 i(2,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
 
@@ -841,7 +830,19 @@ i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand m
 %horz line @ zero
 i(2,1).geom_hline('yintercept', 0, 'style', 'k--'); 
 
-i(2,1).draw();
+i.draw();
+
+%ind subj mean points
+i(2,1).update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', data2.subject);
+
+i(2,1).stat_summary('type','sem','geom','point');
+
+i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+i(2,1).draw()
+
 
 saveFig(gcf, figPath, title, figFormats);
 
@@ -940,19 +941,8 @@ data2= stack(data2, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome
 % figure();
 % clear i
 
-%ind subj mean points
-i(2,1)= gramm('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', data2.subject);
-
-i(2,1).stat_summary('type','sem','geom','point');
-
-i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
-
-i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
-
-i().draw()
-
 %mean between subj
-i(2,1).update('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', []);
+i(2,1)= gramm('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', []);
 
 i(2,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
 
@@ -969,7 +959,18 @@ i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand m
 %horz line @ zero
 i(2,1).geom_hline('yintercept', 0, 'style', 'k--'); 
 
-i(2,1).draw();
+i().draw();
+
+%ind subj mean points
+i(2,1).update('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', data2.subject);
+
+i(2,1).stat_summary('type','sem','geom','point');
+
+i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+i(2,1).draw()
 
 saveFig(gcf, figPath, title, figFormats);
 
