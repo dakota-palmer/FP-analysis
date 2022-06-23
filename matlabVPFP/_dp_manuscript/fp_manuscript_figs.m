@@ -39,8 +39,8 @@ subjMode='experimental';
 
 %% Choose whether to include all sessions or only Criteria sessions in analyses
 % criteriaMode= 'allSes' or 'criteriaSes
-% criteriaMode= 'allSes';
-criteriaMode= 'criteriaSes';
+criteriaMode= 'allSes';
+% criteriaMode= 'criteriaSes';
 
 %% Choose whether to exclude sessions based on fp signal correlation
 

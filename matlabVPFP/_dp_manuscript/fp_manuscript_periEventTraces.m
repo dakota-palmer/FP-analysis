@@ -648,10 +648,118 @@ title= strcat(subjMode, 'allSubj-periEvent-stage7');
 
 saveFig(gcf, figPath, title, figFormats);
 
-%% Figure 2: DS vs NS Peri event Z + AUC bar
+%% Fig 2aa: DS vs NS learning on special days: 2d 
+
+%- Stage 5 Day 1, Stage 5 Criteria, Stage 7 Criteria
+% --marked as sesSpecialLabel in fpTidyTable.m
+
+%subset data 
+data= periEventTable;
+
+ind=[];
+ind= ~cellfun(@isempty, data.sesSpecialLabel);
+
+data= data(ind,:);
+
+%stack() to make trialType variable for faceting
+data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
+
+% FacetGrid with sesSpecialLabel = Row
+clear i;
+figure();
+
+
+% individual subjects means
+i= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'group', data.subject);
+
+% i= facet_wrap(data.sesSpecialLabel,'ncols',1);
+i= i.facet_grid([],data.sesSpecialLabel);
+
+
+i().stat_summary('type','sem','geom','line');
+i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
+
+i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+i().set_line_options('base_size',linewidthSubj);
+i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+i().draw();
+
+%mean between subj + sem
+i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'group',[]);
+
+i().stat_summary('type','sem','geom','area');
+
+i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+
+i().set_line_options('base_size',linewidthGrand)
+
+i().axe_property('YLim',[-1,5]);
+i().axe_property('XLim',[-5,10]);
+
+title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-learning-periCue-zTraces');   
+% i().set_title(title);    
+i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
+
+i.draw()
+
+saveFig(gcf, figPath, title, figFormats);
+
+% ----- Bar plots of AUC
+clear i;
+
+data2= periEventTable;
+
+ind=[];
+ind= ~cellfun(@isempty, data2.sesSpecialLabel);
+
+data2= data2(ind,:);
+
+%stack() to make trialType variable for faceting
+data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
+
+
+%ind subj mean points
+i= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', data2.subject);
+
+i= i.facet_grid([],data.sesSpecialLabel);
+
+i.stat_summary('type','sem','geom','point');
+
+i.set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+i().draw()
+
+%mean between subj
+i.update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', []);
+
+i.set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+
+%mean bar for trialType
+i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+
+i.set_line_options('base_size',linewidthGrand)
+
+i.axe_property('YLim',[-1,10]);
+title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-learning-periCue-zAUC');   
+i.set_title(title);    
+i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
+
+%horz line @ zero
+i.geom_hline('yintercept', 0, 'style', 'k--'); 
+
+i.draw();
+
+saveFig(gcf, figPath, title, figFormats);
+
+
+%% Figure 2a: DS vs NS Peri event Z + AUC bar
 % dp 2022-05-02 updating w new colormap and aesthetics
 
-stagesToPlot= [5];
+stagesToPlot= [7];
 
 %---- i(1) pericue z trace
 %subset specific data to plot
@@ -667,6 +775,7 @@ clear i
 i(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'group', data.subject);
 
 i(1,1).stat_summary('type','sem','geom','line');
+i(1,1).geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
 i(1,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
 
@@ -685,6 +794,8 @@ i(1,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 speci
 i(1,1).set_line_options('base_size',linewidthGrand)
 
 i(1,1).axe_property('YLim',[-1,5]);
+i(1,1).axe_property('XLim',[-5,10]);
+
 title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zTraces');   
 i(1,1).set_title(title);    
 i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
@@ -736,7 +847,7 @@ saveFig(gcf, figPath, title, figFormats);
 
 %% Fig 2 b- Contingency of port entry (PE trial vs noPE trials)
 
-stagesToPlot= [5];
+stagesToPlot= [7];
 
 %---- i(1) pericue z trace
 %subset specific data to plot
@@ -767,6 +878,7 @@ clear i
 i(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome, 'group', data.subject);
 
 i(1,1).stat_summary('type','sem','geom','line');
+i(1,1).geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
 i(1,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
 
@@ -785,6 +897,8 @@ i(1,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 speci
 i(1,1).set_line_options('base_size',linewidthGrand)
 
 i(1,1).axe_property('YLim',[-1,5]);
+i().axe_property('XLim',[-5,10]);
+
 title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zTraces');   
 i(1,1).set_title(title);    
 i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');

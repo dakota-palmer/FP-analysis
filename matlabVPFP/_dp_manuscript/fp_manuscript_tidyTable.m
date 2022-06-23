@@ -71,6 +71,9 @@ for subj= 1:numel(subjects)
     for thisStage= allStages %~~ Here we vectorize the field 'trainStage' to get the unique values easily %we'll loop through each unique stage
         includedSessions= []; %excluded sessions will reset between unique stages
         
+         trainDayThisStage=1; %cumcount of training days within-stage for this subj
+         criteriaDayThisStage=0; %cumcount of criteria days within-stage for this subj
+        
         %loop through all sessions and record index of sessions that correspond only to this stage
         for session= 1:numel(currentSubj)
             if currentSubj(session).trainStage == thisStage %only include sessions from this stage
@@ -141,6 +144,7 @@ for subj= 1:numel(subjects)
             DStrialIDcum= nan(periCueFrames, numTrials);  %cumulative 
             NStrialIDcum= nan(periCueFrames, numTrials); 
 
+            sesSpecialLabel= cell(periCueFrames,numTrials); %empty cell to store string labels for marking specific days to plot (e.g. first day of st5, first criteria of st 5, first criteria of st 7 for vp-vta-fp manuscript Figure 1)
             
             %behavior during trial
                 %PE latency relative to cue onset
@@ -242,12 +246,29 @@ for subj= 1:numel(subjects)
             else
                 tsInd= tsInd+ periCueFrames * size(DSblue,2);
             end
-           
+            
+            %dp 2022-06-19 labelling specific sessions for plotting
+            %--Save string labels to mark specific days for plotting
+            if currentSubj(includedSession).behavior.criteriaSes==1
+               criteriaDayThisStage= criteriaDayThisStage+1; 
+            end
+            
+            if thisStage==5 && trainDayThisStage==1 
+                sesSpecialLabel(:)= {'stage-5-day-1'};
+            elseif thisStage==5 && criteriaDayThisStage==1
+                sesSpecialLabel(:)= {'stage-5-day-1-criteria'};
+            elseif thisStage==7 && criteriaDayThisStage==1
+%                 sesSpecialLabel(:)= {'stage-7-day-1-criteria'};
+            end
+            
+            
             
             %Save data into table
             periEventTable.fileID(tsInd)= sesCount;
             
             periEventTable.trainDay(tsInd)= currentSubj(includedSession).trainDay;
+            
+            periEventTable.sesSpecialLabel(tsInd)= sesSpecialLabel(:);
             
             periEventTable.DStrialID(tsInd)= DStrialID(:);
             
@@ -300,6 +321,7 @@ for subj= 1:numel(subjects)
             periEventTable.criteriaSes(tsInd)= currentSubj(includedSession).behavior.criteriaSes;
             
             sesCount=sesCount+1;
+            trainDayThisStage= trainDayThisStage+1;
         end %end session loop
     end %end stage loop
 end %end subj loop
