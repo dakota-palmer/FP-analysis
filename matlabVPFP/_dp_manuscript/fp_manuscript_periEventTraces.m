@@ -8,7 +8,7 @@
 
 %could save as  mat v 7.3 but seems to makes very large files and takes forever
 
-figFormats = {'.png'}
+figFormats = {'.svg'}
 
 %% Use GRAMM to make plots
 
@@ -623,6 +623,9 @@ i=gramm('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType, 'ligh
 
 
 
+
+
+
 % i(1,1)=gramm('x',data.timeLock,'y',data.DSblue, 'color', data.EventType, 'lightness',data.subject);
 % i(1,1).stat_summary('type','sem','geom','area');
 % i(1,1).set_names('x','time from event (s)','y','z-score','color','subject');
@@ -1119,7 +1122,6 @@ for subj= 1:numel(subjects)
 %     i=gramm('x',data.timeLock,'y',data.DSblue, 'color', 'eventType');
     i=gramm('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType);
 
-    
     %facet by stage
     i.facet_wrap(data.stage);
 
@@ -1134,6 +1136,14 @@ for subj= 1:numel(subjects)
 
     i.draw();
 
+    title= strcat(subjMode,'-subject-', subjects{subj},'-periEvent-allStages');
+
+    saveFig(gcf, figPath, title, figFormats);
+
+end
+    
+ 
+    %--old
     
 %     i.set_color_options('map','brewer1'); %hacky way to get one color per dataset plotted w/o different column, use 3 distinct maps
 
@@ -1181,12 +1191,164 @@ for subj= 1:numel(subjects)
 %     i.draw();
 
 
+% 
+%     title= strcat(subjMode,'-subject-', subjects{subj},'-periEvent-allStages');
+% 
+%     saveFig(gcf, figPath, title, figFormats);
+% 
+% end
 
-    title= strcat(subjMode,'-subject-', subjects{subj},'-periEvent-allStages');
 
+%% --PLOT 465 vs 405 mean peri event for each subj
+
+
+for subj= 1:numel(subjects)
+    clear i;
+    figure();
+    %subset data
+    data=[];
+    data= periEventTable(strcmp(periEventTable.subject, subjects{subj})==1,:);
+    
+    %test subset
+%     data= data(data.stage==stagesToPlot,:);
+    
+    %transform to have eventType variable
+    %ideally want to melt() from wide to long 3 eventTypes into single col
+    %matlab lacks good tidying functions like melt() but we have stack
+    %which is quite helpful!
+    data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox'}, 'IndexVariableName', 'eventTypeBlue', 'NewDataVariableName', 'periEventBlue');
+    
+    %- stack again for 405nm
+    data= stack(data, {'DSpurple', 'DSpurplePox', 'DSpurpleLox'}, 'IndexVariableName', 'eventTypePurple', 'NewDataVariableName', 'periEventPurple');
+
+%     %keep track of a new variable for eventType color
+%     %doing this just so I don't have to manipulate orignal dataframe
+%     %just make 3 columns and subset separately to map color for each
+%     eventType= cell(size(data,1),3); %3 events, 1 type per observation
+%     eventType(:,1)= {'DS'};
+%     eventType(:,2)= {'PE DS'};
+%     eventType(:,3)= {'Lick DS'};
+    
+    %define variables to plot and grouping 
+%     figure();   
+
+    %--individual session means
+    i=gramm('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventTypeBlue, 'group', data.fileID);
+    
+    %facet by stage
+    i.facet_wrap(data.stage);
+
+    i.stat_summary('type','sem','geom','line');
+
+    i().set_line_options('base_size',linewidthSubj)
+    
+    i.draw();
+
+    %--subj means
+    i.update('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventTypeBlue, 'group', []);
+
+%     %facet by stage
+%     i.facet_wrap(data.stage);
+
+%     %facet by stage & eventType
+%     i.facet_wrap(data.stage);
+
+
+    i.stat_summary('type','sem','geom','area');
+    i.geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
+    
+    i().set_line_options('base_size',linewidthGrand);
+
+    
+    %label and draw
+    i.axe_property('YLim',[-5, 10]);
+    i.set_names('x','time from event (s)','y','z-score','color','eventTypeBlue', 'column', 'stage');
+    i.set_title(strcat(subjects{subj},'peri-event-allStages'));
+
+    i.draw();
+    
+    %---- draw 405 purple session means
+    i.update('x',data.timeLock,'y',data.periEventPurple, 'color', data.eventTypePurple, 'group', data.fileID);
+    
+    i.stat_summary('type','sem','geom','line');
+
+    i.set_color_options('map','brewer2'); %subselecting the 2 specific color levels i want from map
+
+    i().set_line_options('base_size',linewidthSubj)
+    
+    i.draw();
+    
+    %--- draw 405 purple grand means
+    i.update('x',data.timeLock,'y',data.periEventPurple, 'color', data.eventTypePurple, 'group', []);
+
+    title= strcat(subjMode,'-subject-', subjects{subj},'-periEvent-bothSignals-allStages');
+    i.set_names('x','time from event (s)','y','z-score','color','eventTypePurple', 'column', 'stage');
+    
+    i.set_color_options('map','brewer2'); %subselecting the 2 specific color levels i want from map
+
+    i.stat_summary('type','sem','geom','area');
+
+    i.draw();
     saveFig(gcf, figPath, title, figFormats);
 
 end
+
+%% Figure3 eventType plot???
+   %--- new
+        %subset data
+    data=[];
+    data= periEventTable;
+    
+    ind=[];
+    ind= ~cellfun(@isempty, data.sesSpecialLabel);
+
+    data= data(ind,:);
+    
+    %transform to have eventType variable
+    %ideally want to melt() from wide to long 3 eventTypes into single col
+    %matlab lacks good tidying functions like melt() but we have stack
+    %which is quite helpful!
+    data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
+    
+    clear i; figure()
+    % individual subjects means
+    i= gramm('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType, 'group', data.subject);
+
+    i= i.facet_grid([],data.sesSpecialLabel);
+%     i= i.facet_grid(data.eventType,data.sesSpecialLabel);
+%     i= i.facet_grid(data.eventType,data.stage);
+%     i= i.facet_grid([],data.stage);
+
+
+    i().stat_summary('type','sem','geom','line');
+    i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
+
+%     i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+
+    i().set_line_options('base_size',linewidthSubj);
+    i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Event type (ind subj mean)');
+
+    i.draw();
+
+    %mean between subj + sem
+    i().update('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType, 'group',[]);
+
+    i().stat_summary('type','sem','geom','area');
+
+%     i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+
+    i().set_line_options('base_size',linewidthGrand)
+
+    i().axe_property('YLim',[-1,5]);
+    i().axe_property('XLim',[-5,10]);
+
+    title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure3-periEvent-bothSignals-allStages');   
+    % i().set_title(title);    
+    i().set_names('x','time from event (s)','y','GCaMP (z score)','color','Event type (grand mean)');
+
+    i.draw()
+    saveFig(gcf, figPath, title, figFormats);
+
 
 %% Close examination of sessions prior to encoding model
 

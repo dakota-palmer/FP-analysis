@@ -44,15 +44,15 @@ criteriaMode= 'allSes';
 
 %% Choose whether to exclude sessions based on fp signal correlation
 
-% sesCorrExcludeMode= 'sesCorr';
-sesCorrExcludeMode= '_';
+sesCorrExcludeMode= 'sesCorr';
+% sesCorrExcludeMode= '_';
 
 
 
 %% Plot Settings
 figPath= strcat(pwd,'\_figures\');
 
-figFormats= {'.fig','.png'} %list of formats to save figures as (for saveFig.m)
+figFormats= {'.fig','.svg'} %list of formats to save figures as (for saveFig.m)
 
 %-- Master plot linestyles and colors
 

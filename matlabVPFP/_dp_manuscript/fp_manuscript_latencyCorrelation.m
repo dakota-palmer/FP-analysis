@@ -351,6 +351,8 @@ i().set_line_options('base_size', linewidthGrand);
 
 
 i.axe_property('YLim',[-1,1]);
+i.axe_property('xLim',[0,10]);
+
 title= strcat(subjMode,'-allSubjects-latencyCorrelation-Figure3-shuffleVsOrder-DS');
 
 
@@ -362,53 +364,53 @@ saveFig(gcf, figPath, title, figFormats);
 
 
 %% -- plot only coefficients with Pval < threshold
-
-ind=[];
-ind= (latencyCorrOutputTable.stage==stagesToPlot);
-
-data= latencyCorrOutputTable(ind,:);
-
-
-%stack table to make signalType (ordered vs shuffled) variable for faceting
-data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyOrder', 'NewDataVariableName', 'periCueRho');
-
-
-%replace non-significant rhos with nan
-data(data.pvalBlue>=alphaThreshold, 'periCueRho')= table(nan);
-data(data.pvalBlueShuffled>=alphaThreshold, 'periCueRho')= table(nan);
-
-
-figure();
-clear i;
-
-    %-individual subj lines
-i= gramm('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', data.subject);
-
-i.stat_summary('type','sem','geom','area');
-
-i().set_color_options('lightness_range', lightnessRangeSubj) 
-i().set_line_options('base_size', linewidthSubj)
-i.draw();
-
-    %-between subj mean+sem
-i.update('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', []);
-
-i.stat_summary('type','sem','geom','area');
-
-
-i().set_color_options('lightness_range', lightnessRangeGrand); 
-i().set_line_options('base_size', linewidthGrand); 
-
-
-i.axe_property('YLim',[-1,1]);
-title= strcat(subjMode,'-allSubjects-latencyCorrelation-Figure3-shuffleVsOrderSignif-DS');
-
-
-i.set_title(title);
-i.set_names('x','time from DS (s)','y','rho (465nm)','color','latencyOrder');
-
-i.draw();
-saveFig(gcf, figPath, title, figFormats);
+% 
+% ind=[];
+% ind= (latencyCorrOutputTable.stage==stagesToPlot);
+% 
+% data= latencyCorrOutputTable(ind,:);
+% 
+% 
+% %stack table to make signalType (ordered vs shuffled) variable for faceting
+% data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyOrder', 'NewDataVariableName', 'periCueRho');
+% 
+% 
+% %replace non-significant rhos with nan
+% data(data.pvalBlue>=alphaThreshold, 'periCueRho')= table(nan);
+% data(data.pvalBlueShuffled>=alphaThreshold, 'periCueRho')= table(nan);
+% 
+% 
+% figure();
+% clear i;
+% 
+%     %-individual subj lines
+% i= gramm('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', data.subject);
+% 
+% i.stat_summary('type','sem','geom','area');
+% 
+% i().set_color_options('lightness_range', lightnessRangeSubj) 
+% i().set_line_options('base_size', linewidthSubj)
+% i.draw();
+% 
+%     %-between subj mean+sem
+% i.update('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', []);
+% 
+% i.stat_summary('type','sem','geom','area');
+% 
+% 
+% i().set_color_options('lightness_range', lightnessRangeGrand); 
+% i().set_line_options('base_size', linewidthGrand); 
+% 
+% 
+% i.axe_property('YLim',[-1,1]);
+% title= strcat(subjMode,'-allSubjects-latencyCorrelation-Figure3-shuffleVsOrderSignif-DS');
+% 
+% 
+% i.set_title(title);
+% i.set_names('x','time from DS (s)','y','rho (465nm)','color','latencyOrder');
+% 
+% i.draw();
+% saveFig(gcf, figPath, title, figFormats);
 
 %% -- Statistical comparison LME to see if rho differs between shuffled/ordered
 
