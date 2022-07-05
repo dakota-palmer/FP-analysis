@@ -204,7 +204,9 @@ for thisStage= 1:numel(allStages)
 
                 [rhoBlueShuffled, pvalBlueShuffled]= corr(y1, y2, 'Rows', 'Complete'); %Complete= ignore nan rows
 
-                
+                %save actual mean latency for plotting overlay
+                poxDSrelMean= [];
+                poxDSrelMean= nanmean(data4.poxDSrel);
                 
                 %assign data to output table
                 metaColumns= ["stage", "subject", "timeLock"];
@@ -216,7 +218,8 @@ for thisStage= 1:numel(allStages)
                 latencyCorrOutputTable(indOutput,"rhoBlueShuffled")= table(rhoBlueShuffled); 
                 latencyCorrOutputTable(indOutput,"pvalBlueShuffled")= table(pvalBlueShuffled); 
 
-
+                latencyCorrOutputTable(indOutput,"poxDSrelMean")= table(poxDSrelMean);
+                
                 indOutput= indOutput+1;            
             end
             
@@ -350,14 +353,22 @@ i().set_color_options('lightness_range', lightnessRangeGrand);
 i().set_line_options('base_size', linewidthGrand); 
 
 
-i.axe_property('YLim',[-1,1]);
-i.axe_property('xLim',[0,10]);
-
 title= strcat(subjMode,'-allSubjects-latencyCorrelation-Figure3-shuffleVsOrder-DS');
 
 
 i.set_title(title);
 i.set_names('x','time from DS (s)','y','rho (465nm)','color','latencyOrder');
+
+i().geom_vline('xintercept', 0, 'style', 'k--'); %horizontal line @ 0 (cue onset)
+
+
+%add vertical line overlay for mean PE latency
+latMean= [];
+latMean= nanmean(data.poxDSrelMean);
+i().geom_vline('xintercept', latMean, 'style', 'b--'); %horizontal line @ mean PE
+
+i.axe_property('YLim',[-0.5,0.5]);
+i.axe_property('xLim',[-2,5]); %capping at +5s
 
 i.draw();
 saveFig(gcf, figPath, title, figFormats);

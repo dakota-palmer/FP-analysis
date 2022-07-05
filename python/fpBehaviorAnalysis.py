@@ -225,7 +225,7 @@ for subj in dfPlot.subject.unique():
     g.fig.suptitle(title)
     g.add_legend()
     
-    saveFigCustom(g.fig, title, savePath)
+    # saveFigCustom(g.fig, title, savePath)
     
     # #==----==-=
     
@@ -310,13 +310,23 @@ for subj in dfPlot.subject.unique():
 
  #%% view distro of eventType counts per fileID for session outliers
   
-dfPlot= dfTidy.groupby(['subject', 'fileID', 'eventType'])['eventTime'].count().reset_index()
+# dfPlot= dfTidy.groupby(['subject', 'fileID', 'eventType'])['eventTime'].count().reset_index()
 
 
-g= sns.displot(data=dfPlot, col='eventType', x='eventTime', kind='hist', hue='eventType', multiple='dodge')
-                # facet_kws={'sharey': False, 'sharex': True})
-g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
-g.fig.suptitle('Total event count across sessions by type- check for outliers')
+# g= sns.displot(data=dfPlot, col='eventType', x='eventTime', kind='hist', hue='eventType', multiple='dodge')
+#                 # facet_kws={'sharey': False, 'sharex': True})
+# g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
+# g.fig.suptitle('Total event count across sessions by type- check for outliers')
+
+#%% View specific outliers
+
+outlierFiles= [82, 53, 157, 163, 387, 388, 424, 294]
+
+dfTemp= dfTidy.loc[dfTidy.fileID.isin(outlierFiles)]
+
+dfTemp= dfTemp[dfTemp.groupby(['fileID']).cumcount()==0]
+
+dfTemp= dfPlot.loc[dfPlot.fileID.isin(outlierFiles)]
 
 
 
@@ -639,20 +649,20 @@ del dfTemp
 dfPlot= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
 
 #signal with epochs + vertical lines at event times
-# g= sns.relplot(data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+# g= sns.relplot(data= dfPlot, x= 'eventTime', y='reblue', hue='epoch')
 
 fig, ax= plt.subplots()
-# sns.lineplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch', dropna=False) #retain gaps (dropna=False)
-# sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+# sns.lineplot(axes= ax, data= dfPlot, x= 'eventTime', y='reblue', hue='epoch', dropna=False) #retain gaps (dropna=False)
+# sns.scatterplot(axes= ax, data= dfPlot, x= 'eventTime', y='reblue', hue='epoch')
 
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='DStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='DStime', color='b')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='DStime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='DStime', color='b')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='NStime', color='k')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='NStime', color='k')
 
-# ax.vlines(x=dfPlot.loc[dfPlot.eventType=='PEtime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='PEtime', color='gray')
+# ax.vlines(x=dfPlot.loc[dfPlot.eventType=='PEtime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='PEtime', color='gray')
 
 ax.legend()
 
@@ -726,11 +736,11 @@ refEvent= 'UStime'
 
 #find UStime for each trial (if exists), then do simple timestamp check if prior or after UStime
 #returns boolean
-# dfTemp['UStime']=  dfTemp.groupby(['fileID','trialID']).transform(lambda x: (x.loc[x.eventType==refEvent,'cutTime']))
+# dfTemp['UStime']=  dfTemp.groupby(['fileID','trialID']).transform(lambda x: (x.loc[x.eventType==refEvent,'eventTime']))
 dfTemp['UStime']=  dfTemp.groupby(['fileID','trialID'])['eventType'].transform(lambda x: x==refEvent)
 
 #convert to timestamp and ffill() within trial
-dfTemp['UStime']= dfTemp.loc[dfTemp.UStime, 'cutTime']
+dfTemp['UStime']= dfTemp.loc[dfTemp.UStime, 'eventTime']
 
 dfTemp['UStime']= dfTemp.groupby(['fileID','trialID'])['UStime'].ffill()
 
@@ -738,7 +748,7 @@ dfTemp['UStime']= dfTemp.groupby(['fileID','trialID'])['UStime'].ffill()
 ##don't replace immediate UStime timestamps for now
 ## dfTemp= dfTemp.loc[dfTemp.epoch != 'UStime']
 
-ind= (dfTemp.cutTime>=dfTemp.UStime)
+ind= (dfTemp.eventTime>=dfTemp.UStime)
 
 dfTemp.loc[ind, 'epoch']= dfTemp.epoch+'-'+'postUS'
 
@@ -748,7 +758,7 @@ preEventTime= 0 #x seconds before refEvent; don't count any before refEvent
 postEventTime= 2# x seconds after refEvent (pump is on for 2s) 
 
 #ffill will only fill null values!
-ind= ((dfTemp.cutTime>=dfTemp.UStime)&(dfTemp.cutTime<=dfTemp.UStime+postEventTime))
+ind= ((dfTemp.eventTime>=dfTemp.UStime)&(dfTemp.eventTime<=dfTemp.UStime+postEventTime))
 
 dfTemp.loc[ind,'epoch']= 'UStime'
 
@@ -763,20 +773,20 @@ dfTidy.epoch= dfTidy.epoch.astype('category')
 dfPlot= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
 
 #signal with epochs + vertical lines at event times
-# g= sns.relplot(data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+# g= sns.relplot(data= dfPlot, x= 'eventTime', y='reblue', hue='epoch')
 
 fig, ax= plt.subplots()
-# sns.lineplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch', dropna=False) #retain gaps (dropna=False)
-# sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+# sns.lineplot(axes= ax, data= dfPlot, x= 'eventTime', y='reblue', hue='epoch', dropna=False) #retain gaps (dropna=False)
+# sns.scatterplot(axes= ax, data= dfPlot, x= 'eventTime', y='reblue', hue='epoch')
 
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='DStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='DStime', color='b')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='DStime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='DStime', color='b')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='NStime', color='k')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='NStime', color='k')
 
-# ax.vlines(x=dfPlot.loc[dfPlot.eventType=='PEtime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='PEtime', color='gray')
+# ax.vlines(x=dfPlot.loc[dfPlot.eventType=='PEtime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='PEtime', color='gray')
 
 ax.legend()
 
@@ -787,24 +797,24 @@ dfPlot= dfTidy.loc[dfTidy.fileID==16].copy()
 # dfPlot= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()].copy()
 
 fig, ax= plt.subplots()
-# sns.scatterplot(axes= ax, data= dfPlot, x= 'cutTime', y='reblue', hue='epoch')
+# sns.scatterplot(axes= ax, data= dfPlot, x= 'eventTime', y='reblue', hue='epoch')
 
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='UStime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='UStime', color='g')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='DStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='DStime', color='b')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='DStime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='DStime', color='b')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='NStime', color='k')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='NStime', color='k')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickPreUS', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickPreUS', color='pink')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickPreUS', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickPreUS', color='pink')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickPostUS', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickPostUS', color='maroon')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickPostUS', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickPostUS', color='maroon')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickUS', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickUS', color='gold')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickUS', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickUS', color='gold')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickTime', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickTime', color='gray')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='lickTime', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='lickTime', color='gray')
 
-ax.vlines(x=dfPlot.loc[dfPlot.eventType=='PEcue', 'cutTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='PEcue', color='red')
+ax.vlines(x=dfPlot.loc[dfPlot.eventType=='PEcue', 'eventTime'], ymin=ax.get_ylim()[0], ymax= ax.get_ylim()[1], label='PEcue', color='red')
 
 
 ax.legend()
@@ -1882,7 +1892,7 @@ my_shelf.close()
 # # #get time of the first PE of each trial (have this from groupby cumcount() earlier)
 # ind= dfTemp.trialPE==0
 
-# dfTemp['firstPEtime']= dfTemp.loc[ind, 'cutTime']
+# dfTemp['firstPEtime']= dfTemp.loc[ind, 'eventTime']
 
 # #fill na throughout trial
 # dfTemp['firstPEtime']= dfTemp.groupby(['fileID','trialID'])['firstPEtime'].transform('fillna', method='ffill')
@@ -1914,7 +1924,7 @@ my_shelf.close()
 # # trials= dfTemp.groupby(['fileID','trialID'])['epoch'].transform(lambda x: (x==epocName).any())
 # # dfTemp['UStime']=  dfTemp.groupby(['fileID','trialID'])['eventType'].transform(lambda x: x==refEvent)
 # #attempt
-# # dfTemp['UStimeEst']=  dfTemp[ind].groupby(['fileID','trialID'])['cutTime'].transform(lambda x: x==refEvent)
+# # dfTemp['UStimeEst']=  dfTemp[ind].groupby(['fileID','trialID'])['eventTime'].transform(lambda x: x==refEvent)
 
 #%%  TODO: Either have specific epocs for different circumstances (by trialType)
 #or should have shared epocs between trialTypes (e.g. DS, post-reward vs Cue, postPE(rewarded or unrewarded based on trialType) )
@@ -1937,7 +1947,7 @@ my_shelf.close()
 
 
 # #if timestamp is between trial start and trial end, label as Cue epoch
-# dfTemp.loc[((dfTemp.cutTime>=dfTemp.trialStart) & (dfTemp.cutTime<=dfTemp.trialEnd)), 'epoch']= 'cue'
+# dfTemp.loc[((dfTemp.eventTime>=dfTemp.trialStart) & (dfTemp.eventTime<=dfTemp.trialEnd)), 'epoch']= 'cue'
 
 
 
