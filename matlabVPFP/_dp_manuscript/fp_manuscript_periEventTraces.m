@@ -851,54 +851,14 @@ i(2,1).draw()
 
 saveFig(gcf, figPath, title, figFormats);
 
-%% -- STATS for Fig2 AUC
+%% STATS for AUC plot above
 
-% dp 2022-07-08 noting problem for stats due to table org...
-    %want unique, cumulative trialID separate between DS & NS so that can
-    %independently analyze them. 
-    
-    %TODO: could consider stacking() of all DS and NS variables?
-    
-    % really want a solution that can be used readily for all the
-    % faceting/stacking etc I've already done... try to do this with data2
-    % above
-    
-% -Compute cumulative trialID 
-%tried doing this in tidytable but not accurate until data is stacked()
-%since DS & NS share rows
+%-First need to subset to actual # of observations (1 per trial)
 
-%basically when constructing tidyTable separate loops are done for
-%1:numel(DS) and 1:numel(NS) which use the same tsInd...
-
-%currently DS and NS trialID are sharing rows. Same trialID within-file
-%despite diff columns. also trialIDcum is shared between them both. needs
-%to be transformed
-
-
-% perhaps can unstack timeLock by trialType?
-    % example unstack based on PE outcome
-%     dataTest= periEventTable;
-%     dataTest(:,'poxDSoutcome')= {''};%{'noPEtrial'}; %table(0);
-%         
-%         outcomeLabels= {'PEtrial','noPEtrial','inPortTrial'}; %1,2,3 
-% 
-%         dataTest(:,'poxDSoutcome')= {outcomeLabels{dataTest.DStrialOutcome}}';
-
-%     groupers= ["subject","stage","date","DStrialID","timeLock"];
-%     test1= unstack(dataTest, 'DSblue', 'poxDSoutcome', 'GroupingVariables',groupers);
-    
-    %here instead of unstacking DSblue by poxDSoutcome want to unstack
-    %periCueBlueAuc for each trial by trialType
-% 
-%      %shouldn't need timelock since aggregated 1 value per trial?
-% groupers= ["subject","stage","date", "DStrialIDcum", "NStrialIDcum", "timeLock"];
-% test2= unstack(data2, 'periCueBlueAuc', 'trialType', 'GroupingVariables',groupers);
-    
-%-data2 currently has 2 values per timestamp per trial (1 per trialType).
+%-Add unique trialIDs
+    %data2 currently has 2 values per timestamp per trial (1 per trialType).
     %want to transform such that each timestamp copy belongs to distinct
-    %trialID
-    %could simply multiply trialID by -1 if trialType== NS then values
-    %would be unique. Or could add 0.5
+    %trialID %could simply multiply trialID by -1 if trialType== NS then values %would be unique.
     
     %convert to string (stack made this categorical)
     data2.trialType= string(data2.trialType);
@@ -911,30 +871,7 @@ saveFig(gcf, figPath, title, figFormats);
     %muliplying by -1
     data2(ind, "trialIDcum") = table(data2.trialIDcum(ind) * -1);
     
-%     %----
-%     %simplfy to one observation (using groupsummary)
-%     %columns to group by
-% groupers= ["subject","trainDay", "fileID", "trialType", "DStrialIDcum"];
-%  test3= groupsummary(test2, [groupers],'mean', ["periCueBlueAuc"]);
-%  
-%  %-- 
-%  %TODO: maybe go back to -- data prior to stacking()?
-%  %if group by trialID and trialType could do a cumcount()?
-%  %or multiply by two for unique trialID or something?
-% groupers= ["subject","trainDay", "fileID", "trialType", "DStrialIDcum"];
-%  test3= groupsummary(data2, [groupers],'all', ["DStrialIDcum", "NStrialIDcum"]);
-%   %--
-%     %columns to group by
-%     
-% %     %try DS count first, do some count, then NS?
-% % groupers= ["subject","trainDay", "fileID", "trialType", "DStrialID","NStrialID"];
-% % 
-% %     %simplfy to one observation, maybe ngroups can be used for count?
-% %  test= groupsummary(data2, [groupers],'all', ["periCueBlueAuc"]);
 
-
-%% 
-% First need to subset to actual # of observations (1 per trial)
 %- aggregate to one observation per trial (AUC is aggregated measure)
     
     %columns to group by
@@ -945,49 +882,10 @@ groupers= ["subject","trainDay", "fileID", "trialType", "trialIDcum"];
 
     %remove appended 'mean_' name on column
  data3 = renamevars(data3,["mean_periCueBlueAuc"],[,"periCueBlueAuc"]);
-        
-%     %yep looks good---auc plot of this should be same as above
-%     clear i; figure;
-%             %mean between subj
-%             i(2,1)=gramm('x',data3.trialType,'y',data3.periCueBlueAuc, 'color', data3.trialType, 'group', []);
-% 
-%             i(2,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
-% 
-%             %mean bar for trialType
-%             i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
-% 
-%             i(2,1).set_line_options('base_size',linewidthGrand)
-% 
-%             i(2,1).axe_property('YLim',[-1,10]);
-%             title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zAUC');   
-%             i(2,1).set_title(title);    
-%             i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
-% 
-%             %horz line @ zero
-%             i(2,1).geom_hline('yintercept', 0, 'style', 'k--'); 
-% 
-%             i.draw();
-% 
-%             %ind subj mean points
-%             i(2,1).update('x',data3.trialType,'y',data3.periCueBlueAuc, 'color', data3.trialType, 'group', data3.subject);
-% 
-%             i(2,1).stat_summary('type','sem','geom','point');
-% 
-%             i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
-% 
-%             i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
-% 
-%             i(2,1).draw()
-%     
- 
-%  %noting duplicate trialIDcum...should be unique..
-%  test= groupsummary(data2, [groupers], 'all', ["periCueBlueAuc"]);
-% %... investigating single trial
-% test2= data2(data2.trialIDcum== 721,:);
- 
+       
 %Result of groupsummary here is table with one auc value per unique trial
 
-% STAT Testing
+%-- STAT LME
 %are mean AUC different by trialType? lme with random subject intercept
 
 %- dummy variable conversion
