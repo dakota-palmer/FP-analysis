@@ -61,6 +61,8 @@ subjects= fieldnames(subjDataAnalyzed);
 sesCount= 1; %cumulative session counter for periEventTable
 DStrialCountCum=1; %cumulative count of unique trials between all subjects and sessions
 NStrialCountCum=1;
+allTrialCountCum= 1; %cumulative count of unique trials between all trialTypes, subjects, sessions
+
 % tsInd= [1:periCueFrames*numTrials]; %cumulative timestamp index for aucTableTS
 % tsInd= [1:periCueFrames]; %cumulative timestamp index for aucTableTS
 
@@ -143,6 +145,9 @@ for subj= 1:numel(subjects)
             
             DStrialIDcum= nan(periCueFrames, numTrials);  %cumulative 
             NStrialIDcum= nan(periCueFrames, numTrials); 
+            
+            trialIDcum= nan(periCueFrames, numTrials); % cumulative count of all trials (useful for stats groupsummary etc later)
+            
 
             sesSpecialLabel= cell(periCueFrames,numTrials); %empty cell to store string labels for marking specific days to plot (e.g. first day of st5, first criteria of st 5, first criteria of st 7 for vp-vta-fp manuscript Figure 1)
             
@@ -185,6 +190,9 @@ for subj= 1:numel(subjects)
                 DStrialIDcum(trialInd,cue)= DStrialCountCum;
                 DStrialCountCum= DStrialCountCum+1;
                 
+                trialIDcum(trialInd,cue)= allTrialCountCum;
+                allTrialCountCum= allTrialCountCum+1;
+                
                 if thisStage>=8 %variable reward
                     pumpID(trialInd, cue)= currentSubj(includedSession).reward.DSreward(cue);
                     rewardID(trialInd,cue)= currentSubj(includedSession).reward.rewardID(cue); 
@@ -219,6 +227,9 @@ for subj= 1:numel(subjects)
 
                 NStrialIDcum(trialInd,cue)= NStrialCountCum;
                 NStrialCountCum= NStrialCountCum+1;
+                
+                trialIDcum(trialInd, cue)= allTrialCountCum;
+                allTrialCountCum= allTrialCountCum+1;
            end
 
 
@@ -247,6 +258,7 @@ for subj= 1:numel(subjects)
                 tsInd= tsInd+ periCueFrames * size(DSblue,2);
             end
             
+            %dp 2022-07-06 moving to new script post data exclusion
             %dp 2022-06-19 labelling specific sessions for plotting
             %--Save string labels to mark specific days for plotting
             if currentSubj(includedSession).behavior.criteriaSes==1
@@ -258,7 +270,7 @@ for subj= 1:numel(subjects)
             elseif thisStage==5 && criteriaDayThisStage==1
                 sesSpecialLabel(:)= {'stage-5-day-1-criteria'};
             elseif thisStage==7 && criteriaDayThisStage==1
-%                 sesSpecialLabel(:)= {'stage-7-day-1-criteria'};
+                sesSpecialLabel(:)= {'stage-7-day-1-criteria'};
             end
             
             
@@ -293,6 +305,11 @@ for subj= 1:numel(subjects)
             periEventTable.DStrialIDcum(tsInd)= DStrialIDcum(:);
             periEventTable.NStrialIDcum(tsInd)= NStrialIDcum(:);
 
+            %not a truly unique trialID (shared between DS/NS still due to
+            %how this table is set up, but could be useful later in
+            %stacking DS vs NS to get truly unique ID)
+            periEventTable.trialIDcum(tsInd)= trialIDcum(:); %dp wont work since shared by DS & NS, should be computed after stacking later
+            
             
             periEventTable.NStrialID(tsInd)= NStrialID(:);
             

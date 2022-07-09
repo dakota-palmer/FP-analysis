@@ -334,8 +334,14 @@ data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyO
 figure();
 clear i;
 
+
+%Don't use Lightness facet since importing to illustrator will make
+%grouping a problem ... instead use group
+
     %-individual subj lines
-i= gramm('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', data.subject);
+% i= gramm('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', data.subject);
+i= gramm('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'group', data.subject);
+
 
 i.stat_summary('type','sem','geom','area');
 
@@ -344,7 +350,7 @@ i().set_line_options('base_size', linewidthSubj)
 i.draw();
 
     %-between subj mean+sem
-i.update('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', []);
+i.update('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', [], 'group', []);
 
 i.stat_summary('type','sem','geom','area');
 
@@ -365,7 +371,7 @@ i().geom_vline('xintercept', 0, 'style', 'k--'); %horizontal line @ 0 (cue onset
 %add vertical line overlay for mean PE latency
 latMean= [];
 latMean= nanmean(data.poxDSrelMean);
-i().geom_vline('xintercept', latMean, 'style', 'b--'); %horizontal line @ mean PE
+i().geom_vline('xintercept', latMean, 'style', 'b-.'); %horizontal line @ mean PE
 
 i.axe_property('YLim',[-0.5,0.5]);
 i.axe_property('xLim',[-2,5]); %capping at +5s

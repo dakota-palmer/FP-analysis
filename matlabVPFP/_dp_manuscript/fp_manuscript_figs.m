@@ -40,8 +40,8 @@ criteriaMode= 'allSes';
 
 %% Choose whether to exclude sessions based on fp signal correlation
 
-sesCorrExcludeMode= 'sesCorr';
-% sesCorrExcludeMode= '_';
+% sesCorrExcludeMode= 'sesCorr';
+sesCorrExcludeMode= '_';
 
 
 

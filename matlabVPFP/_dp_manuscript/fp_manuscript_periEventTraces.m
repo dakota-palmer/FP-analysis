@@ -126,7 +126,9 @@ saveFig(gcf, figPath, title, figFormats);
 
 
 
-%% DS vs NS AUC (Figure 1)s
+%% --- Compute AUC of peri-cue ---
+%TODO: Move to tidyTable script
+
 data= periEventTable;
 
 %---This METHOD seems WAY TOO SLOW, consider another solution elsewhere?
@@ -421,188 +423,188 @@ end %end subj loop
 
 periEventTable= data; %reassign
 
-%
-%that took a long time to run, let's save the table
-save(fullfile(figPath,strcat(experimentName,'-',date, 'periEventTable')), 'data', '-v7.3');
-
-
-
-%% ------------------------------PLOT of AUC data
-
-stagesToPlot= [4,5,7];
-
-data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
-
-%temp subset for testing
-% data= periEventTable(periEventTable.stage==5,:);
-   
-%transform to have trialType variable
-%ideally want to melt() from wide to long 3 eventTypes into single col
-%matlab lacks good tidying functions like melt() but we have stack
-%which is quite helpful!
-
-%------Cumulative AUC Plot over time
-
-data= stack(data, {'aucCumDSblue', 'aucCumNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAucCum');
-
-
-%mean between subj
-figure();
-i= gramm('x',data.timeLock,'y',data.periCueBlueAucCum, 'color', data.trialType);
-
-i.facet_wrap(data.stage);
-
-i.stat_summary('type','sem','geom','area');
-
-i().set_line_options('base_size',2)
-
-i().set_color_options('lightness', 60)
-
-i.draw();
-
-%ind subjects
-i.update('x',data.timeLock,'y',data.periCueBlueAucCum, 'color', data.trialType, 'lightness', data.subject);
-
-
-%define stats to show
-% Mean line for individual subj w/o SEM
-% i.stat_summary('type','sem','geom','area'); %mean + sem shade
-i.stat_summary('type','sem','geom','line'); %mean line only?
-
-i().set_color_options('lightness_range', [20,20])
-
-i().set_line_options('base_size',0.5)
-
-%define labels for plot axes
-i.set_names('x','time from event (s)','y','cumulative AUC (of z-score)','color','trialType','lightness','subject');
-i.set_title('Peri-Cue: Cumulative AUC');
-
-%set axes limits manually
-i.axe_property('YLim',[-7,6]);
-
-i.axe_property('XLim',[0,max(data.timeLock)]);
-
-%draw the actual plot
-i.draw();
-
-title= strcat(subjMode, '-allSubj-periCueAucCum');
-
-saveFig(gcf, figPath, title, figFormats);
-
-%% ------------------------------PLOT of AUC data
-
-stagesToPlot= [4,5,7];
-
-data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
-
-%temp subset for testing
-% data= periEventTable(periEventTable.stage==5,:);
-   
-%transform to have trialType variable
-%ideally want to melt() from wide to long 3 eventTypes into single col
-%matlab lacks good tidying functions like melt() but we have stack
-%which is quite helpful!
-
-%------Cumulative AUC Plot over time
- 
-data= stack(data, {'aucCumAbsDSblue', 'aucCumAbsNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAucCumAbs');
-
-figure();
-
-%mean between subj
-i= gramm('x',data.timeLock,'y',data.periCueBlueAucCumAbs, 'color', data.trialType);
-
-i.facet_wrap(data.stage);
-
-i.stat_summary('type','sem','geom','area');
-
-i().set_line_options('base_size',2)
-
-i().set_color_options('lightness', 60)
-
-i.draw();
-
-%ind subjects
-i.update('x',data.timeLock,'y',data.periCueBlueAucCumAbs, 'color', data.trialType, 'lightness', data.subject);
-
-
-%define stats to show
-% Mean line for individual subj w/o SEM
-% i.stat_summary('type','sem','geom','area'); %mean + sem shade
-i.stat_summary('type','sem','geom','line'); %mean line only?
-
-i().set_color_options('lightness_range', [20,20])
-
-i().set_line_options('base_size',0.5)
-
-%define labels for plot axes
-i.set_names('x','time from event (s)','y','cumulative Absolute AUC (of z-score)','color','trialType','lightness','subject');
-i.set_title('Peri-Cue: Cumulative AUC');
-
-%set axes limits manually
-i.axe_property('YLim',[-5,10]);
-
-i.axe_property('XLim',[0,max(data.timeLock)]);
-
-%draw the actual plot
-i.draw();
-
-title= strcat(subjMode, 'allSubj-periCueAucCumAbs');
-
-saveFig(gcf, figPath, title, figFormats);
-
-
-%% --------- Bar plot of single AUC values
-
-%subset data
-stagesToPlot= [4,5,7];
-
-data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
-
-
-data= stack(data, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
-
-
-%mean between subj
-i= gramm('x',data.trialType,'y',data.periCueBlueAuc, 'color', data.trialType);
-
-i.facet_wrap(data.stage);
-
-%mean bar for trialType
-i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
-
-i().set_line_options('base_size',2)
-
-i().set_color_options('lightness', 60)
-
-i.draw();
-
-
-%ind subjects
-i.update('x',data.trialType,'y',data.periCueBlueAuc, 'color', data.trialType, 'lightness', data.subject);
-
-
-%define stats to show
-% Mean point for ind subjects
-i.stat_summary('type','sem','geom','line'); %mean line only
-
-i().set_color_options('lightness_range', [20,20])
-
-i().set_line_options('base_size',0.5)
-
-%define labels for plot axes
-i.set_names('x','time from event (s)','y','AUC (of z-score)','color','trialType','lightness','subject');
-i.set_title('Peri-Cue: AUC');
-
-%set y axes limits manually
-% i.axe_property('YLim',[-6,10]);
-
-%draw the actual plot
-i.draw();
-
-title= strcat(subjMode, 'allSubj-periCueAuc-Bar');
-
-saveFig(gcf, figPath, title, figFormats);
+% %
+% %that took a long time to run, let's save the table
+% save(fullfile(figPath,strcat(experimentName,'-',date, 'periEventTable')), 'data', '-v7.3');
+% 
+
+% %% auc plots here v slow and not needed (was simply comparing early on
+% %% ------------------------------PLOT of AUC data
+% 
+% stagesToPlot= [4,5,7];
+% 
+% data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+% 
+% %temp subset for testing
+% % data= periEventTable(periEventTable.stage==5,:);
+%    
+% %transform to have trialType variable
+% %ideally want to melt() from wide to long 3 eventTypes into single col
+% %matlab lacks good tidying functions like melt() but we have stack
+% %which is quite helpful!
+% 
+% %------Cumulative AUC Plot over time
+% 
+% data= stack(data, {'aucCumDSblue', 'aucCumNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAucCum');
+% 
+% 
+% %mean between subj
+% figure();
+% i= gramm('x',data.timeLock,'y',data.periCueBlueAucCum, 'color', data.trialType);
+% 
+% i.facet_wrap(data.stage);
+% 
+% i.stat_summary('type','sem','geom','area');
+% 
+% i().set_line_options('base_size',2)
+% 
+% i().set_color_options('lightness', 60)
+% 
+% i.draw();
+% 
+% %ind subjects
+% i.update('x',data.timeLock,'y',data.periCueBlueAucCum, 'color', data.trialType, 'lightness', data.subject);
+% 
+% 
+% %define stats to show
+% % Mean line for individual subj w/o SEM
+% % i.stat_summary('type','sem','geom','area'); %mean + sem shade
+% i.stat_summary('type','sem','geom','line'); %mean line only?
+% 
+% i().set_color_options('lightness_range', [20,20])
+% 
+% i().set_line_options('base_size',0.5)
+% 
+% %define labels for plot axes
+% i.set_names('x','time from event (s)','y','cumulative AUC (of z-score)','color','trialType','lightness','subject');
+% i.set_title('Peri-Cue: Cumulative AUC');
+% 
+% %set axes limits manually
+% i.axe_property('YLim',[-7,6]);
+% 
+% i.axe_property('XLim',[0,max(data.timeLock)]);
+% 
+% %draw the actual plot
+% i.draw();
+% 
+% title= strcat(subjMode, '-allSubj-periCueAucCum');
+% 
+% saveFig(gcf, figPath, title, figFormats);
+% 
+% %% ------------------------------PLOT of AUC data
+% 
+% stagesToPlot= [4,5,7];
+% 
+% data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+% 
+% %temp subset for testing
+% % data= periEventTable(periEventTable.stage==5,:);
+%    
+% %transform to have trialType variable
+% %ideally want to melt() from wide to long 3 eventTypes into single col
+% %matlab lacks good tidying functions like melt() but we have stack
+% %which is quite helpful!
+% 
+% %------Cumulative AUC Plot over time
+%  
+% data= stack(data, {'aucCumAbsDSblue', 'aucCumAbsNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAucCumAbs');
+% 
+% figure();
+% 
+% %mean between subj
+% i= gramm('x',data.timeLock,'y',data.periCueBlueAucCumAbs, 'color', data.trialType);
+% 
+% i.facet_wrap(data.stage);
+% 
+% i.stat_summary('type','sem','geom','area');
+% 
+% i().set_line_options('base_size',2)
+% 
+% i().set_color_options('lightness', 60)
+% 
+% i.draw();
+% 
+% %ind subjects
+% i.update('x',data.timeLock,'y',data.periCueBlueAucCumAbs, 'color', data.trialType, 'lightness', data.subject);
+% 
+% 
+% %define stats to show
+% % Mean line for individual subj w/o SEM
+% % i.stat_summary('type','sem','geom','area'); %mean + sem shade
+% i.stat_summary('type','sem','geom','line'); %mean line only?
+% 
+% i().set_color_options('lightness_range', [20,20])
+% 
+% i().set_line_options('base_size',0.5)
+% 
+% %define labels for plot axes
+% i.set_names('x','time from event (s)','y','cumulative Absolute AUC (of z-score)','color','trialType','lightness','subject');
+% i.set_title('Peri-Cue: Cumulative AUC');
+% 
+% %set axes limits manually
+% i.axe_property('YLim',[-5,10]);
+% 
+% i.axe_property('XLim',[0,max(data.timeLock)]);
+% 
+% %draw the actual plot
+% i.draw();
+% 
+% title= strcat(subjMode, 'allSubj-periCueAucCumAbs');
+% 
+% saveFig(gcf, figPath, title, figFormats);
+% 
+% 
+% %% --------- Bar plot of single AUC values
+% 
+% %subset data
+% stagesToPlot= [4,5,7];
+% 
+% data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+% 
+% 
+% data= stack(data, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
+% 
+% 
+% %mean between subj
+% i= gramm('x',data.trialType,'y',data.periCueBlueAuc, 'color', data.trialType);
+% 
+% i.facet_wrap(data.stage);
+% 
+% %mean bar for trialType
+% i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+% 
+% i().set_line_options('base_size',2)
+% 
+% i().set_color_options('lightness', 60)
+% 
+% i.draw();
+% 
+% 
+% %ind subjects
+% i.update('x',data.trialType,'y',data.periCueBlueAuc, 'color', data.trialType, 'lightness', data.subject);
+% 
+% 
+% %define stats to show
+% % Mean point for ind subjects
+% i.stat_summary('type','sem','geom','line'); %mean line only
+% 
+% i().set_color_options('lightness_range', [20,20])
+% 
+% i().set_line_options('base_size',0.5)
+% 
+% %define labels for plot axes
+% i.set_names('x','time from event (s)','y','AUC (of z-score)','color','trialType','lightness','subject');
+% i.set_title('Peri-Cue: AUC');
+% 
+% %set y axes limits manually
+% % i.axe_property('YLim',[-6,10]);
+% 
+% %draw the actual plot
+% i.draw();
+% 
+% title= strcat(subjMode, 'allSubj-periCueAuc-Bar');
+% 
+% saveFig(gcf, figPath, title, figFormats);
 
 
 %% Stage 7 peri-Cue vs peri-Pox vs peri-Lox
@@ -848,6 +850,168 @@ i(2,1).draw()
 
 
 saveFig(gcf, figPath, title, figFormats);
+
+%% -- STATS for Fig2 AUC
+
+% dp 2022-07-08 noting problem for stats due to table org...
+    %want unique, cumulative trialID separate between DS & NS so that can
+    %independently analyze them. 
+    
+    %TODO: could consider stacking() of all DS and NS variables?
+    
+    % really want a solution that can be used readily for all the
+    % faceting/stacking etc I've already done... try to do this with data2
+    % above
+    
+% -Compute cumulative trialID 
+%tried doing this in tidytable but not accurate until data is stacked()
+%since DS & NS share rows
+
+%basically when constructing tidyTable separate loops are done for
+%1:numel(DS) and 1:numel(NS) which use the same tsInd...
+
+%currently DS and NS trialID are sharing rows. Same trialID within-file
+%despite diff columns. also trialIDcum is shared between them both. needs
+%to be transformed
+
+
+% perhaps can unstack timeLock by trialType?
+    % example unstack based on PE outcome
+%     dataTest= periEventTable;
+%     dataTest(:,'poxDSoutcome')= {''};%{'noPEtrial'}; %table(0);
+%         
+%         outcomeLabels= {'PEtrial','noPEtrial','inPortTrial'}; %1,2,3 
+% 
+%         dataTest(:,'poxDSoutcome')= {outcomeLabels{dataTest.DStrialOutcome}}';
+
+%     groupers= ["subject","stage","date","DStrialID","timeLock"];
+%     test1= unstack(dataTest, 'DSblue', 'poxDSoutcome', 'GroupingVariables',groupers);
+    
+    %here instead of unstacking DSblue by poxDSoutcome want to unstack
+    %periCueBlueAuc for each trial by trialType
+% 
+%      %shouldn't need timelock since aggregated 1 value per trial?
+% groupers= ["subject","stage","date", "DStrialIDcum", "NStrialIDcum", "timeLock"];
+% test2= unstack(data2, 'periCueBlueAuc', 'trialType', 'GroupingVariables',groupers);
+    
+%-data2 currently has 2 values per timestamp per trial (1 per trialType).
+    %want to transform such that each timestamp copy belongs to distinct
+    %trialID
+    %could simply multiply trialID by -1 if trialType== NS then values
+    %would be unique. Or could add 0.5
+    
+    %convert to string (stack made this categorical)
+    data2.trialType= string(data2.trialType);
+    
+    %search for NS trialTypes
+    ind=[];
+    ind= contains(data2.trialType, 'NS');
+    
+    %transform trialIDs for these entries to make unique 
+    %muliplying by -1
+    data2(ind, "trialIDcum") = table(data2.trialIDcum(ind) * -1);
+    
+%     %----
+%     %simplfy to one observation (using groupsummary)
+%     %columns to group by
+% groupers= ["subject","trainDay", "fileID", "trialType", "DStrialIDcum"];
+%  test3= groupsummary(test2, [groupers],'mean', ["periCueBlueAuc"]);
+%  
+%  %-- 
+%  %TODO: maybe go back to -- data prior to stacking()?
+%  %if group by trialID and trialType could do a cumcount()?
+%  %or multiply by two for unique trialID or something?
+% groupers= ["subject","trainDay", "fileID", "trialType", "DStrialIDcum"];
+%  test3= groupsummary(data2, [groupers],'all', ["DStrialIDcum", "NStrialIDcum"]);
+%   %--
+%     %columns to group by
+%     
+% %     %try DS count first, do some count, then NS?
+% % groupers= ["subject","trainDay", "fileID", "trialType", "DStrialID","NStrialID"];
+% % 
+% %     %simplfy to one observation, maybe ngroups can be used for count?
+% %  test= groupsummary(data2, [groupers],'all', ["periCueBlueAuc"]);
+
+
+%% 
+% First need to subset to actual # of observations (1 per trial)
+%- aggregate to one observation per trial (AUC is aggregated measure)
+    
+    %columns to group by
+groupers= ["subject","trainDay", "fileID", "trialType", "trialIDcum"];
+
+    %simplfy to one observation (using mean)
+ data3= groupsummary(data2, [groupers],'mean', ["periCueBlueAuc"]);
+
+    %remove appended 'mean_' name on column
+ data3 = renamevars(data3,["mean_periCueBlueAuc"],[,"periCueBlueAuc"]);
+        
+%     %yep looks good---auc plot of this should be same as above
+%     clear i; figure;
+%             %mean between subj
+%             i(2,1)=gramm('x',data3.trialType,'y',data3.periCueBlueAuc, 'color', data3.trialType, 'group', []);
+% 
+%             i(2,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+% 
+%             %mean bar for trialType
+%             i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+% 
+%             i(2,1).set_line_options('base_size',linewidthGrand)
+% 
+%             i(2,1).axe_property('YLim',[-1,10]);
+%             title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zAUC');   
+%             i(2,1).set_title(title);    
+%             i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
+% 
+%             %horz line @ zero
+%             i(2,1).geom_hline('yintercept', 0, 'style', 'k--'); 
+% 
+%             i.draw();
+% 
+%             %ind subj mean points
+%             i(2,1).update('x',data3.trialType,'y',data3.periCueBlueAuc, 'color', data3.trialType, 'group', data3.subject);
+% 
+%             i(2,1).stat_summary('type','sem','geom','point');
+% 
+%             i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+% 
+%             i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+% 
+%             i(2,1).draw()
+%     
+ 
+%  %noting duplicate trialIDcum...should be unique..
+%  test= groupsummary(data2, [groupers], 'all', ["periCueBlueAuc"]);
+% %... investigating single trial
+% test2= data2(data2.trialIDcum== 721,:);
+ 
+%Result of groupsummary here is table with one auc value per unique trial
+
+% STAT Testing
+%are mean AUC different by trialType? lme with random subject intercept
+
+%- dummy variable conversion
+% converting to dummies(retains only one column, as 2+ is redundant)
+
+%convert trialType to dummy variable 
+dummy=[];
+dummy= categorical(data3.trialType);
+dummy= dummyvar(dummy); 
+
+data3.trialType= dummy(:,1);
+
+
+%- run LME
+lme1=[];
+
+lme1= fitlme(data3, 'periCueBlueAuc~ trialType + (1|subject)');
+
+
+%print and save results to file
+%seems diary keeps running log to same file (e.g. if code rerun seems prior output remains)
+diary('figure2-auc-lmeDetails.txt')
+lme1
+diary off
 
 %% Fig 2 b- Contingency of port entry (PE trial vs noPE trials)
 
@@ -1293,6 +1457,71 @@ for subj= 1:numel(subjects)
 
 end
 
+%% Figure3 variant stage=7 for opto grc poster 
+
+%try diff maps
+map= 'brewer2'
+
+   %--- new
+        %subset data
+    data=[];
+    data= periEventTable;
+    
+    stagesToPlot= 7%
+    ind=[];
+    ind= ismember(data.stage,stagesToPlot);
+
+    data= data(ind,:);
+    
+    %transform to have eventType variable
+    %ideally want to melt() from wide to long 3 eventTypes into single col
+    %matlab lacks good tidying functions like melt() but we have stack
+    %which is quite helpful!
+    data= stack(data, {'DSblue', 'DSbluePox', 'DSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
+    
+    clear i; figure()
+    % individual subjects means
+    i= gramm('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType, 'group', data.subject);
+
+%     i= i.facet_grid([],data.sesSpecialLabel);
+%     i= i.facet_grid(data.eventType,data.sesSpecialLabel);
+%     i= i.facet_grid(data.eventType,data.stage);
+%     i= i.facet_grid([],data.stage);
+%     i= i.facet_grid([],data.eventType);
+
+
+    i().stat_summary('type','sem','geom','line');
+    i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
+
+%     i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+    i().set_color_options('map',map); 
+
+
+    i().set_line_options('base_size',linewidthSubj);
+    i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Event type (ind subj mean)');
+
+    i.draw();
+
+    %mean between subj + sem
+    i().update('x',data.timeLock,'y',data.periEventBlue, 'color', data.eventType, 'group',[]);
+
+    i().stat_summary('type','sem','geom','area');
+
+%     i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+    i().set_color_options('map',map); 
+
+    i().set_line_options('base_size',linewidthGrand)
+
+    i().axe_property('YLim',[-1,5]);
+    i().axe_property('XLim',[-5,10]);
+
+    title= strcat(subjMode,'Figure3-allSubjects-stage-',num2str(stagesToPlot),'-Figure3-periEvent-allEvents');   
+    % i().set_title(title);    
+    i().set_names('x','time from event (s)','y','GCaMP (z score)','color','Event type (grand mean)');
+
+    i.draw()
+    saveFig(gcf, figPath, title, figFormats);
+
 %% Figure3 eventType plot???
    %--- new
         %subset data
@@ -1342,7 +1571,7 @@ end
     i().axe_property('YLim',[-1,5]);
     i().axe_property('XLim',[-5,10]);
 
-    title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure3-periEvent-bothSignals-allStages');   
+    title= strcat(subjMode,'Figure3-allSubjects-specialSesLabel','-Figure3-periEvent-bothSignals-allStages');   
     % i().set_title(title);    
     i().set_names('x','time from event (s)','y','GCaMP (z score)','color','Event type (grand mean)');
 
