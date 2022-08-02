@@ -402,11 +402,15 @@ periEventTable= data; %assign back to table
     
 %% ---- Exclude artifacts ----
 
-signalCol= ["DSblue", "DSbluePox", "DSblueLox", "DSpurple", "DSpurplePox", "DSpurpleLox"
-    "NSblue", "NSbluePox", "NSblueLox", "NSpurple", "NSpurplePox", "NSpurpleLox"];
 
-periEventTable(periEventTable.artifact==1, signalCol)= table(nan);
+%only actually exclude if artifactExcludeMode== 'trial'
 
+if strcmp(artifactExcludeMode, 'trial')
+    signalCol= ["DSblue", "DSbluePox", "DSblueLox", "DSpurple", "DSpurplePox", "DSpurpleLox"
+        "NSblue", "NSbluePox", "NSblueLox", "NSpurple", "NSpurplePox", "NSpurpleLox"];
+
+    periEventTable(periEventTable.artifact==1, signalCol)= table(nan);
+end
 
 %% %confirm w viz:
 % data= periEventTable(periEventTable.artifact==1,:);

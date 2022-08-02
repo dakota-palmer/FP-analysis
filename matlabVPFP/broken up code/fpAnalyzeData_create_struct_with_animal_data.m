@@ -1,6 +1,6 @@
 %fp data analysis 
 %1/20/20
-clear
+clear -signalMode
 clc
 close all
 
@@ -69,7 +69,7 @@ subjIncluded= subjects;
        subjDataAnalyzed.(subjects{subj})(session).raw.cutTime= currentSubj(session).cutTime;
        subjDataAnalyzed.(subjects{subj})(session).raw.reblue= currentSubj(session).reblue;
        subjDataAnalyzed.(subjects{subj})(session).raw.repurple= currentSubj(session).repurple;
-
+       
        
    end %end session loop
 end %end subject loop
@@ -150,11 +150,35 @@ for subj= 1:numel(subjects) %for each subject
        subjDataAnalyzed.(subjects{subj})(session).photometry.fit= fit;
 
 % Delta F/F 
+       df=[];
        df = deltaFF(reblue,fit); %This is dF for boxA in %, calculated by running the deltaFF function on the resampled blue data from boxA and the fitted data from boxA
        subjDataAnalyzed.(subjects{subj})(session).photometry.df= df;
        
+      %--Replace reblue with dff if desired dp 2022-07-28
+       if strcmp(signalMode, 'dff')
+          subjDataAnalyzed.(subjects{subj})(session).raw.reblue= df; %currentSubj(session).photometry.df;
+          subjData.(subjects{subj})(session).reblue= df;
+        
+%             %also replace repurple with some normalized dff value of isosbestic?
+%           % time based instantaneous delta vs some baseline...
+% %             would be nice as comparison but not worth it at this point
+% %             test= diff(fit);
+% %           test= deltaFF(fit,fit);
+% 
+%             % based on moving baseline above?
+%           test= subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff;
+%             
+%           subjDataAnalyzed.(subjects{subj})(session).raw.repurple= fit; %currentSubj(session).photometry.df;
+%           subjData.(subjects{subj})(session).repurple= fit;
+       end
+       
+       
    end %end session loop
 end %end subject loop
+
+
+
+
 %% ~~~Reward identification ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     %fpr stages with variable reward identity (3 pumps, 3 rewards)
     %indicated by 1, 2, or 3 DS TTL pulses in rapid succession

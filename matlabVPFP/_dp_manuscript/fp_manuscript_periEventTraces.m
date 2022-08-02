@@ -907,7 +907,7 @@ lme1= fitlme(data3, 'periCueBlueAuc~ trialType + (1|subject)');
 
 %print and save results to file
 %seems diary keeps running log to same file (e.g. if code rerun seems prior output remains)
-diary('figure2-auc-lmeDetails.txt')
+diary('fp-figure2-DSvNS-auc-lmeDetails.txt')
 lme1
 diary off
 
@@ -1323,7 +1323,7 @@ for subj= 1:numel(subjects)
 
     
     %label and draw
-    i.axe_property('YLim',[-5, 10]);
+%     i.axe_property('YLim',[-5, 10]);
     i.set_names('x','time from event (s)','y','z-score','color','eventTypeBlue', 'column', 'stage');
     i.set_title(strcat(subjects{subj},'peri-event-allStages'));
 

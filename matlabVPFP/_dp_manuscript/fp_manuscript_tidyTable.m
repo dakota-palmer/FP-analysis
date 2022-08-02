@@ -170,12 +170,26 @@ for subj= 1:numel(subjects)
                 DSblueRaw(trialInd, cue)= currentSubj(includedSession).periDS.DSblue(:,:,cue);
                 DSpurpleRaw(trialInd, cue)= currentSubj(includedSession).periDS.DSpurple(:,:,cue);
                 
-                DSblue(trialInd,cue)= currentSubj(includedSession).periDS.DSzblue(:,:,cue); 
-                DSpurple(trialInd,cue)= currentSubj(includedSession).periDS.DSzpurple(:,:,cue);
-                DSbluePox(trialInd,cue)= currentSubj(includedSession).periDSpox.DSzpoxblue(:,:,cue);
-                DSpurplePox(trialInd,cue)= currentSubj(includedSession).periDSpox.DSzpoxpurple(:,:,cue);
-                DSblueLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxblue(:,:,cue);
-                DSpurpleLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxpurple(:,:,cue);
+                % Get normalized signal in z score by default unless you want 'raw' e.g. dff 
+                if (strcmp(normalizeMode, 'z'))
+                
+                    DSblue(trialInd,cue)= currentSubj(includedSession).periDS.DSzblue(:,:,cue); 
+                    DSpurple(trialInd,cue)= currentSubj(includedSession).periDS.DSzpurple(:,:,cue);
+                    DSbluePox(trialInd,cue)= currentSubj(includedSession).periDSpox.DSzpoxblue(:,:,cue);
+                    DSpurplePox(trialInd,cue)= currentSubj(includedSession).periDSpox.DSzpoxpurple(:,:,cue);
+                    DSblueLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxblue(:,:,cue);
+                    DSpurpleLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSzloxpurple(:,:,cue);
+                
+                else %else get 'raw' e.g. dff 
+                    DSblue(trialInd,cue)= currentSubj(includedSession).periDS.DSblue(:,:,cue); 
+                    DSpurple(trialInd,cue)= currentSubj(includedSession).periDS.DSpurple(:,:,cue);
+                    DSbluePox(trialInd,cue)= currentSubj(includedSession).periDSpox.DSpoxblue(:,:,cue);
+                    DSpurplePox(trialInd,cue)= currentSubj(includedSession).periDSpox.DSpoxpurple(:,:,cue);
+                    DSblueLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSloxblue(:,:,cue);
+                    DSpurpleLox(trialInd,cue)= currentSubj(includedSession).periDSlox.DSloxpurple(:,:,cue);
+                end
+
+                
                 DStrialID(trialInd,cue)= cue;
                 
                 DStrialOutcome(trialInd,cue)= currentSubj(includedSession).trialOutcome.DSoutcome(cue);
@@ -204,16 +218,29 @@ for subj= 1:numel(subjects)
                 NSblue(trialInd,cue)= currentSubj(includedSession).periNS.NSzblue(:,:,cue);
                 NSpurple(trialInd,cue)= currentSubj(includedSession).periNS.NSzpurple(:,:,cue);
                 
-                if~isempty(currentSubj(includedSession).periNSpox.NSzpoxblue) %lazy exception for now
-                    NSbluePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSzpoxblue(:,:,cue);
-                    NSpurplePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSzpoxpurple(:,:,cue);
+               % Get normalized signal in z score by default unless you want 'raw' e.g. dff 
+                if (strcmp(normalizeMode, 'z'))
+                    if~isempty(currentSubj(includedSession).periNSpox.NSzpoxblue) %lazy exception for now
+                        NSbluePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSzpoxblue(:,:,cue);
+                        NSpurplePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSzpoxpurple(:,:,cue);
+                    end
+
+                    if~isempty(currentSubj(includedSession).periNSlox.NSzloxblue) %lazy exception for now
+                        NSblueLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxblue(:,:,cue);
+                        NSpurpleLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxpurple(:,:,cue);
+                    end
+                else %else get 'raw' e.g. dff 
+                    
+                    if~isempty(currentSubj(includedSession).periNSpox.NSpoxblue) %lazy exception for now
+                        NSbluePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSpoxblue(:,:,cue);
+                        NSpurplePox(trialInd,cue)= currentSubj(includedSession).periNSpox.NSpoxpurple(:,:,cue);
+                    end
+
+                    if~isempty(currentSubj(includedSession).periNSlox.NSloxblue) %lazy exception for now
+                        NSblueLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSloxblue(:,:,cue);
+                        NSpurpleLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSloxpurple(:,:,cue);
+                    end
                 end
-                
-                if~isempty(currentSubj(includedSession).periNSlox.NSzloxblue) %lazy exception for now
-                    NSblueLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxblue(:,:,cue);
-                    NSpurpleLox(trialInd,cue)= currentSubj(includedSession).periNSlox.NSzloxpurple(:,:,cue);
-                end
-                
                     %get first NS pox only for latency corr
                 if ~isempty( currentSubj(includedSession).behavior.poxNSrel{cue})
                     poxNSrel(trialInd, cue)= currentSubj(includedSession).behavior.poxNSrel{cue}(1);
@@ -346,5 +373,7 @@ end %end subj loop
 
 %save an 'index' column for easy reassignment of new values into table
 periEventTable(:,"index")= table([1:size(periEventTable,1)]');
+
+
 
 

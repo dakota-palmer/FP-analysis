@@ -1,3 +1,13 @@
+%% Choose whether or not to replace reblue with dff (dff after subtracting fitted isosbestic signal)?
+
+% if signalMode== 'dff', will overwrite reblue with dff in
+% create_struct_with_animal_data
+
+signalMode= 'dff';
+
+% signalMode= 'reblue'
+
+
 %% Run Analysis on Extracted Data
 
 

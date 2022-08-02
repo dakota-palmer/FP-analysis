@@ -5,7 +5,12 @@ clear; close all; clc;
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
 
 % % with artifacts
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jul-2022subjDataAnalyzed.mat");
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jul-2022subjDataAnalyzed.mat");
+% experimentName= 'vp-vta-fp'
+
+% % DFF version
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-29-Jul-2022subjDataAnalyzed_dff.mat");
+experimentName= 'vp-vta-fp-dff'
 
 % dp workstation
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-16-Jun-2022subjDataAnalyzed.mat")
@@ -13,8 +18,10 @@ load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-
 
 % %ally no artifacts (bu"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat"t all trials)
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\GADVPFP-22-Feb-2022subjDataAnalyzed.mat")
+% 
+% experimentName= 'vp-vta-fp'
 
-experimentName= 'vp-vta-fp'
+
 
 %% ID control/exclusion subj
 
@@ -33,10 +40,21 @@ subjMode='experimental';
 
 % subjMode= 'all'
 
+%% Choose whether or not to plot z score or dff
+
+% normalizeMode= 'z';
+
+normalizeMode= '_';
+
 %% Choose whether to include all sessions or only Criteria sessions in analyses
 % criteriaMode= 'allSes' or 'criteriaSes
 criteriaMode= 'allSes';
 % criteriaMode= 'criteriaSes';
+
+%% Choose whether to exclude artifact trials based on extreme z score 
+
+% artifactExcludeMode= 'trial';
+artifactExcludeMode= '_';
 
 %% Choose whether to exclude sessions based on fp signal correlation
 
@@ -48,7 +66,7 @@ sesCorrExcludeMode= '_';
 %% Plot Settings
 figPath= strcat(pwd,'\_figures\');
 
-figFormats= {'.fig','.svg'} %list of formats to save figures as (for saveFig.m)
+figFormats= {'.svg'} %list of formats to save figures as (for saveFig.m)
 
 %-- Master plot linestyles and colors
 
@@ -92,11 +110,11 @@ mapCustomCue= [90,180,172;
 
 
 %% Create periEventTable
-fp_manuscript_tidyTable
+fp_manuscript_tidyTable();
 
 %% make training plots
 
-fp_manuscript_behaviorPlots();
+% fp_manuscript_behaviorPlots();
 
 
 %% ID and remove artifacts

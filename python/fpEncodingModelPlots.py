@@ -140,6 +140,7 @@ dfTemp= dfTemp.astype('str').copy()
 
 modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-sessions-'+ dfTemp.loc[0,'modeCue']+ '-'+ dfTemp.loc[0,'modeSignal']
 
+
 #%% Plot entire cross validation (CV) path (MSE + coefficients)
 
 ## commenting out for now due to error with sparse format 
@@ -418,8 +419,42 @@ for subj in dfEncoding.subject.unique():
         kernels.loc[indEvent,'eventType']= eventVars[eventCol]
         kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventShift)/fs
             
+        #-- calculate kernel AUC for this event 
+        #AUC of beta coefficient
+        
+        # not most appropriate- #using sklearn.metrics.auc() function
+        # from sklearn import metrics
+        # kernels.loc[indEvent,'betaAUC']= metrics.auc(kernels.loc[indEvent,'timeShift'],kernels.loc[indEvent, 'beta'])
+        
+        #using numpy.trapz function
+        # kernels.loc[indEvent,'betaAUC']= np.trapz(kernels.loc[indEvent,'timeShift'],kernels.loc[indEvent, 'beta'])
+        # kernels.loc[indEvent,'betaAUC']= np.trapz(kernels.loc[indEvent, 'beta'])
+
+        
+        #using scipy.integrate function (trapezoidal method)
+        from scipy import integrate
+        
+        # test= integrate.trapezoid(kernels.loc[indEvent,'beta'])
+        # test2= integrate.cumulative_trapezoid(kernels.loc[indEvent,'beta'])
+
+        #compute AUC separately Pre- and Post- Event
+        
+        #define time in s to include in AUC (want equivalent time for pre & post comparison)
+        aucTime= 2  
+        
+        ind= []
+        ind= (indEvent) & (kernels.timeShift<0) & (kernels.timeShift>= -aucTime) #pre-event
+        
+        kernels.loc[ind,'betaAUCpreEvent']= integrate.trapezoid(kernels.loc[ind,'beta'])
+        
+        ind= []
+        ind= (indEvent) & (kernels.timeShift>0) & (kernels.timeShift <=aucTime) #post-event
+        
+        kernels.loc[ind,'betaAUCpostEvent']= integrate.trapezoid(kernels.loc[ind,'beta'])
+        
 
     
+    #add data to from this subject to larger df, kernelsAll
     kernels['subject']= subj
         
     kernelsAll= pd.concat([kernelsAll, kernels], axis=0)
@@ -554,6 +589,8 @@ for subj in dfEncoding.subject.unique():
 
 #reset index for unique
 dfPredictedAll= dfPredictedAll.reset_index()
+
+
 
 #%%  TODO: linear sum of kernels at time=0
 
@@ -747,6 +784,46 @@ g= sns.barplot(ax=ax,data= dfPredictedAll,  y='r2')
 g= sns.barplot(ax=ax,data= dfPredictedAll, x='subject',  y='r2', hue='subject')
 
 saveFigCustom(f, modelStr+'allSubj-'+'r2-', savePath)
+
+
+#%%-- Kernels with AUC plot 
+f, ax = plt.subplots(1, 3)
+
+
+#kernels
+g= sns.lineplot(ax=ax[0], data=kernelsAll, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha= 0.3) #, style='subject', alpha=0.3)
+
+
+g= sns.lineplot(ax=ax[0], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+
+g.legend().remove()
+
+#AUC pre-event
+g= sns.barplot(ax= ax[1], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.scatterplot(ax= ax[1], data= kernelsAll, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+
+g= sns.lineplot(ax= ax[1], data=kernelsAll, units='subject', estimator=None, x='eventType', y='betaAUCpreEvent', color='gray', alpha=0.3)
+
+g.legend().remove()
+
+
+#AUC post-event
+g= sns.barplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.scatterplot(ax= ax[2], data= kernelsAll, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+
+g= sns.lineplot(ax= ax[2], data=kernelsAll, units='subject', estimator=None, x='eventType', y='betaAUCpostEvent', color='gray', alpha=0.3)
+
+g.legend().remove()
+
+#share AUC axes
+ax[2].get_shared_y_axes().join(ax[1], ax[2])
+
+
+# g.legend()
+
+saveFigCustom(f, modelStr+'allSubj-'+'kernelsAUC', savePath)
 
 
 #%% 

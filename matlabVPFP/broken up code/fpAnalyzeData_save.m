@@ -6,8 +6,14 @@
 
 
 %DAKOTA
+structName= 'subjDataAnalyzed';
+
+if strcmp(signalMode,'dff')
+    structName= 'subjDataAnalyzed_dff';
+end
+
 structpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code'
-save(fullfile(structpath,strcat(experimentName,'-',date, 'subjDataAnalyzed')), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 for files >2gb
+save(fullfile(structpath,strcat(experimentName,'-',date, structName)), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 for files >2gb
 % %% save data from each stage from each animal for ERT analysis
 % ERTpath='C:\Users\Ally\Desktop\FP-analysis-variableReward\FP_analysis\FP-analysis\matlabVPFP\broken up code\output\ERT\';
 % 
