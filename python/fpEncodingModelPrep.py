@@ -218,6 +218,56 @@ contVars= ['reblue','repurple']
 # #may be able to add regression line to jointplot here
 
 
+#%% FP preprocessing- df/f
+
+from customFunctions import execute_controlFit_dff
+    
+isosbesticControl=True
+filterWindow= 40    
+
+
+# run dff for each file individually
+groups= dfTidy.groupby('fileID')
+    
+for name, group in groups:
+    
+    norm_data= []
+    control_fit= []
+    
+    norm_data, control_fit= execute_controlFit_dff(dfTidy.loc[group.index,'repurple'], dfTidy.loc[group.index,'reblue'], isosbesticControl, filterWindow)
+
+    
+    dfTidy.loc[group.index, 'norm_data']= norm_data
+    dfTidy.loc[group.index, 'control_fit']= control_fit
+
+# #--test subset file
+# test= dfTidy.loc[dfTidy.fileID== dfTidy.fileID.min()]
+
+# norm_data, control_fit= execute_controlFit_dff(test.repurple, test.reblue, isosbesticControl, filterWindow)
+
+# test['norm_data'], test['control_fit']= execute_controlFit_dff(test.repurple, test.reblue, isosbesticControl, filterWindow)
+
+# # viz raw and dff fp signals
+# plt.subplot(2,1,1)
+# plt.plot(test.reblue, color= 'blue')
+# plt.plot(test.control_fit, color='purple')
+# # plt.plot(test.repurple)
+# plt.subplot(2,1,2)
+# plt.plot(test.norm_data, color='green')
+
+# #-- viz dff from random sample subset file
+# ind= dfTidy.fileID==dfTidy.fileID.sample().iloc[0]
+
+# # dfPlot= dfTidy[ind]#.loc[ind]
+
+# plt.subplot(2,1,1)
+# plt.plot(dfTidy.loc[ind,'reblue'], color='blue')
+# plt.plot(dfTidy.loc[ind,'control_fit'], color='purple')
+# plt.subplot(2,1,2)
+# plt.plot(dfTidy.loc[ind,'norm_data'], color='green')
+
+
+
 
 #%% TODO: integrate peri-event plotting & session viewing beforehand to make sure we're getting good sessions
 
@@ -1242,6 +1292,7 @@ for eventCol in eventVars: #.categories:
 #%% Drop original, unshifted event times (we should now have duplicate col for timeshift=0 now)
 
 dfTemp= dfTemp.drop(eventVars,axis=1)
+
 
 #%% Exclude artifacts
 

@@ -7,6 +7,7 @@ Created on Thu Dec 16 13:50:19 2021
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
  #%% define a function to save and close figures
 def saveFigCustom(figure, figName,savePath, close=True):
@@ -94,3 +95,49 @@ def groupPercentCalc(df, levelOfAnalysis, groupHierarchy, colToCalc):
     #normalizing over index (row) should return proportion of each outcome for each trialType 
     result= pd.crosstab(index=xTabInd, columns=dfSubset[colToCalc], margins=False, normalize='index')
     return result
+
+
+
+#%% ---- FP preprocessing functions taken from GuPPY
+# dp adapted from https://github.com/LernerLab/GuPPy/blob/main/GuPPy/preprocess.py
+
+from scipy import signal as ss
+
+# function to compute deltaF/F using fitted control channel and filtered signal channel
+def deltaFF(signal, control):
+    
+	res = np.subtract(signal, control)
+	normData = np.divide(res, control)
+	#deltaFF = normData
+	normData = normData*100
+
+	return normData
+
+# function to fit control channel to signal channel
+def controlFit(control, signal):
+    
+	p = np.polyfit(control, signal, 1)
+	arr = (p[0]*control)+p[1]
+	return arr
+
+
+# function to filter control and signal channel, also execute above two function : controlFit and deltaFF
+# function will also take care if there is only signal channel and no control channel
+# if there is only signal channel, z-score will be computed using just signal channel
+def execute_controlFit_dff(control, signal, isosbestic_control, filter_window):
+
+	b = np.divide(np.ones((filter_window,)), filter_window)
+	a = 1
+
+	if isosbestic_control==False:
+		signal_smooth = ss.filtfilt(b, a, signal)
+		control_fit = controlFit(control, signal_smooth)
+		norm_data = deltaFF(signal_smooth, control_fit)
+	else:
+		control_smooth = ss.filtfilt(b, a, control)
+		signal_smooth = ss.filtfilt(b, a, signal)
+		control_fit = controlFit(control_smooth, signal_smooth)
+		norm_data = deltaFF(signal_smooth, control_fit)
+	
+	return norm_data, control_fit
+
