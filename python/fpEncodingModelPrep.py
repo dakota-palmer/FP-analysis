@@ -29,6 +29,7 @@ from customFunctions import saveFigCustom
 # gcamp_y = 148829 x 1 ; entire session signal predicted by regression . z scored photometry signal currently nan during ITI & only valid values during peri-DS
 
 
+
 #%% Plot & output settings
 
 sns.set_style("darkgrid")
@@ -271,11 +272,34 @@ for name, group in groups:
 
 #%% TODO: integrate peri-event plotting & session viewing beforehand to make sure we're getting good sessions
 
+
+#%% Define whether to run on dF/F or raw signal!
+
+# modeSignalNorm= 'raw'
+
+modeSignalNorm= 'dff' 
+
+## Define whether to z-score peri-event dF/F or keep as dF/F
+
+modePeriEventNorm= 'z'
+
+# modePeriEventNorm= 'raw'
+
+
+#for now simply overwrite the signal with normalized dff
+if modeSignalNorm== 'dff':
+    dfTidy.reblue= dfTidy.norm_data
+    dfTidy.repurple= dfTidy.control_fit
+
+
+
+ 
+
 #%% Define which specific stages / events / sessions to include!
 
 #% #TODO: collect all events, save, and move event exclusion to regression script
 
-stagesToInclude= [5]
+stagesToInclude= [7]
 
 #number of sessions to include, 0 includes final session of this stage+n
 nSessionsToInclude= 0
@@ -303,7 +327,11 @@ eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
 
 
 #exclude stages
+
 dfTidy= dfTidy.loc[dfTidy.stage.isin(stagesToInclude),:]
+
+
+
 
 #exclude sessions within-stage
 dfTidy['maxSesThisStage']= dfTidy.groupby(['stage','subject'])['trainDayThisStage'].transform('max').copy()
@@ -814,6 +842,23 @@ for name, group in groups:
     
 test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()]
 
+
+#%% --quick fix overwrite z-score dff with raw if desired
+
+if (modeSignalNorm=='dff') & (modePeriEventNorm== 'raw'):
+
+        ind= []
+        ind= dfTidy['reblue-z-periDS'].notna()
+
+        dfTidy.loc[ind, 'reblue-z-periDS']= dfTidy.reblue
+        dfTidy.loc[ind, 'repurple-z-periDS']= dfTidy.repurple
+
+        ind= []
+        ind= dfTidy['reblue-z-periNS'].notna()
+      
+        dfTidy.loc[ind, 'reblue-z-periNS']= dfTidy.reblue
+        dfTidy.loc[ind, 'repurple-z-periNS']= dfTidy.repurple
+    
 #%% Peri-event z-scoring 
 # #Iterate through files using groupby() and conduct peri event Z scoring
 # #iterating through fileID to gurantee no contamination between sessions
@@ -1296,65 +1341,76 @@ dfTemp= dfTemp.drop(eventVars,axis=1)
 
 #%% Exclude artifacts
 
+#initialize 
+dfTemp['exclude']= None
+
+
+
 #threshold absolute value z score beyond which entire trial should be excluded (replace w nan)
 thresholdArtifact= 15
 
 
-#--DS
-groupHierarchyTimeLockTrialID= ['fileID','trialIDtimeLock-z-periDS']
+#only run if z score and non-dff
 
-y= dfTemp.columns[dfTemp.columns.str.contains('repurple-z-periDS')]
+if (modeSignalNorm!= 'dff') & (modePeriEventNorm=='z'):
 
-#find trials exceeding threshold
-
-dfTemp2= pd.DataFrame()
-
-#get max, min for each trial then compare absolute value of these extremes against threshold 
-dfTemp2['maxZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('max').copy()
-
-dfTemp2['minZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('min').copy()
-
-dfTemp2['tresholdArtifact']= thresholdArtifact
-
-dfTemp2= dfTemp2.abs()
-
-
-ind= ((dfTemp2.minZ>=thresholdArtifact) | (dfTemp2.maxZ>= thresholdArtifact))
-
-#mark index as artifact if exceed threshold
-dfTemp2.loc[ind,'artifact']= 1
-
-
-#mark for exclusion in main df
-dfTemp.loc[ind, 'exclude']= 1
-
-
-#--NS
-groupHierarchyTimeLockTrialID= ['fileID','trialIDtimeLock-z-periNS']
-
-y= dfTemp.columns[dfTemp.columns.str.contains('repurple-z-periNS')]
-
-#find trials exceeding threshold
-dfTemp2= pd.DataFrame()
-
-#get max, min for each trial then compare absolute value of these extremes against threshold 
-dfTemp2['maxZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('max').copy()
-
-dfTemp2['minZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('min').copy()
-
-dfTemp2['tresholdArtifact']= thresholdArtifact
-
-dfTemp2= dfTemp2.abs()
-
-
-ind= ((dfTemp2.minZ>=thresholdArtifact) | (dfTemp2.maxZ>= thresholdArtifact))
-
-#mark index as artifact if exceed threshold
-dfTemp2.loc[ind,'artifact']= 1
-
-
-#mark for exclusion in main df
-dfTemp.loc[ind, 'exclude']= 1
+    
+    
+    #--DS
+    groupHierarchyTimeLockTrialID= ['fileID','trialIDtimeLock-z-periDS']
+    
+    y= dfTemp.columns[dfTemp.columns.str.contains('repurple-z-periDS')]
+    
+    #find trials exceeding threshold
+    
+    dfTemp2= pd.DataFrame()
+    
+    #get max, min for each trial then compare absolute value of these extremes against threshold 
+    dfTemp2['maxZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('max').copy()
+    
+    dfTemp2['minZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('min').copy()
+    
+    dfTemp2['tresholdArtifact']= thresholdArtifact
+    
+    dfTemp2= dfTemp2.abs()
+    
+    
+    ind= ((dfTemp2.minZ>=thresholdArtifact) | (dfTemp2.maxZ>= thresholdArtifact))
+    
+    #mark index as artifact if exceed threshold
+    dfTemp2.loc[ind,'artifact']= 1
+    
+    
+    #mark for exclusion in main df
+    dfTemp.loc[ind, 'exclude']= 1
+    
+    
+    #--NS
+    groupHierarchyTimeLockTrialID= ['fileID','trialIDtimeLock-z-periNS']
+    
+    y= dfTemp.columns[dfTemp.columns.str.contains('repurple-z-periNS')]
+    
+    #find trials exceeding threshold
+    dfTemp2= pd.DataFrame()
+    
+    #get max, min for each trial then compare absolute value of these extremes against threshold 
+    dfTemp2['maxZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('max').copy()
+    
+    dfTemp2['minZ']= dfTemp.groupby(groupHierarchyTimeLockTrialID)[y].transform('min').copy()
+    
+    dfTemp2['tresholdArtifact']= thresholdArtifact
+    
+    dfTemp2= dfTemp2.abs()
+    
+    
+    ind= ((dfTemp2.minZ>=thresholdArtifact) | (dfTemp2.maxZ>= thresholdArtifact))
+    
+    #mark index as artifact if exceed threshold
+    dfTemp2.loc[ind,'artifact']= 1
+    
+    
+    #mark for exclusion in main df
+    dfTemp.loc[ind, 'exclude']= 1
 
 #%% Convert trialIDtimeLock to true unique trialID for timeLock epochs (not shared between files)
 
@@ -1494,12 +1550,12 @@ for subj in dfTemp.subject.unique():
     
     # g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
     
-    g.set(title=('subj-'+str(subj)+'peri-Cue encoding model input'))
+    g.set(title=('subj-'+str(subj)+'peri-Cue encoding model input')+'')
     g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
     
     g.set(ylim=(-4,10))
     
-    saveFigCustom(f, 'subj-'+str(subj)+'modelInput-periCue-withArtifact',savePath)
+    saveFigCustom(f, 'subj-'+str(subj)+'modelInput-periCue-withArtifact'+'-'+modeSignalNorm+'-'+modePeriEventNorm,savePath)
 
     
 
@@ -1564,7 +1620,7 @@ for subj in dfTemp.subject.unique():
     
     g.set(ylim=(-4,10))
     
-    saveFigCustom(f, 'subj-'+str(subj)+'modelInput-periCue-noArtifact',savePath)
+    saveFigCustom(f, 'subj-'+str(subj)+'modelInput-periCue-noArtifact'+'-'+modeSignalNorm+'-'+modePeriEventNorm,savePath)
 
 
 
@@ -1587,7 +1643,7 @@ dfTemp.loc[ind].to_pickle(savePath+'dfRegressionInputNSonly.pkl')
 contVars= list(dfTemp.columns[(dfTemp.columns.str.contains('reblue') | dfTemp.columns.str.contains('repurple'))])
 
 #also save other variables e.g. variables actually included in regression Input dataset (since we may have excluded specific eventTypes)
-saveVars= ['idVars', 'eventVars', 'contVars', 'trialVars', 'experimentType', 'stagesToInclude', 'nSessionsToInclude', 'preEventTime','postEventShift', 'fs', 'cueTimeOfInfluence']
+saveVars= ['idVars', 'eventVars', 'contVars', 'trialVars', 'experimentType', 'stagesToInclude', 'nSessionsToInclude', 'preEventTime','postEventShift', 'fs', 'cueTimeOfInfluence', 'modeSignalNorm', 'modePeriEventNorm']
 
 
 #use shelve module to save variables as dict keys

@@ -417,6 +417,287 @@ for subj= 1:numel(subjects)
            
        end
    end %end ses loop
+end %end subj loop
+       
+       
+%----405nm AUCs 
+    %-------peri DS AUC
+
+%string of signal column(s)
+signalCol= 'DSpurple'
+
+%string of trialID col
+trialIDCol= 'DStrialID'
+
+%preallocate new columns with nan (otherwise matlab may autofill blanks with 0)
+data(:, append('auc',signalCol))= table(nan); %single AUC value for trial
+data(:, append('aucAbs',signalCol))= table(nan); %single AUC value for abs(signal) 
+data(:, append('aucCum',signalCol))= table(nan); %cumulative AUC across time within trial 
+data(:, append('aucCumAbs',signalCol))= table(nan); %cumulative AUC of abs(signal) across time within trial 
+
+
+subjects= unique(data.subject);
+
+for subj= 1:numel(subjects)
+%  %    dataTemp= data(strcmp(data.subject,subjects{subj}),:);
+   
+   %create a conditional index which we'll cumulatively combine for
+   %reassignment into original table
+   ind=[]; ind2=[]; ind3=[]; ind4=[]; ind5=[]; ind6= [];
+
+   ind= (strcmp(data.subject,subjects{subj}));
+   
+%    dates= unique(dataTemp.date);
+
+   dates= unique(data(ind, 'date'));
+   
+   for thisDate= 1:numel(dates)
+%        dataTemp2= dataTemp(strcmp(dataTemp.date,dates{date}),:);
+       
+%         ind2= (ind & (strcmp(data(:,'date'),dates{thisDate})));
+%         ind2= (ind & (strcmp(data(:,'date'),dates{thisDate,:})));
+
+        %kinda slow but likely faster than ismember
+        ind2= (ind & (strcmp(data{:,'date'},dates{thisDate,:})));
+
+
+      
+       %TODO: ~~ismember is super slow!
+%        ind2= (ind & (ismember(data(:,'date'),dates(thisDate,:))));
+
+       
+       
+        %retain only those with valid trialIDs 
+        ind5= (ind2 & (~ismissing(data(:,trialIDCol))));
+
+       
+%        trials= unique(dataTemp2(:,trialIDCol))
+    
+%        trials= unique(table2array(data(ind2, trialIDCol))); %if run unique() on table doesn't actually get unique values of column
+       
+       %for some reason ind2 w/ nan trialID returns a unique nan for every row
+       trials= unique(data(ind5,trialIDCol));
+
+       trials= table2array(trials);
+       
+       for trial= 1:numel(trials)
+            
+%            dataTemp3= dataTemp2((ismember(dataTemp2(:,trialID),trial)),:);
+           
+%            ind3= (ind2 & (ismember(data(:,trialID),trials(trial))));
+
+%              ind3= (ind5 & (ismember(data(:,trialIDCol),trials(trial,:)))); %this line takes awhile?
+%              ind3= (ind5 & (data(:,trialIDCol)==trials(trial,:))); %this line takes awhile?
+             ind3= (ind5 & (data.(trialIDCol))==trials(trial,:)); %this line takes awhile?
+
+
+
+
+           %compute AUC of signal within this trial
+           auc= []; aucAbs= []; aucCum= []; aucCumAbs= [];
+           
+           
+           
+           %Only include post-cue portion of signal in AUC (timeLock >=0)
+           ind6= data.timeLock>=0;
+           
+           ind3= (ind3 & ind6);
+           
+           signal= data(ind3, signalCol);
+           
+           signal= table2array(signal);
+           
+           
+
+           %for auc and aucAbs, single value for trials so retain only one
+           %observation (for correct plotting & stats; easy w/o changing later)
+           ind4= find(ind3==1);
+
+           auc= nan(size(ind4));
+           aucAbs= nan(size(ind4));
+           
+           [auc(1), aucAbs(1), aucCum, aucCumAbs] = fp_AUC(signal);
+          
+           
+        % -- Eliminate redundant auc values
+        
+%         %for auc and aucAbs, single value for trials so retain only one
+%         %observation (for correct plotting & stats; easy w/o changing later)
+%         ind4= find(ind3==1);
+% %         
+% %         
+% %         auc(1)= auc;
+% % 
+% %         auc(2:,:)= nan;
+% %         aucAbs(2:,:)=nan;
+
+           
+           data(ind3, append('auc',signalCol))= table(auc); %single AUC value for trial
+           data(ind3, append('aucAbs',signalCol))= table(aucAbs); %single AUC value for abs(signal) 
+           data(ind3, append('aucCum',signalCol))= table(aucCum); %cumulative AUC across time within trial 
+           data(ind3, append('aucCumAbs',signalCol))= table(aucCumAbs); %cumulative AUC of abs(signal) across time within trial 
+
+       end %end trial loop
+   end %end ses loop
+    
+end %end subj loop
+
+
+%-------Repeat for NS
+%
+
+%string of signal column(s)
+signalCol= 'NSpurple'
+
+%string of trialID col
+trialIDCol= 'NStrialID'
+
+%preallocate new columns with nan (otherwise matlab may autofill blanks with 0)
+data(:, append('auc',signalCol))= table(nan); %single AUC value for trial
+data(:, append('aucAbs',signalCol))= table(nan); %single AUC value for abs(signal) 
+data(:, append('aucCum',signalCol))= table(nan); %cumulative AUC across time within trial 
+data(:, append('aucCumAbs',signalCol))= table(nan); %cumulative AUC of abs(signal) across time within trial 
+
+
+subjects= unique(data.subject);
+
+for subj= 1:numel(subjects)
+%    dataTemp= data(strcmp(data.subject,subjects{subj}),:);
+   
+   %create a conditional index which we'll cumulatively combine for
+   %reassignment into original table
+   ind=[]; ind2=[]; ind3=[]; ind4=[]; ind5=[]; ind6=[];
+
+   ind= (strcmp(data.subject,subjects{subj}));
+   
+%    dates= unique(dataTemp.date);
+
+   dates= unique(data(ind, 'date'));
+   
+   for thisDate= 1:numel(dates)
+%        dataTemp2= dataTemp(strcmp(dataTemp.date,dates{date}),:);
+       
+%         ind2= (ind & (strcmp(data(:,'date'),dates{thisDate})));
+%         ind2= (ind & (strcmp(data(:,'date'),dates{thisDate,:})));
+
+        %kinda slow but likely faster than ismember
+        ind2= (ind & (strcmp(data{:,'date'},dates{thisDate,:})));
+
+
+      
+       %TODO: ~~ismember is super slow!
+%        ind2= (ind & (ismember(data(:,'date'),dates(thisDate,:))));
+
+       
+       
+        %retain only those with valid trialIDs 
+        ind5= (ind2 & (~ismissing(data(:,trialIDCol))));
+
+       
+%        trials= unique(dataTemp2(:,trialIDCol))
+    
+%        trials= unique(table2array(data(ind2, trialIDCol))); %if run unique() on table doesn't actually get unique values of column
+       
+       %for some reason ind2 w/ nan trialID returns a unique nan for every row
+       trials= unique(data(ind5,trialIDCol));
+
+       trials= table2array(trials);
+       
+       for trial= 1:numel(trials)
+            
+%            dataTemp3= dataTemp2((ismember(dataTemp2(:,trialID),trial)),:);
+           
+%            ind3= (ind2 & (ismember(data(:,trialID),trials(trial))));
+
+%              ind3= (ind5 & (ismember(data(:,trialIDCol),trials(trial,:)))); %this line takes awhile?
+%              ind3= (ind5 & (data(:,trialIDCol)==trials(trial,:))); %this line takes awhile?
+             ind3= (ind5 & (data.(trialIDCol))==trials(trial,:)); %this line takes awhile?
+
+
+
+
+           %compute AUC of signal within this trial
+           auc= []; aucAbs= []; aucCum= []; aucCumAbs= [];
+           
+           %Only include post-cue portion of signal in AUC (timeLock >=0)
+           ind6= data.timeLock>=0;
+           
+           ind3= (ind3 & ind6);
+           
+           signal= data(ind3, signalCol);
+                      
+           signal= table2array(signal);
+           
+           
+
+           %for auc and aucAbs, single value for trials so retain only one
+           %observation (for correct plotting & stats; easy w/o changing later)
+           ind4= find(ind3==1);
+
+           auc= nan(size(ind4));
+           aucAbs= nan(size(ind4));
+           
+           [auc(1), aucAbs(1), aucCum, aucCumAbs] = fp_AUC(signal);
+          
+%            %auc(1) == aucCum(end)
+%            
+%            x= 401; %tbins
+%            
+%            %default x = 1
+%            test= trapz(signal);
+%            
+%            x= 401/fs;
+%            test2= trapz(x, signal); 
+%            
+%            x= 401*fs;
+%            test3= trapz(x, signal); 
+% 
+%            %each of these makes more extreme trapz?
+%            %still get 401 values
+%            % but ~10x larger each time
+%           % x= 401; %tbins
+%            test= cumtrapz(signal);
+%            
+%            x= 2; %401/fs;
+%            test2= cumtrapz(x, signal); 
+%            
+%            x= 0.5;%401*fs;
+%            test3= cumtrapz(x, signal); 
+% 
+%            
+%            %looks like 1/fs is pretty reasonable?
+%            x= 1/fs;%401*fs;
+%            test= cumtrapz(x, signal);
+%            
+%            figure;
+%            subplot(1,2,1); hold on;
+%            plot(signal, 'b');
+%            subplot(1,2,2); hold on;
+%            plot(test, 'k');
+%            
+                
+        % -- Eliminate redundant auc values
+        
+%         %for auc and aucAbs, single value for trials so retain only one
+%         %observation (for correct plotting & stats; easy w/o changing later)
+%         ind4= find(ind3==1);
+% %         
+% %         
+% %         auc(1)= auc;
+% % 
+% %         auc(2:,:)= nan;
+% %         aucAbs(2:,:)=nan;
+
+           
+           data(ind3, append('auc',signalCol))= table(auc); %single AUC value for trial
+           data(ind3, append('aucAbs',signalCol))= table(aucAbs); %single AUC value for abs(signal) 
+           data(ind3, append('aucCum',signalCol))= table(aucCum); %cumulative AUC across time within trial 
+           data(ind3, append('aucCumAbs',signalCol))= table(aucCumAbs); %cumulative AUC of abs(signal) across time within trial 
+
+           
+       end
+       
+   end %end ses loop
     
 end %end subj loop
 
@@ -759,6 +1040,192 @@ i.geom_hline('yintercept', 0, 'style', 'k--');
 i().draw()
 
 saveFig(gcf, figPath, title, figFormats);
+
+%% Figure 2aaa: 465 and 405nm peri cue on special days
+
+%- Stage 5 Day 1, Stage 5 Criteria, Stage 7 Criteria
+% --marked as sesSpecialLabel in fpTidyTable.m
+
+%subset data 
+data= periEventTable;
+
+ind=[];
+ind= ~cellfun(@isempty, data.sesSpecialLabel);
+
+data= data(ind,:);
+
+%stack() to make trialType variable for faceting
+data= stack(data, {'DSblue', 'NSblue', 'DSpurple', 'NSpurple'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
+
+% FacetGrid with sesSpecialLabel = Row
+clear i;
+figure();
+
+cmapSubj= cmapTab10Subj;
+cmapGrand= cmapTab10Grand;
+
+% cmapSubj= cmapCueSubj;
+% cmapGrand= cmapCueGrand;
+
+% cmapSubj= 'brewer2';
+% cmapSubj= 'brewer_dark';
+
+
+% individual subjects means
+i= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'group', data.subject);
+
+% i= facet_wrap(data.sesSpecialLabel,'ncols',1);
+i= i.facet_grid([],data.sesSpecialLabel);
+
+
+i().stat_summary('type','sem','geom','line');
+i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
+
+% i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapSubj);
+
+
+i().set_line_options('base_size',linewidthSubj);
+i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+i().draw();
+
+%mean between subj + sem
+i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'group',[]);
+
+i().stat_summary('type','sem','geom','area');
+
+% i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapGrand);
+
+
+i().set_line_options('base_size',linewidthGrand)
+
+i().axe_property('YLim',[-1,5]);
+i().axe_property('XLim',[-5,10]);
+
+title= strcat(subjMode,'aaa-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-learning-periCue-zTraces');   
+% i().set_title(title);    
+i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
+
+i.draw()
+
+% saveFig(gcf, figPath, title, figFormats);
+
+% ----- Bar plots of AUC
+clear i;
+figure();
+
+data2= periEventTable;
+
+ind=[];
+ind= ~cellfun(@isempty, data2.sesSpecialLabel);
+
+data2= data2(ind,:);
+
+%stack() to make trialType variable for faceting
+data2= stack(data2, {'aucDSblue', 'aucNSblue', 'aucDSpurple','aucNSpurple'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueAuc');
+
+
+
+%mean between subj
+i= gramm('x',data2.trialType,'y',data2.periCueAuc, 'color', data2.trialType, 'group', []);
+
+i.facet_grid([],data2.sesSpecialLabel);
+
+
+% i.set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapGrand);
+
+
+%mean bar for trialType
+i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+
+i.set_line_options('base_size',linewidthGrand)
+
+i.axe_property('YLim',[-1,10]);
+title= strcat(subjMode,'-allSubjects-Figure2-learning-periCue-zAUC');   
+i.set_title(title);    
+i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
+
+
+%ind subj mean points
+i.update('x',data2.trialType,'y',data2.periCueAuc, 'color', data2.trialType, 'group', data2.subject);
+
+i.stat_summary('type','sem','geom','point');
+
+% i.set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapSubj);
+
+i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+
+%horz line @ zero
+i.geom_hline('yintercept', 0, 'style', 'k--'); 
+
+i().draw()
+
+%% Fig ?? Time series of auc by day...
+
+stagesToPlot= [1,2,3,4,5,6,7,12];
+
+data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
+
+% ind=[];
+% ind= ~cellfun(@isempty, data.sesSpecialLabel);
+% 
+% data= data(ind,:);
+
+%stack() to make trialType variable for faceting
+data= stack(data, {'aucDSblue', 'aucNSblue', 'aucDSpurple','aucNSpurple'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueAuc');
+
+
+%- plot 
+clear i;
+figure();
+
+
+% individual subjects means
+i= gramm('x',data.trainDayThisStage,'y',data.periCueAuc, 'color', data.trialType, 'group', data.subject);
+
+% i= facet_wrap(data.sesSpecialLabel,'ncols',1);
+% i= i.facet_grid([],data.stage);
+i= i.facet_wrap(data.stage, 'ncols',4);
+
+
+i().stat_summary('type','sem','geom','line');
+i().geom_hline('yintercept',0, 'style', 'k--'); %overlay t=0
+
+% i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapSubj);
+
+
+i().set_line_options('base_size',linewidthSubj);
+i().set_names('x','trainDay','y','auc','color','trial type (ind subj mean)');
+
+i().draw();
+
+%mean between subj + sem
+i().update('x',data.trainDayThisStage,'y',data.periCueAuc, 'color', data.trialType, 'group',[]);
+
+i().stat_summary('type','sem','geom','area');
+
+% i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapGrand);
+
+
+i().set_line_options('base_size',linewidthGrand)
+
+i().axe_property('YLim',[-4,10]);
+% i().axe_property('XLim',[-5,10]);
+
+title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-learning-periCue-zTraces');   
+i().set_title(title);    
+i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
+
+i.draw()
+
+
+
 
 
 %% Figure 2a: DS vs NS Peri event Z + AUC bar

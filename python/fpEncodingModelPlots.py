@@ -140,6 +140,19 @@ dfTemp= dfTemp.astype('str').copy()
 
 modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-sessions-'+ dfTemp.loc[0,'modeCue']+ '-'+ dfTemp.loc[0,'modeSignal']
 
+#add some manual adjustments to modelStr based on newer options
+# currently assume all same parameters per file in dfEncoding
+#todo: these should be included in saving of dfEncoding and added to modelStr above
+
+#search model name string for paramters and change accordingly
+if 'dff-raw' in dfEncoding.modelName[0]:
+    modelStr= modelStr+'-dff-raw-'
+
+elif 'dff-z' in dfEncoding.modelName[0]:
+    modelStr= modelStr+'dff-z-'
+    
+elif ('-z' in dfEncoding.modelName[0]) & ('dff' not in dfEncoding.modelName[0]):
+    modelStr= modelStr+ '-z-'
 
 #%% Plot entire cross validation (CV) path (MSE + coefficients)
 
@@ -442,15 +455,32 @@ for subj in dfEncoding.subject.unique():
         #define time in s to include in AUC (want equivalent time for pre & post comparison)
         aucTime= 2  
         
+        # #define sampling rate of AUC
+        # aucDx= 1/fs
+        
+        # # #testing scipy.integrate parameters
+        # # giving time range x gives more interpretable values (distro is same)
+        # # test=  integrate.trapezoid(kernels.loc[ind,'beta'])
+        
+        # # #below 3 yield equivalent result.
+        # # test1=  integrate.trapezoid(kernels.loc[ind,'beta'], x= kernels.loc[ind,'timeShift'])
+        # # test2=  integrate.trapezoid(kernels.loc[ind,'beta'], dx= aucDx)
+        # # test3=  integrate.trapezoid(kernels.loc[ind,'beta'], x= kernels.loc[ind,'timeShift'], dx= aucDx)
+
+        
+        
         ind= []
         ind= (indEvent) & (kernels.timeShift<0) & (kernels.timeShift>= -aucTime) #pre-event
         
-        kernels.loc[ind,'betaAUCpreEvent']= integrate.trapezoid(kernels.loc[ind,'beta'])
+        # kernels.loc[ind,'betaAUCpreEvent']= integrate.trapezoid(kernels.loc[ind,'beta'])
+        kernels.loc[ind,'betaAUCpreEvent']= integrate.trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'])
+
+        
         
         ind= []
         ind= (indEvent) & (kernels.timeShift>0) & (kernels.timeShift <=aucTime) #post-event
         
-        kernels.loc[ind,'betaAUCpostEvent']= integrate.trapezoid(kernels.loc[ind,'beta'])
+        kernels.loc[ind,'betaAUCpostEvent']= integrate.trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'])
         
 
     

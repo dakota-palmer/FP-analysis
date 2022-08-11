@@ -55,8 +55,8 @@ modeSignal= 'reblue'
 
 #%% TODO: Make sure everything is saved and loaded by shelve
 
-stagesToInclude=[7]
-nSessionsToInclude= 0
+# stagesToInclude=[7]
+# nSessionsToInclude= 0
 
 
 #%% Load regression input.pkl
@@ -286,7 +286,7 @@ for subj in subjects:
     
     #fit model 
     
-    modelName= 'subj-'+str(subj)+'-'+modeCue+'-trials-'+modeSignal
+    modelName= 'subj-'+str(subj)+'-'+modeCue+'-trials-'+modeSignal+'-'+modeSignalNorm+'-'+modePeriEventNorm
 
     t1 = time.time()
     
@@ -865,6 +865,8 @@ for subj in subjects:
 
     dfEncoding['modeSignal']= modeSignal
     dfEncoding['modeCue']= modeCue
+    dfEncoding['modeSignalNorm']= modeSignalNorm
+    dfEncoding['modePeriEventNorm']= modePeriEventNorm
  
     dfEncoding['modelInput']= [group.copy()]
     

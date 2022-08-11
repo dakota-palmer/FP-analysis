@@ -306,6 +306,8 @@ for subj= 1:numel(subjects)
             periEventTable.fileID(tsInd)= sesCount;
             
             periEventTable.trainDay(tsInd)= currentSubj(includedSession).trainDay;
+          
+            periEventTable.trainDayThisStage(tsInd)= trainDayThisStage;
             
             periEventTable.sesSpecialLabel(tsInd)= sesSpecialLabel(:);
             

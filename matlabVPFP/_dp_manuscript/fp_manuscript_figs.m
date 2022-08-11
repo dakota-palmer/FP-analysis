@@ -5,12 +5,12 @@ clear; close all; clc;
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
 
 % % with artifacts
-% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jul-2022subjDataAnalyzed.mat");
-% experimentName= 'vp-vta-fp'
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jul-2022subjDataAnalyzed.mat");
+experimentName= 'vp-vta-fp'
 
-% % DFF version
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-29-Jul-2022subjDataAnalyzed_dff.mat");
-experimentName= 'vp-vta-fp-dff'
+% % % DFF version
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-29-Jul-2022subjDataAnalyzed_dff.mat");
+% experimentName= 'vp-vta-fp-dff'
 
 % dp workstation
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-16-Jun-2022subjDataAnalyzed.mat")
@@ -21,6 +21,8 @@ experimentName= 'vp-vta-fp-dff'
 % 
 % experimentName= 'vp-vta-fp'
 
+%% Set gramm plot defaults
+set_gramm_plot_defaults();
 
 
 %% ID control/exclusion subj
@@ -42,9 +44,9 @@ subjMode='experimental';
 
 %% Choose whether or not to plot z score or dff
 
-% normalizeMode= 'z';
+normalizeMode= 'z';
 
-normalizeMode= '_';
+% normalizeMode= '_';
 
 %% Choose whether to include all sessions or only Criteria sessions in analyses
 % criteriaMode= 'allSes' or 'criteriaSes
@@ -53,8 +55,8 @@ criteriaMode= 'allSes';
 
 %% Choose whether to exclude artifact trials based on extreme z score 
 
-% artifactExcludeMode= 'trial';
-artifactExcludeMode= '_';
+artifactExcludeMode= 'trial';
+% artifactExcludeMode= '_';
 
 %% Choose whether to exclude sessions based on fp signal correlation
 
