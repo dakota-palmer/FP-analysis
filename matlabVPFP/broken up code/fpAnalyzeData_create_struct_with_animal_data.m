@@ -42,6 +42,7 @@ subjIncluded= subjects;
 %fpExtractData.m
 
 %Fill with metadata
+fileCount= 1;
 
 %Fill with metadata
  for subj= 1:numel(subjects) %for each subject
@@ -59,6 +60,11 @@ subjIncluded= subjects;
        subjDataAnalyzed.(subjects{subj})(session).trainDay= currentSubj(session).trainDay;
        subjDataAnalyzed.(subjects{subj})(session).trainStage= currentSubj(session).trainStage;
        subjDataAnalyzed.(subjects{subj})(session).box= currentSubj(session).box;     
+       
+       %save unique fileID
+       subjData.(subjects{subj})(session).fileID= fileCount;
+       subjDataAnalyzed.(subjects{subj})(session).fileID= fileCount;
+       fileCount= fileCount+1;
        
        %save raw event timestamps too- will be useful for deconvolution later
        subjDataAnalyzed.(subjects{subj})(session).raw.pox= currentSubj(session).pox;
@@ -145,9 +151,16 @@ for subj= 1:numel(subjects) %for each subject
        reblue= currentSubj(session).reblue;
        repurple= currentSubj(session).repurple;
 
-% ControlFit (fits 2 signals together)
-       fit= controlFit(reblue, repurple);
-       subjDataAnalyzed.(subjects{subj})(session).photometry.fit= fit;
+       % variable to allow comparisons of different fit methods of
+       % isosbestic 405 to 465 signal
+       modeFitFP= 'simpleLinear'
+       
+       %-simple linear fit with controlfit function
+        % ControlFit (fits 2 signals together) 
+       if strcmp(modeFitFP, 'simpleLinear')
+           fit= controlFit(reblue, repurple);
+           subjDataAnalyzed.(subjects{subj})(session).photometry.fit= fit;
+       end
 
 % Delta F/F 
        df=[];
@@ -170,7 +183,62 @@ for subj= 1:numel(subjects) %for each subject
 %             
 %           subjDataAnalyzed.(subjects{subj})(session).raw.repurple= fit; %currentSubj(session).photometry.df;
 %           subjData.(subjects{subj})(session).repurple= fit;
+
        end
+       
+       
+       %- Viz - Save figure of fp signals and fitting for each session
+       figPath = strcat(pwd,'\_fpFits\'); %location for output figures to be saved
+
+       %subset data
+       data= [];
+       data= table();
+       
+       data.reblue= reblue;
+       data.repurple= repurple;
+       data.fit= fit;
+       data.df= df;
+       
+       data.time= currentSubj(session).cutTime';
+       
+       %make fig
+       %fitted vs reblue ; dff
+       figure();
+       
+       titleFig= strcat('fp-fitMode-',modeFitFP,'-fileID-',num2str(currentSubj(session).fileID));
+       
+       sgtitle(titleFig);
+       
+       %just matlab 
+       subplot(3,1,1); hold on; title('raw');
+       plot(data.reblue, 'b');
+       plot(data.repurple,'m');
+       
+       legend('465','405');
+       
+       subplot(3,1,2); hold on; title('fitted');
+       plot(data.reblue,'b');
+       plot(data.fit,'k');
+       
+       legend('465','fitted baseline');
+       
+       subplot(3,1,3); hold on;
+       plot(data.df, 'g');
+       
+       legend('df/f');
+       
+       saveFig(gcf, figPath, titleFig, figFormats);
+        
+       
+       %gramm (unnecessary, complicated)
+%        clear g;
+%        
+%        g= gramm();
+%        
+%        g(1,3,1)= gramm('x'= data.time, 'y'= data.reblue,
+        
+
+      
        
        
    end %end session loop

@@ -7,6 +7,13 @@ signalMode= 'dff';
 
 % signalMode= 'reblue'
 
+%% Figure saving options
+% figFormats= {'.svg'}; %svg good for exporting to illustrator
+figFormats= {'.png'}; %png good for quick review of many without interaction
+% figFormats= {'.fig'}; %fig good for interaction
+
+
+
 
 %% Run Analysis on Extracted Data
 
