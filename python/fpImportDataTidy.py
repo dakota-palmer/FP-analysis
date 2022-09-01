@@ -49,7 +49,11 @@ experimentType= 'photometry'
 # #noartifact 
 # datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_input\noartifact-vp-vta-fp-05-Apr-2022.parquet"
 
-datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp-20-Apr-2022.parquet"
+# datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp-20-Apr-2022.parquet"
+
+#dp airPLS 2022-08-30
+datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp-30-Aug-2022.parquet"
+
 
 #%% ID and import Parquet file 
 df= pd.read_parquet(datapath)

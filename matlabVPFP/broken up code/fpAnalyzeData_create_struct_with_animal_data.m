@@ -140,109 +140,194 @@ for subj= 1:numel(subjects) %for each subject
    end %end session loop
 end %end subject loop
 
-%% Fitting and df/f 
-for subj= 1:numel(subjects) %for each subject
-   currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
-   for session = 1:numel(currentSubj) %for each training session this subject completed
-       
-       clear cutTime reblue repurple fit fit
-       
-       cutTime= currentSubj(session).cutTime;
-       reblue= currentSubj(session).reblue;
-       repurple= currentSubj(session).repurple;
 
-       % variable to allow comparisons of different fit methods of
-       % isosbestic 405 to 465 signal
-       modeFitFP= 'simpleLinear'
-       
-       %-simple linear fit with controlfit function
-        % ControlFit (fits 2 signals together) 
-       if strcmp(modeFitFP, 'simpleLinear')
-           fit= controlFit(reblue, repurple);
-           subjDataAnalyzed.(subjects{subj})(session).photometry.fit= fit;
-       end
+% fp_fit_comparison();
 
-% Delta F/F 
-       df=[];
-       df = deltaFF(reblue,fit); %This is dF for boxA in %, calculated by running the deltaFF function on the resampled blue data from boxA and the fitted data from boxA
-       subjDataAnalyzed.(subjects{subj})(session).photometry.df= df;
-       
-      %--Replace reblue with dff if desired dp 2022-07-28
-       if strcmp(signalMode, 'dff')
-          subjDataAnalyzed.(subjects{subj})(session).raw.reblue= df; %currentSubj(session).photometry.df;
-          subjData.(subjects{subj})(session).reblue= df;
-        
-%             %also replace repurple with some normalized dff value of isosbestic?
-%           % time based instantaneous delta vs some baseline...
-% %             would be nice as comparison but not worth it at this point
-% %             test= diff(fit);
-% %           test= deltaFF(fit,fit);
+% %% Fitting and df/f 
+% for subj= 1:numel(subjects) %for each subject
+%    currentSubj= subjData.(subjects{subj}); %use this for easy indexing into the current subject within the struct
+%    for session = 1:numel(currentSubj) %for each training session this subject completed
+%        
+%        clear cutTime reblue repurple fit fit
+%        
+%        cutTime= currentSubj(session).cutTime;
+%        reblue= currentSubj(session).reblue;
+%        repurple= currentSubj(session).repurple;
 % 
-%             % based on moving baseline above?
-%           test= subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff;
+%        % variable to allow comparisons of different fit methods of
+%        % isosbestic 405 to 465 signal
+% %        modeFitFP= 'simpleLinear'
+%        
+%         %use airPLS
+%        modeFitFP= 'airPLS'
+%        
+%        %-simple linear fit with controlfit function
+%         % ControlFit (fits 2 signals together) 
+%        if strcmp(modeFitFP, 'simpleLinear')
+%            fit= controlFit(reblue, repurple);
+%            subjDataAnalyzed.(subjects{subj})(session).photometry.fit= fit;
+%        end
+%        
+%       if strcmp(modeFitFP, 'airPLS')
+% %           [5e9, 2, 0.1, 0.5, 50]; %default airPLS values used in leomol's FPA.m 
+%           %lambda 1e12 used in XuAn-universe's Raw_FPData_Preprocessing.m
+%           %except first trial 
+% %           lambda= ?;
+% 
+%            % use airPLS to estimate baseline of signal & baseline prior to
+%            % fitting and subtraction
+%            signalBaseline= [];
+%            referenceBaseline= [];
+%            
+%            signalBaseline= airPLS(reblue');
+%          
+%            [~, signalBaseline] = airPLS(reblue');
+% 
+%            [~, referenceBaseline]= airPLS(repurple');
+%            
+%            signalBaseline= signalBaseline';
+%            referenceBaseline= referenceBaseline';
+%            
+% %            %- Viz
+% %            figure();
+% %            hold on; 
+% %            plot(reblue,'b');
+% %            plot(signalBaseline,'k--');
+% %            plot(repurple,'m');
+% %            plot(referenceBaseline,'k--');
+% %            legend('reblue','signal baseline', 'repurple', 'ref baseline');
+%            
+% %           -Overwrite reblue and repurple as these baselines prior to fit?
+%            
+% % %            [~, signalBaseline] = airPLS(signalArtifactFreeSmooth', configuration.airPLS{:});
+% % %             signalBaseline = signalBaseline';
+% % %             signalCorrected = signalArtifactFree - signalBaseline;
+%             % how i've seen this used is 
+%             % 1) use airPLS to estimate 'Baseline' of signal (& reference)
+%             % 2) subtract 'baseline' from each signal (& reference)
+%             % 3) if fitting reference signal, fit corrected reference to corrected signal
+%             % 4) Remove motion artifact by subtracting fitted, corrected reference from corrected signal
+%             % 5) Some normalization (e.g. df/f or z score)
+% 
+%             %2- subtract 'baseline' shifts/artifact from both signal & reference
+%             signalBaselineCorrected= []; referenceBaselineCorrected= [];
+% 
+%             signalBaselineCorrected= reblue-signalBaseline;
 %             
-%           subjDataAnalyzed.(subjects{subj})(session).raw.repurple= fit; %currentSubj(session).photometry.df;
-%           subjData.(subjects{subj})(session).repurple= fit;
-
-       end
-       
-       
-       %- Viz - Save figure of fp signals and fitting for each session
-       figPath = strcat(pwd,'\_fpFits\'); %location for output figures to be saved
-
-       %subset data
-       data= [];
-       data= table();
-       
-       data.reblue= reblue;
-       data.repurple= repurple;
-       data.fit= fit;
-       data.df= df;
-       
-       data.time= currentSubj(session).cutTime';
-       
-       %make fig
-       %fitted vs reblue ; dff
-       figure();
-       
-       titleFig= strcat('fp-fitMode-',modeFitFP,'-fileID-',num2str(currentSubj(session).fileID));
-       
-       sgtitle(titleFig);
-       
-       %just matlab 
-       subplot(3,1,1); hold on; title('raw');
-       plot(data.reblue, 'b');
-       plot(data.repurple,'m');
-       
-       legend('465','405');
-       
-       subplot(3,1,2); hold on; title('fitted');
-       plot(data.reblue,'b');
-       plot(data.fit,'k');
-       
-       legend('465','fitted baseline');
-       
-       subplot(3,1,3); hold on;
-       plot(data.df, 'g');
-       
-       legend('df/f');
-       
-       saveFig(gcf, figPath, titleFig, figFormats);
-        
-       
-       %gramm (unnecessary, complicated)
-%        clear g;
+%             referenceBaselineCorrected= repurple- referenceBaseline;
+%             
+%             %3- fit 'corrected' signals
+%            fit= controlFit(signalBaselineCorrected, referenceBaselineCorrected);
+%            subjDataAnalyzed.(subjects{subj})(session).photometry.fit= fit;
+%                 
+%            % 4- motion artifact subtraction (signal-fitted ref) 
+%            %dff fxn below does this?
+% %             signalFitCorrected= [];
+% %             signalFitCorrected= signalBaselineCorrected-fit;
+%             
+%           
+%             % - - overwriting reblue & fit
+% %             reblue= signalFitCorrected;
+% 
+%             % without assuming dff - - overwriting reblue & fit
+%             reblue= signalBaselineCorrected;
+%             
+%             %TODO: normalization 
+%             %5- normalization?
+%             %dff follows below
+%             %currently the deltaFF() fxn subtracts AND normalizes...
+%             
+% %            fit= airPLS(reblue);
+% %            subjDataAnalyzed.(subjects{subj})(session).photometry.fit= fit;
+%        end
+% 
+% % Delta F/F 
+%        df=[];
+%        df = deltaFF(reblue,fit); %This is dF for boxA in %, calculated by running the deltaFF function on the resampled blue data from boxA and the fitted data from boxA
+%        subjDataAnalyzed.(subjects{subj})(session).photometry.df= df;
 %        
-%        g= gramm();
+%       if strcmp(modeFitFP, 'airPLS')
+%             %for airPLS right now dont normalize, just subtract
+%             df= reblue-fit;
+%             subjDataAnalyzed.(subjects{subj})(session).photometry.df= df;
+%       end
 %        
-%        g(1,3,1)= gramm('x'= data.time, 'y'= data.reblue,
-        
-
-      
-       
-       
-   end %end session loop
-end %end subject loop
+%       %--Replace reblue with dff if desired dp 2022-07-28
+%        if strcmp(signalMode, 'dff')
+%           subjDataAnalyzed.(subjects{subj})(session).raw.reblue= df; %currentSubj(session).photometry.df;
+%           subjData.(subjects{subj})(session).reblue= df;
+%         
+% %             %also replace repurple with some normalized dff value of isosbestic?
+% %           % time based instantaneous delta vs some baseline...
+% % %             would be nice as comparison but not worth it at this point
+% % %             test= diff(fit);
+% % %           test= deltaFF(fit,fit);
+% % 
+% %             % based on moving baseline above?
+% %           test= subjDataAnalyzed.(subjects{subj})(session).photometry.purpledff;
+% %             
+% %           subjDataAnalyzed.(subjects{subj})(session).raw.repurple= fit; %currentSubj(session).photometry.df;
+% %           subjData.(subjects{subj})(session).repurple= fit;
+% 
+%        end
+%        
+%        
+%        %- Viz - Save figure of fp signals and fitting for each session
+%        figPath = strcat(pwd,'\_fpFits\'); %location for output figures to be saved
+% 
+%        %subset data
+%        data= [];
+%        data= table();
+%        
+%        data.reblue= reblue;
+%        data.repurple= repurple;
+%        data.fit= fit;
+%        data.df= df;
+%        
+%        data.time= currentSubj(session).cutTime';
+%        
+%        %make fig
+%        %fitted vs reblue ; dff
+%        figure();
+%        
+%        titleFig= strcat('fp-fitMode-',modeFitFP,'-fileID-',num2str(currentSubj(session).fileID));
+%        
+%        sgtitle(titleFig);
+%        
+%        %just matlab 
+%        subplot(3,1,1); hold on; title('raw');
+%        plot(data.reblue, 'b');
+%        plot(data.repurple,'m');
+%        
+%        legend('465','405');
+%        
+%        subplot(3,1,2); hold on; title('fitted');
+%        plot(data.reblue,'b');
+%        plot(data.fit,'k');
+%        
+%        legend('465','fitted baseline');
+%        
+%        subplot(3,1,3); hold on;
+%        plot(data.df, 'g');
+%        
+%        legend('df/f');
+%        
+%        saveFig(gcf, figPath, titleFig, figFormats);
+%         
+%        
+%        %gramm (unnecessary, complicated)
+% %        clear g;
+% %        
+% %        g= gramm();
+% %        
+% %        g(1,3,1)= gramm('x'= data.time, 'y'= data.reblue,
+%         
+% 
+%       
+%        
+%        
+%    end %end session loop
+% end %end subject loop
 
 
 
@@ -332,5 +417,8 @@ end %end subject loop
             
        end %end session loop      
 end %end subject loop
+
+
+
 
  

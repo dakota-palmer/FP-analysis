@@ -8,9 +8,11 @@
 %DAKOTA
 structName= 'subjDataAnalyzed';
 
-if strcmp(signalMode,'dff')
-    structName= 'subjDataAnalyzed_dff';
+if ~strcmp(signalMode,'reblue')
+    structName= strcat('subjDataAnalyzed_',signalMode);
 end
+
+structName= strcat(structName,'_modeFitFP-',signalMode);
 
 structpath='C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code'
 save(fullfile(structpath,strcat(experimentName,'-',date, structName)), 'subjDataAnalyzed', '-v7.3'); %the second argument here is the variable being saved, the first is the filename %v7.3 for files >2gb

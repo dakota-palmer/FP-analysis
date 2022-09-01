@@ -6,7 +6,9 @@
 % data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-23-Mar-2022subjDataAnalyzed.mat")
 
 % data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\vp_vta_fp-13-Apr-2022subjDataAnalyzed.mat");
-data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-16-Jun-2022subjDataAnalyzed.mat")
+% data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-16-Jun-2022subjDataAnalyzed.mat")
+
+data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-30-Aug-2022subjDataAnalyzed_airPLS_modeFitFP-airPLS.mat");
 
 data=data.subjDataAnalyzed;
 

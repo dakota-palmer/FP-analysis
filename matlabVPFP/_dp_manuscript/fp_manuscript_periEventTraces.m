@@ -114,7 +114,7 @@ i.axe_property('YLim',[-2,5]);
 i.draw();
 
 % 
-% i.update('x',data.timeLock,'y',data.NSblue);
+% i.update('x',dataniot.timeLock,'y',data.NSblue);
 % i.stat_summary('type','sem','geom','area');
 % i.draw();
 
@@ -984,7 +984,7 @@ i().set_line_options('base_size',linewidthGrand)
 i().axe_property('YLim',[-1,5]);
 i().axe_property('XLim',[-5,10]);
 
-title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-learning-periCue-zTraces');   
+title= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');   
 % i().set_title(title);    
 i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
 
@@ -1104,7 +1104,7 @@ i().set_line_options('base_size',linewidthGrand)
 i().axe_property('YLim',[-1,5]);
 i().axe_property('XLim',[-5,10]);
 
-title= strcat(subjMode,'aaa-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-learning-periCue-zTraces');   
+title= strcat(subjMode,'aaa-allSubjects-','-Figure2-learning-periCue-zTraces');   
 % i().set_title(title);    
 i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
 

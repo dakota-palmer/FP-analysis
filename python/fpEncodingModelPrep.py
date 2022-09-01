@@ -279,6 +279,8 @@ for name, group in groups:
 
 modeSignalNorm= 'dff' 
 
+modeSignalNorm= 'airPLS' #simply for filenames
+
 ## Define whether to z-score peri-event dF/F or keep as dF/F
 
 modePeriEventNorm= 'z'
@@ -290,7 +292,6 @@ modePeriEventNorm= 'z'
 if modeSignalNorm== 'dff':
     dfTidy.reblue= dfTidy.norm_data
     dfTidy.repurple= dfTidy.control_fit
-
 
 
  
@@ -1632,12 +1633,18 @@ for subj in dfTemp.subject.unique():
 
 print('saving regression input dfTemp to file')
 
-ind= dfTemp['timeLock-z-periDS-DStime'].notnull()
-dfTemp.loc[ind].to_pickle(savePath+'dfRegressionInputDSonly.pkl')
+#save DS and NS trial datasets 
+    #DS
+titleStr= modeSignalNorm+'-'+modePeriEventNorm+'RegressionInput'+'-''DSonly'
 
+ind= dfTemp['timeLock-z-periDS-DStime'].notnull()
+dfTemp.loc[ind].to_pickle(savePath+titleStr+'.pkl')
+
+    #NS
+titleStr= modeSignalNorm+'-'+modePeriEventNorm+'RegressionInput'+'-''NSonly'
 
 ind= dfTemp['timeLock-z-periNS-NStime'].notnull()
-dfTemp.loc[ind].to_pickle(savePath+'dfRegressionInputNSonly.pkl')
+dfTemp.loc[ind].to_pickle(savePath+titleStr+'.pkl')
 
 #update list of contVars to include normalized fp signals
 contVars= list(dfTemp.columns[(dfTemp.columns.str.contains('reblue') | dfTemp.columns.str.contains('repurple'))])

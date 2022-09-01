@@ -1,9 +1,14 @@
 %% Choose whether or not to replace reblue with dff (dff after subtracting fitted isosbestic signal)?
 
-% if signalMode== 'dff', will overwrite reblue with dff in
-% create_struct_with_animal_data
+% % if signalMode== 'dff', will overwrite reblue with dff in
+% % create_struct_with_animal_data
 
-signalMode= 'dff';
+% signalMode= 'dff';
+
+% % if signalMode== 'airPLS', will overwrite reblue with signal based on 
+% % df of independently baseline-corrected 405 and 465
+signalMode= 'airPLS';
+
 
 % signalMode= 'reblue'
 
@@ -28,6 +33,12 @@ cd ('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
 
 fpAnalyzeData_create_struct_with_animal_data;
 fpAnalyzeData_behavioral_analysis;
+
+% fp_fit_comparison;%dp--- plot fp signals for all sessions to test different preprocessing methods
+    
+fp_signal_process; % dp ----- SIGNAL REPLACEMENT; Determined by signalMode
+    
+
 fpAnalyzeData_eventtriggered_analysis;
 
 
@@ -54,7 +65,7 @@ fpAnalyzeData_save;
 
 %%  Speed test /optimizing
 
-profile viewer;
+profile viewer; 
 % %things that should be optimized:
 %% Denote the end
 disp('all done');
