@@ -37,7 +37,7 @@ import time
 
         
 #%% Plot settings
-sns.set_style("darkgrid")
+sns.set_style("darkgrid") 
 sns.set_context('notebook')
 
 savePath= r'./_output/fpEncodingModelStats/'
@@ -62,14 +62,26 @@ modeSignal= 'reblue'
 #%% Load regression input.pkl
 dataPath= r'./_output/fpEncodingModelPrep/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
-if modeCue=='DS':
-    dfTemp= pd.read_pickle(dataPath+'dfRegressionInputDSonly.pkl')
-elif modeCue=='NS':
-    dfTemp= pd.read_pickle(dataPath+'dfRegressionInputNSonly.pkl')
+#define specific dataset .pkl and metadata shelf to load for model 
+
+# e.g airPLS; z scored; DS trials
+modelDataset=  "airPLS-z-RegressionInput-DSonly.pkl" 
+modelDatasetMeta= "airPLS-z-RegressionInputMeta"
+
+# if modeCue=='DS':
+#     dfTemp= pd.read_pickle(dataPath+'dfRegressionInputDSonly.pkl')
+# elif modeCue=='NS':
+#     dfTemp= pd.read_pickle(dataPath+'dfRegressionInputNSonly.pkl')
+
+##load dataset .pkl
+dfTemp= pd.read_pickle(dataPath+modelDataset)
 
 
-#load any other variables saved during the import process ('dfTidymeta' shelf)
-my_shelf = shelve.open(dataPath+'dfRegressionInputMeta')
+
+# #load any other variables saved during the import process ('dfTidymeta' shelf)
+# my_shelf = shelve.open(dataPath+'dfRegressionInputMeta')
+my_shelf = shelve.open(dataPath+modelDatasetMeta)
+
 for key in my_shelf:
     globals()[key]=my_shelf[key]
 my_shelf.close()
@@ -848,16 +860,29 @@ for subj in subjects:
     
     # #Save as pickel
     # pd.to_pickle(model, (savePath+'subj'+str(subj)+'regressionModel.pkl'))
+    # pd.to_pickle(model, (savePath+modelName+'.pkl'))
+
+    
     
     #save model output along with metadata
     dfEncoding= np.empty([1,0])
     dfEncoding= pd.DataFrame(dfEncoding) 
 
+    #save the metadata for the model dataset
+    dfEncoding['modelDataset']= modelDataset
+    
     dfEncoding['subject']= subj
     dfEncoding['modelName']= modelName
     dfEncoding['modelStage']= stagesToInclude
     dfEncoding['nSessions']= nSessionsToInclude
     
+    #create a string label to be used to aggregate & analyze similar models between-subjects
+    # OR base on batch processing of folders (TODO: that's probably best, but have this to confirm also)
+    modelStr= stagesToInclude+'-'modelDataset
+    modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-sessions-'+ dfTemp.loc[0,'modeCue']+ '-'+ dfTemp.loc[0,'modeSignal']
+
+    
+    #save the model
     dfEncoding['model_lasso']= model
     
     #TODO: make sure eventVars saved as categorical for automatically consistent faceting
@@ -878,9 +903,10 @@ for subj in subjects:
 
 
     #Save as pickel
-    pd.to_pickle(dfEncoding, (savePath+'subj'+str(subj)+modeCue+'-trials-'+modeSignal+'regressionModel.pkl'))
+    # pd.to_pickle(dfEncoding, (savePath+'subj'+str(subj)+modeCue+'-trials-'+modeSignal+'regressionModel.pkl'))
         
-    
+    pd.to_pickle(dfEncoding, (savePath+modelName+'-regressionModel.pkl'))
+
       
 
     

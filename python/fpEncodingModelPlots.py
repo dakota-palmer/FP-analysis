@@ -129,6 +129,11 @@ eventOrder= ['DStime','PEcue','lickPreUS','lickUS']
 
 #%% Save model metadata to string for informative output filenames 
 
+# TODO: maybe grab all .pkls then use a 'modelType' or something to denote stage/nSessions/signal type/cue type
+# to do group analyses / subset 
+
+# ** For now, assume all .pkl in the dataPath should be in aggregated analysis
+
 dfTemp= dfEncoding.copy()
 
 dfTemp.modelStage= dfTemp.modelStage.astype(int)
@@ -140,19 +145,21 @@ dfTemp= dfTemp.astype('str').copy()
 
 modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-sessions-'+ dfTemp.loc[0,'modeCue']+ '-'+ dfTemp.loc[0,'modeSignal']
 
+
+
 #add some manual adjustments to modelStr based on newer options
 # currently assume all same parameters per file in dfEncoding
 #todo: these should be included in saving of dfEncoding and added to modelStr above
 
-#search model name string for paramters and change accordingly
-if 'dff-raw' in dfEncoding.modelName[0]:
-    modelStr= modelStr+'-dff-raw-'
+##search model name string for paramters and change accordingly
+# if 'dff-raw' in dfEncoding.modelName[0]:
+#     modelStr= modelStr+'-dff-raw-'
 
-elif 'dff-z' in dfEncoding.modelName[0]:
-    modelStr= modelStr+'dff-z-'
+# elif 'dff-z' in dfEncoding.modelName[0]:
+#     modelStr= modelStr+'dff-z-'
     
-elif ('-z' in dfEncoding.modelName[0]) & ('dff' not in dfEncoding.modelName[0]):
-    modelStr= modelStr+ '-z-'
+# elif ('-z' in dfEncoding.modelName[0]) & ('dff' not in dfEncoding.modelName[0]):
+#     modelStr= modelStr+ '-z-'
 
 #%% Plot entire cross validation (CV) path (MSE + coefficients)
 

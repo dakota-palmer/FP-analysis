@@ -1635,13 +1635,13 @@ print('saving regression input dfTemp to file')
 
 #save DS and NS trial datasets 
     #DS
-titleStr= modeSignalNorm+'-'+modePeriEventNorm+'RegressionInput'+'-''DSonly'
+titleStr= modeSignalNorm+'-'+modePeriEventNorm+'-'+'RegressionInput'+'-''DSonly'
 
 ind= dfTemp['timeLock-z-periDS-DStime'].notnull()
 dfTemp.loc[ind].to_pickle(savePath+titleStr+'.pkl')
 
     #NS
-titleStr= modeSignalNorm+'-'+modePeriEventNorm+'RegressionInput'+'-''NSonly'
+titleStr= modeSignalNorm+'-'+modePeriEventNorm+'-'+'RegressionInput'+'-''NSonly'
 
 ind= dfTemp['timeLock-z-periNS-NStime'].notnull()
 dfTemp.loc[ind].to_pickle(savePath+titleStr+'.pkl')
@@ -1654,7 +1654,9 @@ saveVars= ['idVars', 'eventVars', 'contVars', 'trialVars', 'experimentType', 'st
 
 
 #use shelve module to save variables as dict keys
-my_shelf= shelve.open(savePath+'dfRegressionInputMeta', 'n') #start new file
+titleStr=  modeSignalNorm+'-'+modePeriEventNorm+'-'+'RegressionInputMeta'
+
+my_shelf= shelve.open(savePath+titleStr, 'n') #start new file
 
 for key in saveVars:
     try:
