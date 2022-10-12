@@ -34,7 +34,7 @@ cd ('C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code');
 fpAnalyzeData_create_struct_with_animal_data;
 fpAnalyzeData_behavioral_analysis;
 
-% fp_fit_comparison;%dp--- plot fp signals for all sessions to test different preprocessing methods
+fp_fit_comparison;%dp--- plot fp signals for all sessions to test different preprocessing methods
     
 fp_signal_process; % dp ----- SIGNAL REPLACEMENT; Determined by signalMode
     

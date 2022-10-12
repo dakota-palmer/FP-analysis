@@ -706,7 +706,7 @@ periEventTable= data; %reassign
 
 % %
 % %that took a long time to run, let's save the table
-% save(fullfile(figPath,strcat(experimentName,'-',date, 'periEventTable')), 'data', '-v7.3');
+save(fullfile(figPath,strcat(experimentName,'-',date, 'periEventTable')), 'data', '-v7.3');
 % 
 
 % %% auc plots here v slow and not needed (was simply comparing early on

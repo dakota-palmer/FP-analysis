@@ -291,13 +291,17 @@ for subj= 1:numel(subjects)
             if currentSubj(includedSession).behavior.criteriaSes==1
                criteriaDayThisStage= criteriaDayThisStage+1; 
             end
-            
+                        
             if thisStage==5 && trainDayThisStage==1 
                 sesSpecialLabel(:)= {'stage-5-day-1'};
             elseif thisStage==5 && criteriaDayThisStage==1
                 sesSpecialLabel(:)= {'stage-5-day-1-criteria'};
             elseif thisStage==7 && criteriaDayThisStage==1
                 sesSpecialLabel(:)= {'stage-7-day-1-criteria'};
+                
+            %easy mark of final day of stage 7
+            elseif thisStage==7 && includedSession == max(includedSessions)
+                sesSpecialLabel(:)= {'stage-7-final-day'};
             end
             
             

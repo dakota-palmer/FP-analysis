@@ -52,6 +52,28 @@ pio.renderers.default='browser'
 
 trialOrder= 'DStime', 'NStime'
 
+#%% FP preprocessing- df/f
+
+from customFunctions import execute_controlFit_dff
+    
+isosbesticControl=True
+filterWindow= 40    
+
+
+# run dff for each file individually
+groups= dfTidy.groupby('fileID')
+    
+for name, group in groups:
+    
+    norm_data= []
+    control_fit= []
+    
+    norm_data, control_fit= execute_controlFit_dff(dfTidy.loc[group.index,'repurple'], dfTidy.loc[group.index,'reblue'], isosbesticControl, filterWindow)
+
+    
+    dfTidy.loc[group.index, 'norm_data']= norm_data
+    dfTidy.loc[group.index, 'control_fit']= control_fit
+
 #%% Define events to include in peri-event analyses
 
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
@@ -66,6 +88,30 @@ eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
 #define trial vars to use as baseline (cues)
 #todo: save and recall trialVars for this
 baselineEvents= ['DStime', 'NStime']
+
+
+#%% Define whether to run on dF/F or raw signal!
+
+# modeSignalNorm= 'raw'
+
+modeSignalNorm= 'dff' 
+
+# modeSignalNorm= 'airPLS' #simply for filenames
+
+## Define whether to z-score peri-event dF/F or keep as dF/F
+
+modePeriEventNorm= 'z'
+
+# modePeriEventNorm= 'raw'
+
+
+#for now simply overwrite the signal with normalized dff
+if modeSignalNorm== 'dff':
+    dfTidy.reblue= dfTidy.norm_data
+    dfTidy.repurple= dfTidy.control_fit
+
+
+
 
 
 #%% specifically debugging subj 17
@@ -523,7 +569,24 @@ for name, group in groups:
 #                 dfTidy.loc[ind, 'zEvent']= df.zEvent
 #                 dfTidy.loc[ind, 'trialIDtimeLock']= df.trialIDtimeLock
 
-                
+        
+#%% --quick fix overwrite z-score dff with raw if desired
+
+if (modeSignalNorm=='dff') & (modePeriEventNorm== 'raw'):
+
+        ind= []
+        ind= dfTidy['reblue-z-periDS'].notna()
+
+        dfTidy.loc[ind, 'reblue-z-periDS']= dfTidy.reblue
+        dfTidy.loc[ind, 'repurple-z-periDS']= dfTidy.repurple
+
+        ind= []
+        ind= dfTidy['reblue-z-periNS'].notna()
+      
+        dfTidy.loc[ind, 'reblue-z-periNS']= dfTidy.reblue
+        dfTidy.loc[ind, 'repurple-z-periNS']= dfTidy.repurple
+    
+        
         
 #%% TODO: I think periEvent / trial by trial data warrants a new dataframe where
 #one single column is timeLock. would probs eliminate a lot of unnecessary data? 
@@ -535,6 +598,37 @@ for name, group in groups:
 #Melt() into long format?
 
 # dfTemp= dfTidy.melt(value_vars=[])
+
+
+#%% SAVE THE PERI-EVENT DATAFRAME
+
+titleStr= modeSignalNorm+'-'+modePeriEventNorm+'-'+'dfPeriEvent'
+
+print('saving peri-event df to file')
+
+#save DS and NS trial datasets 
+dfTidy.to_pickle(savePath+titleStr+'.pkl')
+
+#also save other variables e.g. variables actually included in peri-eventAnalyses
+saveVars= ['fs', 'preEventTime', 'postEventTime', 'eventsToInclude', 'baselineEvents', 'baselineTime', 'modeSignalNorm', 'modePeriEventNorm']
+
+
+#use shelve module to save variables as dict keys
+titleStr=  modeSignalNorm+'-'+modePeriEventNorm+'-'+'periEventMeta'
+
+my_shelf= shelve.open(savePath+titleStr, 'n') #start new file
+
+for key in saveVars:
+    try:
+        my_shelf[key]= globals()[key] 
+    except TypeError:
+        #
+        # __builtins__, my_shelf, and imported modules can not be shelved.
+        #
+        print('ERROR shelving: {0}'.format(key))
+my_shelf.close()
+
+
 
 
 #%% Specific examination of subj 17 st 7; trying to id cause of weird SEM lines
@@ -666,6 +760,7 @@ for name, group in groups:
 # # # g= sns.relplot(data=dfPlot4, x='timeLock', y='reblue', kind= 'line', hue='trialIDtimeLock')
 
 # # # #now have bleedthrough between events 
+
 
 #%% Plot Between Subjects ALL event timelocks from specific stage
 # stagesToPlot= [5,7,8,12] #dfTidy.stage.unique()

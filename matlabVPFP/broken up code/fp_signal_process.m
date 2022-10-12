@@ -141,6 +141,9 @@ for subj= 1:numel(subjects) %for each subject
 
       %--Replace reblue & repurple with airPLS-processed signals if desired dp %2022-08-30
        if strcmp(signalMode, 'airPLS')
+           
+%           disp('overwriting fp signals based on airPLS');
+           
           subjDataAnalyzed.(subjects{subj})(session).raw.reblue= signalReferenceCorrected; %currentSubj(session).photometry.df;
           subjData.(subjects{subj})(session).reblue= signalReferenceCorrected;
      
@@ -192,6 +195,9 @@ for subj= 1:numel(subjects) %for each subject
        
       %--Replace reblue & repurple with dff-processed signals if desired dp %2022-08-30
        if strcmp(signalMode, 'dff')
+           
+%           disp('overwriting fp signals based on dff');
+
           subjDataAnalyzed.(subjects{subj})(session).raw.reblue= signalReferenceCorrected; %currentSubj(session).photometry.df;
           subjData.(subjects{subj})(session).reblue= signalReferenceCorrected;
      

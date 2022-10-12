@@ -13,6 +13,10 @@ for subj= 1:numel(subjects) %for each subject
        reblue= currentSubj(session).reblue;
        repurple= currentSubj(session).repurple;
        
+       
+       % string for each file's metadata for fig title and names
+       fileMetadataStr= '';
+       fileMetadataStr= strcat('fileID-',num2str(currentSubj(session).fileID),'-subj-',num2str(currentSubj(session).rat),'-stage-',num2str(currentSubj(session).trainStage),'-date-',num2str(currentSubj(session).date));
       
        %---- table initialization ----
        
@@ -231,8 +235,8 @@ for subj= 1:numel(subjects) %for each subject
        figure(); clear i;
        ax1= [], ax2=[]; ax3=[], ax4=[];
 
-       titleFig= strcat('fp-fit-comparison-','-DFF-','-fileID-',num2str(currentSubj(session).fileID));
-
+       titleFig= strcat('fp-fit-comparison-','-DFF-',fileMetadataStr);
+       
        sgtitle(titleFig);
        
        %just matlab 
@@ -271,7 +275,7 @@ for subj= 1:numel(subjects) %for each subject
        
        
 
-       titleFig= strcat('fp-fit-comparison-','-airPLS-','-fileID-',num2str(currentSubj(session).fileID));
+       titleFig= strcat('fp-fit-comparison-','-airPLS-',fileMetadataStr);
 
        sgtitle(titleFig);
        
@@ -327,7 +331,7 @@ for subj= 1:numel(subjects) %for each subject
        figure(); clear i;
       
 
-       titleFig= strcat('fp-fit-comparison-','-signalCompare-','-fileID-',num2str(currentSubj(session).fileID));
+       titleFig= strcat('fp-fit-comparison-','-signalCompare-',fileMetadataStr);
 
        sgtitle(titleFig);
        
@@ -341,6 +345,9 @@ for subj= 1:numel(subjects) %for each subject
        legend('airPLS','DFF');
 
        linkaxes();
+      
+       saveFig(gcf, figPath, titleFig, figFormats);
+
    
    
 %    end %end session loop
@@ -579,7 +586,7 @@ periEventTable(:,'triggerEvent')= {''};
     clear i;
     figure();
     
-    titleFig= strcat('fp-fit-comparison-','-periEvent-','-raw-','-fileID-',num2str(currentSubj(session).fileID));
+    titleFig= strcat('fp-fit-comparison-','-periEvent-','-raw-',fileMetadataStr);
      %-- individual trials
     group= data.timeLockID;
     
@@ -602,7 +609,7 @@ periEventTable(:,'triggerEvent')= {''};
     %-- individual trials
     group= data.timeLockID;
     
-    titleFig= strcat('fp-fit-comparison-','-periEvent-','-Zscore-','-fileID-',num2str(currentSubj(session).fileID));
+    titleFig= strcat('fp-fit-comparison-','-periEvent-','-Zscore-',fileMetadataStr);
     
     i= gramm('x',data.timeLock, 'y', data.signalPeriEventZ, 'color', data.fitMethod, 'group', group);
     

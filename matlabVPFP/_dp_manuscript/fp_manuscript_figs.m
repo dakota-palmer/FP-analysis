@@ -1,4 +1,4 @@
-%% Initialize variables
+re%% Initialize variables
 clear; close all; clc;
 
 %% Load fpAnalyzedData struct
@@ -9,7 +9,11 @@ load(uigetfile);
 
 % % with artifacts
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jul-2022subjDataAnalyzed.mat");
-experimentName= 'vp-vta-fp'
+% experimentName= 'vp-vta-fp'
+
+% % airPLS version
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-30-Aug-2022subjDataAnalyzed_airPLS_modeFitFP-airPLS.mat")
+experimentName= 'vp-vta-fp-airPLS';
 
 % % % DFF version
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-29-Jul-2022subjDataAnalyzed_dff.mat");
@@ -71,7 +75,10 @@ sesCorrExcludeMode= '_';
 %% Plot Settings
 figPath= strcat(pwd,'\_figures\');
 
-figFormats= {'.svg'} %list of formats to save figures as (for saveFig.m)
+% figFormats= {'.svg'} %list of formats to save figures as (for saveFig.m)
+
+figFormats= {'.png'} %list of formats to save figures as (for saveFig.m)
+
 
 %-- Master plot linestyles and colors
 
@@ -86,31 +93,31 @@ lightnessRangeGrand= [10,10];
 
 %-- Custom colormap for plots
 
-% - Colormap for 465nm vs 405nm comparisons (7 class PRGn, purple vs green)
-%green and purple %3 levels each, dark to light extremes + neutral middle
-mapCustomFP= [ 27,120,55;
-            127,191,123;
-            217,240,211;
-            247,247,247
-            231,212,232
-            175,141,195;
-            118,42,131;
-           ];
-
-        mapCustomFP= mapCustomFP/255;
-
-
-% - Colormap for DS vs NS comparisons (7 class BrBG; teal blue vs. brown orange)
-mapCustomCue= [90,180,172;
-            199,234,229;
-            245,245,245;
-            1,102,94
-            246,232,195;
-            216,179,101;
-            140,81,10;   
-            ];
-            
-        mapCustomCue= mapCustomCue/255;
+% % - Colormap for 465nm vs 405nm comparisons (7 class PRGn, purple vs green)
+% %green and purple %3 levels each, dark to light extremes + neutral middle
+% mapCustomFP= [ 27,120,55;
+%             127,191,123;
+%             217,240,211;
+%             247,247,247
+%             231,212,232
+%             175,141,195;
+%             118,42,131;
+%            ];
+% 
+%         mapCustomFP= mapCustomFP/255;
+% 
+% 
+% % - Colormap for DS vs NS comparisons (7 class BrBG; teal blue vs. brown orange)
+% mapCustomCue= [90,180,172;
+%             199,234,229;
+%             245,245,245;
+%             1,102,94
+%             246,232,195;
+%             216,179,101;
+%             140,81,10;   
+%             ];
+%             
+%         mapCustomCue= mapCustomCue/255;
 
 
 

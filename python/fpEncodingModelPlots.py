@@ -438,6 +438,7 @@ for subj in dfEncoding.subject.unique():
 
         kernels.loc[indEvent,'eventType']= eventVars[eventCol]
         kernels.loc[indEvent, 'timeShift']= np.arange(-preEventTime,postEventShift)/fs
+        
             
         #-- calculate kernel AUC for this event 
         #AUC of beta coefficient
@@ -493,6 +494,11 @@ for subj in dfEncoding.subject.unique():
     
     #add data to from this subject to larger df, kernelsAll
     kernels['subject']= subj
+    
+    #save other metadata in case want for later
+    kernels['fileID']= group.reset_index().fileID
+    kernels['date']= group.reset_index().date
+    
         
     kernelsAll= pd.concat([kernelsAll, kernels], axis=0)
 
@@ -936,6 +942,31 @@ g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
 saveFigCustom(f, modelStr+'-allSubj-'+'model-prediction', savePath)
 
 #%% TODO: Retrieve other peri-event data 
+
+#to make plots of peri-event signals that were inputs to the model (alongside kernels for comparison)
+
+#Matching up fileIDs, load the peri-event FP data (from another df) OR compute here from dfTidyAnalyzed
+
+
+# get dates for each subject (for matlab comparison)
+test= kernelsAll.groupby(['subject'])['date'].unique()
+
+
+# #%% Load previously saved dfTidyAnalyzed (and other vars) from pickle
+dataPath2= r'./_output/'
+
+dfTidy= pd.read_pickle(dataPath+'dfTidyAnalyzed.pkl')
+
+#load any other variables saved during the import process ('dfTidymeta' shelf)
+my_shelf = shelve.open(dataPath+'dfTidymeta')
+for key in my_shelf:
+    globals()[key]=my_shelf[key]
+my_shelf.close()
+
+#double checking very specific files in stage 7 dff z 1 session?
+
+
+
 
 
 #%%  old

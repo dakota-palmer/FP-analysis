@@ -106,12 +106,15 @@ from scipy import signal as ss
 # function to compute deltaF/F using fitted control channel and filtered signal channel
 def deltaFF(signal, control):
     
-	res = np.subtract(signal, control)
-	normData = np.divide(res, control)
-	#deltaFF = normData
-	normData = normData*100
-
-	return normData
+    res = np.subtract(signal, control)
+    normData = np.divide(res, control)
+    #deltaFF = normData
+    normData = normData*100
+    
+    # dp 2022-09-09 changing to just simply be signal-control (not normalizing!) 
+    # normData= res
+     
+    return normData
 
 # function to fit control channel to signal channel
 def controlFit(control, signal):

@@ -64,9 +64,18 @@ dataPath= r'./_output/fpEncodingModelPrep/' #r'C:\Users\Dakota\Documents\GitHub\
 
 #define specific dataset .pkl and metadata shelf to load for model 
 
-# e.g airPLS; z scored; DS trials
+## e.g airPLS; z scored; DS trials
 modelDataset=  "airPLS-z-RegressionInput-DSonly.pkl" 
 modelDatasetMeta= "airPLS-z-RegressionInputMeta"
+
+## e.g. dff; z scored; ds trials
+# modelDataset=  "dff-z-RegressionInput-DSonly.pkl" 
+# modelDatasetMeta= "dff-z-RegressionInputMeta"
+
+
+# #dff matlabz scored
+# modelDataset=  "dffMatlab-z-RegressionInput-DSonly.pkl" 
+# modelDatasetMeta= "dffMatlab-z-RegressionInputMeta"
 
 # if modeCue=='DS':
 #     dfTemp= pd.read_pickle(dataPath+'dfRegressionInputDSonly.pkl')
@@ -188,7 +197,7 @@ dfTemp= dfTemp.loc[~ind,:]
 subjects= dfTemp.subject.unique()
 
 #run only specific subjects
-# subjects= [19]
+subjects= [14,15,19]
 
 
 #intialize a df to combine all data?
@@ -877,9 +886,10 @@ for subj in subjects:
     dfEncoding['nSessions']= nSessionsToInclude
     
     #create a string label to be used to aggregate & analyze similar models between-subjects
-    # OR base on batch processing of folders (TODO: that's probably best, but have this to confirm also)
-    modelStr= stagesToInclude+'-'modelDataset
-    modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-sessions-'+ dfTemp.loc[0,'modeCue']+ '-'+ dfTemp.loc[0,'modeSignal']
+    #TODO: OR base on batch processing of folders (TODO: that's probably best, but have this to confirm also)
+    modelStr= 'stage-'+str(stagesToInclude)+'-'+str(nSessionsToInclude+1)+'-sessions'+'-'+modelDataset
+    
+    dfEncoding['modelStr']= modelStr
 
     
     #save the model

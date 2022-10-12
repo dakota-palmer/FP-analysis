@@ -67,6 +67,9 @@ my_shelf.close()
 #%% TODO: load contvars & eventvars
 
 contVars= ['reblue','repurple']
+
+# contVars= ['reblue', 'repurple', 'reblueOG','repurpleOG']
+
 # eventVars= dfTidy.eventType.unique()
 
 # #%% CORRELATION redo- try correlation without pivot first for better plot faceting 
@@ -273,11 +276,13 @@ for name, group in groups:
 #%% TODO: integrate peri-event plotting & session viewing beforehand to make sure we're getting good sessions
 
 
-#%% Define whether to run on dF/F or raw signal!
+#%% Define whether to run on dF/F oraw signal!
 
 # modeSignalNorm= 'raw'
+# 
+# modeSignalNorm= 'dff' 
 
-modeSignalNorm= 'dff' 
+# modeSignalNorm= 'dffMatlab'
 
 modeSignalNorm= 'airPLS' #simply for filenames
 
@@ -288,13 +293,23 @@ modePeriEventNorm= 'z'
 # modePeriEventNorm= 'raw'
 
 
+
+#todo: save the OG signal here to compare against post-python preprocessing ? memory intensive
+    
+#for now just test specific fileID of interest
+# dfTidy= dfTidy.loc[dfTidy.fileID==180]
+
+
+## keeping OG signals memory intensive so dont unless debugging
+# dfTidy.loc[:,'reblueOG']= dfTidy.reblue.copy()
+# dfTidy.loc[:,'repurpleOG']= dfTidy.repurple.copy()
+
 #for now simply overwrite the signal with normalized dff
 if modeSignalNorm== 'dff':
-    dfTidy.reblue= dfTidy.norm_data
-    dfTidy.repurple= dfTidy.control_fit
+    dfTidy.reblue= dfTidy.norm_data.copy()
+    dfTidy.repurple= dfTidy.control_fit.copy()
 
 
- 
 
 #%% Define which specific stages / events / sessions to include!
 
@@ -303,7 +318,7 @@ if modeSignalNorm== 'dff':
 stagesToInclude= [7]
 
 #number of sessions to include, 0 includes final session of this stage+n
-nSessionsToInclude= 0
+nSessionsToInclude= 2
 
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
@@ -671,6 +686,11 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
     zResult.loc[:]= None
     zResult.index= df.index
     
+    rawResult= np.empty(df.shape[0])
+    rawResult= pd.Series(rawResult, dtype='float64')
+    rawResult.loc[:]= None
+    rawResult.index= df.index
+    
     timeLock= np.empty(df.shape[0])
     timeLock= pd.Series(timeLock, dtype='float64')
     timeLock.loc[:]= None
@@ -711,12 +731,26 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
             preInd= dfTemp.index[0]- preEventTime
             postInd=dfTemp.index[0] +postEventTime
             
-            raw= df.loc[preInd:postInd, signalCol]
-            baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol]
+            raw= df.loc[preInd:postInd, signalCol].copy()
+            baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol].copy()
             
-            z= (raw-baseline.mean())/(baseline.std())
+            #may need raw.COPY() here for proper assignment into zResult. otherwise equivalent to raw
+            z= (raw.copy()-baseline.mean())/(baseline.std())
+            
+            # #dp debugging manual calculation check- looks good
+            # test0= raw.copy()
+            # test1= (test0-baseline.mean())
+            # test2= (baseline.std())
+            # test3= test1/test2
+            
+            # all(test3==z)
                 
-            zResult.loc[preInd:postInd]= z
+            zResult.loc[preInd:postInd]= z.copy() #assignment not working?
+            
+            # zResult.loc[preInd:postInd]= z.values #assignment not working?
+
+            
+            rawResult.loc[preInd:postInd]= raw.copy()
             
             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
     
@@ -727,15 +761,44 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
             zEvent.loc[preInd:postInd]= eventCol
             
             trialIDtimeLock.loc[preInd:postInd]= event
+            
+            #debugging- indexing assignment issue??
+            #zResult is same as raw. z is indeed different but not assigning correctly
+            test1= z
+            test2= zResult.loc[preInd:postInd]
+            test3= raw
+            test4= rawResult.loc[preInd:postInd]
+              
+            # #-- dp examining specific trial
+            # f, ax= plt.subplots(1,2, sharex=True, sharey=False) 
+            
+            # g= sns.lineplot(ax= ax[0], x=timeLock, y=zResult, color='black', linewidth=1.5)
+            
+            # g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, color='black', linewidth=1.5)
+        
+            # g.fig.suptitle('event#'+event)
+
     
         except:
             continue
         
         #round timeLock so that we have exact shared X values for stats and viz!
-        timLock= np.round(timeLock, decimals=3)
+        timeLock= np.round(timeLock, decimals=3)
+      
+        #debugging
+        
+        #z score Result and raw Result are equivalent. why
+        test1=(zResult[zResult.notnull()])
+        test2=(rawResult[rawResult.notnull()])
+        
+        all(test1==test2)
+        
+        #individually they are different
+        
+
     
         
-    return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock
+    return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock, rawResult
         
 
 
@@ -806,7 +869,7 @@ colToInclude= colToInclude+ eventsToInclude
 # Hitting memory errors when time shifting events; so subsetting or processing in chunks should help
 
 
-#%% NORMALIZE photometry signal
+#%% Peri-event analysis: photometry signal (and normalization) timelocked to events
 
 #TODO: may want to add some random trialStart time 'jitter' to add variation to cue onset times for regression (will currently always be t=0)
 
@@ -826,22 +889,86 @@ groups= dfTidy.groupby('fileID')
 for name, group in groups:
     for signal in contVars: #loop through each signal (465 & 405)
         #-- peri-DS 
-        z, timeLock, zEventBaseline, zEvent, trialIDtimeLock=  zscoreCustom(group, signal, 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
+        z, timeLock, zEventBaseline, zEvent, trialIDtimeLock, raw=  zscoreCustom(group, signal, 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
         dfTidy.loc[group.index,signal+'-z-periDS']= z
         dfTidy.loc[group.index,'timeLock-z-periDS-DStime']= timeLock
         dfTidy.loc[group.index, ['trialIDtimeLock-z-periDS']]= trialIDtimeLock
 
 
+
+        #-- dp examining specific file raw vs z
+        # f, ax= plt.subplots(1,2, sharex=True, sharey=False) 
+        
+        # g= sns.lineplot(ax= ax[0], x=timeLock, y=z, color='black', linewidth=1.5)
+        # g= sns.lineplot(ax= ax[0], x=timeLock, y=z, color='black', estimator= None, units= trialIDtimeLock, linewidth=.5, alpha=0.5)
+        
+        # g.set(title=('subj-'+str(subj)+'peri DS z score '))
+
+        
+        # g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, color='black', linewidth=1.5)
+        # g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, color='black', estimator= None, units= trialIDtimeLock, linewidth=.5, alpha=0.5)
+
+        # g.set(title=('subj-'+str(subj)+'peri DS raw '))
+        
+        #dp hue facet by trialID for closer look
+        subj= group.subject.iloc[0] 
+        
+        
+        f, ax= plt.subplots(1,2, sharex=True, sharey=False) 
+        
+        
+        g= sns.lineplot(ax= ax[0], x=timeLock, y=z, color='black', linewidth=2.5)
+        g= sns.lineplot(ax= ax[0], x=timeLock, y=z, hue=trialIDtimeLock, palette='tab20', estimator= None, units= trialIDtimeLock, linewidth=1, alpha=.5)
+        
+        g.set(title=('subj-'+str(subj)+'-'+modeSignalNorm+'-'+modePeriEventNorm+'-'+signal+'-peri DS Z SCORE all trials'))
+
+        
+        g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, color='black', linewidth=2.5)
+        g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, hue=trialIDtimeLock, palette='tab20', estimator= None, units= trialIDtimeLock, linewidth=1, alpha=.5)
+
+        g.set(title=('subj-'+str(subj)+'-'+modeSignalNorm+'-'+modePeriEventNorm+'-'+signal+'-peri DS RAW all trials'))
+        
+        
+        titleFig= ('subj-'+str(subj)+'-'+modeSignalNorm+'-'+modePeriEventNorm+'-'+signal+'-peri DS all trials')
+        f.suptitle(titleFig)
+        
+        saveFigCustom(f, titleFig, savePath)
+
+        
+        # RAW vs Z score normalized peri-event signal plot
+        
+        
+        # # dp doing above but OG raw signals
+        # z, timeLock, zEventBaseline, zEvent, trialIDtimeLock, raw=  zscoreCustom(dfTidy, 'reblueOG', 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
+      
+        # f, ax= plt.subplots(1,2, sharex=True, sharey=True) 
+        
+        # g= sns.lineplot(ax= ax[0], x=timeLock, y=z, color='black', linewidth=1.5)
+        # g= sns.lineplot(ax= ax[0], x=timeLock, y=z, color='black', estimator= None, units= trialIDtimeLock, linewidth=.5, alpha=0.5)
+        
+        # g.set(title=('subj-'+str(subj)+'peri DS OG z score '))
+           
+        
+        # g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, color='black', linewidth=1.5)
+        # g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, color='black', estimator= None, units= trialIDtimeLock, linewidth=.5, alpha=0.5)
+           
+        # g.set(title=('subj-'+str(subj)+'peri OG DS raw '))
+
+
         
         #-- peri-NS 
-        z, timeLock, zEventBaseline, zEvent, trialIDtimeLock=  zscoreCustom(group, signal, 'NStime', preEventTime, postEventTime,'NStime', baselineTime)
+        z, timeLock, zEventBaseline, zEvent, trialIDtimeLock,raw=  zscoreCustom(group, signal, 'NStime', preEventTime, postEventTime,'NStime', baselineTime)
         dfTidy.loc[group.index,signal+'-z-periNS']= z
         dfTidy.loc[group.index,'timeLock-z-periNS-NStime']= timeLock
         
         dfTidy.loc[group.index, ['trialIDtimeLock-z-periNS']]= trialIDtimeLock
+        
+                   
 
     
 test= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.min()]
+
+# #%% DP 2022-09-14 comment all out below for quick comparison
 
 
 #%% --quick fix overwrite z-score dff with raw if desired
@@ -1351,9 +1478,12 @@ dfTemp['exclude']= None
 thresholdArtifact= 15
 
 
-#only run if z score and non-dff
+#only run if z score and ** raw** non-dff 
 
-if (modeSignalNorm!= 'dff') & (modePeriEventNorm=='z'):
+#dp 2022-09-12 dff conditional here means prior airPLS results had extreme 'artifacts' removed
+
+# if (modeSignalNorm!= 'dff') & (modePeriEventNorm=='z'):
+if (modeSignalNorm!= 'raw') & (modePeriEventNorm=='z'):
 
     
     
@@ -1520,7 +1650,7 @@ for subj in dfTemp.subject.unique():
     
     g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
     
-    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+    g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
 
 
     y= 'repurple-z-periDS'
@@ -1529,8 +1659,10 @@ for subj in dfTemp.subject.unique():
     
     g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', linewidth=1.5)
     
-    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+    g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
     
+    g.set(title=('subj-'+str(subj)+'peri-DS encoding model input')+'')
+
     
     #- NS
     
@@ -1538,9 +1670,8 @@ for subj in dfTemp.subject.unique():
     x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periNS')) & (~dfPlot.columns.str.contains('trialID')))][0]
     units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periNS')))][0]
     
-    g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
     
-    # g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+    g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
 
 
     y= 'repurple-z-periNS'
@@ -1549,16 +1680,17 @@ for subj in dfTemp.subject.unique():
     
     g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='purple', linewidth=1.5)
     
-    # g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+    g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
     
-    g.set(title=('subj-'+str(subj)+'peri-Cue encoding model input')+'')
+    g.set(title=('subj-'+str(subj)+'peri-NS encoding model input')+'')
     g.set(xlabel='time from event (s)', ylabel='z-scored FP signal')
     
     g.set(ylim=(-4,10))
     
     saveFigCustom(f, 'subj-'+str(subj)+'modelInput-periCue-withArtifact'+'-'+modeSignalNorm+'-'+modePeriEventNorm,savePath)
 
-    
+    #%% ====================2022-09-14 comment out saving below for to save time
+
 
 #%%--- Remove excluded trials (artifacts)
 
@@ -1622,6 +1754,7 @@ for subj in dfTemp.subject.unique():
     g.set(ylim=(-4,10))
     
     saveFigCustom(f, 'subj-'+str(subj)+'modelInput-periCue-noArtifact'+'-'+modeSignalNorm+'-'+modePeriEventNorm,savePath)
+
 
 
 
