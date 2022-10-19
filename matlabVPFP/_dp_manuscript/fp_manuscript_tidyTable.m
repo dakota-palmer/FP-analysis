@@ -319,6 +319,11 @@ for subj= 1:numel(subjects)
             elseif thisStage==7 && criteriaDayThisStage==1
                 sesSpecialLabel(:)= {'stage-7-day-1-criteria'};
                 
+            %easy mark of final day of stage 5
+            elseif thisStage==5 && includedSession == max(includedSessions)
+                sesSpecialLabel(:)= {'stage-5-final-day'};
+            
+                
             %easy mark of final day of stage 7
             elseif thisStage==7 && includedSession == max(includedSessions)
                 sesSpecialLabel(:)= {'stage-7-final-day'};
