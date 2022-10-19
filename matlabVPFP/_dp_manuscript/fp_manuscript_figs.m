@@ -1,4 +1,4 @@
-re%% Initialize variables
+%% Initialize variables
 clear; close all; clc;
 
 %% Load fpAnalyzedData struct

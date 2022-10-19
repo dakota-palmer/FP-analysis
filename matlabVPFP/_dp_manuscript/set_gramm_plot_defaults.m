@@ -41,6 +41,9 @@ text_options_DefaultStyle= {'font'; 'Arial';
 %To be used to set the 'base_size' of lines e.g. like:
 %     d().set_line_options('base_size',linewidthSubj);
 
+%-- Master plot linestyles and colors
+
+
 %may consider using the group argument in gramm as a logic gate for these (e.g. if group= subject, use subject settings, if group=[] use grand settings)
 
 %thin, light lines for individual subj
@@ -56,6 +59,10 @@ lightnessRangeGrand= [10,10]; %lightness facet with lightness range doesn't work
 % default chroma for connecting points between categorical observations
 % (e.g. bar plot with points overlaid)
 chromaLineSubj= 0; %black lines connecting points
+
+
+%thicker lines for reference lines
+linewidthReference= 2;
 
 %% ------ Notes about faceting Color & Lightness ----------
  %- 2 strategies for plotting individual subject observations 'lighter' with darker

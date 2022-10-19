@@ -20,20 +20,80 @@ figFormats= {'.png'} %list of formats to save figures as (for saveFig.m)
 
 %thin, light lines for individual subj
 linewidthSubj= 0.5;
-lightnessRangeSubj= [100,100];
 
 %dark, thick lines for between subj grand mean
 linewidthGrand= 1.5;
-lightnessRangeGrand= [10,10];
 
+%thicker lines for reference lines
+linewidthReference= 2;
 
 %% Load periEventTable from fp_manuscript_figs.m --
 
 % for now assume preprocessing experimental all sessions
 
-pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-12-Oct-2022periEventTable.mat";
+pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-13-Oct-2022periEventTable.mat";
 
+% for now loads as 'data' struct
 load(pathData);
+
+% get contents and clear
+% periEventTable= data;
+% clear data
+
+
+%% ----------------- LABEL SPECIAL SESSIONS -----------------------------
+%label specific sessions for plotting
+
+%overwrite old labels
+% periEventTable(:,'sesSpecialLabel')= {''};
+
+%manually find and assign specialSesLabels based on criteria
+
+%--first day of stage 1 - is there an innate cue response?
+ind= [];
+ind= periEventTable.stage==1;
+
+
+ind2= [];
+ind2= periEventTable.trainDayThisStage==1;
+
+ind3=[];
+ind3= ind & ind2;
+
+periEventTable(ind3, 'sesSpecialLabel')= {'First Session-Stage1'};
+
+
+%--first day of stage 5 - NS introduced
+ind= [];
+ind= periEventTable.stage==5;
+
+
+ind2= [];
+ind2= periEventTable.trainDayThisStage==1;
+
+ind3=[];
+ind3= ind & ind2;
+
+periEventTable(ind3, 'sesSpecialLabel')= {'NS Introduced-Stage5'};
+
+%TODO: this complicates bc day differs between animals
+%--first day of criteria stage 5- discriminating
+% % %for now just keep old labels
+% % 
+% % ind= [];
+% % ind= periEventTable.stage==5;
+% % 
+% % 
+% % ind2= [];
+% % ind2= periEventTable.criteriaSes==1;
+% % 
+% % ind3=[];
+% % ind3= ind && ind2;
+% % 
+% % ind= [];
+% % ind= periEventTable.trainDayThisStage
+% 
+% periEventTable(ind3, 'specialSesLabel')= {'NS Introduced-Stage5'};
 
 
 %% ----------------- Figure 2---------------------------------------------------
@@ -44,11 +104,17 @@ load(pathData);
 %- Stage 5 Day 1, Stage 5 Criteria, Stage 7 Criteria
 % --marked as sesSpecialLabel in fpTidyTable.m
 
-%subset data 
+%subset data- only sesSpecial
 data= periEventTable;
 
 ind=[];
 ind= ~cellfun(@isempty, data.sesSpecialLabel);
+
+data= data(ind,:);
+
+%subset data- remove specific sesSpecialLabel
+ind= [];
+ind= ~strcmp('stage-7-day-1-criteria',data.sesSpecialLabel);
 
 data= data(ind,:);
 
@@ -93,7 +159,6 @@ i.facet_grid([],data.sesSpecialLabel);%, 'column_labels',false);
 
 
 i().stat_summary('type','sem','geom','line');
-i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
 i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
@@ -123,10 +188,14 @@ i().set_color_options('map',cmapGrand);
 
 i().set_line_options('base_size',linewidthGrand)
 
+%-set limits
 i().axe_property('YLim',[-1,5]);
-i().axe_property('XLim',[-5,10]);
+i().axe_property('XLim',[-2,10]);
 
-i.draw()
+i().geom_vline('xintercept',0, 'style', 'k--', 'linewidth', linewidthReference); %overlay t=0
+
+%- final draw call
+i.draw() 
 
 % titleFig= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');   
 
@@ -140,10 +209,18 @@ clear i; figure;
 dodge= 	1; %if dodge constant between point and bar, will align correctly
 width= 1.8; %good for 2 bars w dodge >=1
 
+
+%subset data- only sesSpecial
 data2= periEventTable;
 
 ind=[];
 ind= ~cellfun(@isempty, data2.sesSpecialLabel);
+
+data2= data2(ind,:);
+
+%subset data- remove specific sesSpecialLabel
+ind= [];
+ind= ~strcmp('stage-7-day-1-criteria',data2.sesSpecialLabel);
 
 data2= data2(ind,:);
 
@@ -225,10 +302,10 @@ lims= [1-.6,(numel(trialTypes))+.6];
 
 i.axe_property('XLim',lims);
 
-i.axe_property('YLim',[-1,10]);
+i.axe_property('YLim',[-1,16]);
 
 %horz line @ zero
-i.geom_hline('yintercept', 0, 'style', 'k--', 'linewidth',linewidthGrand); 
+i.geom_hline('yintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
 
 
 %- final draw call-
@@ -240,7 +317,10 @@ titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');
 
 saveFig(gcf, figPath, titleFig, figFormats);
 
-%% 
+%% TODO: -----------------------FIGURE 2B --------------
+
+
+
 
 
 

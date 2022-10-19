@@ -156,6 +156,10 @@ for subj= 1:numel(subjects)
             poxDSrel= nan(periCueFrames, numTrials);
             poxNSrel= nan(periCueFrames, numTrials);
             
+                %lick latency relative to cue onset
+            loxDSrel= nan(periCueFrames, numTrials);
+            loxNSrel= nan(periCueFrames, numTrials);
+            
             %reward info
             pumpID= nan(periCueFrames, numTrials);
             rewardID= cell(periCueFrames, numTrials);
@@ -200,6 +204,14 @@ for subj= 1:numel(subjects)
                 else
                      poxDSrel(trialInd, cue)= nan;
                 end
+                
+                %saving first lick only (mainly just for plots)
+                if ~isempty( currentSubj(includedSession).behavior.loxDSrel{cue})
+                    loxDSrel(trialInd, cue)= currentSubj(includedSession).behavior.loxDSrel{cue}(1);
+                else
+                     loxDSrel(trialInd, cue)= nan;
+                end
+                    
                     
                 DStrialIDcum(trialInd,cue)= DStrialCountCum;
                 DStrialCountCum= DStrialCountCum+1;
@@ -247,6 +259,14 @@ for subj= 1:numel(subjects)
                 else
                      poxNSrel(trialInd, cue)= nan;
                 end
+              
+                %get first NS lox only for plots (heatmaps)
+                 if ~isempty( currentSubj(includedSession).behavior.loxNSrel{cue})
+                    loxNSrel(trialInd, cue)= currentSubj(includedSession).behavior.loxNSrel{cue}(1);
+                else
+                     loxNSrel(trialInd, cue)= nan;
+                end
+                    
                     
                 
                 NStrialID(trialInd,cue)= cue;
@@ -285,7 +305,7 @@ for subj= 1:numel(subjects)
                 tsInd= tsInd+ periCueFrames * size(DSblue,2);
             end
             
-            %dp 2022-07-06 moving to new script post data exclusion
+            %dp 2022-07-06 TODO: move to new script post data exclusion
             %dp 2022-06-19 labelling specific sessions for plotting
             %--Save string labels to mark specific days for plotting
             if currentSubj(includedSession).behavior.criteriaSes==1
@@ -330,6 +350,8 @@ for subj= 1:numel(subjects)
             periEventTable.DSpurpleLox(tsInd)= DSpurpleLox(:);
             
             periEventTable.poxDSrel(tsInd)= poxDSrel(:);
+            periEventTable.loxDSrel(tsInd)= loxDSrel(:);
+
             
             periEventTable.pumpID(tsInd)= pumpID(:);
             periEventTable.rewardID(tsInd)= rewardID(:);
@@ -356,6 +378,7 @@ for subj= 1:numel(subjects)
             periEventTable.NSpurpleLox(tsInd)= NSpurpleLox(:);
             
             periEventTable.poxNSrel(tsInd)= poxNSrel(:);
+            periEventTable.loxNSrel(tsInd)= loxNSrel(:);
 
             
             time= repmat(currentSubj(includedSession).periDS.timeLock(:),[1,size(DSblue,2)]);
