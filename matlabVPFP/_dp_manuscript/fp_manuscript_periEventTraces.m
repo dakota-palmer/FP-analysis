@@ -706,7 +706,7 @@ periEventTable= data; %reassign
 
 % %
 % %that took a long time to run, let's save the table
-save(fullfile(figPath,strcat(experimentName,'-',date, 'periEventTable')), 'periEventTable', '-v7.3');
+ save(fullfile(figPath,strcat(experimentName,'-',date, 'periEventTable')), 'periEventTable', '-v7.3');
 % 
 
 % %% auc plots here v slow and not needed (was simply comparing early on
@@ -965,7 +965,7 @@ i= i.facet_grid([],data.sesSpecialLabel);
 i().stat_summary('type','sem','geom','line');
 i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
-i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i().set_color_options('map',cmapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
 
 i().set_line_options('base_size',linewidthSubj);
 i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
@@ -977,7 +977,7 @@ i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'gro
 
 i().stat_summary('type','sem','geom','area');
 
-i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i().set_color_options('map',cmapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
 
 i().set_line_options('base_size',linewidthGrand)
 
@@ -1010,7 +1010,7 @@ data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType'
 %mean between subj
 i= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', []);
 
-i.set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
 
 %mean bar for trialType
 i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
@@ -1030,7 +1030,7 @@ i= i.facet_grid([],data.sesSpecialLabel);
 
 i.stat_summary('type','sem','geom','point');
 
-i.set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
 
 i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
 

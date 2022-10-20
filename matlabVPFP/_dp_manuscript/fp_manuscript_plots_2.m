@@ -31,7 +31,7 @@ linewidthReference= 2;
 
 % for now assume preprocessing experimental all sessions
 
-pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-13-Oct-2022periEventTable.mat";
+pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-19-Oct-2022periEventTable.mat";
 
 % for now loads as 'data' struct
 load(pathData);
@@ -319,8 +319,131 @@ saveFig(gcf, figPath, titleFig, figFormats);
 
 %% TODO: -----------------------FIGURE 2B --------------
 
+%% TRYING FIG3 HEATPLOTS ---
 
 
+clear i; figure;
+
+dodge= 	1; %if dodge constant between point and bar, will align correctly
+width= 1.8; %good for 2 bars w dodge >=1
+
+
+%subset data- only sesSpecial
+data2= periEventTable;
+
+ind=[];
+ind= ~cellfun(@isempty, data2.sesSpecialLabel);
+
+data2= data2(ind,:);
+
+%subset data- remove specific sesSpecialLabel
+ind= [];
+ind= ~strcmp('stage-7-day-1-criteria',data2.sesSpecialLabel);
+
+data2= data2(ind,:);
+
+% subset data- retain only periDS
+ind= [];
+ind= ~isnan(data2.DSblue);
+
+data2= data2(ind,:);
+
+
+% %stack() to make trialType variable for faceting
+% data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
+% 
+% %manually relabel trialType for clarity
+% %either simply "DS" or "NS"
+% %convert categorical to string then search 
+% data2(:,"trialTypeLabel")= {''};
+% 
+%  %make labels matching each 'trialType' and loop thru to search/match
+% trialTypes= {'aucDSblue', 'aucNSblue'};
+% trialTypeLabels= {'DS','NS'};
+
+% for thisTrialType= 1:numel(trialTypes)
+%     ind= [];
+%     
+%     ind= strcmp(string(data2.trialType), trialTypes(thisTrialType));
+% 
+%     data2(ind, 'trialTypeLabel')= {trialTypeLabels(thisTrialType)};
+%     
+% end
+
+%mean between subj
+group=[];
+
+
+% Unfortunately gramm seems to only support 2d data for geom image (like 2d heat)...
+%trying 'z' argument. might work
+
+% i= gramm('x',data2.timeLock,'y',data2.DStrialIDcum, 'color', data2.DSblue, 'group', group);
+
+group= data2.DStrialIDcum;
+
+%  i= gramm('x',data2.timeLock,'y',data2.DStrialIDcum, 'group', group);
+%  i= gramm('x',data2.timeLock,'y',data2.DSblue, 'group', group);
+%  i= gramm('x',data2.timeLock, 'y', data2.DStrialIDcum, 'z',data2.DSblue, 'group', group);
+
+% can make 3d plot with lines but eh
+%  i= gramm('x',data2.timeLock, 'y', data2.DStrialIDcum, 'z',data2.DSblue, 'color', data2.DSblue, 'group', group);
+
+% i.geom_line();
+
+% TODO: would FACET by Event Type
+
+% i.facet_grid([],data.sesSpecialLabel);
+
+% i(2,1).stat_bin2d('nbins',[20 20],'geom','image');
+
+%playing with stat options
+group= data2.DStrialID;
+
+ i= gramm('x',data2.timeLock,'y',data2.DStrialID,'color', data2.DSblue, 'group', group);
+
+i.stat_bin2d('geom','image');
+
+
+% i.geom_line();
+
+% i.set_color_options('map',cmapGrand);
+
+%mean bar for trialType
+% i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'}, 'dodge', dodge, 'width', width);
+
+% i.set_line_options('base_size',linewidthGrand)
+
+
+%- Things to do before first draw call-
+% i.set_names('column', '', 'x','Trial Type','y','GCaMP (Z-score)','color','Trial Type');
+
+i.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+titleFig= 'heat test';   
+i.set_title(titleFig); %overarching fig title must be set before first draw call
+
+%- first draw call-
+i.draw()
+
+% %- Draw lines between individual subject points (group= subject, color=[]);
+% group= data2.subject;
+% i.update('x', data2.trialTypeLabel,'y',data2.periCueBlueAuc,'color',[], 'group', group)
+% 
+% % i.geom_line('alpha',0.3); %individual trials way too much
+% i.stat_summary('type','sem','geom','line');
+% 
+% i.set_line_options('base_size',linewidthSubj);
+% 
+% i.set_color_options('chroma', chromaLineSubj); %black lines connecting points
+% 
+% i.draw();
+% 
+% %ind subj mean points
+% i.update('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
+% 
+% i.stat_summary('type','sem','geom','point', 'dodge', dodge);
+% 
+% i.set_color_options('map',cmapSubj); 
 
 
 
