@@ -244,8 +244,10 @@ for name, group in groups:
     dfTidy.loc[group.index, 'norm_data']= norm_data
     dfTidy.loc[group.index, 'control_fit']= control_fit
 
-# #--test subset file
+# # #--test subset file
 # test= dfTidy.loc[dfTidy.fileID== dfTidy.fileID.min()]
+
+# dfTidy=test.copy()
 
 # norm_data, control_fit= execute_controlFit_dff(test.repurple, test.reblue, isosbesticControl, filterWindow)
 
@@ -297,7 +299,7 @@ modePeriEventNorm= 'z'
 #todo: save the OG signal here to compare against post-python preprocessing ? memory intensive
     
 #for now just test specific fileID of interest
-# dfTidy= dfTidy.loc[dfTidy.fileID==180]
+dfTidy= dfTidy.loc[dfTidy.fileID==180]
 
 
 ## keeping OG signals memory intensive so dont unless debugging
@@ -1688,6 +1690,58 @@ for subj in dfTemp.subject.unique():
     g.set(ylim=(-4,10))
     
     saveFigCustom(f, 'subj-'+str(subj)+'modelInput-periCue-withArtifact'+'-'+modeSignalNorm+'-'+modePeriEventNorm,savePath)
+
+#%% 2022-10-20 try heatmaps of peri-event data
+
+for subj in dfTemp.subject.unique():
+    
+    f, ax= plt.subplots(1,2, sharex=True, sharey=False) 
+    
+    dfPlot= dfTemp.loc[dfTemp.subject==subj,:].copy()
+    
+    y= 'reblue-z-periDS'
+    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
+    
+
+    #exclude nans
+    dfPlot= dfPlot.loc[dfPlot[y].notna(),:]
+    
+    # g= sns.heatmap(ax=ax[0], data=dfPlot, x=x, y=units)
+
+    #for some reason heatmap doesn't seem to like categoricals and other dtypes
+    #so subset only col of interest or convert these beforehand?
+    
+    dfPlot2= dfPlot[[x,y,units]].copy()
+    
+  
+    # sns.heatmap seems to specifically like pivot table
+    #pivot (y,x,z)
+    dfPlot2 = dfPlot2.pivot(units, x, y)
+    
+    g= sns.heatmap(ax= ax[0],data=dfPlot2, cmap='viridis')
+    
+    plt.axvline(x=0, linestyle='--', color='black', linewidth=2)
+
+
+    g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
+    
+#    %dp 2022-10-21 in progress
+
+    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+
+
+    # y= 'repurple-z-periDS'
+    # x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+    # units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
+    
+    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', linewidth=1.5)
+    
+    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+    
+    # g.set(title=('subj-'+str(subj)+'peri-DS encoding model input')+'')
+
+
 
     #%% ====================2022-09-14 comment out saving below for to save time
 
