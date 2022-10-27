@@ -1695,7 +1695,7 @@ for subj in dfTemp.subject.unique():
 
 for subj in dfTemp.subject.unique():
     
-    f, ax= plt.subplots(1,2, sharex=True, sharey=False) 
+    f, ax= plt.subplots(1,2, sharex=False, sharey=False) 
     
     dfPlot= dfTemp.loc[dfTemp.subject==subj,:].copy()
     
@@ -1714,17 +1714,94 @@ for subj in dfTemp.subject.unique():
     
     dfPlot2= dfPlot[[x,y,units]].copy()
     
-  
+
+    
     # sns.heatmap seems to specifically like pivot table
     #pivot (y,x,z)
     dfPlot2 = dfPlot2.pivot(units, x, y)
     
-    g= sns.heatmap(ax= ax[0],data=dfPlot2, cmap='viridis')
+    #-try matplotlib-- below works?
+    plt.subplot()
+    plt.imshow(dfPlot2)
+    
+    #overlay PE latency
+    #recall dfPlot.trialPE is cumcount of events in trial, so want ==0 for first
+    ind=[]
+    ind= dfPlot.trialPE10s==0
+    
+    dfPlot3= dfPlot[ind].copy()
+        
+    
+    # https://www.python-graph-gallery.com/heatmap-for-timeseries-matplotlib
+    
+    # plt.pcolormesh(dfPlot[x], dfPlot[units], dfPlot[y])
+    plt.subplot()
+    
+    h= plt.pcolormesh(dfPlot2)
+        
+    #overlay PE latency
+    #recall dfPlot.trialPE is cumcount of events in trial, so want ==0 for first
+    ind=[]
+    ind= dfPlot.trialPE10s==0
+    
+    dfPlot3= dfPlot[ind].copy()
+        
+    
+    g= sns.scatterplot(data=dfPlot3,x=x, y=units, color='red', alpha=0.5)
+
+
+    
+    # g= sns.heatmap(ax= ax[0],data=dfPlot2, cmap='viridis')
+
+    #- for some reason x values are not lining up right between scatter and heat
+    # the axes starts at 0 instead of -5...
+    #what seems to be happening is the x labels on heatmap are 'str'bc pivoted columns. so can just convert data plotted to str too
+
+    # https://stackoverflow.com/questions/60958223/how-to-line-plot-timeseries-data-on-a-bar-plot/60958889#60958889
+    # https://stackoverflow.com/questions/60614007/problem-in-combining-bar-plot-and-line-plot-python
+    
+    # this needs to be mapped onto the timeLock somehow.
+    g= sns.heatmap(ax= ax[0],data=dfPlot2, cmap='viridis', xticklabels=True)
+
+ 
+    #see axes are str
+    g.set_xticklabels(g.get_xticklabels(), rotation=45)
+    test= g.get_xticklabels()
+
+
+    # what if 2d hist instead of heatmap https://seaborn.pydata.org/examples/layered_bivariate_plot.html
+    #wont work, should be heatmap
+    # g= sns.histplot(data=dfPlot, x=x, y=units, hue=y) #cmap='viridis')
+
+    #convert relevant data to str prior to plotting over heatplot
+    dfPlot[x]= dfPlot[x].astype('string')
+
+    #scatter overlays    
+    # overlay cue onset 
+    # need to match up with categorical x
+    ax[0].axvline(x=0, linestyle='--', color='black', linewidth=2) 
+
+
+    
+    #overlay PE latency
+    #recall dfPlot.trialPE is cumcount of events in trial, so want ==0 for first
+    ind=[]
+    ind= dfPlot.trialPE10s==0
+    
+    dfPlot3= dfPlot[ind].copy()
+        
+    # g= sns.scatterplot(ax= ax[0],data=dfPlot3, x='eventLatency', y=units, color='red', alpha=0.5)
+    g2= sns.scatterplot(ax= ax[0],data=dfPlot3, x=x, y=units, color='red', alpha=0.5)
+
+
+
+
+    g2= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
     
     plt.axvline(x=0, linestyle='--', color='black', linewidth=2)
 
 
-    g= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
+
     
 #    %dp 2022-10-21 in progress
 

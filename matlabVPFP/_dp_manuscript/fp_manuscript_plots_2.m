@@ -340,6 +340,13 @@ ind= ismember(data.stage, stagesToPlot);
 
 data= data(ind,:);
 
+% subset data- by PE outcome; only include trials with valid PE post-cue
+ind=[];
+ind= data.DStrialOutcome==1;
+
+data= data(ind,:);
+
+
 % TODO: subset only specific encoding model input?
 
 %subset data- only sesSpecial
@@ -432,19 +439,19 @@ for subj= 1:numel(subjects);
     
     data3= data2(ind,:);
     
-    %make figure
-    figure(); hold on;
-    imagesc(data3.timeLock,data3.DStrialIDcumcount,data3.DSblue);
+%     %make figure
+%     figure(); hold on;
+%     imagesc(data3.timeLock,data3.DStrialIDcumcount,data3.DSblue);
 
-    %overlay Cue Onset (-poxDSrel) 
-    scatter(-data3.poxDSrel,data3.DStrialIDcumcount, 'k.');
-    
-    caxis manual;
-    caxis([bottom,top]); %use a shared color axis to encompass all values
-
-    c= colorbar; %colorbar legend
-
-    xlabel('seconds from PE');
+%     %overlay Cue Onset (-poxDSrel) 
+%     scatter(-data3.poxDSrel,data3.DStrialIDcumcount, 'k.');
+%     
+%     caxis manual;
+%     caxis([bottom,top]); %use a shared color axis to encompass all values
+% 
+%     c= colorbar; %colorbar legend
+% 
+%     xlabel('seconds from PE');
 
     %x is just wrong... timelock should end at +10
     %test individual trial
@@ -452,12 +459,12 @@ for subj= 1:numel(subjects);
 
     test=data3;
 
-    figure(); hold on;
-    imagesc(test.timeLock,test.DStrialIDcumcount,test.DSblue);
+%     figure(); hold on;
+%     imagesc(test.timeLock,test.DStrialIDcumcount,test.DSblue);
 
-    %bad, should be flipped
-    figure;
-    imagesc(test.DStrialIDcumcount,test.timeLock,test.DSblue); %doesnt work?
+%     %bad, should be flipped
+%     figure;
+%     imagesc(test.DStrialIDcumcount,test.timeLock,test.DSblue); %doesnt work?
 
     %get rid of table format
     x=[], y=[], c=[];
@@ -465,15 +472,15 @@ for subj= 1:numel(subjects);
     y= (test.DStrialIDcumcount);
     c= (test.DSblue);
     
-    figure;
-    imagesc(x,y,c);
-    view([90 -90]) %// instead of normal view, which is view([0 90])
-
-    
-    figure;
-    imagesc(y,x,c);
-    
-    view([90 -90]) %// instead of normal view, which is view([0 90])
+%     figure;
+%     imagesc(x,y,c);
+%     view([90 -90]) %// instead of normal view, which is view([0 90])
+% 
+%     
+%     figure;
+%     imagesc(y,x,c);
+%     
+%     view([90 -90]) %// instead of normal view, which is view([0 90])
 
     %looking at old code, input to imagesc is in columns. try this
     %and the c is 601x100 so one column per trial..probs needs to be
@@ -481,9 +488,9 @@ for subj= 1:numel(subjects);
     x2= x';
     y2= y';
     c2= c';
-        
-    figure;
-    imagesc(y,x,c);
+%         
+%     figure;
+%     imagesc(y,x,c);
     
     % need to transform c...
     %unstack 
@@ -509,23 +516,30 @@ for subj= 1:numel(subjects);
 %     imagesc(y,x,c2);
 %     view([-90, 90]) %// instead of normal view, which is view([0 90])
 
-    % ---- this one looks good ---
+    %% ---- this one looks good ---
         
     overlayAlpha= .2;
     overlayPointSize= 10; %default i think is 10
     
     
     figure;
+    %- heatplot
     imagesc(y,x,c2);
-    view([-90, 90]) %// instead of normal view, which is view([0 90])
+    set(gca,'YDir','normal') %increasing latency from top to bottom
+    view([90, 90]) %// instead of normal view, which is view([0 90])
+
+    
+%     caxis manual;
+%     caxis([bottom, top]);
+    c= colorbar; %colorbar legend
+    
+    colormap parula;
     
     hold on;
-    %overlay Cue Onset (-poxDSrel) 
-    %     scatter(-data3.poxDSrel,data3.DStrialIDcumcount, 'k.');
-    % ^ order adjusted bc imagesc
-    
-    %overlay cue onset
 
+    
+    %- scatter overlays
+    %overlay cue
     s= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'k');
     s.MarkerFaceAlpha= overlayAlpha;
     s.AlphaData= overlayAlpha;
@@ -542,7 +556,10 @@ for subj= 1:numel(subjects);
     s.MarkerFaceAlpha= overlayAlpha;
     s.AlphaData= overlayAlpha;
     s.SizeData= overlayPointSize;
-
+    
+    titleFig= 'test';
+    
+%% 
     %     %x and y also need flipping
 %     figure;
 %     imagesc(x2,y2,c2);
@@ -578,17 +595,17 @@ for subj= 1:numel(subjects);
 %     h = pcolor(x3,y3,c3);
 %     set(h, 'EdgeColor', 'none');
 %     
-    %try heatmap
-    %- This works! but needs aesthetic modification
-    % BUT this doesn't support hold so can't plot over.
-    figure(); 
-    h= heatmap(data3,'timeLock','DStrialIDcumcount','ColorVariable','DSblue')
-
-    h.Colormap= parula;
-    
-    %overlay Cue Onset (-poxDSrel) 
-    scatter(-data3.poxDSrel,data3.DStrialIDcumcount, 'k.');
-    
+%     %try heatmap
+%     %- This works! but needs aesthetic modification
+%     % BUT this doesn't support hold so can't plot over.
+%     figure(); 
+%     h= heatmap(data3,'timeLock','DStrialIDcumcount','ColorVariable','DSblue')
+% 
+%     h.Colormap= parula;
+%     
+%     %overlay Cue Onset (-poxDSrel) 
+%     scatter(-data3.poxDSrel,data3.DStrialIDcumcount, 'k.');
+%     
     
     
     %seems that each row is constant, not changing as fxn of time
@@ -607,13 +624,13 @@ for subj= 1:numel(subjects);
 %     set(gca,'YDir','normal') 
 
     
-    %data viz 2d with gramm for debugging
-    figure(); hold on;
-    clear g;
-    g=gramm('x',data3.timeLock,'lightness',data3.DStrialIDcumcount,'y',data3.DSblue, 'group', data3.DStrialIDcumcount);
-
-    g.geom_line()
-    g.draw();
+%     %data viz 2d with gramm for debugging
+%     figure(); hold on;
+%     clear g;
+%     g=gramm('x',data3.timeLock,'lightness',data3.DStrialIDcumcount,'y',data3.DSblue, 'group', data3.DStrialIDcumcount);
+% 
+%     g.geom_line()
+%     g.draw();
 end
 
 close all;
