@@ -410,3 +410,12 @@ periEventTable(:,"index")= table([1:size(periEventTable,1)]');
 
 
 
+%% 2022-11-04 examining licks before PE
+
+ind=[];
+
+ind= periEventTable.poxDSrel>periEventTable.loxDSrel;
+
+test= periEventTable(ind,:);
+
+

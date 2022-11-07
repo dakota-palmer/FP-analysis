@@ -346,6 +346,21 @@ ind= data.DStrialOutcome==1;
 
 data= data(ind,:);
 
+% subset data- only include trials with licks (valid, non-nan lick peri
+% signal)
+ind=[];
+ind= ~isnan(data.DSblueLox);
+
+data= data(ind,:);
+
+% %subset data- only include trials where lick happens after PE 
+% %TODO: CORRECT THE LICK TIMESTAMPS !!!!
+% %2022-11-03
+% ind=[];
+% ind= data.poxDSrel>=data.loxDSrel;
+% 
+% data= data(ind,:);
+
 
 % TODO: subset only specific encoding model input?
 
@@ -517,25 +532,83 @@ for subj= 1:numel(subjects);
 %     view([-90, 90]) %// instead of normal view, which is view([0 90])
 
     %% ---- this one looks good ---
-        
+%         
     overlayAlpha= .2;
     overlayPointSize= 10; %default i think is 10
     
     
-    figure;
-    %- heatplot
-    imagesc(y,x,c2);
+%     figure;
+%     %- heatplot
+%     imagesc(y,x,c2);
+%     set(gca,'YDir','normal') %increasing latency from top to bottom
+%     view([90, 90]) %// instead of normal view, which is view([0 90])
+% 
+%     
+% %     caxis manual;
+% %     caxis([bottom, top]);
+%     c= colorbar; %colorbar legend
+%     
+%     colormap parula;
+%     
+%     hold on;
+% 
+%     
+%     %- scatter overlays
+%     %overlay cue
+%     s= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'k');
+%     s.MarkerFaceAlpha= overlayAlpha;
+%     s.AlphaData= overlayAlpha;
+%     s.SizeData= overlayPointSize;
+%     
+%     %overlay first PE
+%     s= scatter(data3.DStrialIDcumcount ,data3.poxDSrel, 'filled', 'm');
+%     s.MarkerFaceAlpha= overlayAlpha;
+%     s.AlphaData= overlayAlpha;
+%     s.SizeData= overlayPointSize;
+%     
+%     %overlay first lick
+%     s= scatter(data3.DStrialIDcumcount ,data3.loxDSrel, 'filled', 'g');
+%     s.MarkerFaceAlpha= overlayAlpha;
+%     s.AlphaData= overlayAlpha;
+%     s.SizeData= overlayPointSize;
+%     
+%     titleFig= 'test';
+%     
+    %% Subplot peri heatplot of 3 events
+    figure();
+    
+    
+    %1 ---- peri cue
+    subplot(1,3,1);
+    titleFig= strcat('subj-',subj','-peri-DS');
+    
+    
+    %get data; not in table format
+    x=[], y=[], c=[];
+    x= (data3.timeLock);
+    y= (data3.DStrialIDcumcount);
+    c= (data3.DSblue);
+    
+        
+    %reshape to have specific # of columns (num trials)
+    trials= [];
+    trials= numel(unique(y));
+    
+    c= reshape(c, [], trials);
+    
+    %make heatplot
+    imagesc(y,x,c);
     set(gca,'YDir','normal') %increasing latency from top to bottom
     view([90, 90]) %// instead of normal view, which is view([0 90])
 
     
 %     caxis manual;
 %     caxis([bottom, top]);
-    c= colorbar; %colorbar legend
+    cbar= colorbar; %colorbar legend
     
     colormap parula;
     
-    hold on;
+    hold on; %hold on AFTER heatmap (before can change orientation for some reason)
 
     
     %- scatter overlays
@@ -557,7 +630,110 @@ for subj= 1:numel(subjects);
     s.AlphaData= overlayAlpha;
     s.SizeData= overlayPointSize;
     
-    titleFig= 'test';
+
+    %--- 2 peri DS PE ---
+    
+    subplot(1,3,2);
+    titleFig= strcat('subj-',subj','-peri-DS-Port Entry');
+    
+    
+     %get data; not in table format
+    x=[], y=[], c=[];
+    x= (data3.timeLock);
+    y= (data3.DStrialIDcumcount);
+    c= (data3.DSbluePox);
+    
+    trials= [];
+    trials= numel(unique(y));
+    
+    c= reshape(c, [], trials);
+    
+    %make heatplot
+    imagesc(y,x,c);    
+    set(gca,'YDir','normal') %increasing latency from top to bottom
+    view([90, 90]) %// instead of normal view, which is view([0 90])
+
+    
+%     caxis manual;
+%     caxis([bottom, top]);
+    cbar= colorbar; %colorbar legend
+    
+    colormap parula;
+    
+    hold on; %hold on AFTER heatmap (before can change orientation for some reason)
+
+    
+    %- scatter overlays
+    %overlay cue (- poxDSrel)
+    s= scatter(data3.DStrialIDcumcount,-data3.poxDSrel, 'filled', 'k');
+    s.MarkerFaceAlpha= overlayAlpha;
+    s.AlphaData= overlayAlpha;
+    s.SizeData= overlayPointSize;
+    
+    %overlay first PE (0)
+    s= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'm');
+    s.MarkerFaceAlpha= overlayAlpha;
+    s.AlphaData= overlayAlpha;
+    s.SizeData= overlayPointSize;
+    
+    %overlay first lick (relative to PE= lox-pox)
+    s= scatter(data3.DStrialIDcumcount ,data3.loxDSrel-data3.poxDSrel, 'filled', 'g');
+    s.MarkerFaceAlpha= overlayAlpha;
+    s.AlphaData= overlayAlpha;
+    s.SizeData= overlayPointSize;
+    
+     %--- 3 peri DS Lick ---
+    
+    subplot(1,3,3);
+    titleFig= strcat('subj-',subj','-peri-DS-First Lick');
+    
+    
+     %get data; not in table format
+    x=[], y=[], c=[];
+    x= (data3.timeLock);
+    y= (data3.DStrialIDcumcount);
+    c= (data3.DSblueLox);
+    
+    trials= [];
+    trials= numel(unique(y));
+    
+    c= reshape(c, [], trials);
+    
+    %make heatplot
+    imagesc(y,x,c);    
+    set(gca,'YDir','normal') %increasing latency from top to bottom
+    view([90, 90]) %// instead of normal view, which is view([0 90])
+
+    
+%     caxis manual;
+%     caxis([bottom, top]);
+    cbar= colorbar; %colorbar legend
+    
+    colormap parula;
+    
+    hold on; %hold on AFTER heatmap (before can change orientation for some reason)
+
+    
+    %- scatter overlays
+    %overlay cue (- loxDSrel)
+    s= scatter(data3.DStrialIDcumcount,-data3.loxDSrel, 'filled', 'k');
+    s.MarkerFaceAlpha= overlayAlpha;
+    s.AlphaData= overlayAlpha;
+    s.SizeData= overlayPointSize;
+    
+    %overlay first PE (relative to lick= -lox +pox?)
+    s= scatter(data3.DStrialIDcumcount ,-data3.loxDSrel+data3.poxDSrel, 'filled', 'm');
+    s.MarkerFaceAlpha= overlayAlpha;
+    s.AlphaData= overlayAlpha;
+    s.SizeData= overlayPointSize;
+    
+    %overlay first lick (0)
+    s= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'g');
+    s.MarkerFaceAlpha= overlayAlpha;
+    s.AlphaData= overlayAlpha;
+    s.SizeData= overlayPointSize;
+    
+    
     
 %% 
     %     %x and y also need flipping
@@ -635,6 +811,106 @@ end
 
 close all;
 
+
+%% dp 2022-11-07 examining invalid licks (licks before pe) / lick cleaning
+% 
+% %subset data
+% data= periEventTable;
+% 
+% 
+% % subset data- by stage
+% stagesToPlot= [7];
+% 
+% ind=[];
+% ind= ismember(data.stage, stagesToPlot);
+% 
+% data= data(ind,:);
+% 
+% 
+% 
+% %-- add simple cumcount of trials in these subset data
+% id= [];
+% id= unique(data.DStrialIDcum, 'stable'); %stable to prevent sorting
+% 
+% idCount= [];
+% idCount= 1:numel(id);
+% 
+% %initialize
+% data(:,'DStrialIDcumcount')= table(nan);
+% 
+% for thisID= 1:numel(id)
+%      
+%     ind=[];
+%     ind= data.DStrialIDcum==id(thisID);
+%     
+%     
+%     data(ind,'DStrialIDcumcount')= table(idCount(thisID)); 
+% 
+%     
+% end
+% 
+% 
+% 
+% ind= []
+% 
+% ind= data.poxDSrel < data.loxDSrel;
+% 
+% test= data(ind,:);
+% 
+% unique(test.DStrialOutcome)
+% 
+% % trials here include both 1) port entry and 3) inPort
+% 
+% figure(); title('examining pre-PE licks');
+% 
+% 
+%  %get data; not in table format
+% x=[], y=[], c=[];
+% x= (test.timeLock);
+% y= (test.DStrialIDcumcount);%cumcount);
+% c= (test.DSblue);
+% 
+% trials= [];
+% trials= numel(unique(y));
+% 
+% c= reshape(c, [], trials);
+% 
+% %make heatplot
+% imagesc(y,x,c);    
+% set(gca,'YDir','normal') %increasing latency from top to bottom
+% view([90, 90]) %// instead of normal view, which is view([0 90])
+% 
+% 
+% %     caxis manual;
+% %     caxis([bottom, top]);
+% cbar= colorbar; %colorbar legend
+% 
+% colormap parula;
+% % 
+%overlays pretty slow , lots of data
+% % hold on; %scatter overlays
+% % 
+% %  %overlay cue (0)
+% % s= scatter(test.DStrialIDcumcount,zeros(size(test.DStrialIDcum)), 'filled', 'k');
+% % s.MarkerFaceAlpha= overlayAlpha;
+% % s.AlphaData= overlayAlpha;
+% % s.SizeData= overlayPointSize;
+% % 
+% % %overlay first PE
+% % s= scatter(test.DStrialIDcumcount ,test.poxDSrel, 'filled', 'm');
+% % s.MarkerFaceAlpha= overlayAlpha;
+% % s.AlphaData= overlayAlpha;
+% % s.SizeData= overlayPointSize;
+% % 
+% % %overlay first lick 
+% % s= scatter(test.DStrialIDcumcount,test.loxDSrel, 'filled', 'g');
+% % s.MarkerFaceAlpha= overlayAlpha;
+% % s.AlphaData= overlayAlpha;
+% % s.SizeData= overlayPointSize;
+
+%overall looks like good spread of values, not a systemic weird outlier
+
+%% 
 
 %use findgroups to groupby trial and sort?
 
@@ -725,44 +1001,44 @@ end
 %-- heatplot figure
 
 % For each subject
-subjects= unique(data2.subject);
-for subj= 1:numel(subjects);
+% subjects= unique(data2.subject);
+% for subj= 1:numel(subjects);
+% 
+%     ind=[];
+%     ind= strcmp(data2.subject, subjects{subj});
+%     
+%     data3=[];
+%     data3= data2(ind,:);
+%     
+%     %make figure
+%     figure(); hold on;
+%     imagesc(data3.timeLock,data3.trialIDcumcount,data3.DSblue);
+% 
+%     %overlay Cue Onset (-poxDSrel) 
+%     scatter(-data3.poxDSrel,data3.trialIDcumcount, 'k.');
+%     
+% end
 
-    ind=[];
-    ind= strcmp(data2.subject, subjects{subj});
-    
-    data3=[];
-    data3= data2(ind,:);
-    
-    %make figure
-    figure(); hold on;
-    imagesc(data3.timeLock,data3.trialIDcumcount,data3.DSblue);
-
-    %overlay Cue Onset (-poxDSrel) 
-    scatter(-data3.poxDSrel,data3.trialIDcumcount, 'k.');
-    
-end
 
 
-
-%-- Make Fig
-figure();
-subplot(1,3,1);
-heatDSzpoxpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzpoxpurpleAllTrials); 
-
-title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding first PE in DS epoch')) %'(n= ', num2str(unique(trialDSnum)),')')); 
-xlabel('seconds from PE');
-ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
-
-%     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
-
-caxis manual;
-caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
-
-c= colorbar; %colorbar legend
-c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding DS');
-
-set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
+% %-- Make Fig
+% figure();
+% subplot(1,3,1);
+% heatDSzpoxpurpleAllTrials= imagesc(timeLock,currentSubj(1).totalDScount,currentSubj(1).DSzpoxpurpleAllTrials); 
+% 
+% title(strcat(subjData.(subjects{subj})(1).experiment, ' : ', num2str(subjectsAnalyzed{subj}), ' purple z score response surrounding first PE in DS epoch')) %'(n= ', num2str(unique(trialDSnum)),')')); 
+% xlabel('seconds from PE');
+% ylabel(strcat('DS trial (n= ', num2str(currentSubj(1).totalDScount(end)), ')'));
+% 
+% %     set(gca, 'ytick', currentSubj(1).totalDScount); %label trials appropriately
+% 
+% caxis manual;
+% caxis([bottomAllShared topAllShared]); %use a shared color axis to encompass all values
+% 
+% c= colorbar; %colorbar legend
+% c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding DS');
+% 
+% set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
 
 
 

@@ -164,10 +164,14 @@ for subj= 1:numel(subjects)
         
         [eventOnsets, eventOnsetsRel] = fp_trialEventID(currentSubj, currentSubjAnalyzed, session, baselineEvent, eventTimeLock, preBaselineTimeS, postBaselineTimeS); 
 
-       
+        %RAW lick timestamps
         subjDataAnalyzed.(subjects{subj})(session).behavior.loxDS= eventOnsets;
         subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel= eventOnsetsRel;
-              
+                
+  
+        
+            
+
         %--LICK BOUTS
         baselineEvent= 'currentSubj(session).DS';
         eventTimeLock= 'currentSubjAnalyzed(session).behavior.lickBouts';
@@ -834,4 +838,94 @@ for subj= 1:numel(subjects)
     
 end %end subj loop
 
+
+%% DP 2022-11-04 Lick Cleaning
+% TODO...
+%Eliminate "lick" timestamps that occur before PE?
+
+%some licks occur before PE, even on trials with outcome==1 (PE made)?
+%eliminate these? Or isolate first Rewarded licks (post-pump onset).
+
+
+for subj= 1:numel(subjects)
+    
+ currentSubj= subjDataAnalyzed.(subjects{subj});
+    
+    for session= 1:numel(currentSubj)
+
+        for trial = 1:numel(currentSubj(session).behavior.poxDSrel);
+               %dp 2022-11-07 TODO: lick cleaning
+           %some trials have licks prior to PE...
+
+            %Clean lick timestamps
+            %compare PE to lick timestamps, check 
+            %first PE timestamp only
+            pox=[];
+            pox= currentSubj(session).behavior.poxDSrel{trial};%(trial);
             
+            lox= [];
+            lox= currentSubj(session).behavior.loxDSrel{trial};%(trial);
+           
+            
+            %TODO: check if in port
+            %really, licks should be probably be constrained to when the subject is in the
+            %port
+
+            %if this is an inPort trial, keep the raw pre-PE licks (since
+            %they may still be valid)
+            if isnan(currentSubj(session).behavior.inPortDS(trial))
+
+                %comparison requires valid licks during this trial
+                if ~isempty(lox)%{:})
+
+                    %find licks on this trial with latency < PE 
+
+
+                    %-find licks than occur before first PE in this trial
+        %             https://www.mathworks.com/matlabcentral/answers/84242-find-in-a-cell-array
+
+        %           %method A using find(), vectorize cell array using {:}, returns index
+                    ind= [];
+%                     ind = find([lox{:}] > pox{1}(1)); %cell
+                    ind = find([lox] < pox(1)); 
+
+                    %-----Error on subj 1, session 22, trial 16
+                    % no port entry, not inPort, but licks still present
+                    %seems the PE timestamp is exactly equivalent to DS
+                    %timestamp, and was not assigned to trial
+                    
+                    %but why was this not counted as "inPort" outcome?
+                    subjData.('rat8')(22).pox(97) == subjData.('rat8')(22).DS(16)
+
+
+                    %method B using cellfun, returns logical ind for each
+%                     ind=[];
+%                     ind = cellfun(@(lox) lox<pox{1}(1), lox, 'UniformOutput',0);
+%             
+                    
+                                
+                   %clean licks- DELETE LICKS WITH LATENCY < PE
+                   lox(ind)= [];%nan;
+                    
+                   %simply overwrite raw licks
+                   subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel{trial}= {}; 
+
+                   subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel{trial}= lox; 
+                    
+                    
+                end %end isempty lox
+
+                elseif  ~isnan(currentSubj(session).behavior.inPortDS(trial))%if not inPort, delete the licks prior to PE
+                
+                end
+    %             
+
+        end
+        
+        
+        
+
+    end %end ses loop
+   
+    
+end %end subj loop
