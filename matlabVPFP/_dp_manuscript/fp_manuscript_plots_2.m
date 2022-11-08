@@ -13,7 +13,8 @@ figPath= strcat(pwd,'\_figures\_mockups\');
 % figFormats= {'.svg'} %list of formats to save figures as (for saveFig.m)
 
 %PNG good for quickly viewing many
-figFormats= {'.png'} %list of formats to save figures as (for saveFig.m)
+% figFormats= {'.png'} %list of formats to save figures as (for saveFig.m)
+figFormats= {'.svg'} %list of formats to save figures as (for saveFig.m)
 
 
 %-- Master plot linestyles and colors
@@ -31,7 +32,10 @@ linewidthReference= 2;
 
 % for now assume preprocessing experimental all sessions
 
-pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-19-Oct-2022periEventTable.mat";
+% pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-19-Oct-2022periEventTable.mat";
+
+%loxDSpoxRel present
+pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-08-Nov-2022periEventTable.mat";
 
 % for now loads as 'data' struct
 load(pathData);
@@ -411,38 +415,45 @@ for thisID= 1:numel(id)
     
 end
 
-% data2= find(ismember(data2.trialIDcum,test,'row'))
+% make another dataset for plotting sorted by Lick latency from PE
+%sorting by Lick latency within-subject and within-stage
 
-% groupIDs= [];
-% groupIDs= findgroups(data2.trialIDcum);
-% 
-% groupIDsUnique= [];
-% groupIDsUnique= unique(groupIDs);
-% 
-% %go through and cumcount the timestamps in each trialID, then sort only
-% %first observation in each by latency
-% for thisGroupID= 1:numel(groupIDsUnique)
-%     %for each groupID, find index matching groupID
-%     ind= [];
-%     ind= find(groupIDs==groupIDsUnique(thisGroupID));
-%     
-%     %for each groupID, get the table data matching this group
-%     thisGroup=[];
-%     thisGroup= data2(ind,:);
-%     
-%     %now cumulative count of observations in this group
-%     %make default value=1 for each, and then cumsum() to get cumulative count
-%     thisGroup(:,'cumcount')= table(1);
-%     thisGroup(:,'cumcount')= table(cumsum(thisGroup.cumcount));
-%     
-%     %specific code for trainDayThisPhase
-%     %assign back into table
-%     data2(ind, 'cumcountTrialID')= table(thisGroup.cumcount);
-% end
+% %could be precalculated in tidyTable but manual reassign quickly 2022-11-08
+% loxDSpoxRel should be loxDSrel - poxDSrel (PE latency)
+%compared with stored values plots look same 
+data(:,'loxDSpoxRel')= table(nan);
+data.loxDSpoxRel= data.loxDSrel- data.poxDSrel;
+
+
+data4=table;
+% data4 = sortrows(data,{'subject','stage','loxDSrel','fileID','trialIDcum','timeLock'});
+data4 = sortrows(data,{'subject','stage','loxDSpoxRel','fileID','trialIDcum','timeLock'});
+
+
+%-- add simple cumcount of trials in these subset data
+id= [];
+id= unique(data4.DStrialIDcum, 'stable'); %stable to prevent sorting
+
+idCount= [];
+idCount= 1:numel(id);
+
+%initialize
+data4(:,'DStrialIDcumcount')= table(nan);
+
+for thisID= 1:numel(id)
+     
+    ind=[];
+    ind= data4.DStrialIDcum==id(thisID);
+    
+    
+    data4(ind,'DStrialIDcumcount')= table(idCount(thisID)); 
+
+    
+end
 
 % %-- heatplot figure
 % 
-top= 15;
+top= 5;%15;
 bottom= -5;
 
 % % For each subject
@@ -451,8 +462,15 @@ for subj= 1:numel(subjects);
 
     ind=[];
     ind= strcmp(data2.subject, subjects{subj});
-    
+    data3= table;
     data3= data2(ind,:);
+    
+    
+    ind=[];
+    ind= strcmp(data4.subject, subjects{subj});
+    
+    data5=table;
+    data5= data4(ind,:);
     
 %     %make figure
 %     figure(); hold on;
@@ -580,7 +598,6 @@ for subj= 1:numel(subjects);
     
     %1 ---- peri cue
     subplot(1,3,1);
-    titleFig= strcat('subj-',subj','-peri-DS');
     
     
     %get data; not in table format
@@ -602,13 +619,15 @@ for subj= 1:numel(subjects);
     view([90, 90]) %// instead of normal view, which is view([0 90])
 
     
-%     caxis manual;
-%     caxis([bottom, top]);
+    caxis manual;
+    caxis([bottom, top]);
     cbar= colorbar; %colorbar legend
     
     colormap parula;
     
     hold on; %hold on AFTER heatmap (before can change orientation for some reason)
+
+    title('Peri-DS (sorted by PE latency)');
 
     
     %- scatter overlays
@@ -634,7 +653,6 @@ for subj= 1:numel(subjects);
     %--- 2 peri DS PE ---
     
     subplot(1,3,2);
-    titleFig= strcat('subj-',subj','-peri-DS-Port Entry');
     
     
      %get data; not in table format
@@ -654,13 +672,15 @@ for subj= 1:numel(subjects);
     view([90, 90]) %// instead of normal view, which is view([0 90])
 
     
-%     caxis manual;
-%     caxis([bottom, top]);
+    caxis manual;
+    caxis([bottom, top]);
     cbar= colorbar; %colorbar legend
     
     colormap parula;
     
     hold on; %hold on AFTER heatmap (before can change orientation for some reason)
+
+    title('Peri-PE (sorted by PE latency)');
 
     
     %- scatter overlays
@@ -683,16 +703,17 @@ for subj= 1:numel(subjects);
     s.SizeData= overlayPointSize;
     
      %--- 3 peri DS Lick ---
+     
+     %**have this data sorted by Lick Latency from PE**
     
     subplot(1,3,3);
-    titleFig= strcat('subj-',subj','-peri-DS-First Lick');
     
     
      %get data; not in table format
     x=[], y=[], c=[];
-    x= (data3.timeLock);
-    y= (data3.DStrialIDcumcount);
-    c= (data3.DSblueLox);
+    x= (data5.timeLock);
+    y= (data5.DStrialIDcumcount);
+    c= (data5.DSblueLox);
     
     trials= [];
     trials= numel(unique(y));
@@ -705,35 +726,49 @@ for subj= 1:numel(subjects);
     view([90, 90]) %// instead of normal view, which is view([0 90])
 
     
-%     caxis manual;
-%     caxis([bottom, top]);
+    caxis manual;
+    caxis([bottom, top]);
     cbar= colorbar; %colorbar legend
     
     colormap parula;
     
     hold on; %hold on AFTER heatmap (before can change orientation for some reason)
 
+    title('Peri-Lick (sorted by lick latency)');
+
     
     %- scatter overlays
     %overlay cue (- loxDSrel)
-    s= scatter(data3.DStrialIDcumcount,-data3.loxDSrel, 'filled', 'k');
-    s.MarkerFaceAlpha= overlayAlpha;
-    s.AlphaData= overlayAlpha;
+    s= scatter(data5.DStrialIDcumcount,-data5.loxDSrel, 'filled', 'k');
+%     s.MarkerFaceAlpha= overlayAlpha;
+%     s.AlphaData= overlayAlpha;
     s.SizeData= overlayPointSize;
     
     %overlay first PE (relative to lick= -lox +pox?)
-    s= scatter(data3.DStrialIDcumcount ,-data3.loxDSrel+data3.poxDSrel, 'filled', 'm');
-    s.MarkerFaceAlpha= overlayAlpha;
-    s.AlphaData= overlayAlpha;
+%     s= scatter(data4.DStrialIDcumcount ,-data4.loxDSrel+data3.poxDSrel, 'filled', 'm');
+%     s= scatter(data5.DStrialIDcumcount ,-data5.loxDSrel+data5.poxDSrel, 'filled', 'm');
+    s= scatter(data5.DStrialIDcumcount ,-data5.loxDSpoxRel, 'filled', 'm');
+%     s.MarkerFaceAlpha= overlayAlpha;
+%     s.AlphaData= overlayAlpha;
     s.SizeData= overlayPointSize;
     
     %overlay first lick (0)
-    s= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'g');
-    s.MarkerFaceAlpha= overlayAlpha;
-    s.AlphaData= overlayAlpha;
+    s= scatter(data5.DStrialIDcumcount, zeros(size(data5.DStrialIDcumcount)), 'filled', 'g');
+%     s.MarkerFaceAlpha= overlayAlpha;
+%     s.AlphaData= overlayAlpha;    
     s.SizeData= overlayPointSize;
+  
+    %TODO: matlab transparency/alpha of scatter not working
+   %works in legend but not plot
     
+    lgd= legend('DS','PE','Lick');
+%     lgd.Location= 'eastoutside';
+    lgd.Position= [.9,.7,0.05,0.05];
     
+    titleFig= strcat('Fig 3a) heatplot',' subj-', subjects{subj});   
+    sgtitle(titleFig);
+    
+    saveFig(gcf, figPath, titleFig, figFormats);
     
 %% 
     %     %x and y also need flipping
@@ -807,6 +842,8 @@ for subj= 1:numel(subjects);
 % 
 %     g.geom_line()
 %     g.draw();
+
+
 end
 
 close all;
@@ -1039,11 +1076,6 @@ end
 % c.Label.String= strcat('DS purple z-score calculated from', num2str(slideTime/fs), 's preceding DS');
 % 
 % set(gcf,'Position', get(0, 'Screensize')); %make the figure full screen before saving
-
-
-
-
-
 
 
 

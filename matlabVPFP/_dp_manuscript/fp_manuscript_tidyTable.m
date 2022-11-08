@@ -160,6 +160,9 @@ for subj= 1:numel(subjects)
             loxDSrel= nan(periCueFrames, numTrials);
             loxNSrel= nan(periCueFrames, numTrials);
             
+                %lick latency relative to PE 
+            loxDSpoxrel= nan(periCueFrames, numTrials);
+            
             %reward info
             pumpID= nan(periCueFrames, numTrials);
             rewardID= cell(periCueFrames, numTrials);
@@ -208,10 +211,15 @@ for subj= 1:numel(subjects)
                 %saving first lick only (mainly just for plots)
                 if ~isempty( currentSubj(includedSession).behavior.loxDSrel{cue})
                     loxDSrel(trialInd, cue)= currentSubj(includedSession).behavior.loxDSrel{cue}(1);
+                
+                    loxDSpoxRel(trialInd,cue)= currentSubj(includedSession).behavior.loxDSpoxRel{cue}(1);
                 else
                      loxDSrel(trialInd, cue)= nan;
+                     loxDSpoxRel(trialInd,cue)= nan;
                 end
                     
+                
+                
                     
                 DStrialIDcum(trialInd,cue)= DStrialCountCum;
                 DStrialCountCum= DStrialCountCum+1;
@@ -357,6 +365,7 @@ for subj= 1:numel(subjects)
             periEventTable.poxDSrel(tsInd)= poxDSrel(:);
             periEventTable.loxDSrel(tsInd)= loxDSrel(:);
 
+            periEventTable.loxDSpoxRel(tsInd)= loxDSpoxRel(:);
             
             periEventTable.pumpID(tsInd)= pumpID(:);
             periEventTable.rewardID(tsInd)= rewardID(:);

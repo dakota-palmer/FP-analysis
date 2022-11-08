@@ -543,6 +543,10 @@ for subj= 1:numel(subjects) %for each subject
                 poxDiffDS(i) = currentSubj(session).pox(i)- currentSubj(session).DS(cue,1);
             end
             
+            %^ fixed that one, another exception here
+                    %subj 4 session 6 trial 11
+            %looks like should be inPort to me, is out present?
+                    
             %get rid of negative values by making them very large
             %this way we're only looking at TTLs after cue onset
             poxDiffDS(poxDiffDS<0) = 99999; 
@@ -557,15 +561,32 @@ for subj= 1:numel(subjects) %for each subject
 
             outDiffDS(outDiffDS<0)= 99999; %make any negative differences very large
             
-            %if the closest TTL pulse to cue onset was an out, the animal was in the port already
-            if min(outDiffDS)<min(poxDiffDS)
-                
-                currentSubj(session).inPortDS(1,cue)= cue; %animal was in port on this trial
-%                 disp(strcat(subjects{subj}, 'session', num2str(session), '_DS_', num2str(cue), ' inPortDS '));
+            %dp 2022-11-07 in cases where PE timestamp==DS timestamp, classify as "inPort"
+            %previously was not.
+            
+            %found by noting exception noted in rat8 session22 trial 22- PE
+            %and DS timestamp are equivalent. edge case not marked as
+            %'inPort' yet PE not recorded.
+            
+           %initialize
+           currentSubj(session).inPortDS(1,cue)= NaN; %animal was not in port on this trial
 
-            else
-                currentSubj(session).inPortDS(1,cue)= NaN; %animal was not in port on this trial
-            end
+           if min(poxDiffDS)>0 %dp 2022-11-07 in cases where PE timestamp==DS timestamp
+            
+                %if the closest TTL pulse to cue onset was an out, the animal was in the port already
+                if min(outDiffDS)<min(poxDiffDS)
+
+                    currentSubj(session).inPortDS(1,cue)= cue; %animal was in port on this trial
+    %                 disp(strcat(subjects{subj}, 'session', num2str(session), '_DS_', num2str(cue), ' inPortDS '));
+
+                else
+                    currentSubj(session).inPortDS(1,cue)= NaN; %animal was not in port on this trial
+                end
+          
+           elseif min(poxDiffDS)==0
+                currentSubj(session).inPortDS(1,cue)= cue; %animal was in port on this trial
+           end
+            
             
        end %end DS loop
        
@@ -593,15 +614,42 @@ for subj= 1:numel(subjects) %for each subject
             outDiffNS(outDiffNS<0)= 99999; %make any negative differences very large
             
             %if the closest TTL pulse to cue onset was an out, the animal was in the port already
-            if min(outDiffNS)<min(poxDiffNS)
-                
-                currentSubj(session).inPortNS(1,cue)= cue;
-%                 disp(strcat(subjects{subj}, 'session', num2str(session), '_NS_', num2str(cue), ' inPortNS '));
+%             if min(outDiffNS)<min(poxDiffNS)
+%                 
+%                 currentSubj(session).inPortNS(1,cue)= cue;
+% %                 disp(strcat(subjects{subj}, 'session', num2str(session), '_NS_', num2str(cue), ' inPortNS '));
+% 
+%             else
+%                 currentSubj(session).inPortNS(1,cue)= NaN;
+%             end
 
-            else
-                currentSubj(session).inPortNS(1,cue)= NaN;
-            end
+
+              %dp 2022-11-07 in cases where PE timestamp==DS timestamp, classify as "inPort"
+            %previously was not.
             
+            %found by noting exception noted in rat8 session22 trial 22- PE
+            %and DS timestamp are equivalent. edge case not marked as
+            %'inPort' yet PE not recorded.
+          
+           %initialize
+           currentSubj(session).inPortNS(1,cue)= NaN; %animal was not in port on this trial
+
+          
+           if min(poxDiffNS)>0 %dp 2022-11-07 in cases where PE timestamp==NS timestamp
+            
+                %if the closest TTL pulse to cue onset was an out, the animal was in the port already
+                if min(outDiffNS)<min(poxDiffNS)
+
+                    currentSubj(session).inPortNS(1,cue)= cue; %animal was in port on this trial
+    %                 disp(strcat(subjects{subj}, 'session', num2str(session), '_NS_', num2str(cue), ' inPortNS '));
+
+                else
+                    currentSubj(session).inPortNS(1,cue)= NaN; %animal was not in port on this trial
+                end
+          
+           elseif min(poxDiffNS)==0
+                currentSubj(session).inPortNS(1,cue)= cue; %animal was in port on this trial
+           end
        end %end NS loop
        
        
@@ -897,6 +945,27 @@ for subj= 1:numel(subjects)
                     %but why was this not counted as "inPort" outcome?
                     subjData.('rat8')(22).pox(97) == subjData.('rat8')(22).DS(16)
 
+                    %^ fixed that one, another exception here
+                    %subj 4 session 6 trial 11
+                    test= subjData.('rat11')(6).DS;
+%                     test2= subjDataAnalyzed.('rat11')(6).behavior.poxDS(11);
+%                     test3= subjDataAnalyzed.('rat11')(6).behavior.loxDS(11);
+
+                    test2= subjData.('rat11')(6).pox;
+                    test3= subjData.('rat11')(6).lox;
+                    test4= subjData.('rat11')(6).out;
+
+                    
+%                     test= table(nan(numel(subjData.('rat11')(6).lox),1));
+%                     
+%                     test=table();
+%                     
+%                     test(:,'DS')=  table(subjData.('rat11')(6).DS);
+%                     test(:,'pox')=  table(subjData.('rat11')(6).pox);
+%                     test(:,'out')=  table(subjData.('rat11')(6).out);
+%                     test(:,'lox')=  table(subjData.('rat11')(6).lox);
+
+                    
 
                     %method B using cellfun, returns logical ind for each
 %                     ind=[];

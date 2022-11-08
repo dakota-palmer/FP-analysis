@@ -145,7 +145,7 @@ fp_manuscript_dataExclusion();
 
 %% Latency correlation
 
-% fp_manuscript_latencyCorrelation();
+fp_manuscript_latencyCorrelation();
 
 
 %% make peri-event 465nm plots

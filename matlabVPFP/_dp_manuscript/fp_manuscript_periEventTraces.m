@@ -965,7 +965,7 @@ i= i.facet_grid([],data.sesSpecialLabel);
 i().stat_summary('type','sem','geom','line');
 i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
-i().set_color_options('map',cmapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
 i().set_line_options('base_size',linewidthSubj);
 i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
@@ -977,7 +977,7 @@ i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'gro
 
 i().stat_summary('type','sem','geom','area');
 
-i().set_color_options('map',cmapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i().set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
 i().set_line_options('base_size',linewidthGrand)
 
@@ -1010,7 +1010,7 @@ data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType'
 %mean between subj
 i= gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', []);
 
-i.set_color_options('map',cmapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
 %mean bar for trialType
 i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
@@ -1030,7 +1030,7 @@ i= i.facet_grid([],data.sesSpecialLabel);
 
 i.stat_summary('type','sem','geom','point');
 
-i.set_color_options('map',cmapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i.set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
 i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
 
@@ -1081,7 +1081,7 @@ i= i.facet_grid([],data.sesSpecialLabel);
 i().stat_summary('type','sem','geom','line');
 i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
-% i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+% i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 i.set_color_options('map',cmapSubj);
 
 
@@ -1095,7 +1095,7 @@ i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, 'gro
 
 i().stat_summary('type','sem','geom','area');
 
-% i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+% i().set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 i.set_color_options('map',cmapGrand);
 
 
@@ -1134,7 +1134,7 @@ i= gramm('x',data2.trialType,'y',data2.periCueAuc, 'color', data2.trialType, 'gr
 i.facet_grid([],data2.sesSpecialLabel);
 
 
-% i.set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+% i.set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 i.set_color_options('map',cmapGrand);
 
 
@@ -1154,7 +1154,7 @@ i.update('x',data2.trialType,'y',data2.periCueAuc, 'color', data2.trialType, 'gr
 
 i.stat_summary('type','sem','geom','point');
 
-% i.set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+% i.set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 i.set_color_options('map',cmapSubj);
 
 i.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
@@ -1195,7 +1195,7 @@ i= i.facet_wrap(data.stage, 'ncols',4);
 i().stat_summary('type','sem','geom','line');
 i().geom_hline('yintercept',0, 'style', 'k--'); %overlay t=0
 
-% i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+% i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 i.set_color_options('map',cmapSubj);
 
 
@@ -1209,7 +1209,7 @@ i().update('x',data.trainDayThisStage,'y',data.periCueAuc, 'color', data.trialTy
 
 i().stat_summary('type','sem','geom','area');
 
-% i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+% i().set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 i.set_color_options('map',cmapGrand);
 
 
@@ -1249,7 +1249,7 @@ i(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, '
 i(1,1).stat_summary('type','sem','geom','line');
 i(1,1).geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
-i(1,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i(1,1).set_color_options('map', cmapSubj); %subselecting the 2 specific color levels i want from map
 
 i(1,1).set_line_options('base_size',linewidthSubj);
 i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
@@ -1261,7 +1261,7 @@ i(1,1).update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialType, '
 
 i(1,1).stat_summary('type','sem','geom','area');
 
-i(1,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i(1,1).set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
 i(1,1).set_line_options('base_size',linewidthGrand)
 
@@ -1287,7 +1287,7 @@ data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType'
 %mean between subj
 i(2,1)=gramm('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trialType, 'group', []);
 
-i(2,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i(2,1).set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
 %mean bar for trialType
 i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
@@ -1309,7 +1309,7 @@ i(2,1).update('x',data2.trialType,'y',data2.periCueBlueAuc, 'color', data2.trial
 
 i(2,1).stat_summary('type','sem','geom','point');
 
-i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i(2,1).set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
 i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
 
@@ -1413,7 +1413,7 @@ i(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome
 i(1,1).stat_summary('type','sem','geom','line');
 i(1,1).geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
-i(1,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i(1,1).set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
 i(1,1).set_line_options('base_size',linewidthSubj);
 i(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
@@ -1425,7 +1425,7 @@ i(1,1).update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome
 
 i(1,1).stat_summary('type','sem','geom','area');
 
-i(1,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i(1,1).set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
 i(1,1).set_line_options('base_size',linewidthGrand)
 
@@ -1476,7 +1476,7 @@ data2= stack(data2, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome
 %mean between subj
 i(2,1)= gramm('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', []);
 
-i(2,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i(2,1).set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
 %mean bar for trialType
 i(2,1).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
@@ -1498,7 +1498,7 @@ i(2,1).update('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.tr
 
 i(2,1).stat_summary('type','sem','geom','point');
 
-i(2,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i(2,1).set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
 i(2,1).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
 
@@ -1858,7 +1858,7 @@ map= 'brewer2'
     i().stat_summary('type','sem','geom','line');
     i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
-%     i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+%     i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
     i().set_color_options('map',map); 
 
 
@@ -1872,7 +1872,7 @@ map= 'brewer2'
 
     i().stat_summary('type','sem','geom','area');
 
-%     i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+%     i().set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
     i().set_color_options('map',map); 
 
     i().set_line_options('base_size',linewidthGrand)
@@ -1917,7 +1917,7 @@ map= 'brewer2'
     i().stat_summary('type','sem','geom','line');
     i().geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
-%     i().set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+%     i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
     i().set_line_options('base_size',linewidthSubj);
     i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Event type (ind subj mean)');
@@ -1929,7 +1929,7 @@ map= 'brewer2'
 
     i().stat_summary('type','sem','geom','area');
 
-%     i().set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+%     i().set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
     i().set_line_options('base_size',linewidthGrand)
 
