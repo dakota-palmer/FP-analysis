@@ -545,8 +545,15 @@ for subj= 1:numel(subjects) %for each subject
             
             %^ fixed that one, another exception here
                     %subj 4 session 6 trial 11
-            %looks like should be inPort to me, is out present?
-                    
+            %looks like should be inPort to me, is out present? yes and
+            %sooner than PE
+                 %in this case, min poxDiffDS is 10.1197, which is > 10s
+                 %cue duration so maybe wasn't counted in this trial?
+                 % !!!!! this is important distinction
+              %The way code currently works is PE is only counted if within
+              %cue duration.
+               
+            
             %get rid of negative values by making them very large
             %this way we're only looking at TTLs after cue onset
             poxDiffDS(poxDiffDS<0) = 99999; 
@@ -919,74 +926,92 @@ for subj= 1:numel(subjects)
             %really, licks should be probably be constrained to when the subject is in the
             %port
 
-            %if this is an inPort trial, keep the raw pre-PE licks (since
-            %they may still be valid)
+
+            %if this is NOT an inPort trial
             if isnan(currentSubj(session).behavior.inPortDS(trial))
 
                 %comparison requires valid licks during this trial
                 if ~isempty(lox)%{:})
 
+                     
+                %Require valid PE as well (this means it has to be within
+                %cue duration by definition of DSpox? TODO MANUSCRIPT: is this a good call?)
+                
+                %2022-11-09 TODO MANUSCRIPT: ~~~
+                
+                %Found an edge case where not inPort, PE was made >10s (post
+                %cue), so no PE was counted...and yet 2 licks counted: In this case, just delete the
+                %licks. Part of lick cleaning. So Require Pox
+                     if ~isempty(pox)
                     %find licks on this trial with latency < PE 
 
 
-                    %-find licks than occur before first PE in this trial
-        %             https://www.mathworks.com/matlabcentral/answers/84242-find-in-a-cell-array
+                        %-find licks than occur before first PE in this trial
+            %             https://www.mathworks.com/matlabcentral/answers/84242-find-in-a-cell-array
 
-        %           %method A using find(), vectorize cell array using {:}, returns index
-                    ind= [];
-%                     ind = find([lox{:}] > pox{1}(1)); %cell
-                    ind = find([lox] < pox(1)); 
+            %           %method A using find(), vectorize cell array using {:}, returns index
+                        ind= [];
+    %                     ind = find([lox{:}] > pox{1}(1)); %cell
+                        ind = find([lox] < pox(1)); 
 
-                    %-----Error on subj 1, session 22, trial 16
-                    % no port entry, not inPort, but licks still present
-                    %seems the PE timestamp is exactly equivalent to DS
-                    %timestamp, and was not assigned to trial
-                    
-                    %but why was this not counted as "inPort" outcome?
-                    subjData.('rat8')(22).pox(97) == subjData.('rat8')(22).DS(16)
+                        %-----Error on subj 1, session 22, trial 16
+                        % no port entry, not inPort, but licks still present
+                        %seems the PE timestamp is exactly equivalent to DS
+                        %timestamp, and was not assigned to trial
 
-                    %^ fixed that one, another exception here
-                    %subj 4 session 6 trial 11
-                    test= subjData.('rat11')(6).DS;
-%                     test2= subjDataAnalyzed.('rat11')(6).behavior.poxDS(11);
-%                     test3= subjDataAnalyzed.('rat11')(6).behavior.loxDS(11);
+                        %but why was this not counted as "inPort" outcome?
+                        subjData.('rat8')(22).pox(97) == subjData.('rat8')(22).DS(16)
 
-                    test2= subjData.('rat11')(6).pox;
-                    test3= subjData.('rat11')(6).lox;
-                    test4= subjData.('rat11')(6).out;
+                        %now issue with subj 1, session 3, trial 3
+                        %inPort Trial: should not be running here...no Port Entries, but Licks
 
-                    
-%                     test= table(nan(numel(subjData.('rat11')(6).lox),1));
-%                     
-%                     test=table();
-%                     
-%                     test(:,'DS')=  table(subjData.('rat11')(6).DS);
-%                     test(:,'pox')=  table(subjData.('rat11')(6).pox);
-%                     test(:,'out')=  table(subjData.('rat11')(6).out);
-%                     test(:,'lox')=  table(subjData.('rat11')(6).lox);
+    %                     %^ fixed that one, another exception here
+    %                     %subj 4 session 6 trial 11
+    %                     test= subjData.('rat11')(6).DS;
+    % %                     test2= subjDataAnalyzed.('rat11')(6).behavior.poxDS(11);
+    % %                     test3= subjDataAnalyzed.('rat11')(6).behavior.loxDS(11);
+    % 
+    %                     test2= subjData.('rat11')(6).pox;
+    %                     test3= subjData.('rat11')(6).lox;
+    %                     test4= subjData.('rat11')(6).out;
 
-                    
 
-                    %method B using cellfun, returns logical ind for each
-%                     ind=[];
-%                     ind = cellfun(@(lox) lox<pox{1}(1), lox, 'UniformOutput',0);
-%             
-                    
-                                
-                   %clean licks- DELETE LICKS WITH LATENCY < PE
-                   lox(ind)= [];%nan;
-                    
-                   %simply overwrite raw licks
-                   subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel{trial}= {}; 
+    %                     test= table(nan(numel(subjData.('rat11')(6).lox),1));
+    %                     
+    %                     test=table();
+    %                     
+    %                     test(:,'DS')=  table(subjData.('rat11')(6).DS);
+    %                     test(:,'pox')=  table(subjData.('rat11')(6).pox);
+    %                     test(:,'out')=  table(subjData.('rat11')(6).out);
+    %                     test(:,'lox')=  table(subjData.('rat11')(6).lox);
 
-                   subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel{trial}= lox; 
-                    
-                    
-                end %end isempty lox
 
-                elseif  ~isnan(currentSubj(session).behavior.inPortDS(trial))%if not inPort, delete the licks prior to PE
+
+                        %method B using cellfun, returns logical ind for each
+    %                     ind=[];
+    %                     ind = cellfun(@(lox) lox<pox{1}(1), lox, 'UniformOutput',0);
+    %             
+
+
+                       %clean licks- DELETE LICKS WITH LATENCY < PE
+                       lox(ind)= [];%nan;
+
+                       %simply overwrite raw licks
+                       subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel{trial}= {}; 
+
+                       %if all lox deleted
+                       
+                       subjDataAnalyzed.(subjects{subj})(session).behavior.loxDSrel{trial}= lox; 
+                     
+                     end %end isempty pox
+
+                    end %end isempty lox
+
+                %if this IS an inPort trial, keep the raw pre-PE licks (since
+                  %they may still be valid)
+            elseif  ~isnan(currentSubj(session).behavior.inPortDS(trial))%if not inPort, delete the licks prior to PE
                 
-                end
+            end
     %             
 
         end

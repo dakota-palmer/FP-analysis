@@ -34,8 +34,12 @@ linewidthReference= 2;
 
 % pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-19-Oct-2022periEventTable.mat";
 
-%loxDSpoxRel present
-pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-08-Nov-2022periEventTable.mat";
+% %loxDSpoxRel present
+% pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-08-Nov-2022periEventTable.mat";
+
+%revised licks
+pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-09-Nov-2022periEventTable.mat";
+
 
 % for now loads as 'data' struct
 load(pathData);
@@ -323,7 +327,7 @@ saveFig(gcf, figPath, titleFig, figFormats);
 
 %% TODO: -----------------------FIGURE 2B --------------
 
-%% TRYING FIG3 HEATPLOTS ---
+%% FIG3 HEATPLOTS ---
 
 % tried in gramm, not really supported or at least not intuitive and not worth effort
 %going with  matlab imagesc heatplots
@@ -337,25 +341,39 @@ width= 1.8; %good for 2 bars w dodge >=1
 data= periEventTable;
 
 % subset data- by stage
-stagesToPlot= [7];
+stagesToPlot= [1:11];
 
 ind=[];
 ind= ismember(data.stage, stagesToPlot);
 
 data= data(ind,:);
 
+%subset data- simply require DS trial
+ind=[];
+ind= ~isnan(data.DStrialID);
+
+data= data(ind,:);
+
+% subset data- by PE outcome; only include trials with PE or inPort
+% ind=[];
+% % ind= data.DStrialOutcome==1 | data.DStrialOutcome==3;
+% ind= (data.DStrialOutcome==1) | (data.DStrialOutcome==3);
+% 
+% data= data(ind,:);
+
+
 % subset data- by PE outcome; only include trials with valid PE post-cue
-ind=[];
-ind= data.DStrialOutcome==1;
+% ind=[];
+% ind= data.DStrialOutcome==1;
+% 
+% data= data(ind,:);
 
-data= data(ind,:);
-
-% subset data- only include trials with licks (valid, non-nan lick peri
-% signal)
-ind=[];
-ind= ~isnan(data.DSblueLox);
-
-data= data(ind,:);
+% % subset data- only include trials with licks (valid, non-nan lick peri
+% % signal)
+% ind=[];
+% ind= ~isnan(data.DSblueLox);
+% 
+% data= data(ind,:);
 
 % %subset data- only include trials where lick happens after PE 
 % %TODO: CORRECT THE LICK TIMESTAMPS !!!!
@@ -760,15 +778,25 @@ for subj= 1:numel(subjects);
   
     %TODO: matlab transparency/alpha of scatter not working
    %works in legend but not plot
-    
-    lgd= legend('DS','PE','Lick');
+  
+   %legend position may be causing export issues?
+%     lgd= legend('DS','PE','Lick');
 %     lgd.Location= 'eastoutside';
-    lgd.Position= [.9,.7,0.05,0.05];
+%     lgd.Position= [.9,.7,005,0.05];
     
     titleFig= strcat('Fig 3a) heatplot',' subj-', subjects{subj});   
     sgtitle(titleFig);
     
+    
+    %TODO:
+    %saveFig fxn doesnt seem to vectorize heatmaps...
     saveFig(gcf, figPath, titleFig, figFormats);
+    
+
+%     %'contenttype'= 'vector' here does NOT work, way slow
+%     titleFig= strcat(titleFig,'.pdf');
+%     exportgraphics(gcf, titleFig,'ContentType','image')
+
     
 %% 
     %     %x and y also need flipping

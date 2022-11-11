@@ -5,14 +5,19 @@ clear; close all; clc;
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-17-Dec-2021subjDataAnalyzed.mat")
 
 
-load(uigetfile);
+% load(uigetfile);
 
 % % with artifacts
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\VP-VTA-FP-05-Jul-2022subjDataAnalyzed.mat");
 % experimentName= 'vp-vta-fp'
 
 % % airPLS version
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-30-Aug-2022subjDataAnalyzed_airPLS_modeFitFP-airPLS.mat")
+% load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-30-Aug-2022subjDataAnalyzed_airPLS_modeFitFP-airPLS.mat")
+
+%revised licks
+load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-09-Nov-2022subjDataAnalyzed_airPLS_modeFitFP-airPLS.mat")
+
+
 experimentName= 'vp-vta-fp-airPLS';
 
 % % % DFF version
@@ -139,8 +144,6 @@ fp_manuscript_tidyTable();
 % will define periEventTable for subsequent scripts (control v experimental based on flag above)
 
 fp_manuscript_dataExclusion();
-
-
 
 
 %% Latency correlation
