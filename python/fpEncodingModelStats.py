@@ -196,8 +196,8 @@ dfTemp= dfTemp.loc[~ind,:]
 
 subjects= dfTemp.subject.unique()
 
-#run only specific subjects
-subjects= [14,15,19]
+##run only specific subjects
+# subjects= [14,15,19]
 
 
 #intialize a df to combine all data?

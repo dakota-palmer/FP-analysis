@@ -82,7 +82,6 @@ groupHierarchyTrialID = ['stage',
 groupHierarchyEventType = ['stage',
                            'subject', 'trainDayThisStage', 'trialType', 'fileID', 'trialID', 'eventType']
 
-
 #%%-- Preliminary data analyses
 
 # Add trainDay variable (cumulative count of sessions within each subject)
@@ -454,6 +453,103 @@ dfTemp['trialLickUS'] = dfTemp.loc[(dfTemp.eventType == 'lickUS')].groupby([
 #assign back to df
 dfTidy= dfTemp.copy()
 
+
+#%% DP 2022-11-18 define inPort trials 
+
+# ID trials where animal was inPort already at cue onset
+# In early versions of DS training code, reinforcement occurred if inPort at cue onset
+# so may want to exclude these trials
+
+
+#handled timestamps==cue onsets in fpImportDataTidy by sorting by trialID prior to assigning
+
+#may also consider out<PEtime && UStime present
+
+#now just need to check if inPort by seeing if port exit precedes port entry (is the closest timestamp a port entry or exit)
+# ~~alternatively could probably go based off UStime but want to mirror matlab 
+# so compare
+
+
+## get the first eventTime for each eventType for each trial
+## unstack and
+## compare PEtime and out, if out occurs first, mark as inPort
+
+test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
+
+test2= test.unstack()
+
+ind= []
+ind= test2.out < test2.PEtime
+
+#a
+# ind= ind.values
+
+# test3= test2.reset_index();
+
+# test4= test3.loc[ind,:]
+
+# # #have the trials, now merge back into dfTidy
+
+# # test5= test4.set_index(['fileID','trialID'])
+
+# # dfTemp= dfTidy.set_index(['fileID','trialID'])
+
+# # dfTemp= dfTemp.merge(test5)
+
+#b- good
+#try with simply indexing 'fileID','trialID'
+#since this is the index of the groupby results, we can set index on these in dfTidy and assign variable accordingly
+
+ind= []
+ind= test2.out < test2.PEtime
+
+# dfTemp= dfTidy.set_index(['fileID','trialID'])
+
+# dfTemp.loc[ind,'inPort']= 1
+
+# dfTemp.reset_index(inplace=True)
+
+dfTidy.set_index(['fileID','trialID'], inplace=True)
+
+dfTidy.loc[ind,'inPort']= 1
+
+dfTidy.reset_index(inplace=True)
+
+
+
+# test= dfTidy.columns
+
+# #id events that happen before or at trial start
+# test= dfTidy.loc[dfTidy.eventTime-dfTidy.trialStart<=0]
+
+# test2= test.loc[test.fileID==test.fileID.min()]
+
+# sns.relplot(data=test2, x='eventTime', y='trialID', hue='eventType')
+
+
+# test2= test.copy()
+# sns.relplot(data=test2, x='eventTime', y='fileID', hue='eventType')
+
+
+#finding lots of UStime, some PEtime, some lickTime
+
+# #latency is not exactly 0 for some reason there are very small differences
+# test= dfTidy.loc[dfTidy.eventLatency==0]
+
+# test= dfTidy.loc[dfTidy.eventLatency.round()==0]
+
+# test2= test.loc[test.fileID==test.fileID.min()]
+
+
+# sns.relplot(data=test2, x='eventTime', y='trialID', hue='eventType')
+
+
+#they're included in the cumcount() of events
+#eg trialUS, trialPE, trialLick
+
+#TODO: lick cleaning mirroring matlab
+
+
 #%% Count events within 10s of cue onset (cue duration in final stage)  
 #this is mainly for comparing progression/learning between stages since cueDuration varies by stage
 
@@ -495,8 +591,18 @@ dfTidy= dfTidy.set_index(['fileID','trialID'])
 
 dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
 
-#reset index to eventID
+# reset index to eventID
 dfTidy= dfTidy.reset_index().set_index(['eventID'])
+# dfTidy.reset_index(inplace=True)
+
+# overwrite inPort outcomes (determined in section above)
+ind= dfTidy.inPort==1
+
+# dfTidy.loc[ind,'trialOutcomeBeh']= 'inPort'+dfTidy.trialOutcomeBeh
+dfTidy.loc[ind,'trialOutcomeBeh10s']= 'inPort+'+dfTidy.trialOutcomeBeh10s
+
+# #drop inPort column (redundant now)
+dfTidy= dfTidy.drop(['inPort'], axis=1)
 
 
 #%% Calculate probability of behavioral outcome within first 10s of trial 
@@ -667,6 +773,8 @@ ax.vlines(x=dfPlot.loc[dfPlot.eventType=='NStime', 'eventTime'], ymin=ax.get_yli
 ax.legend()
 
 
+#%% ---------------------------------------- TRIALID REVISION -------------
+
 #%%-- Revise TrialID and Epocs
 
 #convert trials trials to be all time from cue onset: next cue start, with 'Cue','Reward','ITI','Pre-Cue' epocs? 
@@ -822,6 +930,68 @@ ax.legend()
 
 #%%-- Conduct trial-based analyses AFTER  revising trialID
 
+#%% DP 2022-12-1 define inPort trials 
+
+# ID trials where animal was inPort already at cue onset
+# In early versions of DS training code, reinforcement occurred if inPort at cue onset
+# so may want to exclude these trials
+
+
+#handled timestamps==cue onsets in fpImportDataTidy by sorting by trialID prior to assigning
+
+#may also consider out<PEtime && UStime present
+
+#now just need to check if inPort by seeing if port exit precedes port entry (is the closest timestamp a port entry or exit)
+# ~~alternatively could probably go based off UStime but want to mirror matlab 
+# so compare
+
+
+## get the first eventTime for each eventType for each trial
+## unstack and
+## compare PEtime and out, if out occurs first, mark as inPort
+
+test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
+
+test2= test.unstack()
+
+ind= []
+ind= test2.out < test2.PEtime
+
+#a
+# ind= ind.values
+
+# test3= test2.reset_index();
+
+# test4= test3.loc[ind,:]
+
+# # #have the trials, now merge back into dfTidy
+
+# # test5= test4.set_index(['fileID','trialID'])
+
+# # dfTemp= dfTidy.set_index(['fileID','trialID'])
+
+# # dfTemp= dfTemp.merge(test5)
+
+#b- good
+#try with simply indexing 'fileID','trialID'
+#since this is the index of the groupby results, we can set index on these in dfTidy and assign variable accordingly
+
+ind= []
+ind= test2.out < test2.PEtime
+
+# dfTemp= dfTidy.set_index(['fileID','trialID'])
+
+# dfTemp.loc[ind,'inPort']= 1
+
+# dfTemp.reset_index(inplace=True)
+
+dfTidy.set_index(['fileID','trialID'], inplace=True)
+
+dfTidy.loc[ind,'inPort']= 1
+
+dfTidy.reset_index(inplace=True)
+
+
 #%% Count events within 10s of cue onset (cue duration in final stage)  
 #this is mainly for comparing progression/learning between stages since cueDuration varies by stage
 
@@ -865,6 +1035,17 @@ dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
 
 dfTidy.reset_index(inplace=True)
 dfTidy.set_index(['eventID'], inplace=True)
+
+#2022-12-1
+# overwrite inPort outcomes (determined in section above)
+ind= dfTidy.inPort==1
+
+# dfTidy.loc[ind,'trialOutcomeBeh']= 'inPort'+dfTidy.trialOutcomeBeh
+dfTidy.loc[ind,'trialOutcomeBeh10s']= 'inPort+'+dfTidy.trialOutcomeBeh10s
+
+# #drop inPort column (redundant now)
+dfTidy= dfTidy.drop(['inPort'], axis=1)
+
 
 #%% Calculate Probability of behavioral outcome for each trial type. 
 #This is normalized so is more informative than simple count of trials. 

@@ -578,12 +578,28 @@ df.reset_index(drop=True, inplace=True)
 
 #%% Sort by eventType (to ensure correct trialID ffill)
 
+#in importDataTidy script prior to adding trialIDs, should by sorted by timestamp and eventType so that cues occur FIRST in index order and can rely on ffill() for trialID 
+
+# test= df.loc[df.fileID==df.fileID.min()]
+
+# test2= test.sort_values(['fileID','cutTime','eventType'])
+
+# test3= test.sort_values(['fileID','cutTime','trialID'])
+
+
 # df= df.sort_values(['fileID','cutTime','eventType'])
+# 
+
+#if you sort by cutTime, trialID it ensures that cues come first with shared timestamps since only those have trialIDs at this point.
 
 #sort by time, trialID within file making sure that the Trial events (cues) are first
-
 df= df.sort_values(['fileID','cutTime','trialID'])
 
+
+#% dp 2022-11-21 trying to fix inPort trials
+#I think sorting above should handle event timestamps equivalent to cue onset, so in analyze script do the pox vs lox comparison
+#below may be useful
+test= df.loc[df.eventType.notnull()]
 
 #% dp 3/7/22 finding UStime with same timestamp as DStime being assigned to ITI instead of trial (must be from inport trial)
 

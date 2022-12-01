@@ -222,6 +222,18 @@ contVars= ['reblue','repurple']
 # #may be able to add regression line to jointplot here
 
 
+#%% EXCLUDE TRIALS based on behavior
+# exclude inPort trials
+
+ind= []
+ind= dfTidy.trialOutcomeBeh10s.str.contains('inPort')
+
+
+#just make the signal nan
+dfTidy.loc[ind,'reblue']= None
+dfTidy.loc[ind, 'repurple']= None
+
+
 #%% FP preprocessing- df/f
 
 from customFunctions import execute_controlFit_dff
@@ -230,19 +242,21 @@ isosbesticControl=True
 filterWindow= 40    
 
 
-# run dff for each file individually
-groups= dfTidy.groupby('fileID')
+# # run dff for each file individually
+# groups= dfTidy.groupby('fileID')
     
-for name, group in groups:
+# for name, group in groups:
     
-    norm_data= []
-    control_fit= []
+#     norm_data= []
+#     control_fit= []
     
-    norm_data, control_fit= execute_controlFit_dff(dfTidy.loc[group.index,'repurple'], dfTidy.loc[group.index,'reblue'], isosbesticControl, filterWindow)
+#     norm_data, control_fit= execute_controlFit_dff(dfTidy.loc[group.index,'repurple'], dfTidy.loc[group.index,'reblue'], isosbesticControl, filterWindow)
 
     
-    dfTidy.loc[group.index, 'norm_data']= norm_data
-    dfTidy.loc[group.index, 'control_fit']= control_fit
+#     dfTidy.loc[group.index, 'norm_data']= norm_data
+#     dfTidy.loc[group.index, 'control_fit']= control_fit
+
+
 
 # # #--test subset file
 # test= dfTidy.loc[dfTidy.fileID== dfTidy.fileID.min()]
@@ -287,7 +301,7 @@ for name, group in groups:
 # modeSignalNorm= 'dffMatlab'
 
 modeSignalNorm= 'airPLS' #simply for filenames
-
+0
 ## Define whether to z-score peri-event dF/F or keep as dF/F
 
 modePeriEventNorm= 'z'
@@ -299,7 +313,7 @@ modePeriEventNorm= 'z'
 #todo: save the OG signal here to compare against post-python preprocessing ? memory intensive
     
 #for now just test specific fileID of interest
-dfTidy= dfTidy.loc[dfTidy.fileID==180]
+# dfTidy= dfTidy.loc[dfTidy.fileID==180]
 
 
 ## keeping OG signals memory intensive so dont unless debugging
@@ -320,7 +334,7 @@ if modeSignalNorm== 'dff':
 stagesToInclude= [7]
 
 #number of sessions to include, 0 includes final session of this stage+n
-nSessionsToInclude= 2
+nSessionsToInclude= 1
 
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
@@ -357,6 +371,15 @@ dfTidy['maxSesThisStage']= dfTidy.groupby(['stage','subject'])['trainDayThisStag
 dfTidy= dfTidy.loc[dfTidy.trainDayThisStage>= dfTidy.maxSesThisStage-nSessionsToInclude]
 
 dfTidy= dfTidy.drop('maxSesThisStage', axis=1)
+
+#%% Exclude trials based on PE outcome
+
+test= dfTidy.columns
+
+# test= dfTidy.trialOutcomeBeh10s.unique()
+
+# test= dfTidy.groupby(['fileID']).cumcount()==0
+
 
 #%% Define peri-event z scoring parameters
 fs= 40
@@ -789,13 +812,13 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
       
         #debugging
         
-        #z score Result and raw Result are equivalent. why
-        test1=(zResult[zResult.notnull()])
-        test2=(rawResult[rawResult.notnull()])
+        # #z score Result and raw Result are equivalent. why
+        # test1=(zResult[zResult.notnull()])
+        # test2=(rawResult[rawResult.notnull()])
         
-        all(test1==test2)
+        # all(test1==test2)
         
-        #individually they are different
+        # #individually they are different
         
 
     
@@ -1693,130 +1716,130 @@ for subj in dfTemp.subject.unique():
 
 #%% 2022-10-20 try heatmaps of peri-event data
 
-for subj in dfTemp.subject.unique():
+# for subj in dfTemp.subject.unique():
     
-    f, ax= plt.subplots(1,2, sharex=False, sharey=False) 
+#     f, ax= plt.subplots(1,2, sharex=False, sharey=False) 
     
-    dfPlot= dfTemp.loc[dfTemp.subject==subj,:].copy()
+#     dfPlot= dfTemp.loc[dfTemp.subject==subj,:].copy()
     
-    y= 'reblue-z-periDS'
-    x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
-    units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
-    
-
-    #exclude nans
-    dfPlot= dfPlot.loc[dfPlot[y].notna(),:]
-    
-    # g= sns.heatmap(ax=ax[0], data=dfPlot, x=x, y=units)
-
-    #for some reason heatmap doesn't seem to like categoricals and other dtypes
-    #so subset only col of interest or convert these beforehand?
-    
-    dfPlot2= dfPlot[[x,y,units]].copy()
+#     y= 'reblue-z-periDS'
+#     x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+#     units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
     
 
+#     #exclude nans
+#     dfPlot= dfPlot.loc[dfPlot[y].notna(),:]
     
-    # sns.heatmap seems to specifically like pivot table
-    #pivot (y,x,z)
-    dfPlot2 = dfPlot2.pivot(units, x, y)
+#     # g= sns.heatmap(ax=ax[0], data=dfPlot, x=x, y=units)
+
+#     #for some reason heatmap doesn't seem to like categoricals and other dtypes
+#     #so subset only col of interest or convert these beforehand?
     
-    #-try matplotlib-- below works?
-    plt.subplot()
-    plt.imshow(dfPlot2)
+#     dfPlot2= dfPlot[[x,y,units]].copy()
     
-    #overlay PE latency
-    #recall dfPlot.trialPE is cumcount of events in trial, so want ==0 for first
-    ind=[]
-    ind= dfPlot.trialPE10s==0
+
     
-    dfPlot3= dfPlot[ind].copy()
+#     # sns.heatmap seems to specifically like pivot table
+#     #pivot (y,x,z)
+#     dfPlot2 = dfPlot2.pivot(units, x, y)
+    
+#     #-try matplotlib-- below works?
+#     plt.subplot()
+#     plt.imshow(dfPlot2)
+    
+#     #overlay PE latency
+#     #recall dfPlot.trialPE is cumcount of events in trial, so want ==0 for first
+#     ind=[]
+#     ind= dfPlot.trialPE10s==0
+    
+#     dfPlot3= dfPlot[ind].copy()
         
     
-    # https://www.python-graph-gallery.com/heatmap-for-timeseries-matplotlib
+#     # https://www.python-graph-gallery.com/heatmap-for-timeseries-matplotlib
     
-    # plt.pcolormesh(dfPlot[x], dfPlot[units], dfPlot[y])
-    plt.subplot()
+#     # plt.pcolormesh(dfPlot[x], dfPlot[units], dfPlot[y])
+#     plt.subplot()
     
-    h= plt.pcolormesh(dfPlot2)
+#     h= plt.pcolormesh(dfPlot2)
         
-    #overlay PE latency
-    #recall dfPlot.trialPE is cumcount of events in trial, so want ==0 for first
-    ind=[]
-    ind= dfPlot.trialPE10s==0
+#     #overlay PE latency
+#     #recall dfPlot.trialPE is cumcount of events in trial, so want ==0 for first
+#     ind=[]
+#     ind= dfPlot.trialPE10s==0
     
-    dfPlot3= dfPlot[ind].copy()
+#     dfPlot3= dfPlot[ind].copy()
         
     
-    g= sns.scatterplot(data=dfPlot3,x=x, y=units, color='red', alpha=0.5)
+#     g= sns.scatterplot(data=dfPlot3,x=x, y=units, color='red', alpha=0.5)
 
 
     
-    # g= sns.heatmap(ax= ax[0],data=dfPlot2, cmap='viridis')
+#     # g= sns.heatmap(ax= ax[0],data=dfPlot2, cmap='viridis')
 
-    #- for some reason x values are not lining up right between scatter and heat
-    # the axes starts at 0 instead of -5...
-    #what seems to be happening is the x labels on heatmap are 'str'bc pivoted columns. so can just convert data plotted to str too
+#     #- for some reason x values are not lining up right between scatter and heat
+#     # the axes starts at 0 instead of -5...
+#     #what seems to be happening is the x labels on heatmap are 'str'bc pivoted columns. so can just convert data plotted to str too
 
-    # https://stackoverflow.com/questions/60958223/how-to-line-plot-timeseries-data-on-a-bar-plot/60958889#60958889
-    # https://stackoverflow.com/questions/60614007/problem-in-combining-bar-plot-and-line-plot-python
+#     # https://stackoverflow.com/questions/60958223/how-to-line-plot-timeseries-data-on-a-bar-plot/60958889#60958889
+#     # https://stackoverflow.com/questions/60614007/problem-in-combining-bar-plot-and-line-plot-python
     
-    # this needs to be mapped onto the timeLock somehow.
-    g= sns.heatmap(ax= ax[0],data=dfPlot2, cmap='viridis', xticklabels=True)
+#     # this needs to be mapped onto the timeLock somehow.
+#     g= sns.heatmap(ax= ax[0],data=dfPlot2, cmap='viridis', xticklabels=True)
 
  
-    #see axes are str
-    g.set_xticklabels(g.get_xticklabels(), rotation=45)
-    test= g.get_xticklabels()
+#     #see axes are str
+#     g.set_xticklabels(g.get_xticklabels(), rotation=45)
+#     test= g.get_xticklabels()
 
 
-    # what if 2d hist instead of heatmap https://seaborn.pydata.org/examples/layered_bivariate_plot.html
-    #wont work, should be heatmap
-    # g= sns.histplot(data=dfPlot, x=x, y=units, hue=y) #cmap='viridis')
+#     # what if 2d hist instead of heatmap https://seaborn.pydata.org/examples/layered_bivariate_plot.html
+#     #wont work, should be heatmap
+#     # g= sns.histplot(data=dfPlot, x=x, y=units, hue=y) #cmap='viridis')
 
-    #convert relevant data to str prior to plotting over heatplot
-    dfPlot[x]= dfPlot[x].astype('string')
+#     #convert relevant data to str prior to plotting over heatplot
+#     dfPlot[x]= dfPlot[x].astype('string')
 
-    #scatter overlays    
-    # overlay cue onset 
-    # need to match up with categorical x
-    ax[0].axvline(x=0, linestyle='--', color='black', linewidth=2) 
+#     #scatter overlays    
+#     # overlay cue onset 
+#     # need to match up with categorical x
+#     ax[0].axvline(x=0, linestyle='--', color='black', linewidth=2) 
 
 
     
-    #overlay PE latency
-    #recall dfPlot.trialPE is cumcount of events in trial, so want ==0 for first
-    ind=[]
-    ind= dfPlot.trialPE10s==0
+#     #overlay PE latency
+#     #recall dfPlot.trialPE is cumcount of events in trial, so want ==0 for first
+#     ind=[]
+#     ind= dfPlot.trialPE10s==0
     
-    dfPlot3= dfPlot[ind].copy()
+#     dfPlot3= dfPlot[ind].copy()
         
-    # g= sns.scatterplot(ax= ax[0],data=dfPlot3, x='eventLatency', y=units, color='red', alpha=0.5)
-    g2= sns.scatterplot(ax= ax[0],data=dfPlot3, x=x, y=units, color='red', alpha=0.5)
+#     # g= sns.scatterplot(ax= ax[0],data=dfPlot3, x='eventLatency', y=units, color='red', alpha=0.5)
+#     g2= sns.scatterplot(ax= ax[0],data=dfPlot3, x=x, y=units, color='red', alpha=0.5)
 
 
 
 
-    g2= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
+#     g2= sns.lineplot(ax= ax[1], data= dfPlot, x=x, y=y, color='green', linewidth=1.5)
     
-    plt.axvline(x=0, linestyle='--', color='black', linewidth=2)
+#     plt.axvline(x=0, linestyle='--', color='black', linewidth=2)
 
 
 
     
-#    %dp 2022-10-21 in progress
+# #    %dp 2022-10-21 in progress
 
-    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+#     # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='green', units= units,estimator=None, alpha=0.5, linewidth=0.5)
 
 
-    # y= 'repurple-z-periDS'
-    # x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
-    # units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
+#     # y= 'repurple-z-periDS'
+#     # x= dfPlot.columns[((dfPlot.columns.str.contains('timeLock-z-periDS')) & (~dfPlot.columns.str.contains('trialID')))][0]
+#     # units= dfPlot.columns[((dfPlot.columns.str.contains('trialIDtimeLock-z-periDS')))][0]
     
-    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', linewidth=1.5)
+#     # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', linewidth=1.5)
     
-    # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
+#     # g= sns.lineplot(ax= ax[0], data= dfPlot, x=x, y=y, color='purple', units= units,estimator=None, alpha=0.5, linewidth=0.5)
     
-    # g.set(title=('subj-'+str(subj)+'peri-DS encoding model input')+'')
+#     # g.set(title=('subj-'+str(subj)+'peri-DS encoding model input')+'')
 
 
 
