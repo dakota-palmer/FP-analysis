@@ -13,8 +13,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
  
-import plotly.express as px #plotly is good for interactive plots (& can export as nice interactive html)
-import plotly.io as pio
+# import plotly.express as px #plotly is good for interactive plots (& can export as nice interactive html)
+# import plotly.io as pio
 
 #unfortunately doesn't seem plotly has built in easy support for stats things like SEM
 #you can plot it all, but requires separate calculation and more code

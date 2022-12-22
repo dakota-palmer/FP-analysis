@@ -26,16 +26,30 @@ dodge=0.6; %dodge is useful when drawing bars & points. Especially with categori
     
 % do this before first draw() call so applied on subsequent updates()
 
+% good for larger, full screen figures
 
+% text_options_DefaultStyle= {'font'; 'Arial'; 
+%     'interpreter'; 'none'; 
+%     'base_size'; 18; 
+%     'label_scaling'; 1;
+%    'legend_scaling'; 1; 
+%    'legend_title_scaling'; 1.02;
+%    'facet_scaling'; 1.02; 
+%    'title_scaling'; 1.05;
+%    'big_title_scaling'; 1.1};
+
+
+%good for smaller, manuscript figures
 text_options_DefaultStyle= {'font'; 'Arial'; 
     'interpreter'; 'none'; 
-    'base_size'; 18; 
+    'base_size'; 10; 
     'label_scaling'; 1;
    'legend_scaling'; 1; 
    'legend_title_scaling'; 1.02;
    'facet_scaling'; 1.02; 
    'title_scaling'; 1.05;
    'big_title_scaling'; 1.1};
+
 
 %% -- Default plot linestyles 
 %To be used to set the 'base_size' of lines e.g. like:

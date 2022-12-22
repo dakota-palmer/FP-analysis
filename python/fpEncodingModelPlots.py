@@ -950,22 +950,308 @@ saveFigCustom(f, modelStr+'-allSubj-'+'model-prediction', savePath)
 #Matching up fileIDs, load the peri-event FP data (from another df) OR compute here from dfTidyAnalyzed
 
 
-# get dates for each subject (for matlab comparison)
-test= kernelsAll.groupby(['subject'])['date'].unique()
+# get dates for each subject (for matlab comparison) 
+#get fileIDs included in model
+# test= kernelsAll.groupby(['subject'])['date'].unique()
+
+fileIDsModel= kernelsAll.groupby(['fileID'])['fileID'].unique()
 
 
 # #%% Load previously saved dfTidyAnalyzed (and other vars) from pickle
 dataPath2= r'./_output/'
 
-dfTidy= pd.read_pickle(dataPath+'dfTidyAnalyzed.pkl')
+dfTidy= pd.read_pickle(dataPath2+'dfTidyAnalyzed.pkl')
 
 #load any other variables saved during the import process ('dfTidymeta' shelf)
-my_shelf = shelve.open(dataPath+'dfTidymeta')
+my_shelf = shelve.open(dataPath2+'dfTidymeta')
 for key in my_shelf:
     globals()[key]=my_shelf[key]
 my_shelf.close()
 
-#double checking very specific files in stage 7 dff z 1 session?
+
+# Subset only fileIDs included in model
+ind= dfTidy.fileID.isin(fileIDsModel)
+
+dfTidy= dfTidy.loc[ind,:]
+
+
+#%% RUN PERI EVENT PLOT CODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# below copied from fpPeriEventTidy.py
+ 
+#%% Define events to include in peri-event analyses
+
+# eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
+
+eventsToInclude= kernels.eventType.unique()
+
+eventVars=eventsToInclude
+
+# eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
+
+# eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+
+
+#define trial vars to use as baseline (cues)
+#todo: save and recall trialVars for this
+baselineEvents= ['DStime']#, 'NStime']
+
+
+#%% Define whether to run on dF/F or raw signal!
+
+# modeSignalNorm= 'raw'
+
+modeSignalNorm= 'dff' 
+
+# modeSignalNorm= 'airPLS' #simply for filenames
+
+## Define whether to z-score peri-event dF/F or keep as dF/F
+
+modePeriEventNorm= 'z'
+
+
+#%% Define peri-event z scoring parameters
+fs= 40 #sampling frequency= 40hz
+
+preEventTime= 5 *fs # seconds x fs
+postEventTime= 15 *fs
+
+baselineTime= 10*fs
+
+
+#%% Define custom Z score function
+# FOR TIDY DATA, SINGLE eventType COLUMN
+
+#assume input eventCol is binary coded event timestamp, with corresponding cutTime value
+def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColBaseline, baselineTime):
+    
+    #want to groupby trial but can't strictly since want pre-cue data as baseline
+    #rearrange logical strucutre here a bit, go through and find all of the baseline events
+    #then find the get the first event in this trial. TODO: For now assuming 1 baseline event= 1 trial (e.g. 60 cues, 1 per trialID) 
+    preIndBaseline= df.index[df.eventType==eventColBaseline]-preEventTime
+    #end baseline at timestamp prior to baseline event onset
+    postIndBaseline= df.index[df.eventType==eventColBaseline]-1
+
+
+    ##initialize resulting series, which will be a column that aligns with original df index
+    zResult= np.empty(df.shape[0])
+    zResult= pd.Series(zResult, dtype='float64')
+    zResult.loc[:]= None
+    zResult.index= df.index
+    
+    timeLock= np.empty(df.shape[0])
+    timeLock= pd.Series(timeLock, dtype='float64')
+    timeLock.loc[:]= None
+    timeLock.index= df.index
+    
+    #save label cols for easy faceting
+    zEventBaseline= np.empty(df.shape[0])
+    zEventBaseline= pd.Series(zEventBaseline, dtype='string')
+    zEventBaseline.loc[:]= None
+    zEventBaseline.index= df.index
+    
+    zEvent= np.empty(df.shape[0])
+    zEvent= pd.Series(zEvent, dtype='string')
+    zEvent.loc[:]= None
+    zEvent.index= df.index
+
+    #new trialID based on timeLock (since it will bleed through trials)
+    trialIDtimeLock= np.empty(df.shape[0])
+    trialIDtimeLock= pd.Series(zEventBaseline, dtype='float64')
+    trialIDtimeLock.loc[:]= None
+    trialIDtimeLock.index= df.index
+    
+    #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
+    #RESTRICTING to 1st event in trial
+    for event in range(preIndBaseline.size):
+        #assumes 1 unique trialID per baseline event!!!
+        trial= df.loc[postIndBaseline[event]+1,'trialID']
+        
+        dfTemp= df.loc[df.trialID==trial].copy()
+        
+        #get events in this trial
+        dfTemp= dfTemp.loc[dfTemp.eventType==eventCol]
+        
+        #get index of only first event in this trial
+        try: #embed in try: in case there are no events
+        
+        #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
+            preInd= dfTemp.index[0]- preEventTime
+            postInd=dfTemp.index[0] +postEventTime
+            
+            raw= df.loc[preInd:postInd, signalCol]
+            baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol]
+            
+            z= (raw-baseline.mean())/(baseline.std())
+                
+            zResult.loc[preInd:postInd]= z
+            
+            timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
+    
+
+        #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
+            zEventBaseline.loc[preInd:postInd]= eventColBaseline
+            
+            zEvent.loc[preInd:postInd]= eventCol
+            
+            trialIDtimeLock.loc[preInd:postInd]= event
+    
+        except:
+            continue
+        
+        #round timeLock so that we have exact shared X values for stats and viz!
+        timLock= np.round(timeLock, decimals=3)
+    
+        
+    return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock
+        
+
+#%% Peri-event z-scoring ; programatic loop through eventsToInclude
+#Iterate through files using groupby() and conduct peri event Z scoring
+#iterating through fileID to gurantee no contamination between sessions
+ 
+groups= dfTidy.groupby('fileID')
+
+#currently fxn will go through and z score surrounding ALL events. Need to restrict to FIRST event per trial? 
+
+for name, group in groups:
+
+    for thisBaselineEventType in baselineEvents:
+                
+        for thisEventType in eventsToInclude:
+                          
+                #conditional to skip different cue types
+                if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
+                    continue
+                    
+                if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
+                    continue
+                    
+            
+                df= group
+                signalCol='reblue'
+                eventCol= thisEventType
+                preEventTime= preEventTime
+                postEventTime= postEventTime
+                eventColBaseline= thisBaselineEventType
+                baselineTime= baselineTime
+            
+                #TODO: name here is temp bandaid to match rest of code, simply getting rid of last 4 chars '-time' after DS/NS
+                
+                colName= ['blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType]
+                colName2= ['timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType]
+    
+                
+                z, timeLock, zEventBaseline, zEvent, trialIDtimeLock =  zscoreCustom(group, 'reblue', thisEventType, preEventTime, postEventTime, thisBaselineEventType, baselineTime)
+                dfTidy.loc[group.index,colName]= z
+                dfTidy.loc[group.index, colName2]= timeLock
+                
+                
+                #TODO: lots of redundant columns really but preventing bleedthrough between trialID as well as eventTypes
+                #would be best fixed by some long format solution? maybe a groupby (['fileID', 'zEventBaseline','zEvent']).cumcount()? still dont think it solves bleedthrough btwn eventtypes
+                colName= thisBaselineEventType[0:-4]+'-'+thisEventType
+
+                # dfTidy.loc[group.index, ['zEventBaseline'+colName]]= zEventBaseline
+                # dfTidy.loc[group.index, ['zEvent'+colName]]= zEvent
+                dfTidy.loc[group.index, ['trialIDtimeLock-z-peri'+colName]]= trialIDtimeLock
+
+
+
+#%% PERI EVENT PLOTS ~~~~~~~~~~~~~~~~
+
+# ---- Plot Kernels alongside Peri-Event z scored traces 
+
+    #subset data
+    dfPlot= dfTidy.copy()
+
+    for thisBaselineEventType in baselineEvents:
+        
+        f, ax = plt.subplots(2,len(eventsToInclude), sharey=True, sharex=True)
+        
+        for thisEventType in eventsToInclude:
+                
+             #conditional to skip different cue types
+            if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
+                continue
+                
+            if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
+                continue
+            
+            x= 'timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+
+            y= 'blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+            
+            z= 'trialIDtimeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+            
+            # axes= np.where(eventsToInclude==thisEventType)
+            axes= np.where(thisEventType== eventsToInclude)
+            axes= axes[0][0] #returning nested array for some reason
+        
+            # here there is error potential bleedthrough between trials. idk how seaborn is grouping the data for this
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+            # woof this is looking wquite different
+            g= sns.lineplot(ax= ax[0,axes],  data=dfPlot, sort=False, x=x,y=y, hue='subject', legend='full')
+
+            #style- no
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, style=z, hue='subject', legend='full')
+
+            #perhaps sorting before plotting will help- no
+            # dfPlot3= dfPlot3.sort_values([z,x])
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+            # #maybe set index will help- no, very very slow
+            # dfPlot3= dfPlot3.set_index([z])
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+            #drop na then set index?
+            dfPlot2= dfPlot.loc[dfPlot[z].notnull()]
+            dfPlot2= dfPlot.set_index([z])
+            
+            g= sns.lineplot(ax= ax[0,axes],  data=dfPlot2, x=x,y=y, hue='subject', legend='full')
+
+            #define units- no, requires plotting all
+            
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, units=z, estimator=None, hue='subject', legend='full')
+
+            
+            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, units='trainDayThisStage', estimator=None, x=x,y=y, hue='subject')
+
+            
+            ax[0,axes].axvline(x=0, linestyle='--', color='black', linewidth=2)
+            
+            ax[0,axes].set(xlabel= 'time from event (s)')
+            ax[0,axes].set(ylabel= 'GCaMP Z-score (based on pre-cue baseline')
+            ax[0,axes].set(title= thisEventType)
+
+            
+            # plt.xlabel('time from event (s)')
+            # plt.ylabel('GCaMP Z-score (based on pre-cue baseline')
+            # plt.title(thisEventType)
+            
+            # f.suptitle('allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials')
+            f.suptitle('allSubj-'+'-stage-'+'-periEventAll-'+thisBaselineEventType+'trials')
+
+
+            #-- subplot kernels
+            dfPlot3= kernelsAll.loc[kernelsAll.eventType==thisEventType]
+            
+            g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha=0.3)
+
+            g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+
+
+            g.set(title=('allSubj-kernels-'))#+modeCue+'-trials-'+modeSignal))
+            g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
+
+
+        #%% 
+        # saveFigCustom(f, 'allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials', savePath)
+
+
+
+
+
+# %% #double checking very specific files in stage 7 dff z 1 session?
 
 
 

@@ -334,7 +334,7 @@ if modeSignalNorm== 'dff':
 stagesToInclude= [7]
 
 #number of sessions to include, 0 includes final session of this stage+n
-nSessionsToInclude= 1
+nSessionsToInclude= 2
 
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))

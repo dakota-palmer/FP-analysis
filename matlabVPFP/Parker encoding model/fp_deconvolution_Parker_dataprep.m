@@ -17,8 +17,11 @@ fs= 40; %make sure the sampling frequency is correct!
 savePath= strcat(pwd,'\data_to_input\');
 
 %Exclude subjects here if necessary
-excludedSubjs= {}'%{'rat12','rat13'}; %cell array with strings of excluded subj fieldnames
+% excludedSubjs= {}'%{'rat12','rat13'}; %cell array with strings of excluded subj fieldnames
 % 
+excludedSubjs= {'rat12','rat13','rat17'}; %cell array with strings of excluded subj fieldnames
+
+
 subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
 subjectsAnalyzed= fieldnames(subjDataAnalyzed);
 

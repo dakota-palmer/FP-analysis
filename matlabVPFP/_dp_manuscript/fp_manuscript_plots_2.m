@@ -151,7 +151,7 @@ end
 
 % FacetGrid with sesSpecialLabel = Row
 clear i;
-figure();
+h= figure();
 
 cmapGrand= cmapBlueGrayGrand;
 cmapSubj= cmapBlueGraySubj;
@@ -184,6 +184,7 @@ i.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styl
 titleFig= 'Fig 2a)';   
 i.set_title(titleFig); %overarching fig title must be set before first draw call
 
+
 %- first draw call-
 i().draw();
 
@@ -202,17 +203,81 @@ i().axe_property('XLim',[-2,10]);
 
 i().geom_vline('xintercept',0, 'style', 'k--', 'linewidth', linewidthReference); %overlay t=0
 
+%-initialize overall Figure for complex subplotting
+fig2Handle= figure();
+
+
+%-copy to overall Figure as subplot
+%this is a soft copy so need to draw before i is cleared/changed... because i is handle type object..., like if i is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
+fig2(1,1)= copy(i);
+% %copyobj doesn't seem usable for hard copy
+% fig2(1,1)= copyobj(i,fig2Handle);
+
+% set(0,'CurrentFigure',fig2Handle);%switch to this figure before drawing
+% figure(fig2Handle);
+% title('test fig2');
+fig2(1,1).draw();
+
 %- final draw call
-i.draw() 
+% set(0,'CurrentFigure',h)%switch to this figure before drawing
+% figure(h);
+i.draw();
 
 % titleFig= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');   
 
 titleFig= strcat('figure2a-learning-fp-periCue');   
 
-saveFig(gcf, figPath, titleFig, figFormats);
+% for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
+figSize1= [100, 100, 430, 600];
+
+figSize2= [100, 100, 650, 600];
+
+%2022-12-16 playing with figure size
+% set(gcf,'Position', figSize1);
+% i.redraw()
+
+% i.set_layout_options('legend_position',0,0.5,0.5,0.5]);
+% i.draw()
+% 
+% i.set_layout_options('legend_width',0.10);
+% i.redraw()
+
+%try gramm export 
+i.export('file_name',strcat(titleFig,'_Gramm_exported'),'export_Path',figPath,'width',11.5,'units','centimeters')
+
+titleFig= strcat(titleFig,'matlab_Saved');
+
+% saveFig(gcf, figPath, titleFig, figFormats, figSize2);
+
+%-- TODO: maybe try https://stackoverflow.com/questions/24531402/matlab-scale-figures-for-publishing-exact-dimensions-and-font-sizes
+
+% - also note white space min here https://interfacegroup.ch/preparing-matlab-figures-for-publication/
+
+
+%-- Try embedding in 1 big figure?
+%will need all subplots to fit within whole fig
+
+% fig1(1,1)= i;
+
+% .copy() should work, see here- https://github.com/piermorel/gramm/issues/23
+% i think .copy() needs to happen before draw() or update() calls... so
+% would need to copy to figure and update prior to each of those
+% 
+%seems to work if you put it before the final draw call!
+% but soft copy, see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
+
+% fig1= copy(i);
+% figure;
+% 
+% fig1.draw();
+% 
+% fig1(1,1)= copy(i);
+% 
+% fig1(1,1).draw();
 
 %% Fig 2a ----- Bar plots of AUC ------
-clear i; figure;
+clear i; 
+h= figure;
 
 dodge= 	1; %if dodge constant between point and bar, will align correctly
 width= 1.8; %good for 2 bars w dodge >=1
@@ -315,8 +380,17 @@ i.axe_property('YLim',[-1,16]);
 %horz line @ zero
 i.geom_hline('yintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
 
+%-copy to overall Figure as subplot
+%this is a soft copy so need to draw before i is cleared/changed... because i is handle type object..., like if i is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
+fig2(2,1)= copy(i);
+
+% set(0,'CurrentFigure',fig2Handle);%switch to this figure before drawing
+
+fig2(2,1).draw();
 
 %- final draw call-
+set(0,'CurrentFigure',h);%switch to this figure before drawing
+
 i().draw();
 
 

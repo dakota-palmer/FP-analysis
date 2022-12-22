@@ -152,6 +152,17 @@ dfTemp= dfTemp.loc[~dfTemp.subject.isin(subjToExclude)]
 #TODO: How to handle different subjects? should run separately in loop or use as predictor?
 #unlike matlab version of code this is one big table with everything
 
+
+#define predictor and response variables:
+    
+#will save X and y as index instead of copying data to save mem
+    
+#regressors/predictors will be all remaining columns that are not idVars or contVars
+# col= ~dfTemp.columns.isin(idVars+contVars+['trainDayThisStage','trialID','timeLock-z-periDS-DStime','timeLock-z-periNS-NStime'])
+
+#regressand/response variable is fp signal
+y= 'reblue-z-periDS'
+
 #TESTING with subset
 # dfTemp= dfTemp.loc[dfTemp.fileID==dfTemp.fileID.min()]
 
@@ -167,20 +178,20 @@ dfTemp= dfTemp.loc[~dfTemp.subject.isin(subjToExclude)]
 #pd.shift() timeshift introduced nans at beginning and end of session 
 #(since there were no observations to fill with); Exclude these timestamps
 #regression inputs should not have any nan & should be finite; else  will throw error
+
+#nans introduced when removing inPort trials
+# dfTemp= dfTemp.loc[~dfTemp.isin([np.nan, np.inf, -np.inf]).any(1),:]
+
+# exclude nans from inPort trials... mark for exclusion
+ind= dfTemp[y].isnull()
+
+dfTemp.loc[ind,'exclude']= 1
+
 # --shouldn't happen now since fill_values=
 
 #artifact removal introduces nans tho
 # dfTemp= dfTemp.loc[~dfTemp.isin([np.nan, np.inf, -np.inf]).any(1),:]
     
-#define predictor and response variables:
-    
-#will save X and y as index instead of copying data to save mem
-    
-#regressors/predictors will be all remaining columns that are not idVars or contVars
-# col= ~dfTemp.columns.isin(idVars+contVars+['trainDayThisStage','trialID','timeLock-z-periDS-DStime','timeLock-z-periNS-NStime'])
-
-#regressand/response variable is fp signal
-y= 'reblue-z-periDS'
 
 # Remove invalid observations (nan, inf) in these columns
 # since artifact removal introduces nans 
