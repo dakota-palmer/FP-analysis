@@ -150,8 +150,13 @@ end
 
 
 % FacetGrid with sesSpecialLabel = Row
+%2022-12-22 instead of clearing gramm objects, want to copy() them as
+%subplots into single large Figure. To do so, want to save each object
+%instead of clearing between so that single draw call can be made (e.g.
+%instead of i, make i1, i2, i3... etc corresponding to single Fig)
 clear i;
-h= figure();
+% h= figure();
+figure;
 
 cmapGrand= cmapBlueGrayGrand;
 cmapSubj= cmapBlueGraySubj;
@@ -204,19 +209,23 @@ i().axe_property('XLim',[-2,10]);
 i().geom_vline('xintercept',0, 'style', 'k--', 'linewidth', linewidthReference); %overlay t=0
 
 %-initialize overall Figure for complex subplotting
-fig2Handle= figure();
+% fig2Handle= figure();
 
 
 %-copy to overall Figure as subplot
 %this is a soft copy so need to draw before i is cleared/changed... because i is handle type object..., like if i is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
 fig2(1,1)= copy(i);
+
+figTest(1,:)= copy(i);
+
+%save drawing til end
 % %copyobj doesn't seem usable for hard copy
 % fig2(1,1)= copyobj(i,fig2Handle);
 
 % set(0,'CurrentFigure',fig2Handle);%switch to this figure before drawing
 % figure(fig2Handle);
 % title('test fig2');
-fig2(1,1).draw();
+% fig2(1,1).draw();
 
 %- final draw call
 % set(0,'CurrentFigure',h)%switch to this figure before drawing
@@ -276,8 +285,9 @@ titleFig= strcat(titleFig,'matlab_Saved');
 % fig1(1,1).draw();
 
 %% Fig 2a ----- Bar plots of AUC ------
-clear i; 
-h= figure;
+clear i1; 
+% h= figure;
+figure;
 
 dodge= 	1; %if dodge constant between point and bar, will align correctly
 width= 1.8; %good for 2 bars w dodge >=1
@@ -320,50 +330,50 @@ end
 
 %mean between subj
 group=[];
-i= gramm('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
+i1= gramm('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
 
-i.facet_grid([],data.sesSpecialLabel);
+i1.facet_grid([],data.sesSpecialLabel);
 
-i.set_color_options('map',cmapGrand);
+i1.set_color_options('map',cmapGrand);
 
 %mean bar for trialType
-i.stat_summary('type','sem','geom',{'bar', 'black_errorbar'}, 'dodge', dodge, 'width', width);
+i1.stat_summary('type','sem','geom',{'bar', 'black_errorbar'}, 'dodge', dodge, 'width', width);
 
-i.set_line_options('base_size',linewidthGrand)
+i1.set_line_options('base_size',linewidthGrand)
 
 
 %- Things to do before first draw call-
-i.set_names('column', '', 'x','Trial Type','y','GCaMP (Z-score)','color','Trial Type');
+i1.set_names('column', '', 'x','Trial Type','y','GCaMP (Z-score)','color','Trial Type');
 
-i.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+i1.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
 
 titleFig= 'Fig 2a) inlay';   
-i.set_title(titleFig); %overarching fig title must be set before first draw call
+i1.set_title(titleFig); %overarching fig title must be set before first draw call
 
 %- first draw call-
-i.draw()
+i1.draw()
 
 %- Draw lines between individual subject points (group= subject, color=[]);
 group= data2.subject;
-i.update('x', data2.trialTypeLabel,'y',data2.periCueBlueAuc,'color',[], 'group', group)
+i1.update('x', data2.trialTypeLabel,'y',data2.periCueBlueAuc,'color',[], 'group', group)
 
-% i.geom_line('alpha',0.3); %individual trials way too much
-i.stat_summary('type','sem','geom','line');
+% i1.geom_line('alpha',0.3); %individual trials way too much
+i1.stat_summary('type','sem','geom','line');
 
-i.set_line_options('base_size',linewidthSubj);
+i1.set_line_options('base_size',linewidthSubj);
 
-i.set_color_options('chroma', chromaLineSubj); %black lines connecting points
+i1.set_color_options('chroma', chromaLineSubj); %black lines connecting points
 
-i.draw();
+i1.draw();
 
 %ind subj mean points
-i.update('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
+i1.update('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
 
-i.stat_summary('type','sem','geom','point', 'dodge', dodge);
+i1.stat_summary('type','sem','geom','point', 'dodge', dodge);
 
-i.set_color_options('map',cmapSubj); 
+i1.set_color_options('map',cmapSubj); 
 
-i.no_legend(); %avoid duplicate legend from other plots (e.g. subject  grand colors)
+i1.no_legend(); %avoid duplicate legend from other plots (e.g. subject  grand colors)
 
 %-set plot limits-
 
@@ -373,31 +383,62 @@ i.no_legend(); %avoid duplicate legend from other plots (e.g. subject  grand col
 lims= [1-.6,(numel(trialTypes))+.6];
 
 
-i.axe_property('XLim',lims);
+i1.axe_property('XLim',lims);
 
-i.axe_property('YLim',[-1,16]);
+i1.axe_property('YLim',[-1,16]);
 
 %horz line @ zero
-i.geom_hline('yintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
+i1.geom_hline('yintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
 
 %-copy to overall Figure as subplot
-%this is a soft copy so need to draw before i is cleared/changed... because i is handle type object..., like if i is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
-fig2(2,1)= copy(i);
+%this is a soft copy so need to draw before i1 is cleared/changed... because i1 is handle type object..., like if i1 is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
+fig2(2,1)= copy(i1);
+
+figTest(2,:)= copy(i1);
+%save drawing until end
 
 % set(0,'CurrentFigure',fig2Handle);%switch to this figure before drawing
 
-fig2(2,1).draw();
+% fig2(2,1).draw();
 
 %- final draw call-
-set(0,'CurrentFigure',h);%switch to this figure before drawing
+% set(0,'CurrentFigure',h);%switch to this figure before drawing
 
-i().draw();
+i1().draw();
 
 
 % titleFig= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');
 titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');   
 
-saveFig(gcf, figPath, titleFig, figFormats);
+% saveFig(gcf, figPath, titleFig, figFormats);
+
+%% Draw the Figure2
+
+%for some reason drawing on separate figures (overwriting i fig and i1 fig
+%respectively) instead of drawing both on new figure...
+
+%seems to work fine if you don't make new figure() between gramm objects
+%declaring a new figure doens't matter, it will always draw on the first
+%fig.
+% figure();
+fig2.draw();
+
+%maybe because should be single gramm object instead of 2 nested in fig2
+% 
+% figTest= copy(i);
+% figTest(1,1)= copy(i);
+% 
+% figTest.draw();
+%% Try  copying into single fig and drawing at end (post final draw call)
+
+% %doesn't work, i think needs to be copied before each gramm object is
+% %finally drawn...
+% figure();
+% 
+% fig22(1,1)= copy(i);
+% fig22(2,1)= copy(i1);
+% 
+% fig22.draw();
 
 %% TODO: -----------------------FIGURE 2B --------------
 
