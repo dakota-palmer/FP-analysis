@@ -3,6 +3,10 @@
 
 %editing prior code to make one large figure instead of multiple figs
 
+
+%% set defaults
+text_options_DefaultStyle
+
 %% Scrap copying approach, use uipanels and draw one at a time
 
 %% Figure 2
@@ -82,7 +86,7 @@ padPanel= 0.0025; %padding between other uiPanels
     w= 1-padWidth;
     
         %dynamically adjust bPos based on padHeight and height desired
-    h= 0.4;
+    h= 0.36; %CHANGE HEIGHT
 
     bPos= 1- h - padHeight;  
     
@@ -99,24 +103,34 @@ padPanel= 0.0025; %padding between other uiPanels
         %...height of row 1 + padding
     bPos= (p1.Position(2)) - (p1.Position(4)) - padPanel;
     
-    p2 = uipanel('Position',[padWidth, bPos, w, .32],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+    p2 = uipanel('Position',[padWidth, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
 
     % Panel C- 3rd row, 1st half width
         %... height of row 1 + 2 + padding
-    bPos= (p2.Position(2)) - (p2.Position(4)) - padPanel;
+%     bPos= (p2.Position(2)) - (p2.Position(4)) - padPanel; 
+%was working fine prior to adding variable bPos & dynamic w above...
+%     bPos= (p2.Position(2)) - (p2.Position(4)) - padPanel;
+
+    % redeclare height now for this panel
+    h= .25;
+    bPos= (p2.Position(2)) - (h) - padPanel;
+
 
         %... width of full row /2
     w= p2.Position(3) / 2 %- padWidth;
         
-    p3= uipanel('Position',[padWidth, bPos, w, .32],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+%     p3= uipanel('Position',[padWidth, bPos, w, .32],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+    p3= uipanel('Position',[padWidth, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
         
+
     % Panel D- 3rd row, 2nd half width
         %adjust lPos position to accomodate Panel C width + padding
 %     lPos= (p3.Position(3) - p3.Position(1) - padPanel + padWidth);
 
     lPos= (w + p3.Position(1) - padPanel + padWidth);
 
-    p4= uipanel('Position',[lPos, bPos, w, .32],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+%     p4= uipanel('Position',[lPos, bPos, w, .32],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+    p4= uipanel('Position',[lPos, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
 
     
         %width 1/2 of Panels A/B
@@ -129,7 +143,7 @@ padPanel= 0.0025; %padding between other uiPanels
     
 %     p1 = uipanel('Position',[lPos bPos w h],'Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
 
-    p1
+%     p1
 
 %%
     
@@ -233,10 +247,59 @@ titleFig= 'Fig 2a)';
 i.set_title(titleFig); %overarching fig title must be set before first draw call
 
 
+% set parent in uipanel of overall figure
 i.set_parent(p1);
+
+% % working 
+% % i.set_layout_options('legend_position',[.3,.25,.3,.5]); %avoid duplicate legend from other plots (e.g. subject & grand colors)
+% 
+% %cant get legend_pos without drawing first it seems
+% % %try placing legend outside of figure
+% % i.no_legend()
+% legend_pos=get(i.legend_axe_handle,'Position');
+% 
+% % i.set_layout_options('legend_position',[-.1,.25,.3,.5]); %avoid duplicate legend from other plots (e.g. subject & grand colors)
+% 
+% % again, [l,b,w,h]
+% i.set_layout_options('legend_position',[0.74 0.25  legend_pos(3) legend_pos(4)]); %avoid duplicate legend from other plots (e.g. subject & grand colors)
+% 
+
+% %try detaching legend
+% % i.set_layout_options('legend_position',[1,1,1,1]); %avoid duplicate legend from other plots (e.g. subject & grand colors)
+% 
+% %The no_legend() call allows to remove the space on the left
+% i.no_legend()
+% legend_pos=get(i.legend_axe_handle,'Position');
+% %This places the legend at the desired location (coordinates in the whole figure).
+% set(i.legend_axe_handle,'Position',[0.74 0.25  legend_pos(3) legend_pos(4)]);
+% i.redraw()
+
 
 %- first draw call-
 i().draw();
+
+% %try detaching legend after drawing
+% % i.set_layout_options('legend_position',[1,1,1,1]); %avoid duplicate legend from other plots (e.g. subject & grand colors)
+% 
+% %The no_legend() call allows to remove the space on the left
+% i.no_legend()
+% legend_pos=get(i.legend_axe_handle,'Position');
+% %This places the legend at the desired location (coordinates in the whole figure).
+% set(i.legend_axe_handle,'Position',[0.74 0.25  legend_pos(3) legend_pos(4)]);
+% 
+% % place legend outside of this uiPanel 
+% % not working, though can move within the panel.
+% % set(i.legend_axe_handle,'Position',[.08 .05 .1 .1]);
+% 
+% %maybe try very large distance
+% set(i.legend_axe_handle,'Position',[1.5 1.5  legend_pos(3) legend_pos(4)]);
+% 
+% 
+% i.redraw()
+% 
+% titleFig='test'
+% saveFig(gcf, figPath, titleFig, figFormats, figSize2);
+
 
 %mean between subj + sem
 i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group',[]);
@@ -253,15 +316,22 @@ i().axe_property('XLim',[-2,10]);
 
 i().geom_vline('xintercept',0, 'style', 'k--', 'linewidth', linewidthReference); %overlay t=0
 
+
+%remove legend
+i.no_legend();
+
+%- Final Draw Call
+i.draw();
+
 %-initialize overall Figure for complex subplotting
 % fig2Handle= figure();
 
 
-%-copy to overall Figure as subplot
-%this is a soft copy so need to draw before i is cleared/changed... because i is handle type object..., like if i is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
-fig2(1,1)= copy(i);
-
-figTest(1,:)= copy(i);
+% %-copy to overall Figure as subplot
+% %this is a soft copy so need to draw before i is cleared/changed... because i is handle type object..., like if i is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
+% fig2(1,1)= copy(i);
+% 
+% figTest(1,:)= copy(i);
 
 %save drawing til end
 % %copyobj doesn't seem usable for hard copy
@@ -279,18 +349,19 @@ figTest(1,:)= copy(i);
 
 % titleFig= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');   
 
-titleFig= strcat('figure2a-learning-fp-periCue');   
-
-% for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
-figSize1= [100, 100, 430, 600];
-
-figSize2= [100, 100, 650, 600];
+% titleFig= strcat('figure2a-learning-fp-periCue');   
+% 
+% % for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
+% figSize1= [100, 100, 430, 600];
+% 
+% figSize2= [100, 100, 650, 600];
 
 %2022-12-16 playing with figure size
 % set(gcf,'Position', figSize1);
 % i.redraw()
 
-% i.set_layout_options('legend_position',0,0.5,0.5,0.5]);
+% % try moving legend
+% i.set_layout_options('legend_position',[0,0.5,0.5,0.5]);
 % i.draw()
 % 
 % i.set_layout_options('legend_width',0.10);
@@ -299,7 +370,7 @@ figSize2= [100, 100, 650, 600];
 %try gramm export 
 % i.export('file_name',strcat(titleFig,'_Gramm_exported'),'export_Path',figPath,'width',11.5,'units','centimeters')
 
-titleFig= strcat(titleFig,'matlab_Saved');
+% titleFig= strcat(titleFig,'matlab_Saved');
 
 % saveFig(gcf, figPath, titleFig, figFormats, figSize2);
 
