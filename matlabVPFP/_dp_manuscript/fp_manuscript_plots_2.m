@@ -14,7 +14,7 @@ figPath= strcat(pwd,'\_figures\_mockups\');
 
 %PNG good for quickly viewing many
 % figFormats= {'.png'} %list of formats to save figures as (for saveFig.m)
-figFormats= {'.svg'} %list of formats to save figures as (for saveFig.m)
+figFormats= {'.svg','.fig'} %list of formats to save figures as (for saveFig.m)
 
 
 %-- Master plot linestyles and colors
@@ -27,6 +27,17 @@ linewidthGrand= 1.5;
 
 %thicker lines for reference lines
 linewidthReference= 2;
+
+%-- Master plot axes settings
+%- set default axes limits between plots for consistency
+%default lims for traces 
+ylimTraces= [-2,5];
+xlimTraces= [-2,10];
+
+%default lims for AUC plots
+%note xlims best to calculate dynamically for bar plots based on num x categories
+ylimAUC= [-1,16];
+
 
 %% Load periEventTable from fp_manuscript_figs.m --
 
@@ -103,344 +114,357 @@ periEventTable(ind3, 'sesSpecialLabel')= {'NS Introduced-Stage5'};
 % 
 % periEventTable(ind3, 'specialSesLabel')= {'NS Introduced-Stage5'};
 
+%% Remove last day of Stage 5 specialSes?
 
-%% ----------------- Figure 2---------------------------------------------------
-
-%% Figure 2a -- FP Learning on special sessions
-% DS vs NS learning on special days: 2d 
-
-%- Stage 5 Day 1, Stage 5 Criteria, Stage 7 Criteria
-% --marked as sesSpecialLabel in fpTidyTable.m
-
-%subset data- only sesSpecial
 data= periEventTable;
 
-ind=[];
-ind= ~cellfun(@isempty, data.sesSpecialLabel);
+%search for this label and remove it
+labelToClear= {'stage-5-final-day'};
 
-data= data(ind,:);
+ind = strcmp(data.sesSpecialLabel,labelsToClear);
 
-%subset data- remove specific sesSpecialLabel
-ind= [];
-ind= ~strcmp('stage-7-day-1-criteria',data.sesSpecialLabel);
+%remove label with empty
+data(ind,'sesSpecialLabel')= {''};
 
-data= data(ind,:);
+periEventTable= data;
 
-%stack() to make trialType variable for faceting
-data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
+%% ----------------- Figure 2---------------------------------------------------
+fp_manuscript_fig2_uiPanels();
 
-
-%manually relabel trialType for clarity
-%either simply "DS" or "NS"
-%convert categorical to string then search 
-data(:,"trialTypeLabel")= {''};
-
- %make labels matching each 'trialType' and loop thru to search/match
-trialTypes= {'DSblue', 'NSblue'};
-trialTypeLabels= {'DS','NS'};
-
-for thisTrialType= 1:numel(trialTypes)
-    ind= [];
-    
-    ind= strcmp(string(data.trialType), trialTypes(thisTrialType));
-
-    data(ind, 'trialTypeLabel')= {trialTypeLabels(thisTrialType)};
-    
-end
-
-
-% FacetGrid with sesSpecialLabel = Row
-%2022-12-22 instead of clearing gramm objects, want to copy() them as
-%subplots into single large Figure. To do so, want to save each object
-%instead of clearing between so that single draw call can be made (e.g.
-%instead of i, make i1, i2, i3... etc corresponding to single Fig)
-clear i;
-% h= figure();
-figure;
-
-cmapGrand= cmapBlueGrayGrand;
-cmapSubj= cmapBlueGraySubj;
-
-% cmapGrand= cmapCueGrand;
-% cmapSubj= cmapCueSubj;
-
-
-% individual subjects means
-i= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group', data.subject);
-
-i.facet_grid([],data.sesSpecialLabel);%, 'column_labels',false);
-
-
-i().stat_summary('type','sem','geom','line');
-
-i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
-
-i().set_line_options('base_size',linewidthSubj);
-% i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
-
-% i.set_names('column','test'); %seems column label needs to come before first draw call
-
-%- Things to do before first draw call-
-i.set_names('column', '', 'x', 'Time from Cue (s)','y','GCaMP (Z-score)','color','Trial type'); %row/column labels must be set before first draw call
-
-i.no_legend(); %avoid duplicate legend from other plots (e.g. subject & grand colors)
-i.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
-
-titleFig= 'Fig 2a)';   
-i.set_title(titleFig); %overarching fig title must be set before first draw call
-
-
-%- first draw call-
-i().draw();
-
-%mean between subj + sem
-i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group',[]);
-
-i().stat_summary('type','sem','geom','area');
-
-i().set_color_options('map',cmapGrand);
-
-i().set_line_options('base_size',linewidthGrand)
-
-%-set limits
-i().axe_property('YLim',[-1,5]);
-i().axe_property('XLim',[-2,10]);
-
-i().geom_vline('xintercept',0, 'style', 'k--', 'linewidth', linewidthReference); %overlay t=0
-
-%-initialize overall Figure for complex subplotting
-% fig2Handle= figure();
-
-
-%-copy to overall Figure as subplot
-%this is a soft copy so need to draw before i is cleared/changed... because i is handle type object..., like if i is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
-fig2(1,1)= copy(i);
-
-figTest(1,:)= copy(i);
-
-%save drawing til end
-% %copyobj doesn't seem usable for hard copy
-% fig2(1,1)= copyobj(i,fig2Handle);
-
-% set(0,'CurrentFigure',fig2Handle);%switch to this figure before drawing
-% figure(fig2Handle);
-% title('test fig2');
-% fig2(1,1).draw();
-
-%- final draw call
-% set(0,'CurrentFigure',h)%switch to this figure before drawing
-% figure(h);
-i.draw();
-
-% titleFig= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');   
-
-titleFig= strcat('figure2a-learning-fp-periCue');   
-
-% for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
-figSize1= [100, 100, 430, 600];
-
-figSize2= [100, 100, 650, 600];
-
-%2022-12-16 playing with figure size
-% set(gcf,'Position', figSize1);
-% i.redraw()
-
-% i.set_layout_options('legend_position',0,0.5,0.5,0.5]);
-% i.draw()
+% %% Figure 2a -- FP Learning on special sessions
+% % DS vs NS learning on special days: 2d 
 % 
-% i.set_layout_options('legend_width',0.10);
-% i.redraw()
-
-%try gramm export 
-i.export('file_name',strcat(titleFig,'_Gramm_exported'),'export_Path',figPath,'width',11.5,'units','centimeters')
-
-titleFig= strcat(titleFig,'matlab_Saved');
-
-% saveFig(gcf, figPath, titleFig, figFormats, figSize2);
-
-%-- TODO: maybe try https://stackoverflow.com/questions/24531402/matlab-scale-figures-for-publishing-exact-dimensions-and-font-sizes
-
-% - also note white space min here https://interfacegroup.ch/preparing-matlab-figures-for-publication/
-
-
-%-- Try embedding in 1 big figure?
-%will need all subplots to fit within whole fig
-
-% fig1(1,1)= i;
-
-% .copy() should work, see here- https://github.com/piermorel/gramm/issues/23
-% i think .copy() needs to happen before draw() or update() calls... so
-% would need to copy to figure and update prior to each of those
+% %- Stage 5 Day 1, Stage 5 Criteria, Stage 7 Criteria
+% % --marked as sesSpecialLabel in fpTidyTable.m
 % 
-%seems to work if you put it before the final draw call!
-% but soft copy, see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
-
-% fig1= copy(i);
+% %subset data- only sesSpecial
+% data= periEventTable;
+% 
+% ind=[];
+% ind= ~cellfun(@isempty, data.sesSpecialLabel);
+% 
+% data= data(ind,:);
+% 
+% %subset data- remove specific sesSpecialLabel
+% ind= [];
+% ind= ~strcmp('stage-7-day-1-criteria',data.sesSpecialLabel);
+% 
+% data= data(ind,:);
+% 
+% %stack() to make trialType variable for faceting
+% data= stack(data, {'DSblue', 'NSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlue');
+% 
+% 
+% %manually relabel trialType for clarity
+% %either simply "DS" or "NS"
+% %convert categorical to string then search 
+% data(:,"trialTypeLabel")= {''};
+% 
+%  %make labels matching each 'trialType' and loop thru to search/match
+% trialTypes= {'DSblue', 'NSblue'};
+% trialTypeLabels= {'DS','NS'};
+% 
+% for thisTrialType= 1:numel(trialTypes)
+%     ind= [];
+%     
+%     ind= strcmp(string(data.trialType), trialTypes(thisTrialType));
+% 
+%     data(ind, 'trialTypeLabel')= {trialTypeLabels(thisTrialType)};
+%     
+% end
+% 
+% 
+% % FacetGrid with sesSpecialLabel = Row
+% %2022-12-22 instead of clearing gramm objects, want to copy() them as
+% %subplots into single large Figure. To do so, want to save each object
+% %instead of clearing between so that single draw call can be made (e.g.
+% %instead of i, make i1, i2, i3... etc corresponding to single Fig)
+% clear i;
+% % h= figure();
 % figure;
 % 
-% fig1.draw();
+% cmapGrand= cmapBlueGrayGrand;
+% cmapSubj= cmapBlueGraySubj;
 % 
-% fig1(1,1)= copy(i);
+% % cmapGrand= cmapCueGrand;
+% % cmapSubj= cmapCueSubj;
 % 
-% fig1(1,1).draw();
-
-%% Fig 2a ----- Bar plots of AUC ------
-clear i1; 
-% h= figure;
-figure;
-
-dodge= 	1; %if dodge constant between point and bar, will align correctly
-width= 1.8; %good for 2 bars w dodge >=1
-
-
-%subset data- only sesSpecial
-data2= periEventTable;
-
-ind=[];
-ind= ~cellfun(@isempty, data2.sesSpecialLabel);
-
-data2= data2(ind,:);
-
-%subset data- remove specific sesSpecialLabel
-ind= [];
-ind= ~strcmp('stage-7-day-1-criteria',data2.sesSpecialLabel);
-
-data2= data2(ind,:);
-
-%stack() to make trialType variable for faceting
-data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
-
-%manually relabel trialType for clarity
-%either simply "DS" or "NS"
-%convert categorical to string then search 
-data2(:,"trialTypeLabel")= {''};
-
- %make labels matching each 'trialType' and loop thru to search/match
-trialTypes= {'aucDSblue', 'aucNSblue'};
-trialTypeLabels= {'DS','NS'};
-
-for thisTrialType= 1:numel(trialTypes)
-    ind= [];
-    
-    ind= strcmp(string(data2.trialType), trialTypes(thisTrialType));
-
-    data2(ind, 'trialTypeLabel')= {trialTypeLabels(thisTrialType)};
-    
-end
-
-%mean between subj
-group=[];
-i1= gramm('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
-
-i1.facet_grid([],data.sesSpecialLabel);
-
-i1.set_color_options('map',cmapGrand);
-
-%mean bar for trialType
-i1.stat_summary('type','sem','geom',{'bar', 'black_errorbar'}, 'dodge', dodge, 'width', width);
-
-i1.set_line_options('base_size',linewidthGrand)
-
-
-%- Things to do before first draw call-
-i1.set_names('column', '', 'x','Trial Type','y','GCaMP (Z-score)','color','Trial Type');
-
-i1.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
-
-titleFig= 'Fig 2a) inlay';   
-i1.set_title(titleFig); %overarching fig title must be set before first draw call
-
-%- first draw call-
-i1.draw()
-
-%- Draw lines between individual subject points (group= subject, color=[]);
-group= data2.subject;
-i1.update('x', data2.trialTypeLabel,'y',data2.periCueBlueAuc,'color',[], 'group', group)
-
-% i1.geom_line('alpha',0.3); %individual trials way too much
-i1.stat_summary('type','sem','geom','line');
-
-i1.set_line_options('base_size',linewidthSubj);
-
-i1.set_color_options('chroma', chromaLineSubj); %black lines connecting points
-
-i1.draw();
-
-%ind subj mean points
-i1.update('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
-
-i1.stat_summary('type','sem','geom','point', 'dodge', dodge);
-
-i1.set_color_options('map',cmapSubj); 
-
-i1.no_legend(); %avoid duplicate legend from other plots (e.g. subject  grand colors)
-
-%-set plot limits-
-
-%set x lims and ticks (a bit more manual good for bars)
-% lims= [0-.4,(numel(trialTypes)-1)+.4];
-
-lims= [1-.6,(numel(trialTypes))+.6];
-
-
-i1.axe_property('XLim',lims);
-
-i1.axe_property('YLim',[-1,16]);
-
-%horz line @ zero
-i1.geom_hline('yintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
-
-%-copy to overall Figure as subplot
-%this is a soft copy so need to draw before i1 is cleared/changed... because i1 is handle type object..., like if i1 is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
-fig2(2,1)= copy(i1);
-
-figTest(2,:)= copy(i1);
-%save drawing until end
-
-% set(0,'CurrentFigure',fig2Handle);%switch to this figure before drawing
-
-% fig2(2,1).draw();
-
-%- final draw call-
-% set(0,'CurrentFigure',h);%switch to this figure before drawing
-
-i1().draw();
-
-
-% titleFig= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');
-titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');   
-
-% saveFig(gcf, figPath, titleFig, figFormats);
-
-%% Draw the Figure2
-
-%for some reason drawing on separate figures (overwriting i fig and i1 fig
-%respectively) instead of drawing both on new figure...
-
-%seems to work fine if you don't make new figure() between gramm objects
-%declaring a new figure doens't matter, it will always draw on the first
-%fig.
-% figure();
-fig2.draw();
-
-%maybe because should be single gramm object instead of 2 nested in fig2
 % 
-% figTest= copy(i);
-% figTest(1,1)= copy(i);
+% % individual subjects means
+% i= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group', data.subject);
 % 
-% figTest.draw();
-%% Try  copying into single fig and drawing at end (post final draw call)
+% i.facet_grid([],data.sesSpecialLabel);%, 'column_labels',false);
+% 
+% 
+% i().stat_summary('type','sem','geom','line');
+% 
+% i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
+% 
+% i().set_line_options('base_size',linewidthSubj);
+% % i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+% 
+% % i.set_names('column','test'); %seems column label needs to come before first draw call
+% 
+% %- Things to do before first draw call-
+% i.set_names('column', '', 'x', 'Time from Cue (s)','y','GCaMP (Z-score)','color','Trial type'); %row/column labels must be set before first draw call
+% 
+% i.no_legend(); %avoid duplicate legend from other plots (e.g. subject & grand colors)
+% i.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+% 
+% titleFig= 'Fig 2a)';   
+% i.set_title(titleFig); %overarching fig title must be set before first draw call
+% 
+% 
+% %- first draw call-
+% i().draw();
+% 
+% %mean between subj + sem
+% i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group',[]);
+% 
+% i().stat_summary('type','sem','geom','area');
+% 
+% i().set_color_options('map',cmapGrand);
+% 
+% i().set_line_options('base_size',linewidthGrand)
+% 
+% %-set limits
+% i().axe_property('YLim',[-1,5]);
+% i().axe_property('XLim',[-2,10]);
+% 
+% i().geom_vline('xintercept',0, 'style', 'k--', 'linewidth', linewidthReference); %overlay t=0
+% 
+% %-initialize overall Figure for complex subplotting
+% % fig2Handle= figure();
+% 
+% 
+% %-copy to overall Figure as subplot
+% %this is a soft copy so need to draw before i is cleared/changed... because i is handle type object..., like if i is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
+% fig2(1,1)= copy(i);
+% 
+% figTest(1,:)= copy(i);
+% 
+% %save drawing til end
+% % %copyobj doesn't seem usable for hard copy
+% % fig2(1,1)= copyobj(i,fig2Handle);
+% 
+% % set(0,'CurrentFigure',fig2Handle);%switch to this figure before drawing
+% % figure(fig2Handle);
+% % title('test fig2');
+% % fig2(1,1).draw();
+% 
+% %- final draw call
+% % set(0,'CurrentFigure',h)%switch to this figure before drawing
+% % figure(h);
+% i.draw();
+% 
+% % titleFig= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');   
+% 
+% titleFig= strcat('figure2a-learning-fp-periCue');   
+% 
+% % for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
+% figSize1= [100, 100, 430, 600];
+% 
+% figSize2= [100, 100, 650, 600];
+% 
+% %2022-12-16 playing with figure size
+% % set(gcf,'Position', figSize1);
+% % i.redraw()
+% 
+% % i.set_layout_options('legend_position',0,0.5,0.5,0.5]);
+% % i.draw()
+% % 
+% % i.set_layout_options('legend_width',0.10);
+% % i.redraw()
+% 
+% %try gramm export 
+% i.export('file_name',strcat(titleFig,'_Gramm_exported'),'export_Path',figPath,'width',11.5,'units','centimeters')
+% 
+% titleFig= strcat(titleFig,'matlab_Saved');
+% 
+% % saveFig(gcf, figPath, titleFig, figFormats, figSize2);
+% 
+% %-- TODO: maybe try https://stackoverflow.com/questions/24531402/matlab-scale-figures-for-publishing-exact-dimensions-and-font-sizes
+% 
+% % - also note white space min here https://interfacegroup.ch/preparing-matlab-figures-for-publication/
+% 
+% 
+% %-- Try embedding in 1 big figure?
+% %will need all subplots to fit within whole fig
+% 
+% % fig1(1,1)= i;
+% 
+% % .copy() should work, see here- https://github.com/piermorel/gramm/issues/23
+% % i think .copy() needs to happen before draw() or update() calls... so
+% % would need to copy to figure and update prior to each of those
+% % 
+% %seems to work if you put it before the final draw call!
+% % but soft copy, see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
+% 
+% % fig1= copy(i);
+% % figure;
+% % 
+% % fig1.draw();
+% % 
+% % fig1(1,1)= copy(i);
+% % 
+% % fig1(1,1).draw();
+% 
+% %% Fig 2a ----- Bar plots of AUC ------
+% clear i1; 
+% % h= figure;
+% figure;
+% 
+% dodge= 	1; %if dodge constant between point and bar, will align correctly
+% width= 1.8; %good for 2 bars w dodge >=1
+% 
+% 
+% %subset data- only sesSpecial
+% data2= periEventTable;
+% 
+% ind=[];
+% ind= ~cellfun(@isempty, data2.sesSpecialLabel);
+% 
+% data2= data2(ind,:);
+% 
+% %subset data- remove specific sesSpecialLabel
+% ind= [];
+% ind= ~strcmp('stage-7-day-1-criteria',data2.sesSpecialLabel);
+% 
+% data2= data2(ind,:);
+% 
+% %stack() to make trialType variable for faceting
+% data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
+% 
+% %manually relabel trialType for clarity
+% %either simply "DS" or "NS"
+% %convert categorical to string then search 
+% data2(:,"trialTypeLabel")= {''};
+% 
+%  %make labels matching each 'trialType' and loop thru to search/match
+% trialTypes= {'aucDSblue', 'aucNSblue'};
+% trialTypeLabels= {'DS','NS'};
+% 
+% for thisTrialType= 1:numel(trialTypes)
+%     ind= [];
+%     
+%     ind= strcmp(string(data2.trialType), trialTypes(thisTrialType));
+% 
+%     data2(ind, 'trialTypeLabel')= {trialTypeLabels(thisTrialType)};
+%     
+% end
+% 
+% %mean between subj
+% group=[];
+% i1= gramm('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
+% 
+% i1.facet_grid([],data.sesSpecialLabel);
+% 
+% i1.set_color_options('map',cmapGrand);
+% 
+% %mean bar for trialType
+% i1.stat_summary('type','sem','geom',{'bar', 'black_errorbar'}, 'dodge', dodge, 'width', width);
+% 
+% i1.set_line_options('base_size',linewidthGrand)
+% 
+% 
+% %- Things to do before first draw call-
+% i1.set_names('column', '', 'x','Trial Type','y','GCaMP (Z-score)','color','Trial Type');
+% 
+% i1.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+% 
+% titleFig= 'Fig 2a) inlay';   
+% i1.set_title(titleFig); %overarching fig title must be set before first draw call
+% 
+% %- first draw call-
+% i1.draw()
+% 
+% %- Draw lines between individual subject points (group= subject, color=[]);
+% group= data2.subject;
+% i1.update('x', data2.trialTypeLabel,'y',data2.periCueBlueAuc,'color',[], 'group', group)
+% 
+% % i1.geom_line('alpha',0.3); %individual trials way too much
+% i1.stat_summary('type','sem','geom','line');
+% 
+% i1.set_line_options('base_size',linewidthSubj);
+% 
+% i1.set_color_options('chroma', chromaLineSubj); %black lines connecting points
+% 
+% i1.draw();
+% 
+% %ind subj mean points
+% i1.update('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
+% 
+% i1.stat_summary('type','sem','geom','point', 'dodge', dodge);
+% 
+% i1.set_color_options('map',cmapSubj); 
+% 
+% i1.no_legend(); %avoid duplicate legend from other plots (e.g. subject  grand colors)
+% 
+% %-set plot limits-
+% 
+% %set x lims and ticks (a bit more manual good for bars)
+% % lims= [0-.4,(numel(trialTypes)-1)+.4];
+% 
+% lims= [1-.6,(numel(trialTypes))+.6];
+% 
+% 
+% i1.axe_property('XLim',lims);
+% 
+% i1.axe_property('YLim',[-1,16]);
+% 
+% %horz line @ zero
+% i1.geom_hline('yintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
+% 
+% %-copy to overall Figure as subplot
+% %this is a soft copy so need to draw before i1 is cleared/changed... because i1 is handle type object..., like if i1 is deleted here you can't draw it again see https://www.mathworks.com/help/matlab/matlab_prog/copying-objects.html
+% fig2(2,1)= copy(i1);
+% 
+% figTest(2,:)= copy(i1);
+% %save drawing until end
+% 
+% % set(0,'CurrentFigure',fig2Handle);%switch to this figure before drawing
+% 
+% % fig2(2,1).draw();
+% 
+% %- final draw call-
+% % set(0,'CurrentFigure',h);%switch to this figure before drawing
+% 
+% i1().draw();
+% 
+% 
+% % titleFig= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');
+% titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');   
+% 
+% % saveFig(gcf, figPath, titleFig, figFormats);
+% 
+% %% Draw the Figure2
+% 
+% %for some reason drawing on separate figures (overwriting i fig and i1 fig
+% %respectively) instead of drawing both on new figure...
+% 
+% %seems to work fine if you don't make new figure() between gramm objects
+% %declaring a new figure doens't matter, it will always draw on the first
+% %fig.
+% % figure();
+% fig2.draw();
+% 
+% %maybe because should be single gramm object instead of 2 nested in fig2
+% % 
+% % figTest= copy(i);
+% % figTest(1,1)= copy(i);
+% % 
+% % figTest.draw();
+% %% Try  copying into single fig and drawing at end (post final draw call)
+% 
+% % %doesn't work, i think needs to be copied before each gramm object is
+% % %finally drawn...
+% % figure();
+% % 
+% % fig22(1,1)= copy(i);
+% % fig22(2,1)= copy(i1);
+% % 
+% % fig22.draw();
 
-% %doesn't work, i think needs to be copied before each gramm object is
-% %finally drawn...
-% figure();
-% 
-% fig22(1,1)= copy(i);
-% fig22(2,1)= copy(i1);
-% 
-% fig22.draw();
-
-%% TODO: -----------------------FIGURE 2B --------------
 
 %% FIG3 HEATPLOTS ---
 

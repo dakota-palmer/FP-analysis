@@ -5,8 +5,25 @@
 
 
 %% set defaults
-text_options_DefaultStyle
 
+% for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
+figSize1= [100, 100, 430, 600];
+
+figSize2= [100, 100, 650, 600];
+
+%make appropriate size
+figSize= figSize2
+
+% text_options_DefaultStyle
+
+% %- set default axes limits between plots for consistency
+% %default lims for traces 
+% ylimTraces= [-2,5];
+% xlimTraces= [-2,10];
+% 
+% %default lims for AUC plots
+% %note xlims best to calculate dynamically for bar plots based on num x categories
+% ylimAUC= [-1,16];
 %% Scrap copying approach, use uipanels and draw one at a time
 
 %% Figure 2
@@ -17,12 +34,6 @@ text_options_DefaultStyle
 clear i i2 i1 fig2
 close all
 
-%initialize figure?
-
-% for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
-figSize1= [100, 100, 430, 600];
-
-figSize2= [100, 100, 650, 600];
 
 
 % Create the uipanels, the 'Position' property is what will allow to create different sizes (it works the same as the corresponding argument in subplot() )
@@ -33,9 +44,14 @@ figSize2= [100, 100, 650, 600];
     
     
 %%
-%make appropriate size
 % Initialize a figure with Drawable Area padding appropriately
-f = figure('Position',[100 100 1200 800])
+% f = figure('Position',[100 100 1200 800])
+
+% make figure of desired final size
+f = figure('Position',figSize)
+
+
+
 % padFigure= 0.05;
 % figWidth= 1200;
 % figHeight= 800;
@@ -233,17 +249,17 @@ i().stat_summary('type','sem','geom','line');
 i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
 i().set_line_options('base_size',linewidthSubj);
-% i().set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+% i().set_names('x','Time from cue (s)','y','GCaMP (Z-score)','color','Cue type (ind subj mean)');
 
 % i.set_names('column','test'); %seems column label needs to come before first draw call
 
 %- Things to do before first draw call-
-i.set_names('column', '', 'x', 'Time from Cue (s)','y','GCaMP (Z-score)','color','Trial type'); %row/column labels must be set before first draw call
+i.set_names('column', '', 'x', 'Time from cue (s)','y','GCaMP (Z-score)','color','Trial type'); %row/column labels must be set before first draw call
 
 i.no_legend(); %avoid duplicate legend from other plots (e.g. subject & grand colors)
 i.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
 
-titleFig= 'Fig 2a)';   
+titleFig= 'A';   
 i.set_title(titleFig); %overarching fig title must be set before first draw call
 
 
@@ -311,8 +327,8 @@ i().set_color_options('map',cmapGrand);
 i().set_line_options('base_size',linewidthGrand)
 
 %-set limits
-i().axe_property('YLim',[-1,5]);
-i().axe_property('XLim',[-2,10]);
+i().axe_property('YLim',ylimTraces);
+i().axe_property('XLim',xlimTraces);
 
 i().geom_vline('xintercept',0, 'style', 'k--', 'linewidth', linewidthReference); %overlay t=0
 
@@ -463,9 +479,14 @@ i1.set_names('column', '', 'x','Trial Type','y','GCaMP (Z-score)','color','Trial
 
 i1.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
 
-titleFig= 'Fig 2b) auc';   
+titleFig= 'B';   
 i1.set_title(titleFig); %overarching fig title must be set before first draw call
 
+
+%remove legend
+i1.no_legend();
+
+% set parent in uipanel of overall figure
 i1.set_parent(p2);
 
 %- first draw call-
@@ -498,12 +519,11 @@ i1.no_legend(); %avoid duplicate legend from other plots (e.g. subject  grand co
 %set x lims and ticks (a bit more manual good for bars)
 % lims= [0-.4,(numel(trialTypes)-1)+.4];
 
-lims= [1-.6,(numel(trialTypes))+.6];
+xlims= [1-.6,(numel(trialTypes))+.6];
 
+i1.axe_property('XLim',xlims);
 
-i1.axe_property('XLim',lims);
-
-i1.axe_property('YLim',[-1,16]);
+i1.axe_property('YLim', ylimAUC);
 
 %horz line @ zero
 i1.geom_hline('yintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
@@ -519,14 +539,14 @@ figTest(2,:)= copy(i1);
 
 % fig2(2,1).draw();
 
-%- final draw call-
+% - final draw call-
 % set(0,'CurrentFigure',h);%switch to this figure before drawing
 
-% i1().draw();
+i1().draw();
 
 
 % titleFig= strcat(subjMode,'-allSubjects-','-Figure2-learning-periCue-zTraces');
-titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');   
+% titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');   
 
 % saveFig(gcf, figPath, titleFig, figFormats);
 
@@ -573,7 +593,7 @@ titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');
 % i2(1,1).set_title(titleFig); 
 % 
 % i2(1,1).set_line_options('base_size',linewidthSubj);
-% i2(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+% i2(1,1).set_names('x','Time from cue (s)','y','GCaMP (Z-score)','color','Cue type (ind subj mean)');
 % 
 % i2(1,1).set_parent(p3);
 % 
@@ -595,7 +615,7 @@ titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');
 % % title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zTraces');   
 % 
 % % % titleFig= strcat('-stage-',num2str(stagesToPlot),'-Figure2c');      
-% i2(1,1).set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
+% i2(1,1).set_names('x','Time from cue (s)','y','GCaMP (Z-score)','color','Cue type (grand mean)');
 % 
 % 
 % % i2(3,1).draw();
@@ -648,7 +668,7 @@ titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');
 % % title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2b-periCue-byPEoutcome-zAUC');   
 % titleFig= 'Fig 2d) auc';   
 % i2(1,2).set_title(titleFig);
-% i2(1,2).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
+% i2(1,2).set_names('x','Cue type','y','GCaMP (Z-score)','color','Cue type (grand mean)');
 % 
 % %horz line @ zero
 % i2(1,2).geom_hline('yintercept', 0, 'style', 'k--'); 
@@ -669,7 +689,7 @@ titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');
 % 
 % i2(1,2).set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 % 
-% i2(1,2).set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+% i2(1,2).set_names('x','Cue type','y','GCaMP (Z-score)','color','Cue type (ind subj mean)');
 % 
 % fig2(3,2)= copy(i2(1,2));
 % 
@@ -677,7 +697,6 @@ titleFig= strcat('figure2a-learning-fp-periCue_Inlay-AUC');
 
 
 %% Try distinct gramm objects for panel C and D
-
 
 stagesToPlot= [7];
 
@@ -704,8 +723,11 @@ data= unstack(data, 'DSblue', 'poxDSoutcome', 'GroupingVariables',groupers);
 data= stack(data, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome', 'NewDataVariableName', 'periCueBlue');
 
 % figure();
-% clear i
+clear i2
 
+% use cmap distinct from the DS vs NS (can refine in illustrator)
+cmapGrand= cmapCueGrand;
+cmapSubj= cmapCueSubj;
 
 % individual subjects means
 i2= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome, 'group', data.subject);
@@ -715,13 +737,20 @@ i2.geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
 i2.set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
-titleFig= 'Fig 2c)';   
+titleFig= 'C';   
 i2.set_title(titleFig); 
 
 i2.set_line_options('base_size',linewidthSubj);
-i2.set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+i2.set_names('x','Time from cue (s)','y','GCaMP (Z-score)','color','Cue type (ind subj mean)');
 
+i2.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+%remove legend
+i2.no_legend();
+
+% set parent uiPanel in overall figure
 i2.set_parent(p3);
+
 
 %- First Draw call
 i2.draw();
@@ -735,19 +764,26 @@ i2.set_color_options('map',cmapGrand); %subselecting the 2 specific color levels
 
 i2.set_line_options('base_size',linewidthGrand)
 
-i2.axe_property('YLim',[-1,5]);
-i2.axe_property('XLim',[-5,10]);
+%-set limits
+i2.axe_property('YLim',ylimTraces);
+i2.axe_property('XLim',xlimTraces);
 
 % title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2-periCue-zTraces');   
 
 % % titleFig= strcat('-stage-',num2str(stagesToPlot),'-Figure2c');      
-i2.set_names('x','time from Cue (s)','y','GCaMP (z score)','color','Cue type (grand mean)');
+i2.set_names('x','Time from cue (s)','y','GCaMP (Z-score)','color','Cue type (grand mean)');
 
+%remove legend
+i2.no_legend();
 
-% i2(3,1).draw();
+%-set limits
+i2.axe_property('YLim',ylimTraces);
+i2.axe_property('XLim',xlimTraces);
 
-%% when making subplots gramm likes a collective i.draw() after creating
-%each subplot before updating?
+%- Final draw call
+i2().draw();
+
+%% Panel D- AUC
 
 %---- i(2) bar AUC
 data2= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
@@ -778,7 +814,11 @@ data2= unstack(data2, 'aucDSblue', 'poxDSoutcome', 'GroupingVariables',groupers)
 data2= stack(data2, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome', 'NewDataVariableName', 'periCueBlueAuc');
 
 % figure();
-% clear i
+clear i3
+
+% use cmap distinct from the DS vs NS (can refine in illustrator)
+cmapGrand= cmapCueGrand;
+cmapSubj= cmapCueSubj;
 
 %mean between subj
 i3= gramm('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', []);
@@ -790,37 +830,140 @@ i3.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
 
 i3.set_line_options('base_size',linewidthGrand)
 
-i3.axe_property('YLim',[-1,10]);
+i3.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+% i3.axe_property('YLim',[-1,10]);
 % title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2b-periCue-byPEoutcome-zAUC');   
-titleFig= 'Fig 2d) auc';   
+titleFig= 'D';   
 i3.set_title(titleFig);
-i3.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (grand mean)');
+i3.set_names('x','Cue type','y','GCaMP (Z-score)','color','Cue type (grand mean)');
 
 %horz line @ zero
 i3.geom_hline('yintercept', 0, 'style', 'k--'); 
 
-fig2(3,1)= copy(i2);
 
+%remove legend
+i3.no_legend();
+
+% set parent uiPanel in overall figure
 i3.set_parent(p4);
 
-
-%2022-12-23
-i2().draw();
-% i2(3,:).draw();
+%-First draw call
 i3.draw();
 
-%ind subj mean points
+%- Draw lines between individual subject points (group= subject, color=[]);
+group= data2.subject;
+i3.update('x', data2.trialOutcome,'y',data2.periCueBlueAuc,'color',[], 'group', group)
+
+% i1.geom_line('alpha',0.3); %individual trials way too much
+i3.stat_summary('type','sem','geom','line');
+
+i3.set_line_options('base_size',linewidthSubj);
+
+i3.set_color_options('chroma', chromaLineSubj); %black lines connecting points
+
+i3.draw();
+
+
+%-ind subj mean points
 i3.update('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', data2.subject);
 
 i3.stat_summary('type','sem','geom','point');
 
 i3.set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
-i3.set_names('x','Cue type','y','GCaMP (z score)','color','Cue type (ind subj mean)');
+i3.set_names('x','Trial outcome','y','GCaMP (Z-score)','color','Cue type (ind subj mean)');
 
 fig2(3,2)= copy(i3);
 
+%remove legend
+i3.no_legend();
+
+%-set limits
+trialTypes= unique(data2.trialOutcome);
+
+xlims= [1-.6,(numel(trialTypes))+.6];
+i3.axe_property('XLim',xlims);
+
+i3.axe_property('YLim',ylimAUC);
+
+%- Final draw call
 i3.draw()
+
+
+%% Save the figure
+
+%-Declare Size of Figure at time of creation (up top), not time of saving.
+
+%-Save the figure
+titleFig='vp-vta_Figure2_uiPanels';
+saveFig(gcf, figPath, titleFig, figFormats, figSize);
+
+
+%% TODO: STATS for this Figure (save output)
+
+%% AUC Stats
+
+
+%% STATS for AUC plot above
+
+%-First need to subset to actual # of observations (1 per trial)
+
+%-Add unique trialIDs
+    %data2 currently has 2 values per timestamp per trial (1 per trialType).
+    %want to transform such that each timestamp copy belongs to distinct
+    %trialID %could simply multiply trialID by -1 if trialType== NS then values %would be unique.
+    
+    %convert to string (stack made this categorical)
+    data2.trialType= string(data2.trialType);
+    
+    %search for NS trialTypes
+    ind=[];
+    ind= contains(data2.trialType, 'NS');
+    
+    %transform trialIDs for these entries to make unique 
+    %muliplying by -1
+    data2(ind, "trialIDcum") = table(data2.trialIDcum(ind) * -1);
+    
+
+%- aggregate to one observation per trial (AUC is aggregated measure)
+    
+    %columns to group by
+groupers= ["subject","trainDay", "fileID", "trialType", "trialIDcum"];
+
+    %simplfy to one observation (using mean)
+ data3= groupsummary(data2, [groupers],'mean', ["periCueBlueAuc"]);
+
+    %remove appended 'mean_' name on column
+ data3 = renamevars(data3,["mean_periCueBlueAuc"],[,"periCueBlueAuc"]);
+       
+%Result of groupsummary here is table with one auc value per unique trial
+
+%-- STAT LME
+%are mean AUC different by trialType? lme with random subject intercept
+
+%- dummy variable conversion
+% converting to dummies(retains only one column, as 2+ is redundant)
+
+%convert trialType to dummy variable 
+dummy=[];
+dummy= categorical(data3.trialType);
+dummy= dummyvar(dummy); 
+
+data3.trialType= dummy(:,1);
+
+
+%- run LME
+lme1=[];
+
+lme1= fitlme(data3, 'periCueBlueAuc~ trialType + (1|subject)');
+
+
+%print and save results to file
+%seems diary keeps running log to same file (e.g. if code rerun seems prior output remains)
+diary('fp-figure2-DSvNS-auc-lmeDetails.txt')
+lme1
+diary off
 
 
 
@@ -939,7 +1082,7 @@ i3.draw()
 % 
 % fig2.redraw();
 
-titleFig= 'Figure2_Final';
+% titleFig= 'Figure2_Final';
 % fig2.export('file_name',strcat(titleFig,'_Gramm_exported'),'export_Path',figPath,'width',11.5,'units','centimeters')
 
 
