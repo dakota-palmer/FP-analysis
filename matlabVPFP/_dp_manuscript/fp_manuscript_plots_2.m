@@ -36,7 +36,8 @@ xlimTraces= [-2,10];
 
 %default lims for AUC plots
 %note xlims best to calculate dynamically for bar plots based on num x categories
-ylimAUC= [-1,16];
+% ylimAUC= [-1,16];
+ylimAUC= [-6,16];
 
 
 %% Load periEventTable from fp_manuscript_figs.m --

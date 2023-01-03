@@ -20,6 +20,7 @@ stagesToPlot= [1:7];
 
 %subplot of DS pe ratio, subplot of NS pe ratio
 
+mapCustomCue= cmapCueGrand;
 
 %- subset specific data to plot
 data= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
@@ -66,8 +67,10 @@ i(1,1).set_color_options('map',mapCustomCue([1],:)); %subselecting the specific 
 i(1,1).set_line_options('base_size',linewidthGrand)
 
 i(1,1).axe_property('YLim',[0,1]);
-title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure1-DSpeRatio');   
-i(1,1).set_title(title);    
+% title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure1-DSpeRatio');   
+titleFig= strcat('-allSubjects-stage-',num2str(stagesToPlot),'-Figure1-DSpeRatio');   
+
+i(1,1).set_title(titleFig);    
 i(1,1).set_names('x','training day','y','PE probability','color','Cue type (grand mean)');
 
 
@@ -110,10 +113,12 @@ i(2,1).draw()
 
 
 
-% stacked version for color facet of trialType (instead of subplots)
+%% stacked version for color facet of trialType (instead of subplots)
 %- stack() to make cueType variable
 data2= stack(data2, {'mean_DSpeRatio', 'mean_NSpeRatio'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'peRatio');
 
+cmapGrand= cmapCueGrand;
+cmapSubj= cmapCueSubj;
 
 % -make fig
 figure();
@@ -126,7 +131,7 @@ i(1,1)= gramm('x',data2.trainDay,'y',data2.(y), 'color', data2.trialType, 'group
 
 i(1,1).stat_summary('type','sem','geom','line');
 
-i(1,1).set_color_options('map',mapCustomCue([2,6],:)); %subselecting the 2 specific color levels i want from map
+i(1,1).set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
 i(1,1).set_line_options('base_size',linewidthSubj);
 i(1,1).set_names('x','time from Cue (s)','y',y,'color','Cue type (ind subj mean)');
@@ -138,7 +143,7 @@ i(1,1).update('x',data2.trainDay,'y',data2.(y), 'color', data2.trialType, 'group
 
 i(1,1).stat_summary('type','sem','geom','area');
 
-i(1,1).set_color_options('map',mapCustomCue([1,7],:)); %subselecting the 2 specific color levels i want from map
+i(1,1).set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
 i(1,1).set_line_options('base_size',linewidthGrand)
 

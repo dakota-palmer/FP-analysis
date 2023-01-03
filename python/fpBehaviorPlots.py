@@ -34,6 +34,7 @@ import shelve
 import seaborn as sns
 
 
+#%% First part here is plotting python calculated ratios from dfTidyAnalyzed... second part here below reimports raw data to plot raw MPC ratios
 
 #%% Load previously saved dfTidy (and other vars) from pickle
 dataPath= r'./_output/' #'r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python\\'
@@ -140,16 +141,16 @@ g.add_legend()
 g.map(plt.axhline, y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
 
 
-#individual subjects
+# #individual subjects
 
-for subj in dfPlot.subject.unique():
+# for subj in dfPlot.subject.unique():
     
-    dfPlot2= dfPlot.loc[dfPlot.subject==subj]
+#     dfPlot2= dfPlot.loc[dfPlot.subject==subj]
     
-    g= sns.FacetGrid(data=dfPlot2, row='stage')
+#     g= sns.FacetGrid(data=dfPlot2, row='stage')
 
-    g.map_dataframe(sns.lineplot, units='subject', estimator=None, x= 'trainDay', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder, alpha=0.3)
-    g.map(plt.axhline, y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
+#     g.map_dataframe(sns.lineplot, units='subject', estimator=None, x= 'trainDay', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder, alpha=0.3)
+#     g.map(plt.axhline, y=criteriaDS, color=".2", linewidth=3, dashes=(3,1), zorder=0)
 
 
 #%% DP Manuscript Figure peProb 10s + mean Latency subplot

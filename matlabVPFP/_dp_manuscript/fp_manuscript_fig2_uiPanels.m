@@ -3,6 +3,9 @@
 
 %editing prior code to make one large figure instead of multiple figs
 
+%% default error (sem vs bootstrap CI)
+errorBar= 'sem';
+% errorBar= 'bootci';
 
 %% set defaults
 
@@ -71,7 +74,7 @@ f = figure('Position',figSize)
     h= panelPos(4);
     
     %amount of padding for uipanels
-%     padPanel= 0.02
+    padPanel= 0.0025;
     
 %todo- Adjust width,height based on the whole figure size? assumes equal
 %size though so not useful really
@@ -244,7 +247,7 @@ i= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, '
 i.facet_grid([],data.sesSpecialLabel);%, 'column_labels',false);
 
 
-i().stat_summary('type','sem','geom','line');
+i().stat_summary('type',errorBar,'geom','line');
 
 i().set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
@@ -320,7 +323,7 @@ i().draw();
 %mean between subj + sem
 i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group',[]);
 
-i().stat_summary('type','sem','geom','area');
+i().stat_summary('type',errorBar,'geom','area');
 
 i().set_color_options('map',cmapGrand);
 
@@ -469,7 +472,7 @@ i1.facet_grid([],data.sesSpecialLabel);
 i1.set_color_options('map',cmapGrand);
 
 %mean bar for trialType
-i1.stat_summary('type','sem','geom',{'bar', 'black_errorbar'}, 'dodge', dodge, 'width', width);
+i1.stat_summary('type',errorBar,'geom',{'bar', 'black_errorbar'}, 'dodge', dodge, 'width', width);
 
 i1.set_line_options('base_size',linewidthGrand)
 
@@ -497,7 +500,7 @@ group= data2.subject;
 i1.update('x', data2.trialTypeLabel,'y',data2.periCueBlueAuc,'color',[], 'group', group)
 
 % i1.geom_line('alpha',0.3); %individual trials way too much
-i1.stat_summary('type','sem','geom','line');
+i1.stat_summary('type',errorBar,'geom','line');
 
 i1.set_line_options('base_size',linewidthSubj);
 
@@ -508,7 +511,7 @@ i1.draw();
 %ind subj mean points
 i1.update('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
 
-i1.stat_summary('type','sem','geom','point', 'dodge', dodge);
+i1.stat_summary('type',errorBar,'geom','point', 'dodge', dodge);
 
 i1.set_color_options('map',cmapSubj); 
 
@@ -551,6 +554,81 @@ i1().draw();
 % saveFig(gcf, figPath, titleFig, figFormats);
 
 
+%% STATS for AUC plot above
+
+%-First need to subset to actual # of observations (1 per trial)
+
+%-Add unique trialIDs
+    %data2 currently has 2 values per timestamp per trial (1 per trialType).
+    %want to transform such that each timestamp copy belongs to distinct
+    %trialID %could simply multiply trialID by -1 if trialType== NS then values %would be unique.
+    
+    %convert to string (stack made this categorical)
+    data2.trialType= string(data2.trialType);
+    
+    %search for NS trialTypes
+    ind=[];
+    ind= contains(data2.trialType, 'NS');
+    
+    %transform trialIDs for these entries to make unique 
+    %muliplying by -1
+    data2(ind, "trialIDcum") = table(data2.trialIDcum(ind) * -1);
+    
+
+%- aggregate to one observation per trial (AUC is aggregated measure)
+    
+    %columns to group by
+groupers= ["subject","stage","trainDay", "fileID", "trialType", "trialIDcum"];
+
+    %simplfy to one observation (using mean)
+ data3= groupsummary(data2, [groupers],'mean', ["periCueBlueAuc"]);
+
+    %remove appended 'mean_' name on column
+ data3 = renamevars(data3,["mean_periCueBlueAuc"],[,"periCueBlueAuc"]);
+       
+%Result of groupsummary here is table with one auc value per unique trial
+
+%-- STAT LME
+%are mean AUC different by trialType? lme with random subject intercept
+
+%- dummy variable conversion
+% converting to dummies(retains only one column, as 2+ is redundant)
+
+%convert trialType to dummy variable 
+dummy=[];
+dummy= categorical(data3.trialType);
+dummy= dummyvar(dummy); 
+
+data3.trialType= dummy(:,1);
+
+
+%- run LME
+lme1=[];
+
+% lme1= fitlme(data3, 'periCueBlueAuc~ trialType + (1|subject)');
+%add stage?
+lme1= fitlme(data3, 'periCueBlueAuc~ trialType * stage + (1|subject)');
+
+
+%print and save results to file
+%seems diary keeps running log to same file (e.g. if code rerun seems prior output remains)
+diary('vp-vta-fp_Figure2_B_-DSvNS-auc-lmeDetails.txt')
+lme1
+diary off
+
+%-- Followup-- 
+
+%significant trialType * Stage interaction, so do followups for each stage?
+
+lme2= [];
+lme2= fitlme(data3, 'periCueBlueAuc~ trialType + stage + (1|subject)');
+
+% test= multcompare(lmre2)
+
+test= anova(lme2)
+
+
+
 %% -- Figure 2c - PE contingency PE vs no PE trace
 % 
 % stagesToPlot= [7];
@@ -584,7 +662,7 @@ i1().draw();
 % % individual subjects means
 % i2(1,1)= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome, 'group', data.subject);
 % 
-% i2(1,1).stat_summary('type','sem','geom','line');
+% i2(1,1).stat_summary('type',errorBar,'geom','line');
 % i2(1,1).geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 % 
 % i2(1,1).set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
@@ -603,7 +681,7 @@ i1().draw();
 % %mean between subj + sem
 % i2(1,1).update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome, 'group',[]);
 % 
-% i2(1,1).stat_summary('type','sem','geom','area');
+% i2(1,1).stat_summary('type',errorBar,'geom','area');
 % 
 % i2(1,1).set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 % 
@@ -660,7 +738,7 @@ i1().draw();
 % i2(1,2).set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 % 
 % %mean bar for trialType
-% i2(1,2).stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+% i2(1,2).stat_summary('type',errorBar,'geom',{'bar', 'black_errorbar'});
 % 
 % i2(1,2).set_line_options('base_size',linewidthGrand)
 % 
@@ -685,7 +763,7 @@ i1().draw();
 % %ind subj mean points
 % i2(1,2).update('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', data2.subject);
 % 
-% i2(1,2).stat_summary('type','sem','geom','point');
+% i2(1,2).stat_summary('type',errorBar,'geom','point');
 % 
 % i2(1,2).set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 % 
@@ -696,7 +774,7 @@ i1().draw();
 % i2(1,2).draw()
 
 
-%% Try distinct gramm objects for panel C and D
+%% Panel 3-  distinct gramm objects for panel C and D
 
 stagesToPlot= [7];
 
@@ -732,7 +810,7 @@ cmapSubj= cmapCueSubj;
 % individual subjects means
 i2= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome, 'group', data.subject);
 
-i2.stat_summary('type','sem','geom','line');
+i2.stat_summary('type',errorBar,'geom','line');
 i2.geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
 i2.set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
@@ -758,7 +836,7 @@ i2.draw();
 %mean between subj + sem
 i2.update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome, 'group',[]);
 
-i2.stat_summary('type','sem','geom','area');
+i2.stat_summary('type',errorBar,'geom','area');
 
 i2.set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
@@ -826,7 +904,7 @@ i3= gramm('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialO
 i3.set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
 %mean bar for trialType
-i3.stat_summary('type','sem','geom',{'bar', 'black_errorbar'});
+i3.stat_summary('type',errorBar,'geom',{'bar', 'black_errorbar'});
 
 i3.set_line_options('base_size',linewidthGrand)
 
@@ -856,7 +934,7 @@ group= data2.subject;
 i3.update('x', data2.trialOutcome,'y',data2.periCueBlueAuc,'color',[], 'group', group)
 
 % i1.geom_line('alpha',0.3); %individual trials way too much
-i3.stat_summary('type','sem','geom','line');
+i3.stat_summary('type',errorBar,'geom','line');
 
 i3.set_line_options('base_size',linewidthSubj);
 
@@ -868,7 +946,7 @@ i3.draw();
 %-ind subj mean points
 i3.update('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', data2.subject);
 
-i3.stat_summary('type','sem','geom','point');
+i3.stat_summary('type',errorBar,'geom','point');
 
 i3.set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
@@ -903,67 +981,6 @@ saveFig(gcf, figPath, titleFig, figFormats, figSize);
 %% TODO: STATS for this Figure (save output)
 
 %% AUC Stats
-
-
-%% STATS for AUC plot above
-
-%-First need to subset to actual # of observations (1 per trial)
-
-%-Add unique trialIDs
-    %data2 currently has 2 values per timestamp per trial (1 per trialType).
-    %want to transform such that each timestamp copy belongs to distinct
-    %trialID %could simply multiply trialID by -1 if trialType== NS then values %would be unique.
-    
-    %convert to string (stack made this categorical)
-    data2.trialType= string(data2.trialType);
-    
-    %search for NS trialTypes
-    ind=[];
-    ind= contains(data2.trialType, 'NS');
-    
-    %transform trialIDs for these entries to make unique 
-    %muliplying by -1
-    data2(ind, "trialIDcum") = table(data2.trialIDcum(ind) * -1);
-    
-
-%- aggregate to one observation per trial (AUC is aggregated measure)
-    
-    %columns to group by
-groupers= ["subject","trainDay", "fileID", "trialType", "trialIDcum"];
-
-    %simplfy to one observation (using mean)
- data3= groupsummary(data2, [groupers],'mean', ["periCueBlueAuc"]);
-
-    %remove appended 'mean_' name on column
- data3 = renamevars(data3,["mean_periCueBlueAuc"],[,"periCueBlueAuc"]);
-       
-%Result of groupsummary here is table with one auc value per unique trial
-
-%-- STAT LME
-%are mean AUC different by trialType? lme with random subject intercept
-
-%- dummy variable conversion
-% converting to dummies(retains only one column, as 2+ is redundant)
-
-%convert trialType to dummy variable 
-dummy=[];
-dummy= categorical(data3.trialType);
-dummy= dummyvar(dummy); 
-
-data3.trialType= dummy(:,1);
-
-
-%- run LME
-lme1=[];
-
-lme1= fitlme(data3, 'periCueBlueAuc~ trialType + (1|subject)');
-
-
-%print and save results to file
-%seems diary keeps running log to same file (e.g. if code rerun seems prior output remains)
-diary('fp-figure2-DSvNS-auc-lmeDetails.txt')
-lme1
-diary off
 
 
 

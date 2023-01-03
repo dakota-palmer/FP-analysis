@@ -606,45 +606,48 @@ dfTidy= dfTidy.drop(['inPort'], axis=1)
 
 
 #%% Calculate probability of behavioral outcome within first 10s of trial 
-#This is normalized so is more informative than simple count of trials. 
 
-#calculate Proportion of trials with PE out of all trials for each trial type
-#can use nunique() to get count of unique trialIDs with specific PE outcome per file
-#given this, can calculate Probortion as #PE/#PE+#noPE
+# #duplicated below after trialID revision, so getting rid of this?
+
+# #This is normalized so is more informative than simple count of trials. 
+
+# #calculate Proportion of trials with PE out of all trials for each trial type
+# #can use nunique() to get count of unique trialIDs with specific PE outcome per file
+# #given this, can calculate Probortion as #PE/#PE+#noPE
    
-#subset data and save as intermediate variable dfGroup
-#get only one entry per trial
-dfGroup= dfTidy.loc[dfTidy.groupby(['fileID','trialID']).cumcount()==0].copy()
+# #subset data and save as intermediate variable dfGroup
+# #get only one entry per trial
+# dfGroup= dfTidy.loc[dfTidy.groupby(['fileID','trialID']).cumcount()==0].copy()
 
-#for Lick+laser sessions, retain only trials with PE+lick for comparison (OPTO specific)
-# dfGroup.loc[dfGroup.laserDur=='Lick',:]= dfGroup.loc[(dfGroup.laserDur=='Lick') & (dfGroup.trialOutcomeBeh=='PE+lick')].copy()
+# #for Lick+laser sessions, retain only trials with PE+lick for comparison (OPTO specific)
+# # dfGroup.loc[dfGroup.laserDur=='Lick',:]= dfGroup.loc[(dfGroup.laserDur=='Lick') & (dfGroup.trialOutcomeBeh=='PE+lick')].copy()
    
-dfPlot= dfGroup.copy() 
+# dfPlot= dfGroup.copy() 
 
-#for each unique behavioral outcome, loop through and get count of trials in file
-#fill null counts with 0
-dfTemp=dfPlot.groupby(
-        ['fileID','trialType','trialOutcomeBeh10s'],dropna=False)['trialID'].nunique(dropna=False).unstack(fill_value=0)
-
-
-##calculate proportion for each trial type: num trials with outcome/total num trials of this type
-
-trialCount= dfTemp.sum(axis=1)
+# #for each unique behavioral outcome, loop through and get count of trials in file
+# #fill null counts with 0
+# dfTemp=dfPlot.groupby(
+#         ['fileID','trialType','trialOutcomeBeh10s'],dropna=False)['trialID'].nunique(dropna=False).unstack(fill_value=0)
 
 
-outcomeProb= dfTemp.divide(dfTemp.sum(axis=1),axis=0)
+# ##calculate proportion for each trial type: num trials with outcome/total num trials of this type
 
-#melt() into single column w label
-dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='trialOutcomeBeh10s',value_name='outcomeProbFile10s')
-
-#assign back to df by merging
-#TODO: can probably be optimized. if this section is run more than once will get errors due to assignment back to dfTidy
-dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
-
-dfTidy= dfTidy.merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s'])#.copy()
+# trialCount= dfTemp.sum(axis=1)
 
 
-# dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
+# outcomeProb= dfTemp.divide(dfTemp.sum(axis=1),axis=0)
+
+# #melt() into single column w label
+# dfTemp= outcomeProb.reset_index().melt(id_vars=['fileID','trialType'],var_name='trialOutcomeBeh10s',value_name='outcomeProbFile10s')
+
+# #assign back to df by merging
+# #TODO: can probably be optimized. if this section is run more than once will get errors due to assignment back to dfTidy
+# dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
+
+# dfTidy= dfTidy.merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s'])#.copy()
+
+
+# # dfTidy= dfTidy.reset_index().merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s']).copy()
 
 
 
@@ -1034,7 +1037,7 @@ dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
 # dfTidy= dfTidy.reset_index().set_index(['eventID'])
 
 dfTidy.reset_index(inplace=True)
-dfTidy.set_index(['eventID'], inplace=True)
+# dfTidy.set_index(['eventID'], inplace=True)
 
 #2022-12-1
 # overwrite inPort outcomes (determined in section above)
@@ -1093,7 +1096,7 @@ dfTidy.reset_index(inplace=True) #reset index so eventID index is kept
 dfTidy= dfTidy.merge(dfTemp,'left', on=['fileID','trialType','trialOutcomeBeh10s'])#.copy()
 
 
-dfTidy.set_index(['eventID'], inplace=True)
+# dfTidy.set_index(['eventID'], inplace=True)
 
 
 
@@ -1294,6 +1297,7 @@ my_shelf.close()
 # dfPlot = dfGroup[(dfGroup.trialType == 'DStime') | (dfGroup.trialType =='NStime')].copy()
 # trialOrderPlot= ['DStime','NStime']
 
+#%% Training plot for manuscript...
 
 # #dp 1/15/22 error for fp data
 # # #define stages for 'early' and 'late' subplotting
