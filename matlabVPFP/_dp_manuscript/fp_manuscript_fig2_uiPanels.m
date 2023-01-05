@@ -5,7 +5,7 @@
 
 %% default error (sem vs bootstrap CI)
 errorBar= 'sem';
-% errorBar= 'bootci';
+% errorBar= 'bootci'; %computationally expensive;
 
 %% set defaults
 
