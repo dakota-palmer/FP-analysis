@@ -776,6 +776,7 @@ test= anova(lme2)
 
 %% Panel 3-  distinct gramm objects for panel C and D
 
+
 stagesToPlot= [7];
 
 %---- i(1) pericue z trace
@@ -804,8 +805,8 @@ data= stack(data, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome',
 clear i2
 
 % use cmap distinct from the DS vs NS (can refine in illustrator)
-cmapGrand= cmapCueGrand;
-cmapSubj= cmapCueSubj;
+cmapGrand= cmapPEGrand;
+cmapSubj= cmapPESubj;
 
 % individual subjects means
 i2= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialOutcome, 'group', data.subject);
@@ -864,9 +865,45 @@ i2().draw();
 %% Panel D- AUC
 
 %---- i(2) bar AUC
+data2=[];
 data2= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
 
-% data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
+%-- subset to one observation per trial
+%use findgroups to groupby trialIDcum and subset to 1 observation per
+groupIDs= [];
+groupIDs= findgroups(data2.trialIDcum);
+
+groupIDsUnique= [];
+groupIDsUnique= unique(groupIDs);
+
+
+data3=table; 
+for thisGroupID= 1:numel(groupIDsUnique)
+    %for each groupID, find index matching groupID
+    ind= [];
+    ind= find(groupIDs==groupIDsUnique(thisGroupID));
+    
+    %for each groupID, get the table data matching this group
+    thisGroup=[];
+    thisGroup= data2(ind,:);
+
+    %now cumulative count of observations in this group
+    %make default value=1 for each, and then cumsum() to get cumulative count
+    thisGroup(:,'cumcount')= table(1);
+    thisGroup(:,'cumcount')= table(cumsum(thisGroup.cumcount));
+    
+    %save only single observation per trial (get first value)
+    %get observation where timeLock==0
+    ind= [];
+    ind= thisGroup.timeLock==0;
+    
+    data3(thisGroupID,:)= thisGroup(ind,:);
+    
+end 
+
+%redefine data table
+data2= table();
+data2= data3;
 
 %initialize & add binary variable for PE vs noPE
 data2(:,'poxDSoutcome')= {''}; %table(0);
@@ -895,8 +932,8 @@ data2= stack(data2, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome
 clear i3
 
 % use cmap distinct from the DS vs NS (can refine in illustrator)
-cmapGrand= cmapCueGrand;
-cmapSubj= cmapCueSubj;
+cmapGrand= cmapPEGrand;
+cmapSubj= cmapPESubj;
 
 %mean between subj
 i3= gramm('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialOutcome, 'group', []);
@@ -973,8 +1010,15 @@ i3.draw()
 
 %-Declare Size of Figure at time of creation (up top), not time of saving.
 
+%- Remove borders of UIpanels prior to save
+p1.BorderType= 'none'
+p2.BorderType= 'none'
+p3.BorderType= 'none'
+p4.BorderType= 'none'
+
+
 %-Save the figure
-titleFig='vp-vta_Figure2_uiPanels';
+titleFig='vp-vta_Figure2_uiPanels_colorA';
 saveFig(gcf, figPath, titleFig, figFormats, figSize);
 
 

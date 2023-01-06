@@ -166,8 +166,72 @@ cmapCustomCue= cmapCustomCue/255;
 
 cmapCueGrand= cmapCustomCue([1,7],:); %dark
 cmapCueSubj= cmapCustomCue([2,6],:); %light
+%%
+% % -- PE vs noPE cmap (variations of of DS blue-- teal / purple picked from Illustrators 'color guide' 'analogous')
+
+% %tested a few variants here
+
+% purple vs teal - good
+cmapCustomPE= [65, 146, 119; %dark teal
+            120, 206,178; 
+            187,231,217; %light teal 
+            230,230,230 %neutral
+            187,188,231; %light purple
+            120,121,206;
+            65,65,146;  %dark purple 
+            ];
+%             
+% 
+
+% cmapCustomPE= [26, 71, 105; %dark blue
+%             71, 108,135; 
+%             117,145,165; %light blue 
+%             230,230,230 %neutral
+%             187,188,231; %light purple
+%             120,121,206;
+%             65,65,146;  %dark purple 
+%             ];
+%             
+
+% 
+
+%     %more intense blue vs teal  %- good
+% cmapCustomPE= [65, 146, 119; %dark 
+%             120, 206,178; 
+%             187,231,217; %light  
+%             230,230,230 %neutral
+%             126, 148,225; %light 
+%             82,112,215;
+%             39 ,76,205;  %dark  
+%             ];
+%             
+%             %more intense blue vs less 
+% cmapCustomPE=  [26, 71, 105; %dark blue
+%             71, 108,135; 
+%             117,145,165; %light blue 
+%             230,230,230 %neutral
+%             126, 148,225; %light 
+%             82,112,215;
+%             39 ,76,205;  %dark  
+%             ];
+%             
+        
+
+cmapCustomPE= cmapCustomPE/255;
+
+cmapPEGrand= cmapCustomPE([7,1],:); %dark
+cmapPESubj= cmapCustomPE([6,2],:); %light
+
+   %viz this colormap in colorbar to side of rgbplot
+    figure();
+    rgbplot(cmapCustomPE);
+    hold on
+    colormap(cmapCustomPE)
+    colorbar('Ticks',[])
+    title('cmapCustomPE');
 
 
+%% 
 %--Active vs Inactive cmaps (e.g. laser-paired vs unpaired operand)
 
 %- Blue vs. Grey

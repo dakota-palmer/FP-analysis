@@ -144,11 +144,44 @@ groupHierarchyEventType = ['stage',
                            'subject', 'trainDayThisStage', 'trialType', 'fileID', 'trialID', 'eventType']
     
 
+
 #%% RECALCULATRING / DEFINING ENDSTAGE
+
+
+#%% - Mark criteriaSes; sessions which pass behavioral criteria (for DS task, DS and NS PE Ratio)
 
 #- clear previously calclulated values
 dfTidy.trainPhase= None
 dfTidy.trainDayThisPhase= None
+# dfTidy.criteriaSes= None
+
+
+# #-----TODO: do reverse-criteria for the mpc values first (less complicated than this)
+
+# #stages 1-4= DS only 
+#     #melt() probPE trialtype 
+
+
+
+# dfTemp= dfTidy.loc[dfTidy.stage< 5].copy()
+
+# ind= dfTemp.mpcDSpeRatio >= criteriaDS 
+
+# ind= dfTemp.loc[ind].index
+
+# dfTidy.loc[ind, 'criteriaSes']= 1
+
+# #stage >5 includes NS also
+
+# dfTemp= df.loc[df.stage>= 5]
+
+# ind= ((dfTemp.mpcDSpeRatio >= criteriaDS ) & (dfTemp.mpcNSpeRatio <= criteriaNS))
+
+# ind=dfTemp.loc[ind].index
+
+# df.loc[ind,'criteriaSes']= 1
+
+
 
 #% - Mark Early vs. Late training data for comparison
 # n first days vs. n final days (prior to meeting criteria)
@@ -249,6 +282,12 @@ dfTidy.trainDayThisPhase= dfTidy.groupby(['fileID'])['trainDayThisPhase'].fillna
 
 
 
+#% 
+# viz by day
+test= subsetLevelObs(dfTidy,['fileID'])
+test= test.loc[:,['fileID','subject','stage','trainPhase','trainDayThisPhase', 'criteriaSes']]#,'mpcDSpeRatio','mpcNSpeRatio']]
+
+
 
 #%% Figure 1 code copied from fpBehaviorPlots (newer)
 
@@ -270,7 +309,6 @@ dfPlot= subsetData(dfTidy, stagesToPlot, trialTypesToPlot, eventsToPlot).copy()
 #subset to 1 obs per trial for counting
 dfPlot= subsetLevelObs(dfPlot, groupHierarchyTrialType)#.copy()
 
-
 g= sns.FacetGrid(data=dfPlot, col='trainPhase', sharex=False)
 
 g.map_dataframe(sns.lineplot,data= dfPlot, units='subject', estimator=None, x= 'trainDayThisPhase', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder, alpha=alphaSubj)
@@ -283,8 +321,8 @@ g.map(plt.axhline,y=criteriaDS, color=".2", linewidth=linewidthRef, dashes=(3,1)
 g.add_legend()
 
 
-#-- Appropriately size & position figure for final layout
-# g.figure.set_size_inches(figWidth,figHeight)
+# #-- Appropriately size & position figure for final layout
+# # g.figure.set_size_inches(figWidth,figHeight)
 
 #mockup figure
 # For JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
@@ -295,16 +333,16 @@ px = 1/plt.rcParams['figure.dpi']  # pixel in inches
 figWidth= 650*px
 figHeight= 600*px
 
-# #define Figure subplots
+# # #define Figure subplots
 
-# # fig, ax = plt.subplots(1, 2, gridspec_kw={'width_ratios': [3, 1]})
+# # # fig, ax = plt.subplots(1, 2, gridspec_kw={'width_ratios': [3, 1]})
 
-# #4 subplots (2x2), equal length/width?
-# fig, ax = plt.subplots(2, 2) #gridspec_kw={'width_ratios': [3, 1]})
+# # #4 subplots (2x2), equal length/width?
+# # fig, ax = plt.subplots(2, 2) #gridspec_kw={'width_ratios': [3, 1]})
 
-# fig.set_size_inches(figWidth,figHeight)
+# # fig.set_size_inches(figWidth,figHeight)
 
-# fig.tight_layout()
+# # fig.tight_layout()
 
 
 #%% FINAL Figure1 mockup figure with subFigures and blank spaces for others
@@ -324,8 +362,8 @@ sns.set_palette(cmapCustomBlueGray)
 
 #adjust to make text save as editable- might prevent live drawing in spyder?
 # https://stackoverflow.com/questions/5956182/cannot-edit-text-in-chart-exported-by-matplotlib-and-opened-in-illustrator
-# matplotlib.rcParams['pdf.fonttype'] = 42
-# matplotlib.rcParams['ps.fonttype'] = 42
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 
 #--make the figure with sub-figures
@@ -340,10 +378,10 @@ fig = plt.figure(constrained_layout=True, figsize=(figWidth, figHeight))
 subFigs = fig.subfigures(2, 1, wspace=0.0, hspace= 0.0) #minimal padding between subFigs
 
 # make 2 subfigs in top row subfig
-subFigsTop= subFigs[0].subfigures(1,2, width_ratios=[1,1])
+subFigsTop= subFigs[0].subfigures(1,2, width_ratios=[1,1], wspace=0.0, hspace= 0.0)
 
 #make 2 subfigs in bottom row subfig
-subFigsNest = subFigs[1].subfigures(1, 2, width_ratios=[1, 3])
+subFigsNest = subFigs[1].subfigures(1, 2, width_ratios=[1, 1.66], wspace=0.0, hspace= 0.0)
 
 
 #leaving some varying gray in the other subfigure blanks for visible divisions
@@ -377,6 +415,7 @@ fig1D = subFigsNest[1].subplots(1, 2, sharey=True, sharex=False)
 #loop through to keep code concise
 phasesToPlot= dfPlot.trainPhase.unique()
 
+
 for thisPhase in range(len(phasesToPlot)):
     ind= dfPlot.trainPhase==phasesToPlot[thisPhase]
     dfPlot2= dfPlot.loc[ind,:].copy()
@@ -387,6 +426,9 @@ for thisPhase in range(len(phasesToPlot)):
 
     # g.set(title=('Reward-seeking in '+phasesToPlot[thisPhase] + ' training'))
     g.set(title=(phasesToPlot[thisPhase] + ' training'))
+
+    #-Adjust axes ticks- 1 per x value
+    fig1D[thisPhase].set(xticks= np.arange(dfPlot2.trainDayThisPhase.min(),dfPlot2.trainDayThisPhase.max()+1,1))
 
 
     # g.set(xlabel='Days from training start')
@@ -1203,7 +1245,7 @@ df.loc[df.stage<5, 'mpcNSpeRatio']= None
 # df= df.loc[df.stage.notnull()]
 
 
-#%% - Mark stages which pass behavioral criteria (for DS task, DS and NS PE Ratio)
+#%% - Mark criteriaSes; sessions which pass behavioral criteria (for DS task, DS and NS PE Ratio)
 
 # df['criteriaSes']= None
 
@@ -1239,8 +1281,9 @@ df.loc[ind,'criteriaSes']= 1
 # # endStage= 7
 # endStage= 5
 
+#%% - TrainPhase label based on behavioral criteria!
 
-#%% Add trainPhase label for early vs. late training days within-subject
+#% Add trainPhase label for early vs. late training days within-subject
 
 # #
 # # dfTemp= df.copy()
@@ -1264,15 +1307,15 @@ df.loc[ind,'criteriaSes']= 1
 dfTemp= df.copy()
 
 #instead of limiting to criteria days, simply start last n day count from final day of endStage
-# dfTemp= dfTemp.loc[dfTemp.criteriaSes==1]
+dfTemp= dfTemp.loc[dfTemp.criteriaSes==1]
 
-dfTemp= dfTemp.loc[dfTemp.stage==endStage]
+# dfTemp= dfTemp.loc[dfTemp.stage==endStage]
 
 #first fileIDs for each subject which meet criteria in the endStage
-# dfTemp= dfTemp.groupby(['subject']).first()#.index
+dfTemp= dfTemp.groupby(['subject']).first()#.index
 
 #just get last fileID for each subj in endStage
-dfTemp= dfTemp.groupby(['subject']).last()#.index
+# dfTemp= dfTemp.groupby(['subject']).last()#.index
 
 ind= dfTemp.fileID
 
@@ -1331,6 +1374,114 @@ df.trainDayThisPhase= df.groupby(['fileID'])['trainDayThisPhase'].fillna(method=
 # df['trainDayThisPhase']=  dfGroup.groupby(['subject', 'trainPhase']).transform('cumcount')
 # df.trainDayThisPhase= df.groupby(['fileID'])['trainDayThisPhase'].fillna(method='ffill').copy()
 
+
+
+#% 
+# viz by day
+test= subsetLevelObs(df,['fileID'])
+test= test.loc[:,['fileID','subject','stage','trainPhase','trainDayThisPhase', 'criteriaSes']]#,'mpcDSpeRatio','mpcNSpeRatio']]
+
+
+
+
+#%% ===== TrainPhase label based on last day of late 
+# #%% Add trainPhase label for early vs. late training days within-subject
+
+# # #
+# # # dfTemp= df.copy()
+
+# # # ind= dfTemp.loc[dfTemp.criteriaSes==1 & (dfTemp.stage == endStage)]
+
+# ## TODO: Limit "late" training sessions as prior to meeting criteria (not just the last stage) 
+    
+# # #mark the absolute criteria point, set criteriaSes=2 (first session in endStage where criteria was met)
+# # #this way can find easily and get last n sessions
+# # dfTemp= df.copy()
+
+# # dfGroup= dfTemp.loc[dfTemp.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+
+# # test= dfGroup.groupby(['subject','fileID','criteriaSes'], as_index=False)['trainDay'].count()
+
+
+
+# #- mark the absolute criteria point, set criteriaSes=2 (first session in endStage where criteria was met)
+# #this way can find easily and get last n sessionsdfTemp= df.copy()
+# dfTemp= df.copy()
+
+# #instead of limiting to criteria days, simply start last n day count from final day of endStage
+# # dfTemp= dfTemp.loc[dfTemp.criteriaSes==1]
+
+# dfTemp= dfTemp.loc[dfTemp.stage==endStage]
+
+# #first fileIDs for each subject which meet criteria in the endStage
+# # dfTemp= dfTemp.groupby(['subject']).first()#.index
+
+# #just get last fileID for each subj in endStage
+# dfTemp= dfTemp.groupby(['subject']).last()#.index
+
+# ind= dfTemp.fileID
+
+
+# df.loc[df.fileID.isin(ind),'criteriaSes']= 2
+
+# #- now mark last n sessions preceding final criteria day as "late"
+
+# #subset data up to absolute criteria session
+
+# #get trainDay corresponding to absolute criteria day for each subject, then get n prior sessions and mark as late
+# dfTemp2= df.copy()
+
+# # dfTemp2=dfTemp2.set_index(['subject'])
+# #explicitly saving and setting on original index to prevent mismatching (idk why this was happening but it was, possibly something related to dfTemp having index on subject)
+# dfTemp2=dfTemp2.reset_index(drop=False).set_index(['subject'])
+
+
+# #-- something wrong here with lastTrainDay assignment
+# dfTemp2['lastTrainDay']= dfTemp.trainDay.copy()
+
+# dfTemp2= dfTemp2.reset_index().set_index('index')
+
+# #get dates within nSes prior to final day 
+# ind= ((dfTemp2.trainDay>=dfTemp2.lastTrainDay-nSes) & (dfTemp2.trainDay<=dfTemp2.lastTrainDay))
+
+
+# #label trainPhase as late
+# dfTemp2.loc[ind,'trainPhase']= 'late'
+
+# df['trainPhase']= dfTemp2['trainPhase'].copy()
+
+# #add reverse count of training days within late phase (countdown to final day =0)
+# dfTemp2.loc[ind,'trainDayThisPhase']= dfTemp2.trainDay-dfTemp2.lastTrainDay
+
+# df['trainDayThisPhase']= dfTemp2['trainDayThisPhase'].copy()
+
+# #- Now do early trainPhase for first nSes
+# #just simply get first nSes starting with 0
+# ind= df.trainDay <= nSes
+
+# df.loc[ind,'trainPhase']= 'early'
+
+
+# #TODO- in progress (indexing match up)
+# # add forward cumcount of training day within early phase 
+# #only save into early phase subset
+# ind= df.trainPhase=='early'
+
+# dfGroup= df.loc[df.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+# df.loc[ind,'trainDayThisPhase']=  dfGroup.groupby(['subject', 'trainPhase']).transform('cumcount') #add 1 for intuitive count
+# df.trainDayThisPhase= df.groupby(['fileID'])['trainDayThisPhase'].fillna(method='ffill').copy()
+
+# #old; add corresponding days for each phase for plot x axes- old; simple cumcount
+# # dfGroup= df.loc[df.groupby('fileID').transform('cumcount')==0,:].copy() #one per session
+# # df['trainDayThisPhase']=  dfGroup.groupby(['subject', 'trainPhase']).transform('cumcount')
+# # df.trainDayThisPhase= df.groupby(['fileID'])['trainDayThisPhase'].fillna(method='ffill').copy()
+
+
+
+# #% 
+# # viz by day
+# test= subsetLevelObs(df,['fileID'])
+# test= test.loc[:,['fileID','subject','stage','trainPhase','trainDayThisPhase', 'criteriaSes','mpcDSpeRatio','mpcNSpeRatio']]
 
 
 #%% ----  melt() 2 columns of PE probability into one by trialType

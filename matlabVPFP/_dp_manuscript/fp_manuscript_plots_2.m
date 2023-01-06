@@ -37,7 +37,7 @@ xlimTraces= [-2,10];
 %default lims for AUC plots
 %note xlims best to calculate dynamically for bar plots based on num x categories
 % ylimAUC= [-1,16];
-ylimAUC= [-6,16];
+ylimAUC= [-6,16.5];
 
 
 %% Load periEventTable from fp_manuscript_figs.m --
@@ -120,7 +120,7 @@ periEventTable(ind3, 'sesSpecialLabel')= {'NS Introduced-Stage5'};
 data= periEventTable;
 
 %search for this label and remove it
-labelToClear= {'stage-5-final-day'};
+labelsToClear= {'stage-5-final-day'};
 
 ind = strcmp(data.sesSpecialLabel,labelsToClear);
 
