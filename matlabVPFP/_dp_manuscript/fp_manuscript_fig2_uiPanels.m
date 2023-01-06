@@ -596,6 +596,19 @@ i1().draw();
 %export as parquet for python
 dataTableFig2B= data2;
 
+% save table as Parquet file
+% % https://www.quora.com/When-should-I-use-parquet-file-to-store-data-instead-of-csv
+% 
+% % test.date= [test.date{:}]'
+% 
+% % datetime(test.date, 'InputFormat', 'dd/MM/yyyy HH')
+% 
+% % parquetwrite('test.parquet', test);
+
+% %changing dtype of date, parquet doesn't like cells
+% fpTable.date= [fpTable.date{:}]';
+
+parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
 
 
 
