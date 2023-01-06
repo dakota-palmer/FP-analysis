@@ -17,7 +17,11 @@ import statsmodels.formula.api as smf
 
 #using statsmodels package
 #note that statsmodels documentation frequently mentions using patsy to create design matrices. 
-#using patsy is a good approach but can also just manually prep data with pandas functions
+
+#formulaic seems better long term successor to patsy
+# https://github.com/matthewwardrop/formulaic
+
+#but formulaic support for mixed effects unclear as of late 2022 https://github.com/matthewwardrop/formulaic/pull/34
 
 #here am just going to just use pandas dataframes and prep the data myself, best for mixed effects
 
@@ -28,13 +32,33 @@ import statsmodels.formula.api as smf
 # The dummy coding is not wrong per se. It captures all of the coefficients, but it complicates matters when the model assumes independence of the coefficients such as in ANOVA.
 #Linear regression models do not assume independence of the coefficients and thus dummy coding is often the only coding that is taught in this context.
 
-#%% ------------ FIGURE 2B STATS -------------------------------
+
+#% Example LME- examining how variables are coded 
+#% https://www.statsmodels.org/dev/examples/notebooks/generated/mixed_lm_example.html
+# data = sm.datasets.get_rdataset("dietox", "geepack").data
+# md = smf.mixedlm("Weight ~ Time", data, groups=data["Pig"])
+# mdf = md.fit(method=["lbfgs"])
+# print(mdf.summary())
+
+
+#%% ---- FIGURE 2B STATS ---------------------------------------
 #Figure 2B- compare AUC of DS vs NS
     
 #%%--Load the data
 datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp_stats_fig2bTable.parquet"
 
 dfFig2B= pd.read_parquet(datapath)
+
+
+df= dfFig2B.copy()
+
+
+#Defining model variables here to help automate data prep (thinking want dummy coding of categorical fixed effects but not random effects)
+yVar= ['periCueBlueAUC']
+
+fixedEffectVars= ['trialType','sesSpecialLabel']
+
+randomEffectVars= ['subject']
 
 
 #%%-- Isolate only data you want
@@ -46,12 +70,10 @@ varsToInclude= ['subject','trialType','stage','sesSpecialLabel']
 
 varsToInclude.append(y)
 
-df= dfFig2B[varsToInclude].copy()
+df= df[varsToInclude]
 
 #%%--Prepare data for stats
-# df= dfFig2B.copy()
 
-#remove empty values/subset as needed, ensure dtypes ok
 
 #--remove missing/invalid observations
 
@@ -64,12 +86,6 @@ df= df.loc[ind,:]
 
 #-- Fix dtypes - explicitly assign categorical type to categorical vars
 
-# df.subject= df.subject.astype('category')
-# df.trialType= df.trialType.astype('category')
-# df.stage= df.stage.astype('category')
-# df.sesSpecialLabel= df.sesSpecialLabel.astype('category')
-
-
 catVars= ['subject','trialType','stage','sesSpecialLabel']
 
 df[catVars]= df[catVars].astype('category')
@@ -78,30 +94,59 @@ df[catVars]= df[catVars].astype('category')
 
 #%% Dummy Coding
 
-#compare manual prep vs patsy
-#manual:
-
-#-- All categorical variables should be converted into dummy variables before modeling!!! 
+#-- Categorical predictor variables should be converted into dummy variables before modeling
 # https://www.statology.org/pandas-get-dummies/
 
 #if columns= None, will automatically make dummies of Object and Categorical type columns
 # df= pd.get_dummies(df, columns=None , drop_first=True)
-dfDummy= pd.get_dummies(df, columns=catVars , drop_first=True)
+
+dfDummy= df.copy()
+
+dfDummy= pd.get_dummies(dfDummy, columns=catVars , drop_first=True).copy()
 
 
-# # search auto-generated dummy columns for variable names we want to include in model. Iterate through and collect into new series
-# fixedEffects= ['virus','sex', 'stage', 'trialType', 'laserDur']
+# search auto-generated dummy columns for variable names we want to include in model. Iterate through and collect into new series
+fixedEffectsDum= pd.Series()
+
+# for var in fixedEffectVars:
+#     fixedEffectsDum= fixedEffectsDum.append(dfDummy.columns[dfDummy.columns.str.contains(pat = var)].to_series())
+
+# #- Create dummy variables for categoricals, replacing original columns
+# for var in fixedEffectVars:
+    
+#     test= pd.get_dummies(dfDummy , drop_first=True).copy()    
+
+
+# for var in fixedEffectVars:
+#     dfDummy= df[var].copy()
+    
+#     test= pd.get_dummies(dfDummy , drop_first=True).copy()    
+    
+    
+    
+# search auto-generated dummy columns for variable names we want to include in model. Iterate through and collect into new series
 # fixedEffectsDum= pd.Series()
+fixedEffectsDum=[]
 
-# for var in fixedEffects:
-#     fixedEffectsDum= fixedEffectsDum.append(df.columns[df.columns.str.contains(pat = var)].to_series())
+for var in fixedEffectVars:
+    # dfDummy= df[var].copy()
+    
+    # dfDummy= pd.get_dummies(dfDummy , drop_first=True).copy()    
+    
+    #collect new dummy columns belonging to each fixed effect
+    fixedEffectsDum.append(dfDummy.columns[dfDummy.columns.str.contains(pat = var)])
+
+    # fixedEffectsDum= fixedEffectsDum.append(dfDummy.columns[dfDummy.columns.str.contains(pat = var)].to_series())
+    # fixedEffectsDum= fixedEffectsDum.concat(dfDummy.columns[dfDummy.columns.str.contains(pat = var)].to_series())
+
+    
     
 #Patsy data prep:
 
 # #Using Patsy to make data matrices, automatically makes dummy coded columns
 # from patsy import dmatrices
 
-# y, X = dmatrices('periCueBlueAuc ~ trialType + sesSpecialLabel', data=df, return_type='dataframe')
+# y, X = dmatrices('periCueBlueAuc ~ trialType * sesSpecialLabel ', data=df, return_type='dataframe')
 
 
 #subset as needed
@@ -130,6 +175,53 @@ dfDummy= pd.get_dummies(df, columns=catVars , drop_first=True)
 # y= ['probPE']
 
 
+#%% SIMPLY USE C() for categoricals? 
+
+# use C() to manually declare categorical & automatic dummy coding (should be inferred automatically)
+# this works. easy.
+groups= 'subject'
+
+formula= 'periCueBlueAuc ~ C(trialType) * C(sesSpecialLabel)'
+
+model= = smf.mixedlm(data=df, formula= formula, groups= df[groups])
+
+modelFit= model.fit()
+
+print(model.summary())
+
+# for readability, could numerically code using cat.codes but would need to ensure C() is added in formula so that used appropriately.
+
+# #convert categorical var strings to int codes?
+# df['subjCode'] = df.subject.cat.codes.copy()
+# df['trialTypeCode'] = df.trialType.cat.codes.copy()
+# df['sesSpecialLabelCode'] = df.sesSpecialLabel.cat.codes.copy()
+
+
+
+
+#%% MODEL
+
+
+#groups for random intercept
+groups= 'subject'
+
+formula= 'periCueBlueAuc ~ trialType * sesSpecialLabel'
+
+testMixed2 = smf.mixedlm(data=df, formula= formula, groups= df[groups])
+
+# testMixed = smf.mixedlm(data=df, formula= 'periCueBlueAuc ~ trialType * sesSpecialLabel', groups= df['subject'])
+
+
+testMixedFit2= testMixed2.fit()
+
+
+write_path = './_output.csv'
+with open(write_path, 'w') as f:
+    f.write(testMixedFit2.summary().as_csv())
+
+# testPredict= testModel.predict(df.loc[:,fixedEffectsDum])
+
+
 #%% How to handle categorical variables?
 
 # https://stats.stackexchange.com/questions/323098/encoding-of-categorical-variables-dummy-vs-effects-coding-in-mixed-models
@@ -142,20 +234,45 @@ dfDummy= pd.get_dummies(df, columns=catVars , drop_first=True)
 
 #%% try setting up design matrices instead of dataframe
 
-#Using Patsy to make data matrices, automatically makes dummy coded columns
-from patsy import dmatrices
+import formulaic
+# Formulaic module is successor to Patsy which is no longer in development
+# y, X = model_matrix("y ~ a + b + a:b", df)
+# This is short-hand for:
+# y, X = formulaic.Formula('y ~ a + b + a:b').get_model_matrix(df)
+# y, X = formulaic.Formula('probPE ~ virus + sex + virus:sex').get_model_matrix(df)
 
-y, X = dmatrices('periCueBlueAuc ~ trialType + sesSpecialLabel', data=df, return_type='dataframe')
-
-# testMixed3= 
-
-#%%-- MIXED EFFECTS LM
-# df= dfFig2B.copy()
-#removing empty placeholders
-# df= df.loc[df.subject.notnull()]
+# a * b is equivalent to a + b + a:b
+y, X = formulaic.Formula('periCueBlueAuc ~  * trialType * sesSpecialLabel | subject').get_model_matrix(df)
 
 
-df.subject= df.subject.astype('category')
+# Fitting a model in statsmodels typically involves 3 easy steps:
+
+#1) Use the model class to describe the model
+#e.g. mod = sm.OLS(y, X)    # Describe model
+
+
+#2) Fit the model using a class method
+# e.g. res = mod.fit()       # Fit model
+
+
+#3) Inspect the results using a summary method
+# e.g. print(res.summary())   # Summarize model
+
+
+# # statsmodels also provides graphics functions. For example, we can draw a plot of partial regression for a set of regressors by:
+# # : sm.graphics.plot_partregress('Lottery', 'Wealth', ['Region', 'Literacy'],
+# #    ....:                              data=df, obs_labels=False)
+# mod= sm.OLS(y,X) # Describe model
+# res = mod.fit()       # Fit model
+
+# print(res.summary())   # Summarize model
+# #%-- MIXED EFFECTS LM
+# # df= dfFig2B.copy()
+# #removing empty placeholders
+# # df= df.loc[df.subject.notnull()]
+
+
+# df.subject= df.subject.astype('category')
 
 #convert categorical var strings to int codes?
 df['subjCode'] = df.subject.cat.codes.copy()
