@@ -442,6 +442,43 @@ ind= ~strcmp('stage-7-day-1-criteria',data2.sesSpecialLabel);
 
 data2= data2(ind,:);
 
+%-- subset to one observation per trial
+%use findgroups to groupby trialIDcum and subset to 1 observation per
+groupIDs= [];
+groupIDs= findgroups(data2.trialIDcum);
+
+groupIDsUnique= [];
+groupIDsUnique= unique(groupIDs);
+
+data3=table; 
+for thisGroupID= 1:numel(groupIDsUnique)
+    %for each groupID, find index matching groupID
+    ind= [];
+    ind= find(groupIDs==groupIDsUnique(thisGroupID));
+    
+    %for each groupID, get the table data matching this group
+    thisGroup=[];
+    thisGroup= data2(ind,:);
+
+    %now cumulative count of observations in this group
+    %make default value=1 for each, and then cumsum() to get cumulative count
+    thisGroup(:,'cumcount')= table(1);
+    thisGroup(:,'cumcount')= table(cumsum(thisGroup.cumcount));
+    
+    %save only single observation per trial (get first value)
+    %get observation where timeLock==0
+    ind= [];
+    ind= thisGroup.timeLock==0;
+    
+    data3(thisGroupID,:)= thisGroup(ind,:);
+    
+end 
+
+%redefine data table
+data2= table();
+data2= data3;
+
+
 %stack() to make trialType variable for faceting
 data2= stack(data2, {'aucDSblue', 'aucNSblue'}, 'IndexVariableName', 'trialType', 'NewDataVariableName', 'periCueBlueAuc');
 
@@ -467,7 +504,7 @@ end
 group=[];
 i1= gramm('x',data2.trialTypeLabel,'y',data2.periCueBlueAuc, 'color', data2.trialTypeLabel, 'group', group);
 
-i1.facet_grid([],data.sesSpecialLabel);
+i1.facet_grid([],data2.sesSpecialLabel);
 
 i1.set_color_options('map',cmapGrand);
 
@@ -490,7 +527,7 @@ i1.set_title(titleFig); %overarching fig title must be set before first draw cal
 i1.no_legend();
 
 % set parent in uipanel of overall figure
-i1.set_parent(p2);
+% i1.set_parent(p2);
 
 %- first draw call-
 i1.draw()
@@ -554,78 +591,86 @@ i1().draw();
 % saveFig(gcf, figPath, titleFig, figFormats);
 
 
+%% Export data for external stats analysis outside of matlab
+
+%export as parquet for python
+dataTableFig2B= data2;
+
+
+
+
 %% STATS for AUC plot above
-
-%-First need to subset to actual # of observations (1 per trial)
-
-%-Add unique trialIDs
-    %data2 currently has 2 values per timestamp per trial (1 per trialType).
-    %want to transform such that each timestamp copy belongs to distinct
-    %trialID %could simply multiply trialID by -1 if trialType== NS then values %would be unique.
-    
-    %convert to string (stack made this categorical)
-    data2.trialType= string(data2.trialType);
-    
-    %search for NS trialTypes
-    ind=[];
-    ind= contains(data2.trialType, 'NS');
-    
-    %transform trialIDs for these entries to make unique 
-    %muliplying by -1
-    data2(ind, "trialIDcum") = table(data2.trialIDcum(ind) * -1);
-    
-
-%- aggregate to one observation per trial (AUC is aggregated measure)
-    
-    %columns to group by
-groupers= ["subject","stage","trainDay", "fileID", "trialType", "trialIDcum"];
-
-    %simplfy to one observation (using mean)
- data3= groupsummary(data2, [groupers],'mean', ["periCueBlueAuc"]);
-
-    %remove appended 'mean_' name on column
- data3 = renamevars(data3,["mean_periCueBlueAuc"],[,"periCueBlueAuc"]);
-       
-%Result of groupsummary here is table with one auc value per unique trial
-
-%-- STAT LME
-%are mean AUC different by trialType? lme with random subject intercept
-
-%- dummy variable conversion
-% converting to dummies(retains only one column, as 2+ is redundant)
-
-%convert trialType to dummy variable 
-dummy=[];
-dummy= categorical(data3.trialType);
-dummy= dummyvar(dummy); 
-
-data3.trialType= dummy(:,1);
-
-
-%- run LME
-lme1=[];
-
-% lme1= fitlme(data3, 'periCueBlueAuc~ trialType + (1|subject)');
-%add stage?
-lme1= fitlme(data3, 'periCueBlueAuc~ trialType * stage + (1|subject)');
-
-
-%print and save results to file
-%seems diary keeps running log to same file (e.g. if code rerun seems prior output remains)
-diary('vp-vta-fp_Figure2_B_-DSvNS-auc-lmeDetails.txt')
-lme1
-diary off
-
-%-- Followup-- 
-
-%significant trialType * Stage interaction, so do followups for each stage?
-
-lme2= [];
-lme2= fitlme(data3, 'periCueBlueAuc~ trialType + stage + (1|subject)');
-
-% test= multcompare(lmre2)
-
-test= anova(lme2)
+% 
+% %-First need to subset to actual # of observations (1 per trial)
+% 
+% %-Add unique trialIDs
+%     %data2 currently has 2 values per timestamp per trial (1 per trialType).
+%     %want to transform such that each timestamp copy belongs to distinct
+%     %trialID %could simply multiply trialID by -1 if trialType== NS then values %would be unique.
+%     
+%     %convert to string (stack made this categorical)
+%     data2.trialType= string(data2.trialType);
+%     
+%     %search for NS trialTypes
+%     ind=[];
+%     ind= contains(data2.trialType, 'NS');
+%     
+%     %transform trialIDs for these entries to make unique 
+%     %muliplying by -1
+%     data2(ind, "trialIDcum") = table(data2.trialIDcum(ind) * -1);
+%     
+% 
+% %- aggregate to one observation per trial (AUC is aggregated measure)
+%     
+%     %columns to group by
+% groupers= ["subject","stage","trainDay", "fileID", "trialType", "trialIDcum"];
+% 
+%     %simplfy to one observation (using mean)
+%  data3= groupsummary(data2, [groupers],'mean', ["periCueBlueAuc"]);
+% 
+%     %remove appended 'mean_' name on column
+%  data3 = renamevars(data3,["mean_periCueBlueAuc"],[,"periCueBlueAuc"]);
+%        
+% %Result of groupsummary here is table with one auc value per unique trial
+% 
+% %-- STAT LME
+% %are mean AUC different by trialType? lme with random subject intercept
+% 
+% %- dummy variable conversion
+% % converting to dummies(retains only one column, as 2+ is redundant)
+% 
+% %convert trialType to dummy variable 
+% dummy=[];
+% dummy= categorical(data3.trialType);
+% dummy= dummyvar(dummy); 
+% 
+% data3.trialType= dummy(:,1);
+% 
+% 
+% %- run LME
+% lme1=[];
+% 
+% % lme1= fitlme(data3, 'periCueBlueAuc~ trialType + (1|subject)');
+% %add stage?
+% lme1= fitlme(data3, 'periCueBlueAuc~ trialType * stage + (1|subject)');
+% 
+% 
+% %print and save results to file
+% %seems diary keeps running log to same file (e.g. if code rerun seems prior output remains)
+% diary('vp-vta-fp_Figure2_B_-DSvNS-auc-lmeDetails.txt')
+% lme1
+% diary off
+% 
+% %-- Followup-- 
+% 
+% %significant trialType * Stage interaction, so do followups for each stage?
+% 
+% lme2= [];
+% lme2= fitlme(data3, 'periCueBlueAuc~ trialType + stage + (1|subject)');
+% 
+% % test= multcompare(lmre2)
+% 
+% test= anova(lme2)
 
 
 
@@ -875,7 +920,6 @@ groupIDs= findgroups(data2.trialIDcum);
 
 groupIDsUnique= [];
 groupIDsUnique= unique(groupIDs);
-
 
 data3=table; 
 for thisGroupID= 1:numel(groupIDsUnique)
