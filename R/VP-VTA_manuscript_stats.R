@@ -101,15 +101,45 @@ t= emmeans(model_lmerTest, pairwise ~ trialType | sesSpecialLabel)
 summary(t)
 
 # pairwise comparisons with emmeans
-emms<- emmeans(model_lmerTest, pairwise ~ trialType : sesSpecialLabel)
+# emms<- emmeans(model_lmerTest, pairwise ~ trialType : sesSpecialLabel) #this was all interaction combos, should use |
 
-pw= pairs(emm)
+emms<- emmeans(model_lmerTest, pairwise ~ trialType | sesSpecialLabel) 
+
+#what's the difference between calling emms and calling pairs(emms) ?
+#- summary(emms) gives emmeans for each, which I think I want. Along with the pairwise contrast pvalues
+
+# PAIRS here is giving same result as emms$contrasts
+
+# https://cran.r-project.org/web/packages/emmeans/vignettes/FAQs.html#noadjust
+# emmeans() completely ignores my P-value adjustments
+# This happens when there are only two means (or only two in each by group). Thus there is only one comparison. When there is only one thing to test, there is no multiplicity issue, and hence no multiplicity adjustment to the P values.
+
+pw= pairs(emms, adjust= 'sidak')
+
+# no difference here at all
+pwDefault= pairs(emms)
+pwNone= pairs(emms, adjust='none')
+pwSidak= pairs(emms, adjust='sidak')
+pwBonf= pairs(emms, adjust='bonf')
+
+# assignment issue?
+summary(pairs(emms, adjust='bonf'))
+
+
+
 
 #don't use tukey's post-hok adjustment, use sidak.
 
 # pw= summary(pw, adjust= 'sidak')
 
 # plot(pw)
+
+
+# # Use single consistent naming structure for this fig's data?
+# #best to just keep generic & change filenames I think
+# fig2Bstats.lme= model_lmerTest
+# fig2Bstats.lme_anova= model_anova_lmerTest
+# fig2Bstats.posthoc_pairwise= emms
 
 
 #%%- Save outputs #### 
@@ -130,12 +160,26 @@ sink()  # returns output to the console
 
 #use sink to write console output to text file
 sink("vp-vta_fig2B_posthoc_pairwise.txt")
-print(summary(pw, adjust= 'sidak')) #use sidak correction for posthoc
+print(summary(pw)) 
 sink()  # returns output to the console
 
 #use sink to write console output to text file
 sink("vp-vta_fig2B_posthoc_simple_pairwise.txt")
-print(summary(t), adjust= 'sidak')
+print(summary(t))
+sink()  # returns output to the console
+
+
+# use sink to write console output to text file
+# write everything to one file #removing print() calls doesn't seem to clean up anyway
+
+sink("vp-vta_fig2B_stats.txt")
+print('1)---- LME: -----')
+print(summary(model_lmerTest))
+print('2)---- ANOVA of LME: -----')
+print(model_anova_lmerTest)
+print('3)---- Posthoc pairwise: -----')
+print(summary(t))
+
 sink()  # returns output to the console
 
 
