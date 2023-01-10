@@ -453,7 +453,8 @@ data.latencyOrder= latencyOrderDummy(:,1);
 % lme1= fitlme(data, 'periCueRho~ (timeLock:latencyOrder)+ (1|subject)');
 lme1= fitlme(data, 'periCueRho~ timeLock*latencyOrder + (1|subject)');
 
-lme1
+% can call anova() on lme output to estimate main effects tho.
+anova(lme1)?
 
 %TBD in R, multiple comparisons seem impossible in matlab
 % if significant time:latencyOrder interaction, follow-up with individual comparison at each timepoint:

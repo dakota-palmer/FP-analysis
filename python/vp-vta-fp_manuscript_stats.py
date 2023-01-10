@@ -40,6 +40,11 @@ import statsmodels.formula.api as smf
 # mdf = md.fit(method=["lbfgs"])
 # print(mdf.summary())
 
+#%% Environmetn for R?
+#- pandas version needs to match R environment version to load the pickle!
+# activate R environment for pickling (to make env management/consistency easier)
+# conda activate r-env 
+
 
 #%% ---- FIGURE 2B STATS ---------------------------------------
 #Figure 2B- compare AUC of DS vs NS
@@ -62,7 +67,7 @@ randomEffectVars= ['subject']
 
 
 #%%-- Isolate only data you want
-#to save time/memory, pare down dataset to vars we are interested in?
+#to save time/memory, pare down dataset to vars we are interested in
 
 y= 'periCueBlueAuc'
 
@@ -74,7 +79,6 @@ df= df[varsToInclude]
 
 #%%--Prepare data for stats
 
-
 #--remove missing/invalid observations
 
 #-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
@@ -85,280 +89,118 @@ ind= df.stage>=5
 df= df.loc[ind,:]
 
 #-- Fix dtypes - explicitly assign categorical type to categorical vars
+# note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
 
 catVars= ['subject','trialType','stage','sesSpecialLabel']
 
 df[catVars]= df[catVars].astype('category')
 
+#%%-- Export to R.
 
+# save to pickle
+#- pandas version needs to match R environment version to load the pickle!
+# # activate R environment for pickling (to make env management/consistency easier)
+# conda activate r-env 
 
-#%% Dummy Coding
+df= df.copy()
 
-#-- Categorical predictor variables should be converted into dummy variables before modeling
-# https://www.statology.org/pandas-get-dummies/
+savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
-#if columns= None, will automatically make dummies of Object and Categorical type columns
-# df= pd.get_dummies(df, columns=None , drop_first=True)
+print('saving fig2b df to file')
 
-dfDummy= df.copy()
+#Save as pickel
+df.to_pickle(savePath+'fig2b.pkl')
 
-dfDummy= pd.get_dummies(dfDummy, columns=catVars , drop_first=True).copy()
+#%%-- Run model
 
-
-# search auto-generated dummy columns for variable names we want to include in model. Iterate through and collect into new series
-fixedEffectsDum= pd.Series()
-
-# for var in fixedEffectVars:
-#     fixedEffectsDum= fixedEffectsDum.append(dfDummy.columns[dfDummy.columns.str.contains(pat = var)].to_series())
-
-# #- Create dummy variables for categoricals, replacing original columns
-# for var in fixedEffectVars:
-    
-#     test= pd.get_dummies(dfDummy , drop_first=True).copy()    
-
-
-# for var in fixedEffectVars:
-#     dfDummy= df[var].copy()
-    
-#     test= pd.get_dummies(dfDummy , drop_first=True).copy()    
-    
-    
-    
-# search auto-generated dummy columns for variable names we want to include in model. Iterate through and collect into new series
-# fixedEffectsDum= pd.Series()
-fixedEffectsDum=[]
-
-for var in fixedEffectVars:
-    # dfDummy= df[var].copy()
-    
-    # dfDummy= pd.get_dummies(dfDummy , drop_first=True).copy()    
-    
-    #collect new dummy columns belonging to each fixed effect
-    fixedEffectsDum.append(dfDummy.columns[dfDummy.columns.str.contains(pat = var)])
-
-    # fixedEffectsDum= fixedEffectsDum.append(dfDummy.columns[dfDummy.columns.str.contains(pat = var)].to_series())
-    # fixedEffectsDum= fixedEffectsDum.concat(dfDummy.columns[dfDummy.columns.str.contains(pat = var)].to_series())
-
-    
-    
-#Patsy data prep:
-
-# #Using Patsy to make data matrices, automatically makes dummy coded columns
-# from patsy import dmatrices
-
-# y, X = dmatrices('periCueBlueAuc ~ trialType * sesSpecialLabel ', data=df, return_type='dataframe')
-
-
-#subset as needed
-# df= df.loc[df.subject.notnull()]
-
-#datetime needs to be converted as well?
-# df.date= pd.datetime(df.date)
-
-
-# catVars= ['virus', 'sex', 'subject','stage', 'laserDur', 'trialType']
-# df= pd.get_dummies(df, columns=catVars , drop_first=True)
-
-
-# #if columns= None, will automatically make dummies of Object and Categorical type columns
-# df= pd.get_dummies(df, columns=None , drop_first=True)
-
-
-# # search auto-generated dummy columns for variable names we want to include in model. Iterate through and collect into new series
-# fixedEffects= ['virus','sex', 'stage', 'trialType', 'laserDur']
-# fixedEffectsDum= pd.Series()
-
-# for var in fixedEffects:
-#     fixedEffectsDum= fixedEffectsDum.append(df.columns[df.columns.str.contains(pat = var)].to_series())
-    
-
-# y= ['probPE']
-
-
-#%% SIMPLY USE C() for categoricals? 
+# statsmodels simply doesn't seem to have the posthoc tests worked out for mixed effects models yet https://github.com/statsmodels/statsmodels/issues/4787 ; https://github.com/statsmodels/statsmodels/issues/4916
 
 # use C() to manually declare categorical & automatic dummy coding (should be inferred automatically)
-# this works. easy.
 groups= 'subject'
 
 formula= 'periCueBlueAuc ~ C(trialType) * C(sesSpecialLabel)'
 
-model= = smf.mixedlm(data=df, formula= formula, groups= df[groups])
+model= smf.mixedlm(data=df, formula= formula, groups= df[groups])
 
 modelFit= model.fit()
 
-print(model.summary())
+print(modelFit.summary())
 
-# for readability, could numerically code using cat.codes but would need to ensure C() is added in formula so that used appropriately.
+#TODO: print output to file?
 
-# #convert categorical var strings to int codes?
-# df['subjCode'] = df.subject.cat.codes.copy()
-# df['trialTypeCode'] = df.trialType.cat.codes.copy()
-# df['sesSpecialLabelCode'] = df.sesSpecialLabel.cat.codes.copy()
+#significant trialType*sesSpecialLabel interaction. Follow-up below
 
+#%% -- Follow-up tests
 
+#pairwise failing here... because of dummy coding?
+pw= modelFit.t_test_pairwise('C(trialType)')
 
+pw= modelFit.t_test_pairwise('C(sesSpecialLabel)')
 
-#%% MODEL
+pw= modelFit.t_test_pairwise('C(trialType)*C(sesSpecialLabel)')
 
 
-#groups for random intercept
-groups= 'subject'
+# ValueError: r_matrix for t-test should have 6 columns
+# what's the r_matrix..
 
-formula= 'periCueBlueAuc ~ trialType * sesSpecialLabel'
+    # another f test documentation
+    # r_matrix{array_like, str, tuple}
+    # One of:
+    
+    # array : An r x k array where r is the number of restrictions to test and k is the number of regressors. It is assumed that the linear combination is equal to zero.
+    
+    # str : The full hypotheses to test can be given as a string. See the examples.
+    
+    # tuple : A tuple of arrays in the form (R, q), q can be either a scalar or a length k row vector.
 
-testMixed2 = smf.mixedlm(data=df, formula= formula, groups= df[groups])
+    # t test documentation (not _t_test_paired)
+    # r_matrix{array_like, str, tuple}
+    # One of:
+    
+    # array : If an array is given, a p x k 2d array or length k 1d array specifying the linear restrictions. It is assumed that the linear combination is equal to zero.
+    
+    # str : The full hypotheses to test can be given as a string. See the examples.
+    
+    # tuple : A tuple of arrays in the form (R, q). If q is given, can be either a scalar or a length p row vector.
 
-# testMixed = smf.mixedlm(data=df, formula= 'periCueBlueAuc ~ trialType * sesSpecialLabel', groups= df['subject'])
+# pw= modelFit.t_test_pairwise('C(trialType)*C(sesSpecialLabel)')
 
 
-testMixedFit2= testMixed2.fit()
+# #try simpler model then pairwise?
+# # groups= 'subject'
 
+# formula= 'periCueBlueAuc ~ C(trialType) + C(sesSpecialLabel)'
 
-write_path = './_output.csv'
-with open(write_path, 'w') as f:
-    f.write(testMixedFit2.summary().as_csv())
+# model= smf.mixedlm(data=df, formula= formula, groups=groups)
 
-# testPredict= testModel.predict(df.loc[:,fixedEffectsDum])
+# modelFit= model.fit()
 
+# print(modelFit.summary())
 
-#%% How to handle categorical variables?
+# pw=modelFit.t_test_pairwise('C(trialType)')
 
-# https://stats.stackexchange.com/questions/323098/encoding-of-categorical-variables-dummy-vs-effects-coding-in-mixed-models
 
-# https://patsy.readthedocs.io/en/latest/categorical-coding.html
+# #try simpler model then pairwise?
+# # groups= 'subject'
 
-#%% StatsModels Notes
+# formula= 'periCueBlueAuc ~ trialType + sesSpecialLabel'
 
-# https://www.statsmodels.org/stable/endog_exog.html
+# model= smf.mixedlm(data=df, formula= formula, groups=groups)
 
-#%% try setting up design matrices instead of dataframe
+# modelFit= model.fit()
 
-import formulaic
-# Formulaic module is successor to Patsy which is no longer in development
-# y, X = model_matrix("y ~ a + b + a:b", df)
-# This is short-hand for:
-# y, X = formulaic.Formula('y ~ a + b + a:b').get_model_matrix(df)
-# y, X = formulaic.Formula('probPE ~ virus + sex + virus:sex').get_model_matrix(df)
+# print(modelFit.summary())
 
-# a * b is equivalent to a + b + a:b
-y, X = formulaic.Formula('periCueBlueAuc ~  * trialType * sesSpecialLabel | subject').get_model_matrix(df)
+# pw=modelFit.t_test_pairwise('trialType')
 
 
-# Fitting a model in statsmodels typically involves 3 easy steps:
+# # maybe be more explicit with model call ?
+# model= smf.mixedlm(data=df, formula= 'periCueBlueAuc ~ trialType + sesSpecialLabel', groups='subject')
 
-#1) Use the model class to describe the model
-#e.g. mod = sm.OLS(y, X)    # Describe model
+# modelFit= model.fit()
 
+# print(modelFit.summary())
 
-#2) Fit the model using a class method
-# e.g. res = mod.fit()       # Fit model
+# pw=modelFit.t_test_pairwise('trialType')
 
 
-#3) Inspect the results using a summary method
-# e.g. print(res.summary())   # Summarize model
-
-
-# # statsmodels also provides graphics functions. For example, we can draw a plot of partial regression for a set of regressors by:
-# # : sm.graphics.plot_partregress('Lottery', 'Wealth', ['Region', 'Literacy'],
-# #    ....:                              data=df, obs_labels=False)
-# mod= sm.OLS(y,X) # Describe model
-# res = mod.fit()       # Fit model
-
-# print(res.summary())   # Summarize model
-# #%-- MIXED EFFECTS LM
-# # df= dfFig2B.copy()
-# #removing empty placeholders
-# # df= df.loc[df.subject.notnull()]
-
-
-# df.subject= df.subject.astype('category')
-
-#convert categorical var strings to int codes?
-df['subjCode'] = df.subject.cat.codes.copy()
-df['trialTypeCode'] = df.trialType.cat.codes.copy()
-df['sesSpecialLabelCode'] = df.sesSpecialLabel.cat.codes.copy()
-
-
-mixedEffects= ['subjCode']
-
-# Run an LME with fixed effects for trialType, sesSpecialLabel + interactions + 
-#random intercept for subject
-
-#coded version
-#groups for random intercept
-mixedEffect= 'subjCode'
-
-formula= 'periCueBlueAuc ~ trialTypeCode * sesSpecialLabelCode'
-
-testMixed = smf.mixedlm(data=df, formula= formula, groups= df['subjCode'])
-
-# testMixed = smf.mixedlm(data=df, formula= 'periCueBlueAuc ~ trialTypeCode * sesSpecialLabelCode', groups= df['subjCode'])
-
-testMixedFit= testMixed.fit()
-
-
-#groups for random intercept
-mixedEffect= 'subject'
-
-formula= 'periCueBlueAuc ~ trialType * sesSpecialLabel'
-
-testMixed2 = smf.mixedlm(data=df, formula= formula, groups= df[mixedEffect])
-
-# testMixed = smf.mixedlm(data=df, formula= 'periCueBlueAuc ~ trialType * sesSpecialLabel', groups= df['subject'])
-
-
-testMixedFit2= testMixed2.fit()
-
-
-write_path = './_output.csv'
-with open(write_path, 'w') as f:
-    f.write(testMixedFit2.summary().as_csv())
-
-# Since the random effects structure is not specified, the default random effects structure (a random intercept for each group) is automatically used.
-# 
-# testMixed = smf.mixedlm(data=df, formula= 'probPE ~virus + sex + laserDurCode + trialTypeCode', groups= df['subjCode'])
-# testMixed = smf.mixedlm(data=df, formula= 'probPE ~virus + sex + laserDur + trialType', groups= df['subjCode'])
-
-#why would i get error for fitting trialType but not laserDur?
-
-testMixedFit= testMixed.fit() #(method=['lbfgs'])
-
-print(testMixedFit.summary())
-print(testMixedFit2.summary())
-
-
-
-#%-- Save output of stats test
-result= testMixedFit
-
-
-
-
-#%- Followup tests
-# https://www.statsmodels.org/dev/generated/statsmodels.regression.mixed_linear_model.MixedLMResults.html#statsmodels.regression.mixed_linear_model.MixedLMResults
-
-# Next we fit a model with two random effects for each animal: a random intercept, and a random slope (with respect to time). This means that each pig may have a different baseline weight, as well as growing at a different rate. 
-# 
-
-#%% formulaic stuff
-
-
-# To fit most of the models covered by statsmodels, you will need to create two design matrices. The first is a matrix of endogenous variable(s) (i.e. dependent, response, regressand, etc.). The second is a matrix of exogenous variable(s) (i.e. independent, predictor, regressor, etc.). The OLS coefficient estimates are calculated as usual
-
- # Typically, the raw input data for a model is stored in a dataframe, but the actual implementations of various statistical methodologies (e.g. linear regression solvers) act on two-dimensional numerical matrices that go by several names depending on the prevailing nomenclature of your field, including "model matrices", "design matrices" and "regressor matrices" (within Formulaic, we refer to them as "model matrices"). A formula provides the necessary information required to automate much of the translation of a dataframe into a model matrix suitable for ingestion into a statistical model.
-# set()                                                       
-# We use patsy’s dmatrices function to create design matrices:
-# y, X = dmatrices('Lottery ~ Literacy + Wealth + Region', data=df, return_type='dataframe')
-
-# y, X= dmatrices('probPE ~ virus + sex + stage + laserDur + subject +  trialType', data=df, return_type='dataframe')
-
-# Formulaic module is successor to Patsy which is no longer in development
-# y, X = model_matrix("y ~ a + b + a:b", df)
-# This is short-hand for:
-# y, X = formulaic.Formula('y ~ a + b + a:b').get_model_matrix(df)
-# y, X = formulaic.Formula('probPE ~ virus + sex + virus:sex').get_model_matrix(df)
-
-# a * b is equivalent to a + b + a:b
-import formulaic
-y, X = formulaic.Formula(formula).get_model_matrix(df)

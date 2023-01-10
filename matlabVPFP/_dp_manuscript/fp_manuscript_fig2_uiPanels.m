@@ -592,27 +592,27 @@ i1().draw();
 
 
 %% Export data for external stats analysis outside of matlab
-
-%export as parquet for python
-dataTableFig2B= data2;
-
-% save table as Parquet file
-% % https://www.quora.com/When-should-I-use-parquet-file-to-store-data-instead-of-csv
 % 
-% % test.date= [test.date{:}]'
+% %export as parquet for python
+% dataTableFig2B= data2;
 % 
-% % datetime(test.date, 'InputFormat', 'dd/MM/yyyy HH')
+% % save table as Parquet file
+% % % https://www.quora.com/When-should-I-use-parquet-file-to-store-data-instead-of-csv
+% % 
+% % % test.date= [test.date{:}]'
+% % 
+% % % datetime(test.date, 'InputFormat', 'dd/MM/yyyy HH')
+% % 
+% % % parquetwrite('test.parquet', test);
 % 
-% % parquetwrite('test.parquet', test);
-
-% %changing dtype of date, parquet doesn't like cells
-% fpTable.date= [fpTable.date{:}]';
-
-parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
-
-
-
-%% STATS for AUC plot above
+% % %changing dtype of date, parquet doesn't like cells
+% % fpTable.date= [fpTable.date{:}]';
+% 
+% parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
+% 
+% 
+% 
+% % STATS for AUC plot above
 % 
 % %-First need to subset to actual # of observations (1 per trial)
 % 
@@ -636,7 +636,7 @@ parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
 % %- aggregate to one observation per trial (AUC is aggregated measure)
 %     
 %     %columns to group by
-% groupers= ["subject","stage","trainDay", "fileID", "trialType", "trialIDcum"];
+% groupers= ["subject","sesSpecialLabel","trainDay", "fileID", "trialType", "trialIDcum"];
 % 
 %     %simplfy to one observation (using mean)
 %  data3= groupsummary(data2, [groupers],'mean', ["periCueBlueAuc"]);
@@ -652,12 +652,19 @@ parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
 % %- dummy variable conversion
 % % converting to dummies(retains only one column, as 2+ is redundant)
 % 
-% %convert trialType to dummy variable 
-% dummy=[];
-% dummy= categorical(data3.trialType);
-% dummy= dummyvar(dummy); 
+% %convert trialType to dummy variable - no, just ensure categorical?
+% % dummy=[];
+% % dummy= categorical(data3.trialType);
+% % dummy= dummyvar(dummy); 
+% % 
+% % data3.trialType= dummy(:,1);
 % 
-% data3.trialType= dummy(:,1);
+% % ensure categorical
+% data3(:,"trialType")= table(categorical(data3.trialType));
+%  
+% data3(:,"sesSpecialLabel")= table(categorical(data3.sesSpecialLabel));
+% dummyVar(data3.sesSpecialLabel)
+% 
 % 
 % 
 % %- run LME
@@ -665,7 +672,7 @@ parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
 % 
 % % lme1= fitlme(data3, 'periCueBlueAuc~ trialType + (1|subject)');
 % %add stage?
-% lme1= fitlme(data3, 'periCueBlueAuc~ trialType * stage + (1|subject)');
+% lme1= fitlme(data3, 'periCueBlueAuc~ trialType * sesSpecialLabel + (1|subject)');
 % 
 % 
 % %print and save results to file
@@ -679,7 +686,7 @@ parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
 % %significant trialType * Stage interaction, so do followups for each stage?
 % 
 % lme2= [];
-% lme2= fitlme(data3, 'periCueBlueAuc~ trialType + stage + (1|subject)');
+% lme2= fitlme(data3, 'periCueBlueAuc~ sesSpecialLabel + stage + (1|subject)');
 % 
 % % test= multcompare(lmre2)
 % 
