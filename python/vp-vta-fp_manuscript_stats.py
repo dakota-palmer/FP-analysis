@@ -79,14 +79,14 @@ df= df[varsToInclude]
 
 #%%--Prepare data for stats
 
-#--remove missing/invalid observations
+# #--remove missing/invalid observations
 
-#-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
-#so subset to stages >=5
-ind= []
-ind= df.stage>=5
+# #-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
+# #so subset to stages >=5
+# ind= []
+# ind= df.stage>=5
 
-df= df.loc[ind,:]
+# df= df.loc[ind,:]
 
 #-- Fix dtypes - explicitly assign categorical type to categorical vars
 # note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
