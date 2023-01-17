@@ -111,96 +111,170 @@ print('saving fig2b df to file')
 #Save as pickel
 df.to_pickle(savePath+'fig2b.pkl')
 
-#%%-- Run model
-
-# statsmodels simply doesn't seem to have the posthoc tests worked out for mixed effects models yet https://github.com/statsmodels/statsmodels/issues/4787 ; https://github.com/statsmodels/statsmodels/issues/4916
-
-# use C() to manually declare categorical & automatic dummy coding (should be inferred automatically)
-groups= 'subject'
-
-formula= 'periCueBlueAuc ~ C(trialType) * C(sesSpecialLabel)'
-
-model= smf.mixedlm(data=df, formula= formula, groups= df[groups])
-
-modelFit= model.fit()
-
-print(modelFit.summary())
-
-#TODO: print output to file?
-
-#significant trialType*sesSpecialLabel interaction. Follow-up below
-
-#%% -- Follow-up tests
-
-#pairwise failing here... because of dummy coding?
-pw= modelFit.t_test_pairwise('C(trialType)')
-
-pw= modelFit.t_test_pairwise('C(sesSpecialLabel)')
-
-pw= modelFit.t_test_pairwise('C(trialType)*C(sesSpecialLabel)')
 
 
-# ValueError: r_matrix for t-test should have 6 columns
-# what's the r_matrix..
+#%% ------Figure 2D stats ------------------
+# Figure 2D- compare AUC of PE vs no PE DS trials
 
-    # another f test documentation
-    # r_matrix{array_like, str, tuple}
-    # One of:
     
-    # array : An r x k array where r is the number of restrictions to test and k is the number of regressors. It is assumed that the linear combination is equal to zero.
-    
-    # str : The full hypotheses to test can be given as a string. See the examples.
-    
-    # tuple : A tuple of arrays in the form (R, q), q can be either a scalar or a length k row vector.
+#%%--Load the data
+datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp_stats_fig2dTable.parquet"
 
-    # t test documentation (not _t_test_paired)
-    # r_matrix{array_like, str, tuple}
-    # One of:
-    
-    # array : If an array is given, a p x k 2d array or length k 1d array specifying the linear restrictions. It is assumed that the linear combination is equal to zero.
-    
-    # str : The full hypotheses to test can be given as a string. See the examples.
-    
-    # tuple : A tuple of arrays in the form (R, q). If q is given, can be either a scalar or a length p row vector.
+dfFig2D= pd.read_parquet(datapath)
+
+
+df= dfFig2D.copy()
+
+
+#Defining model variables here to help automate data prep (thinking want dummy coding of categorical fixed effects but not random effects)
+yVar= ['periCueBlueAUC']
+
+# if wanted to look at effect across sessions, would want to keep trainDay or add a fileID
+fixedEffectVars= ['trialOutcome']
+
+randomEffectVars= ['subject']
+
+
+#%%-- Isolate only data you want
+#to save time/memory, pare down dataset to vars we are interested in
+
+y= 'periCueBlueAuc'
+
+varsToInclude= ['subject','trialOutcome','trialIDcum']
+
+varsToInclude.append(y)
+
+df= df[varsToInclude]
+
+#%%--Prepare data for stats
+
+# #--remove missing/invalid observations
+
+# #-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
+# #so subset to stages >=5
+# ind= []
+# ind= df.stage>=5
+
+# df= df.loc[ind,:]
+
+#-- Fix dtypes - explicitly assign categorical type to categorical vars
+# note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
+
+catVars= ['subject','trialOutcome', 'trialIDcum']
+
+df[catVars]= df[catVars].astype('category')
+
+#%%-- Export to R.
+
+# save to pickle
+#- pandas version needs to match R environment version to load the pickle!
+# # activate R environment for pickling (to make env management/consistency easier)
+# conda activate r-env 
+
+df= df.copy()
+
+savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+print('saving fig2d df to file')
+
+#Save as pickel
+df.to_pickle(savePath+'fig2d.pkl')
+
+
+
+
+#%% ------ OLD statsmodels code examples: ------
+# #%% abandoned statsmodels because LME posthoc tests not working 
+# #%%-- Run model
+
+# # statsmodels simply doesn't seem to have the posthoc tests worked out for mixed effects models yet https://github.com/statsmodels/statsmodels/issues/4787 ; https://github.com/statsmodels/statsmodels/issues/4916
+
+# # use C() to manually declare categorical & automatic dummy coding (should be inferred automatically)
+# groups= 'subject'
+
+# formula= 'periCueBlueAuc ~ C(trialType) * C(sesSpecialLabel)'
+
+# model= smf.mixedlm(data=df, formula= formula, groups= df[groups])
+
+# modelFit= model.fit()
+
+# print(modelFit.summary())
+
+# #TODO: print output to file?
+
+# #significant trialType*sesSpecialLabel interaction. Follow-up below
+
+# #%% -- Follow-up tests
+
+# #pairwise failing here... because of dummy coding?
+# pw= modelFit.t_test_pairwise('C(trialType)')
+
+# pw= modelFit.t_test_pairwise('C(sesSpecialLabel)')
 
 # pw= modelFit.t_test_pairwise('C(trialType)*C(sesSpecialLabel)')
 
 
-# #try simpler model then pairwise?
-# # groups= 'subject'
+# # ValueError: r_matrix for t-test should have 6 columns
+# # what's the r_matrix..
 
-# formula= 'periCueBlueAuc ~ C(trialType) + C(sesSpecialLabel)'
+#     # another f test documentation
+#     # r_matrix{array_like, str, tuple}
+#     # One of:
+    
+#     # array : An r x k array where r is the number of restrictions to test and k is the number of regressors. It is assumed that the linear combination is equal to zero.
+    
+#     # str : The full hypotheses to test can be given as a string. See the examples.
+    
+#     # tuple : A tuple of arrays in the form (R, q), q can be either a scalar or a length k row vector.
 
-# model= smf.mixedlm(data=df, formula= formula, groups=groups)
+#     # t test documentation (not _t_test_paired)
+#     # r_matrix{array_like, str, tuple}
+#     # One of:
+    
+#     # array : If an array is given, a p x k 2d array or length k 1d array specifying the linear restrictions. It is assumed that the linear combination is equal to zero.
+    
+#     # str : The full hypotheses to test can be given as a string. See the examples.
+    
+#     # tuple : A tuple of arrays in the form (R, q). If q is given, can be either a scalar or a length p row vector.
 
-# modelFit= model.fit()
-
-# print(modelFit.summary())
-
-# pw=modelFit.t_test_pairwise('C(trialType)')
-
-
-# #try simpler model then pairwise?
-# # groups= 'subject'
-
-# formula= 'periCueBlueAuc ~ trialType + sesSpecialLabel'
-
-# model= smf.mixedlm(data=df, formula= formula, groups=groups)
-
-# modelFit= model.fit()
-
-# print(modelFit.summary())
-
-# pw=modelFit.t_test_pairwise('trialType')
+# # pw= modelFit.t_test_pairwise('C(trialType)*C(sesSpecialLabel)')
 
 
-# # maybe be more explicit with model call ?
-# model= smf.mixedlm(data=df, formula= 'periCueBlueAuc ~ trialType + sesSpecialLabel', groups='subject')
+# # #try simpler model then pairwise?
+# # # groups= 'subject'
 
-# modelFit= model.fit()
+# # formula= 'periCueBlueAuc ~ C(trialType) + C(sesSpecialLabel)'
 
-# print(modelFit.summary())
+# # model= smf.mixedlm(data=df, formula= formula, groups=groups)
 
-# pw=modelFit.t_test_pairwise('trialType')
+# # modelFit= model.fit()
+
+# # print(modelFit.summary())
+
+# # pw=modelFit.t_test_pairwise('C(trialType)')
+
+
+# # #try simpler model then pairwise?
+# # # groups= 'subject'
+
+# # formula= 'periCueBlueAuc ~ trialType + sesSpecialLabel'
+
+# # model= smf.mixedlm(data=df, formula= formula, groups=groups)
+
+# # modelFit= model.fit()
+
+# # print(modelFit.summary())
+
+# # pw=modelFit.t_test_pairwise('trialType')
+
+
+# # # maybe be more explicit with model call ?
+# # model= smf.mixedlm(data=df, formula= 'periCueBlueAuc ~ trialType + sesSpecialLabel', groups='subject')
+
+# # modelFit= model.fit()
+
+# # print(modelFit.summary())
+
+# # pw=modelFit.t_test_pairwise('trialType')
 
 

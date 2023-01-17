@@ -593,23 +593,23 @@ i1().draw();
 
 %% Export data for external stats analysis outside of matlab
 % 
-% %export as parquet for python
-% dataTableFig2B= data2;
+%export as parquet for python
+dataTableFig2B= data2;
+
+% save table as Parquet file
+% % https://www.quora.com/When-should-I-use-parquet-file-to-store-data-instead-of-csv
 % 
-% % save table as Parquet file
-% % % https://www.quora.com/When-should-I-use-parquet-file-to-store-data-instead-of-csv
-% % 
-% % % test.date= [test.date{:}]'
-% % 
-% % % datetime(test.date, 'InputFormat', 'dd/MM/yyyy HH')
-% % 
-% % % parquetwrite('test.parquet', test);
+% % test.date= [test.date{:}]'
 % 
-% % %changing dtype of date, parquet doesn't like cells
-% % fpTable.date= [fpTable.date{:}]';
+% % datetime(test.date, 'InputFormat', 'dd/MM/yyyy HH')
 % 
-% parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
-% 
+% % parquetwrite('test.parquet', test);
+
+% %changing dtype of date, parquet doesn't like cells
+% fpTable.date= [fpTable.date{:}]';
+
+parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
+
 % 
 % 
 % % STATS for AUC plot above
@@ -860,11 +860,17 @@ outcomeLabels= {'PEtrial','noPEtrial','inPortTrial'}; %1,2,3
 data(:,'poxDSoutcome')= {outcomeLabels{data.DStrialOutcome}}';
 
 %unstack based on PE outcome
-groupers= ["subject","stage","date","DStrialID","timeLock"];
+groupers= ["subject","stage","date","trialIDcum","timeLock"];
 data= unstack(data, 'DSblue', 'poxDSoutcome', 'GroupingVariables',groupers);
 
 %transform with stack to have trialOutcome variable
+%- only stacking() the 2 outcomes I want, ignoring inPort trial.
 data= stack(data, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome', 'NewDataVariableName', 'periCueBlue');
+
+%-Remove invalid observations. 
+% currently stack() makes a value for each ts for each trial. Remove nan
+% values and should be left with single.
+data= data(~isnan(data.periCueBlue),:);
 
 % figure();
 clear i2
@@ -934,7 +940,7 @@ data2=[];
 data2= periEventTable(ismember(periEventTable.stage, stagesToPlot),:);
 
 %-- subset to one observation per trial
-%use findgroups to groupby trialIDcum and subset to 1 observation per
+%use findgroups to groupby trialIDcum and subset to 1 observation per trial
 groupIDs= [];
 groupIDs= findgroups(data2.trialIDcum);
 
@@ -981,7 +987,7 @@ outcomeLabels= {'PEtrial','noPEtrial','inPortTrial'}; %1,2,3
 data2(:,'poxDSoutcome')= {outcomeLabels{data2.DStrialOutcome}}';
 
 %unstack based on PE outcome
-groupers= ["subject","stage","date","DStrialID","timeLock"];
+groupers= ["subject","stage","date","trialIDcum","timeLock"];
 data2= unstack(data2, 'aucDSblue', 'poxDSoutcome', 'GroupingVariables',groupers);
 
 % 
@@ -991,6 +997,11 @@ data2= unstack(data2, 'aucDSblue', 'poxDSoutcome', 'GroupingVariables',groupers)
 
 %transform with stack to have trialOutcome variable
 data2= stack(data2, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome', 'NewDataVariableName', 'periCueBlueAuc');
+
+%-Remove invalid observations. 
+% currently stack() makes a value for each ts for each trial. Remove nan
+% values and should be left with single.
+data2= data2(~isnan(data2.periCueBlueAuc),:);
 
 % figure();
 clear i3
@@ -1068,6 +1079,28 @@ i3.axe_property('YLim',ylimAUC);
 
 %- Final draw call
 i3.draw()
+
+
+%% Export data for external stats analysis outside of matlab
+% 
+%export as parquet for python
+dataTableFig2D= data2;
+
+% save table as Parquet file
+% % https://www.quora.com/When-should-I-use-parquet-file-to-store-data-instead-of-csv
+% 
+% % test.date= [test.date{:}]'
+% 
+% % datetime(test.date, 'InputFormat', 'dd/MM/yyyy HH')
+% 
+% % parquetwrite('test.parquet', test);
+
+% %changing dtype of date, parquet doesn't like cells
+% fpTable.date= [fpTable.date{:}]';
+
+parquetwrite(strcat('vp-vta-fp_stats_fig2dTable'), dataTableFig2D);
+
+
 
 
 %% Save the figure
