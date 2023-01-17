@@ -217,7 +217,6 @@ sink()  # returns output to the console
 
 setwd(pathWorking)
 
-# TODO: T-Test for Figure 2B first day ... Compare mean auc against 0
 
 ## ---- FIGURE 2D --------------------------------------------------------####
 
@@ -234,7 +233,7 @@ summary(df)
 #verify dtypes imported properly
 sapply(df, class) 
 
-#%% Figure 2B Stats A -- Compare DS vs NS AUC on special sessions with NS (stage >5)--####
+#%% Figure 2D Stats A -- Compare PE vs no PE AUC DS 
 
 #%%-- Subset data ## 
 #Remove missing/invalid observations 
@@ -294,7 +293,149 @@ sink()  # returns output to the console
 
 setwd(pathWorking)
 
+## ----- FIGURE 1D ---------------------------------------------------------####
+
+#%%-- Load data from .pkl ####
+
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig1d.pkl"
+
+df <- pd$read_pickle(pathData)
+
+
+###### summarize data
+summary(df)
+
+#verify dtypes imported properly
+sapply(df, class) 
+
+#%% Figure 1D Stats A -- Compare DS vs NS PE Ratio--####
+
+#%%-- Subset data ## 
+#Remove missing/invalid observations 
+#only include the late trainPhase (when NS is present)
+
+df_Sub_A= df[df$trainPhase=='late',]
+
+#since we've dropped levels(categories) from the factor(categorical) variable trainDayThisPhase, drop accordingly for stats to work out
+# droplevels(df_Sub_A$trainDayThisPhase)
+# droplevels(df_Sub_A$trainPhase)
+
+
+#%%-- Run LME ##
+
+model= lmerTest::lmer('trialTypePEProb10s  ~ trialType * trainDayThisPhase + (1|subject)', data=df_Sub_A)
+
+
+model_anova<- anova(model)
+
+
+#%%-- Run Follow-up post-hoc tests ####
+
+#-- Pairwise comparisons (t test) between TrialOutcome
+#- Viz interaction plot & save
+figName= "vp-vta_fig1D_stats_A_interactionPlot.pdf"
+setwd(pathOutput)
+pdf(file=figName)
+
+emmip(model, trialType ~ trainDayThisPhase)
+
+dev.off()
+setwd(pathWorking)
+
+#- Pairwise T- tests
+EMM <- emmeans(model, ~ trialType | trainDayThisPhase)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+
+#%%-- Save output to variables between tests  ####
+# trying to keep code mostly generalizable and just save custom names at end
+# all the results into descriptive variables between tests
+fig1D_stats_A_0_description= "Figure 1D: Late Training DS vs NS PE Ratio"
+fig1D_stats_A_1_model= model
+fig1D_stats_A_2_model_anova= model_anova
+fig1D_stats_A_3_model_post_hoc_pairwise= tPairwise 
+
+
+
+#%% Figure 1D Stats B -- Learning DS PE Ratio--####
+
+#%%-- Subset data ## 
+#Remove missing/invalid observations 
+#include only DS PE Ratios, across both phases
+df_Sub_B= df[df$trialType=='DStime',]
+
+#since we've dropped levels(categories) from the factor(categorical) variable trainDayThisPhase, drop accordingly for stats to work out
+# droplevels(df_Sub_A$trainDayThisPhase)
+# droplevels(df_Sub_A$trainPhase)
+
+
+#%%-- Run LME ##
+ #-- This isn't good because trainDayThisPhase==0 in both early and late. ----$$$$
+model= lmerTest::lmer('trialTypePEProb10s  ~ trainDayThisPhase + (1|subject)', data=df_Sub_B)
+
+
+model_anova<- anova(model)
+
+
+#%%-- Run Follow-up post-hoc tests ####
+
+# #-- Pairwise comparisons (t test) between TrialOutcome
+# #- Viz interaction plot & save
+# figName= "vp-vta_fig1D_stats_B_interactionPlot.pdf"
+# setwd(pathOutput)
+# pdf(file=figName)
+# 
+# emmip(model, trialType ~ trainDayThisPhase)
+# 
+# dev.off()
+# setwd(pathWorking)
+
+#- Pairwise T- tests
+EMM <- emmeans(model, ~  trainDayThisPhase)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+
+#%%-- Save output to variables between tests  ####
+# trying to keep code mostly generalizable and just save custom names at end
+# all the results into descriptive variables between tests
+fig1D_stats_B_0_description= "Figure 1D:  Learning- DS PE Ratio early & late"
+fig1D_stats_B_1_model= model
+fig1D_stats_B_2_model_anova= model_anova
+fig1D_stats_B_3_model_post_hoc_pairwise= tPairwise 
+
+
+#%%-- Save output to File ####
+# B
+setwd(pathOutput)
+
+
+sink("vp-vta_fig1D_stats_B_Learning_DS_PE_Ratio.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig1D_stats_B_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig1D_stats_B_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig1D_stats_B_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc pairwise:')
+print(fig1D_stats_B_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+setwd(pathWorking)
+
+
+
+
+
+
 ## ----- FIGURE XX ---------------------------------------------------------####
+
 
 
 ## ----- Notes on Stats  / Packages-----------------------------------------####

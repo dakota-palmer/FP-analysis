@@ -455,6 +455,49 @@ plt.savefig(savePath+figName+'.pdf')
 # g.add_legend()
 
 
+#%% Prepare data for stats and export .pickle for stats in R
+# save to pickle
+#- pandas version needs to match R environment version to load the pickle!
+# # activate R environment for pickling (to make env management/consistency easier)
+# conda activate r-env 
+
+df= dfPlot.copy()
+
+#%%-- Isolate only data you want
+#to save time/memory, pare down dataset to vars we are interested in
+
+y= 'trialTypePEProb10s'
+
+varsToInclude= ['subject','fileID', 'stage', 'trainDayThisPhase', 'trainPhase', 'trialType', 'trainDay' ]
+
+varsToInclude.append(y)
+
+df= df[varsToInclude]
+
+#%%--Prepare data for stats
+
+# #--remove missing/invalid observations
+
+
+#-- Fix dtypes - explicitly assign categorical type to categorical vars
+# note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
+
+catVars= ['subject','fileID', 'stage', 'trainPhase', 'trainDayThisPhase', 'trialType']
+
+df[catVars]= df[catVars].astype('category')
+
+#-- make trainDayThisPhase dtype int
+# df['trainDayThisPhase']= df['trainDayThisPhase'].astype('int')
+
+
+savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+print('saving fig1d df to file')
+
+#Save as pickel
+df.to_pickle(savePath+'fig1d.pkl')
+
+
 
 # %%-- old unnested of above
 
