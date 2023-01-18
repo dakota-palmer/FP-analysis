@@ -466,6 +466,8 @@ fp_manuscript_fig2_uiPanels();
 % % 
 % % fig22.draw();
 
+%% ----- FIGURE 3--- 
+fp_manuscript_fig3_uiPanels();
 
 %% FIG3 HEATPLOTS ---
 

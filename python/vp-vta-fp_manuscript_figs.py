@@ -498,6 +498,8 @@ print('saving fig1d df to file')
 df.to_pickle(savePath+'fig1d.pkl')
 
 
+#%% TODO: Stat comparison of PE Latency as well? 
+
 
 # %%-- old unnested of above
 
