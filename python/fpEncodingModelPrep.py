@@ -334,7 +334,7 @@ if modeSignalNorm== 'dff':
 stagesToInclude= [7]
 
 #number of sessions to include, 0 includes final session of this stage+n
-nSessionsToInclude= 2
+nSessionsToInclude= 0#2
 
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
@@ -346,7 +346,9 @@ eventVars= dfTidy.eventType.unique()
 
 # eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
 
-eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+eventsToInclude= ['DStime','PEcue','lickUS']
+
+
 
 
 # dfTidy.loc[~dfTidy.eventType.isin(eventsToInclude),'eventType']= pd.NA

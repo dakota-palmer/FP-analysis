@@ -496,8 +496,8 @@ for subj in dfEncoding.subject.unique():
     kernels['subject']= subj
     
     #save other metadata in case want for later
-    kernels['fileID']= group.reset_index().fileID
-    kernels['date']= group.reset_index().date
+    kernels['fileID']= group.reset_index(drop=True).fileID
+    kernels['date']= group.reset_index(drop=True).date
     
         
     kernelsAll= pd.concat([kernelsAll, kernels], axis=0)
@@ -1160,88 +1160,89 @@ for name, group in groups:
 
 # ---- Plot Kernels alongside Peri-Event z scored traces 
 
-    #subset data
-    dfPlot= dfTidy.copy()
+#subset data
+dfPlot= dfTidy.copy()
 
-    for thisBaselineEventType in baselineEvents:
+for thisBaselineEventType in baselineEvents:
+    
+    f, ax = plt.subplots(2,len(eventsToInclude), sharey=True, sharex=True)
+    
+    for thisEventType in eventsToInclude:
+            
+         #conditional to skip different cue types
+        if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
+            continue
+            
+        if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
+            continue
         
-        f, ax = plt.subplots(2,len(eventsToInclude), sharey=True, sharex=True)
+        x= 'timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+
+        y= 'blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
         
-        for thisEventType in eventsToInclude:
-                
-             #conditional to skip different cue types
-            if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
-                continue
-                
-            if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
-                continue
-            
-            x= 'timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
-
-            y= 'blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
-            
-            z= 'trialIDtimeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
-            
-            # axes= np.where(eventsToInclude==thisEventType)
-            axes= np.where(thisEventType== eventsToInclude)
-            axes= axes[0][0] #returning nested array for some reason
+        z= 'trialIDtimeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
         
-            # here there is error potential bleedthrough between trials. idk how seaborn is grouping the data for this
-            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+        # axes= np.where(eventsToInclude==thisEventType)
+        axes= np.where(thisEventType== eventsToInclude)
+        axes= axes[0][0] #returning nested array for some reason
+    
+        # here there is error potential bleedthrough between trials. idk how seaborn is grouping the data for this
+        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
 
-            # woof this is looking wquite different
-            g= sns.lineplot(ax= ax[0,axes],  data=dfPlot, sort=False, x=x,y=y, hue='subject', legend='full')
+        # woof this is looking wquite different
+        g= sns.lineplot(ax= ax[0,axes],  data=dfPlot, sort=False, x=x,y=y, hue='subject', legend='full')
 
-            #style- no
-            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, style=z, hue='subject', legend='full')
+        #style- no
+        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, style=z, hue='subject', legend='full')
 
-            #perhaps sorting before plotting will help- no
-            # dfPlot3= dfPlot3.sort_values([z,x])
-            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+        #perhaps sorting before plotting will help- no
+        # dfPlot3= dfPlot3.sort_values([z,x])
+        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
 
-            # #maybe set index will help- no, very very slow
-            # dfPlot3= dfPlot3.set_index([z])
-            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+        # #maybe set index will help- no, very very slow
+        # dfPlot3= dfPlot3.set_index([z])
+        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
 
-            #drop na then set index?
-            dfPlot2= dfPlot.loc[dfPlot[z].notnull()]
-            dfPlot2= dfPlot.set_index([z])
-            
-            g= sns.lineplot(ax= ax[0,axes],  data=dfPlot2, x=x,y=y, hue='subject', legend='full')
+        #drop na then set index?
+        # issue here I think bc non unique trialIDs? 
+        dfPlot2= dfPlot.loc[dfPlot[z].notnull()]
+        dfPlot2= dfPlot.set_index([z])
+        
+        # g= sns.lineplot(ax= ax[0,axes],  data=dfPlot2, x=x,y=y, hue='subject', legend='full')
 
-            #define units- no, requires plotting all
-            
-            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, units=z, estimator=None, hue='subject', legend='full')
+        #define units- no, requires plotting all
+        
+        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, units=z, estimator=None, hue='subject', legend='full')
 
-            
-            # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, units='trainDayThisStage', estimator=None, x=x,y=y, hue='subject')
+        
+        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, units='trainDayThisStage', estimator=None, x=x,y=y, hue='subject')
 
-            
-            ax[0,axes].axvline(x=0, linestyle='--', color='black', linewidth=2)
-            
-            ax[0,axes].set(xlabel= 'time from event (s)')
-            ax[0,axes].set(ylabel= 'GCaMP Z-score (based on pre-cue baseline')
-            ax[0,axes].set(title= thisEventType)
+        
+        ax[0,axes].axvline(x=0, linestyle='--', color='black', linewidth=2)
+        
+        ax[0,axes].set(xlabel= 'time from event (s)')
+        ax[0,axes].set(ylabel= 'GCaMP Z-score (based on pre-cue baseline')
+        ax[0,axes].set(title= thisEventType)
 
-            
-            # plt.xlabel('time from event (s)')
-            # plt.ylabel('GCaMP Z-score (based on pre-cue baseline')
-            # plt.title(thisEventType)
-            
-            # f.suptitle('allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials')
-            f.suptitle('allSubj-'+'-stage-'+'-periEventAll-'+thisBaselineEventType+'trials')
-
-
-            #-- subplot kernels
-            dfPlot3= kernelsAll.loc[kernelsAll.eventType==thisEventType]
-            
-            g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha=0.3)
-
-            g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+        
+        # plt.xlabel('time from event (s)')
+        # plt.ylabel('GCaMP Z-score (based on pre-cue baseline')
+        # plt.title(thisEventType)
+        
+        # f.suptitle('allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials')
+        f.suptitle('allSubj-'+'-stage-'+'-periEventAll-'+thisBaselineEventType+'trials')
 
 
-            g.set(title=('allSubj-kernels-'))#+modeCue+'-trials-'+modeSignal))
-            g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
+        #-- subplot kernels
+        dfPlot3= kernelsAll.loc[kernelsAll.eventType==thisEventType]
+        
+        g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha=0.3)
+
+        g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+
+
+        g.set(title=('allSubj-kernels-'))#+modeCue+'-trials-'+modeSignal))
+        g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
 
 
         #%% 
