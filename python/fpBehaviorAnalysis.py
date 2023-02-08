@@ -58,6 +58,18 @@ if experimentType.__contains__('Opto'):
     # trialOrder= [trialOrder, 'laserDStrial_0', 'laserDStrial_1', 'laserNStrial_0', 'laserNStrial_1']
     trialOrder= (['DStime', 'DStime_laser', 'NStime', 'NStime_laser', 'Pre-Cue','ITI'])
 
+
+# %% Exclude data
+
+# #hitting memory cap, going to subset specific stages to reduce data 
+stagesToInclude= [4., 5.0, 6.0, 7.0]#, 8., 11.0, 12.0]
+
+dfTidy= dfTidy.loc[dfTidy.stage.isin(stagesToInclude)]
+
+# %% Exclude data- restrict to single/few files for quick debugging
+dfTidy=dfTidy[(dfTidy.fileID==58)]
+
+
 # %% Declare hierarchical grouping variables for analysis
 # e.g. for aggregated measures, how should things be calculated and grouped?
 
@@ -125,189 +137,189 @@ nSes= 4
 endStage= 7
 # endStage= 5
 
- #%% ID, mark, and vizualize sessions with abnormal event counts
+#  %% ID, mark, and vizualize sessions with abnormal event counts
   
  
-#Unstack() the groupby output for a dataframe we can profile
-dfPlot= dfTidy.copy()
-dfPlot= dfPlot.groupby(['stage', 'subject', 'fileID', 'eventType'], observed=True)['eventTime'].count().unstack()
-#add trialType counts
-# dfPlot= dfPlot.merge(dfTidy.loc[(dfTidy.eventType=='NStime') | (dfTidy.eventType=='DStime')].groupby(['subject','date','trialType'])['eventTime'].count().unstack(),left_index=True,right_index=True)
+# #Unstack() the groupby output for a dataframe we can profile
+# dfPlot= dfTidy.copy()
+# dfPlot= dfPlot.groupby(['stage', 'subject', 'fileID', 'eventType'], observed=True)['eventTime'].count().unstack()
+# #add trialType counts
+# # dfPlot= dfPlot.merge(dfTidy.loc[(dfTidy.eventType=='NStime') | (dfTidy.eventType=='DStime')].groupby(['subject','date','trialType'])['eventTime'].count().unstack(),left_index=True,right_index=True)
 
 
-# dfPlot.boxplot()
+# # dfPlot.boxplot()
 
-dfPlot= dfPlot.stack().reset_index(name='count')
+# dfPlot= dfPlot.stack().reset_index(name='count')
 
-# dfPlot.plot(kind='scatter', x='fileID', y='count', c='eventType', colormap='tab10')
-# # dfPlot.plot.scatter()
+# # dfPlot.plot(kind='scatter', x='fileID', y='count', c='eventType', colormap='tab10')
+# # # dfPlot.plot.scatter()
  
 
-# #ind subj distros
+# # #ind subj distros
 
-# def fixed_boxplot(*args, label=None, **kwargs):
-#     sns.boxplot(*args, **kwargs, labels=[label])
+# # def fixed_boxplot(*args, label=None, **kwargs):
+# #     sns.boxplot(*args, **kwargs, labels=[label])
 
-for subj in dfPlot.subject.unique():
+# for subj in dfPlot.subject.unique():
     
-    dfPlot2= dfPlot.loc[dfPlot.subject==subj]
+#     dfPlot2= dfPlot.loc[dfPlot.subject==subj]
     
-    # g= sns.FacetGrid(data=dfPlot2, col='eventType', sharex=True, sharey=False, hue='eventType')
+#     # g= sns.FacetGrid(data=dfPlot2, col='eventType', sharex=True, sharey=False, hue='eventType')
     
-    # g.map_dataframe(fixed_boxplot, y='count')
+#     # g.map_dataframe(fixed_boxplot, y='count')
     
-    # g.map_dataframe(sns.stripplot, y='count')
+#     # g.map_dataframe(sns.stripplot, y='count')
     
-    # line facet
-    #- want to see for each subject, counts over time across ses
+#     # line facet
+#     #- want to see for each subject, counts over time across ses
 
     
         
 
     
-    #use stats to find outliers based on z score
-    from scipy import stats
+#     #use stats to find outliers based on z score
+#     from scipy import stats
     
-    #really need to compute z score for each file for each eventType
-    dfGroup= dfPlot2.groupby(['subject','eventType'])
-    z= dfGroup.apply(lambda x: (np.abs(stats.zscore(x['count']))))
-    # ^ returns one z score per eventType (same across files)
+#     #really need to compute z score for each file for each eventType
+#     dfGroup= dfPlot2.groupby(['subject','eventType'])
+#     z= dfGroup.apply(lambda x: (np.abs(stats.zscore(x['count']))))
+#     # ^ returns one z score per eventType (same across files)
     
-    #instead try pivot() eventType and running z score by columns?
-    dfPlot2= dfPlot2.set_index(['fileID'])
-    dfTemp= dfPlot2.pivot(columns='eventType')['count'].copy()
+#     #instead try pivot() eventType and running z score by columns?
+#     dfPlot2= dfPlot2.set_index(['fileID'])
+#     dfTemp= dfPlot2.pivot(columns='eventType')['count'].copy()
     
-    #for zscore fxn, axis should = 0. Note if no variance will return nan even with nan_policy='omit'
-    z= np.abs(stats.zscore(dfTemp,axis=0, nan_policy='omit'))
+#     #for zscore fxn, axis should = 0. Note if no variance will return nan even with nan_policy='omit'
+#     z= np.abs(stats.zscore(dfTemp,axis=0, nan_policy='omit'))
     
-    # ind= z > zThresh
+#     # ind= z > zThresh
 
     
-    #melt()
-    #reset_index so fileID can be kept in melt
-    z= z.reset_index()
-    z2 = z.melt(id_vars= 'fileID', value_vars=z.columns, var_name='eventType', value_name='count').copy()
+#     #melt()
+#     #reset_index so fileID can be kept in melt
+#     z= z.reset_index()
+#     z2 = z.melt(id_vars= 'fileID', value_vars=z.columns, var_name='eventType', value_name='count').copy()
 
-    z2= z2.rename(columns= {'count':'zScore'})
+#     z2= z2.rename(columns= {'count':'zScore'})
 
 
-    #merge z score back into df
-    #merge on fileID, eventType
+#     #merge z score back into df
+#     #merge on fileID, eventType
     
-    z2= z2.set_index(['fileID','eventType'])
-    dfPlot2= dfPlot2.reset_index().set_index(['fileID','eventType'])
+#     z2= z2.set_index(['fileID','eventType'])
+#     dfPlot2= dfPlot2.reset_index().set_index(['fileID','eventType'])
     
-    dfPlot2['zScore']= z2.zScore
+#     dfPlot2['zScore']= z2.zScore
 
-    #mark 'outliers' exceeding zThreshold
+#     #mark 'outliers' exceeding zThreshold
 
-    zThresh=2
+#     zThresh=2
 
-    ind= dfPlot2.zScore > zThresh   
+#     ind= dfPlot2.zScore > zThresh   
 
-    dfPlot2.loc[:,'outlier']= 0
+#     dfPlot2.loc[:,'outlier']= 0
 
-    dfPlot2.loc[ind,'outlier']= 1
+#     dfPlot2.loc[ind,'outlier']= 1
     
-    dfPlot2.reset_index(inplace=True)
+#     dfPlot2.reset_index(inplace=True)
     
     
-    # make event count plots with facet of outlier status
-    # g= sns.FacetGrid(data=dfPlot2, col='eventType', hue='outlier', sharey=False)#, sharex=False, sharey=False)
-    g= sns.FacetGrid(data=dfPlot2, row='eventType', sharey=False)#, sharex=False, sharey=False)
+#     # make event count plots with facet of outlier status
+#     # g= sns.FacetGrid(data=dfPlot2, col='eventType', hue='outlier', sharey=False)#, sharex=False, sharey=False)
+#     g= sns.FacetGrid(data=dfPlot2, row='eventType', sharey=False)#, sharex=False, sharey=False)
 
-    g.map_dataframe(sns.scatterplot, x='fileID', y='count', hue='outlier', style='outlier')
-    g.map_dataframe(sns.lineplot, x='fileID', y='count', color='blue', alpha=0.3)
-
-
-    title= 'subject-'+str(subj)+'-eventCount-by-session'
-    g.fig.suptitle(title)
-    g.add_legend()
-    
-    # saveFigCustom(g.fig, title, savePath)
-    
-    # #==----==-=
-    
-    # # dfPlot2.set_index(['subject','eventType'], inplace=True)
-    
-    # # ind= (np.abs(stats.zscore(dfPlot2)) < 3).all(axis=1)]
-    
-    # ##using groupby.apply()
-    
-    # dfGroup= dfPlot2.groupby(['subject','eventType'])
-    # # dfGroup.apply(lambda x: stats.zscore(x['count']))
+#     g.map_dataframe(sns.scatterplot, x='fileID', y='count', hue='outlier', style='outlier')
+#     g.map_dataframe(sns.lineplot, x='fileID', y='count', color='blue', alpha=0.3)
 
 
-    # #apply the zscore fxn to each group and check if exceeding threshold (3)    
-    # zThresh= 3
+#     title= 'subject-'+str(subj)+'-eventCount-by-session'
+#     g.fig.suptitle(title)
+#     g.add_legend()
+    
+#     # saveFigCustom(g.fig, title, savePath)
+    
+#     # #==----==-=
+    
+#     # # dfPlot2.set_index(['subject','eventType'], inplace=True)
+    
+#     # # ind= (np.abs(stats.zscore(dfPlot2)) < 3).all(axis=1)]
+    
+#     # ##using groupby.apply()
+    
+#     # dfGroup= dfPlot2.groupby(['subject','eventType'])
+#     # # dfGroup.apply(lambda x: stats.zscore(x['count']))
+
+
+#     # #apply the zscore fxn to each group and check if exceeding threshold (3)    
+#     # zThresh= 3
         
-    # ind= dfGroup.apply(lambda x: (np.abs(stats.zscore(x['count'])) > zThresh))
+#     # ind= dfGroup.apply(lambda x: (np.abs(stats.zscore(x['count'])) > zThresh))
     
-    # dfPlot2.set_index(['subject','eventType'],drop=False, inplace=True)
+#     # dfPlot2.set_index(['subject','eventType'],drop=False, inplace=True)
     
-    # ind= ind.reset_index()
+#     # ind= ind.reset_index()
     
-    # # THESE are outliers for this subject.  
-    # ind2= ind[ind['count']==True]
+#     # # THESE are outliers for this subject.  
+#     # ind2= ind[ind['count']==True]
     
     
     
-    # dfPlot2.loc[ind,'outlier']= 1
-    # # dfTemp.loc[ind,'outlier']= 1
+#     # dfPlot2.loc[ind,'outlier']= 1
+#     # # dfTemp.loc[ind,'outlier']= 1
 
-
-    
-    # # this isn't grouping by eventType
-    # ind= (np.abs(stats.zscore(dfPlot2['count'])) < 3)#.all(axis=1)]
-    
-    # dfPlot2.loc[ind, 'outlier']= 1
-    
-    # # dfPlot2[(np.abs(stats.zscore(dfPlot2[0])) < 3), 'outlier']= 1
-
-    # g= sns.FacetGrid(data=dfPlot2, col='eventType', hue='eventType', sharey=False)#, sharex=False, sharey=False)
-
-    # g.map_dataframe(sns.scatterplot, x='fileID', y='count')
 
     
-# # subj facet
-# g= sns.FacetGrid(data=dfPlot, col='subject', col_wrap=4, hue='eventType')
+#     # # this isn't grouping by eventType
+#     # ind= (np.abs(stats.zscore(dfPlot2['count'])) < 3)#.all(axis=1)]
+    
+#     # dfPlot2.loc[ind, 'outlier']= 1
+    
+#     # # dfPlot2[(np.abs(stats.zscore(dfPlot2[0])) < 3), 'outlier']= 1
 
-# g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+#     # g= sns.FacetGrid(data=dfPlot2, col='eventType', hue='eventType', sharey=False)#, sharex=False, sharey=False)
 
-# g.map_dataframe(sns.stripplot, x='eventType', y='count')
+#     # g.map_dataframe(sns.scatterplot, x='fileID', y='count')
 
-# # #all subj
-# g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType', sharex=False, sharey=False)
+    
+# # # subj facet
+# # g= sns.FacetGrid(data=dfPlot, col='subject', col_wrap=4, hue='eventType')
 
-# g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+# # g.map_dataframe(fixed_boxplot, x='eventType', y='count')
 
-# g.map_dataframe(sns.stripplot, x='eventType', y='count')
+# # g.map_dataframe(sns.stripplot, x='eventType', y='count')
 
+# # # #all subj
+# # g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType', sharex=False, sharey=False)
 
+# # g.map_dataframe(fixed_boxplot, x='eventType', y='count')
 
-# # #with fileID (to actually pinpoint outliers)
-# g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
-
-# g.map_dataframe(sns.lineplot, x='fileID', y='count')
-# g.map_dataframe(sns.scatterplot, x='fileID', y='count')
-
-
-
-# #STAGE FACET 
-# g= sns.FacetGrid(data=dfPlot, row='stage', hue='eventType')#, sharex=False, sharey=False)
-
-# g.map_dataframe(fixed_boxplot, x='eventType', y='count')
-
-# g.map_dataframe(sns.stripplot, x='eventType', y='count')
+# # g.map_dataframe(sns.stripplot, x='eventType', y='count')
 
 
-# #line stage facet
-# g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
 
-# g.map_dataframe(sns.lineplot, x='fileID', y='count')
+# # # #with fileID (to actually pinpoint outliers)
+# # g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
+
+# # g.map_dataframe(sns.lineplot, x='fileID', y='count')
+# # g.map_dataframe(sns.scatterplot, x='fileID', y='count')
 
 
- #%% view distro of eventType counts per fileID for session outliers
+
+# # #STAGE FACET 
+# # g= sns.FacetGrid(data=dfPlot, row='stage', hue='eventType')#, sharex=False, sharey=False)
+
+# # g.map_dataframe(fixed_boxplot, x='eventType', y='count')
+
+# # g.map_dataframe(sns.stripplot, x='eventType', y='count')
+
+
+# # #line stage facet
+# # g= sns.FacetGrid(data=dfPlot, row='stage', col='eventType', hue='eventType')#, sharex=False, sharey=False)
+
+# # g.map_dataframe(sns.lineplot, x='fileID', y='count')
+
+
+#  %% view distro of eventType counts per fileID for session outliers
   
 # dfPlot= dfTidy.groupby(['subject', 'fileID', 'eventType'])['eventTime'].count().reset_index()
 
@@ -317,15 +329,15 @@ for subj in dfPlot.subject.unique():
 # g.fig.subplots_adjust(top=0.9)  # adjust the figure for title
 # g.fig.suptitle('Total event count across sessions by type- check for outliers')
 
-#%% View specific outliers
+# %% View specific outliers
 
-outlierFiles= [82, 53, 157, 163, 387, 388, 424, 294]
+# outlierFiles= [82, 53, 157, 163, 387, 388, 424, 294]
 
-dfTemp= dfTidy.loc[dfTidy.fileID.isin(outlierFiles)]
+# dfTemp= dfTidy.loc[dfTidy.fileID.isin(outlierFiles)]
 
-dfTemp= dfTemp[dfTemp.groupby(['fileID']).cumcount()==0]
+# dfTemp= dfTemp[dfTemp.groupby(['fileID']).cumcount()==0]
 
-dfTemp= dfPlot.loc[dfPlot.fileID.isin(outlierFiles)]
+# dfTemp= dfPlot.loc[dfPlot.fileID.isin(outlierFiles)]
 
 
 
@@ -476,6 +488,7 @@ dfTidy= dfTemp.copy()
 
 test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
 
+# hitting an error here because of big dataframe in debug mode, pandas version specific...https://github.com/pandas-dev/pandas/issues/47069
 test2= test.unstack()
 
 ind= []
@@ -548,6 +561,34 @@ dfTidy.reset_index(inplace=True)
 #eg trialUS, trialPE, trialLick
 
 #TODO: lick cleaning mirroring matlab
+
+#%% Lick cleaning
+
+# exclude licks on a trial-by-trial basis if animal is not 'inPort' when licks
+
+#- subset trials where not 'inPort'
+
+dfTemp= dfTidy.loc[dfTidy.inPort!=1].copy()
+
+#- get first PE time for each trial, compare lick times against this
+test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
+
+
+# If not an InPort trial, Delete licks with latency < PE
+
+# test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
+
+# test2= test.unstack()
+
+# ind= []
+# ind= test2.lox < test2.PEtime
+
+# %if this IS an inPort trial, keep the raw pre-PE licks (since they may still be valid)
+
+# ind= []
+# ind= dfTidy.inPort==1
+
+# test= dfTidy[ind & dfTidy.eventType=='lickTime']
 
 
 #%% Count events within 10s of cue onset (cue duration in final stage)  
@@ -653,6 +694,8 @@ dfTidy= dfTidy.drop(['inPort'], axis=1)
 
 
 #%%-- ADD EPOCS prior to revising trialID
+
+#----- dp 2023-02-08 TODO: this is based on eventTime and for FP should be based on cutTime since eventTimes mostly nan but FP signal occurs continuously!!  
 
 #add epoch column
 #for now could be as simple as reversing trialID transformations for ITI+Pre-Cue, will make current ITIs fall within same trialID
@@ -1039,6 +1082,9 @@ dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
 dfTidy.reset_index(inplace=True)
 # dfTidy.set_index(['eventID'], inplace=True)
 
+#dp 2023-02-08 review specific example
+test2= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)]
+
 #2022-12-1
 # overwrite inPort outcomes (determined in section above)
 ind= dfTidy.inPort==1
@@ -1149,6 +1195,15 @@ dfTemp.loc[((dfTemp.trialType=='NStime') & ((dfTemp.epoch=='NStime') | (dfTemp.e
 # dfTemp.loc[((dfTemp.epoch=='DStime')|(dfTemp.epoch=='NStime') | (dfTemp.epoch=='cue-postPE')), 'eventType']= 'lickPreUS'
 dfTemp.loc[((dfTemp.trialType=='DStime') & ((dfTemp.epoch=='DStime')| (dfTemp.epoch=='cue-postPE'))), 'eventType']= 'lickPreUS'
 
+# dp 2023-02-07 ITI postPE licks aren't being counted properly as lickPreUS using above... given late PE at like 9.2s, lick at 10.1s, UStime at 10.2s . kept as "lickTime" undefined but should be lickPreUS
+# add a quick exception for these remaining unclassified licks- if in ITI-postPE epoch and trialOutcome is PE, count as lickPreUS
+
+# #viz some examples
+# test= dfTemp.loc[((dfTemp.trialType=='DStime') & (dfTemp.epoch=='ITI-postPE'))]
+# test2= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)]
+
+dfTemp.loc[((dfTemp.trialType=='DStime') & (dfTemp.epoch=='ITI-postPE')), 'eventType']= 'lickPreUS'
+
 
 #some flexibility for postUS licks
 #just defining these as lickUS also so should be guranteeed to capture first reward licks (that is the most important)
@@ -1158,6 +1213,25 @@ dfTemp.loc[dfTemp.epoch.str.contains('postUS'), 'eventType']= 'lickUS'
 
 
 dfTemp.loc[(dfTemp.epoch=='UStime'), 'eventType']= 'lickUS'
+
+#--TODO: Clean licks prior to PE 
+# exclude licks on a trial-by-trial basis if animal is not 'inPort' when licks
+
+#review possible epochs / outcomes
+test= dfTemp.epoch.cat.categories
+test2= dfTemp.trialOutcomeBeh10s.unique()
+
+#review remaining unclassified licks (on DS trials only; NS trials are still not well defined)
+test3= dfTemp.loc[(dfTemp.eventType=='lickTime') &( dfTemp.trialType=='DStime')]
+
+#review specific trials with issue
+test4= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)]
+
+# licks shouldn't be counted if in
+
+# ?? is lickPreUS equivalent to matlab cleaned licks? no
+
+#- subset trials where not 'inPort'
 
 
 
@@ -1169,6 +1243,8 @@ dfTidy.loc[dfTemp.index, 'eventType']= dfTemp.eventType.copy()
 
 dfTidy.eventType= dfTidy.eventType.astype('category')
 
+#review specific trials with issue post eventType reclassification
+test5= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)]
 
 #%% Refine PE eventType to PEcue
 dfTidy.eventType= dfTidy.eventType.astype(str)

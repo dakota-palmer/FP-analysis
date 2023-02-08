@@ -348,6 +348,15 @@ eventVars= dfTidy.eventType.unique()
 
 eventsToInclude= ['DStime','PEcue','lickUS']
 
+# DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
+# OVERWRITING all lick events with undefined type
+
+dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
+
+eventsToInclude= ['DStime','PEcue','lickTime']
+
+
+
 
 
 
