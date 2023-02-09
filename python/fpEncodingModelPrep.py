@@ -423,6 +423,7 @@ test2= dfTidy[((dfTidy.fileID==212) & (dfTidy.trialID==24))]
 #%% DP 2023-02-09 new trial inclusion based on presence of model events within time window
 
 #time post- trial start for model: require events with latency within this time 
+fs=40
 postEventTime= 15 *fs
 
 
@@ -455,16 +456,29 @@ dfTemp.loc[dfTemp.eventLatency>postEventTime, 'exclude']= 1
 
 
 # ---- a bit simpler groupby and unstack
-dfTemp= dfTidy.groupby(['fileID','trialID','eventType']).eventLatency.first()
 
-dfTemp2= dfTemp.unstack()
+#-get first latency value for first event of each type in every trial
+# dfTemp= dfTidy.groupby(['fileID','trialID','eventType'])['eventLatency'].first()
+dfTemp= dfTidy.groupby(['fileID','trialID','eventType'], as_index=False)['eventLatency'].first()
 
+#-drop unwanted eventTypes
+dfTemp= dfTemp.loc[dfTemp.eventType.isin(eventsToInclude)]
+
+#-check to see if latencies are within model time window, if not make null
 ind= []
-ind= test2.out < test2.PEtime
+ind= dfTemp.eventLatency < (postEventTime/fs)
+dfTemp.loc[ind, 'exclude']= 1
+
+#-set index on 'fileID','trialID','eventType' and unstack for easy comparisons
+#unstack for easy visual comparison (and any() check)
+
+dfTemp2= dfTemp.set_index(['fileID','trialID', 'eventType']).copy()
+
+dfTemp3= dfTemp2['eventLatency'].unstack().copy()
 
 
 #set index on fileID, trialID and see if any values are missing
-dfTemp2= dfTemp.set_index(['fileID','trialID'])
+# dfTemp2= dfTemp.set_index(['fileID','trialID'])
 
 
 

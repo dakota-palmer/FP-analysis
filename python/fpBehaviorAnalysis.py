@@ -639,14 +639,15 @@ dfTidy.loc[trialOutcomeBeh.index,'trialOutcomeBeh10s']= trialOutcomeBeh
 dfTidy= dfTidy.reset_index().set_index(['eventID'])
 # dfTidy.reset_index(inplace=True)
 
-# overwrite inPort outcomes (determined in section above)
-ind= dfTidy.inPort==1
+# dp comment out 2023-02-09
+# # overwrite inPort outcomes (determined in section above)
+# ind= dfTidy.inPort==1
 
-# dfTidy.loc[ind,'trialOutcomeBeh']= 'inPort'+dfTidy.trialOutcomeBeh
-dfTidy.loc[ind,'trialOutcomeBeh10s']= 'inPort+'+dfTidy.trialOutcomeBeh10s
+# # dfTidy.loc[ind,'trialOutcomeBeh']= 'inPort'+dfTidy.trialOutcomeBeh
+# dfTidy.loc[ind,'trialOutcomeBeh10s']= 'inPort+'+dfTidy.trialOutcomeBeh10s
 
-# #drop inPort column (redundant now)
-dfTidy= dfTidy.drop(['inPort'], axis=1)
+# # #drop inPort column (redundant now)
+# dfTidy= dfTidy.drop(['inPort'], axis=1)
 
 
 #%% Calculate probability of behavioral outcome within first 10s of trial 
@@ -979,7 +980,7 @@ ax.legend()
 
 #%%-- Conduct trial-based analyses AFTER  revising trialID
 
-#%% DP 2022-12-1 define inPort trials 
+#%% DP 2022-12-1 define inPort trials post trial revision
 
 # ID trials where animal was inPort already at cue onset
 # In early versions of DS training code, reinforcement occurred if inPort at cue onset
@@ -994,53 +995,120 @@ ax.legend()
 # ~~alternatively could probably go based off UStime but want to mirror matlab 
 # so compare
 
+#- also instead of going by eventTime could use eventLatency and then compare against cueDur to help determine outcome too
 
 ## get the first eventTime for each eventType for each trial
 ## unstack and
 ## compare PEtime and out, if out occurs first, mark as inPort
 
-test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
-
-test2= test.unstack()
-
-ind= []
-ind= test2.out < test2.PEtime
-
-#a
-# ind= ind.values
-
-# test3= test2.reset_index();
-
-# test4= test3.loc[ind,:]
-
-# # #have the trials, now merge back into dfTidy
-
-# # test5= test4.set_index(['fileID','trialID'])
-
-# # dfTemp= dfTidy.set_index(['fileID','trialID'])
-
-# # dfTemp= dfTemp.merge(test5)
-
-#b- good
-#try with simply indexing 'fileID','trialID'
-#since this is the index of the groupby results, we can set index on these in dfTidy and assign variable accordingly
-
-ind= []
-ind= test2.out < test2.PEtime
-
-# dfTemp= dfTidy.set_index(['fileID','trialID'])
-
-# dfTemp.loc[ind,'inPort']= 1
-
-# dfTemp.reset_index(inplace=True)
-
-dfTidy.set_index(['fileID','trialID'], inplace=True)
-
 dfTidy['inPort']= None
+
+
+dfTemp= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
+
+dfTemp2= dfTemp.unstack()
+
+# A few cases to mark here:
+# marking with distinct numbers for clearer debugging later
+    
+#-- note that currently this is based on eventTime (NOT LATENCY DEPENDENT)
+
+# 1- if Out is recorded before PE. But assumes both timestamps are present
+#but it misses cases where for example no PE is recorded
+ind= []
+ind= dfTemp2.out < dfTemp2.PEtime
+
+dfTemp3= dfTemp2.iloc[np.where(ind)]
+
+#- set index of dfTidy on fileID, trialID to mark trials matching index 
+dfTidy.set_index(['fileID','trialID'], inplace=True)
 
 dfTidy.loc[ind,'inPort']= 1
 
+# 2- If out is recorded but PE isn't... 
+# had like 66 trials like this prior 2023-02-09
+ind=[]
+ind= (dfTemp2.out.notnull()) & (dfTemp2.PEtime.isnull())
+
+dfTemp3= dfTemp2.iloc[np.where(ind)]
+
+dfTidy.loc[ind,'inPort']= 2
+
+# 3 here is redundant with first 2
+# 3- UStime is recorded but PE isn't ? this is too specific to older DS task code... should really base things on US outcome and then do more nuanced latency-based definitions
+# this will only apply to DS trials too
+ind= []
+ind= (dfTemp2.UStime.notnull()) & (dfTemp2.PEtime.isnull())
+
+dfTemp3= dfTemp2.iloc[np.where(ind)]
+
+#- is this redundant vs the prior 1/2?
+ind1= dfTemp2.out < dfTemp2.PEtime
+ind2= (dfTemp2.out.notnull()) & (dfTemp2.PEtime.isnull())
+ind3= (dfTemp2.UStime.notnull()) & (dfTemp2.PEtime.isnull())
+
+# get the True values (file,trial) meeting condition 3, see if they're also true in 1 and 2
+indTest= ind3.index[ind3==True]
+
+
+# check if each of these #3 trials are in either of the prior 2. Remaining False are not.
+test= ((ind1[indTest]) | (ind2[indTest]))
+
+indNew= indTest[np.where(test==False)]
+
+#these are the trials unique to case 3 (UStime but no PE. some also have no Out)
+dfTemp4= dfTemp2.loc[indNew]
+
+# Mark only these explicitly as 3
+ind= []
+ind= indNew
+dfTidy.loc[ind,'inPort']= 3
+
+
+#- Reset index after assignment
 dfTidy.reset_index(inplace=True)
+
+
+
+# # #todo- reviewing trials
+# # test4= dfTidy.loc[ind,:]
+
+
+# #a
+# # ind= ind.values
+
+# # test3= test2.reset_index();
+
+# # test4= test3.loc[ind,:]
+
+# # # #have the trials, now merge back into dfTidy
+
+# # # test5= test4.set_index(['fileID','trialID'])
+
+# # # dfTemp= dfTidy.set_index(['fileID','trialID'])
+
+# # # dfTemp= dfTemp.merge(test5)
+
+# #b- good
+# #try with simply indexing 'fileID','trialID'
+# #since this is the index of the groupby results, we can set index on these in dfTidy and assign variable accordingly
+
+# ind= []
+# ind= test2.out < test2.PEtime
+
+# # dfTemp= dfTidy.set_index(['fileID','trialID'])
+
+# # dfTemp.loc[ind,'inPort']= 1
+
+# # dfTemp.reset_index(inplace=True)
+
+# # dfTidy.set_index(['fileID','trialID'], inplace=True)
+
+# # dfTidy['inPort']= None
+
+# # dfTidy.loc[ind,'inPort']= 1
+
+# dfTidy.reset_index(inplace=True)
 
 
 #%% Count events within 10s of cue onset (cue duration in final stage)  
@@ -1092,7 +1160,7 @@ test2= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)]
 
 #2022-12-1
 # overwrite inPort outcomes (determined in section above)
-ind= dfTidy.inPort==1
+ind= dfTidy.inPort.notnull()
 
 # dfTidy.loc[ind,'trialOutcomeBeh']= 'inPort'+dfTidy.trialOutcomeBeh
 dfTidy.loc[ind,'trialOutcomeBeh10s']= 'inPort+'+dfTidy.trialOutcomeBeh10s
