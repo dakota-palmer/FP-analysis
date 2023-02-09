@@ -59,7 +59,10 @@ print(subjectsToExclude)
 fs= 40
 
 preEventTime= 5 *fs
-postEventTime= 10 *fs
+# postEventTime= 10 *fs
+
+postEventTime= 15 *fs
+
 
 cueTimeOfInfluence= 2*fs
 #%% Get all .pkl files in encoding model output folder (1 per subj)
@@ -124,6 +127,9 @@ dfEncoding= dfEncoding.reset_index()
 #- Manual; DS events specifically
 
 eventOrder= ['DStime','PEcue','lickPreUS','lickUS']
+
+eventOrder= ['DStime','PEcue','lickTime']
+
 
 # - TODO: default should be pd categorical order if categorical dtype
 
@@ -392,7 +398,20 @@ for subj in dfEncoding.subject.unique():
     y= dfTemp['y']
     
     eventVars= dfTemp['eventVars']
+
+  
     eventVars= eventVars[0][0]
+      
+    # dp 2023-02-09 eventVars imported with extra categoricals, use np.unique to remove unused categories bc categorical list format weird at this point 
+    eventVars= np.unique(eventVars)
+    
+    # # first convert to Series again for pandas fxn
+    # eventVars= pd.Series(eventVars).astype(str)
+
+    
+    # eventVars=  dfTemp['eventVars'].cat.remove_unused_categories()  
+    # eventVars= eventVars.astype(str)
+
     
     # X= dfEncoding.loc[ind, 'X']
     
@@ -400,7 +419,10 @@ for subj in dfEncoding.subject.unique():
 
     # y= dfEncoding.loc[ind, 'y'][0]
     # eventVars= dfEncoding.loc[ind,'eventVars'][0]
-    eventVars= eventVars[0]
+    
+    # # dp 2023-02-09 commented out bc import change above
+    # eventVars= eventVars[0]
+    
     #coefficients: 1 col for each shifted version of event timestamps in the range of timeShifts. events ordered sequentially
      
     #alt method of lining up coef with feature names:

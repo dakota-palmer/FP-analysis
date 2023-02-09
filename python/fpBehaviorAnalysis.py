@@ -62,12 +62,12 @@ if experimentType.__contains__('Opto'):
 # %% Exclude data
 
 # #hitting memory cap, going to subset specific stages to reduce data 
-stagesToInclude= [4., 5.0, 6.0, 7.0]#, 8., 11.0, 12.0]
+stagesToInclude= [5.0, 6.0, 7.0]#, 8., 11.0, 12.0]
 
 dfTidy= dfTidy.loc[dfTidy.stage.isin(stagesToInclude)]
 
 # %% Exclude data- restrict to single/few files for quick debugging
-dfTidy=dfTidy[(dfTidy.fileID==58)]
+# dfTidy=dfTidy[(dfTidy.fileID==58)] #fixed unclassified licks here
 
 
 # %% Declare hierarchical grouping variables for analysis
@@ -468,127 +468,130 @@ dfTidy= dfTemp.copy()
 
 #%% DP 2022-11-18 define inPort trials 
 
-# ID trials where animal was inPort already at cue onset
-# In early versions of DS training code, reinforcement occurred if inPort at cue onset
-# so may want to exclude these trials
+# #2023-09-02 Flaw: assumes there's both a PE and out event. If there's no PEtime or out within 10s then there's n
+# # first() returns nan and this inPort trial is missed - even when UStime is present.
+
+# # ID trials where animal was inPort already at cue onset
+# # In early versions of DS training code, reinforcement occurred if inPort at cue onset
+# # so may want to exclude these trials
 
 
-#handled timestamps==cue onsets in fpImportDataTidy by sorting by trialID prior to assigning
+# #handled timestamps==cue onsets in fpImportDataTidy by sorting by trialID prior to assigning
 
-#may also consider out<PEtime && UStime present
+# #may also consider out<PEtime && UStime present
 
-#now just need to check if inPort by seeing if port exit precedes port entry (is the closest timestamp a port entry or exit)
-# ~~alternatively could probably go based off UStime but want to mirror matlab 
-# so compare
-
-
-## get the first eventTime for each eventType for each trial
-## unstack and
-## compare PEtime and out, if out occurs first, mark as inPort
-
-test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
-
-# hitting an error here because of big dataframe in debug mode, pandas version specific...https://github.com/pandas-dev/pandas/issues/47069
-test2= test.unstack()
-
-ind= []
-ind= test2.out < test2.PEtime
-
-#a
-# ind= ind.values
-
-# test3= test2.reset_index();
-
-# test4= test3.loc[ind,:]
-
-# # #have the trials, now merge back into dfTidy
-
-# # test5= test4.set_index(['fileID','trialID'])
-
-# # dfTemp= dfTidy.set_index(['fileID','trialID'])
-
-# # dfTemp= dfTemp.merge(test5)
-
-#b- good
-#try with simply indexing 'fileID','trialID'
-#since this is the index of the groupby results, we can set index on these in dfTidy and assign variable accordingly
-
-ind= []
-ind= test2.out < test2.PEtime
-
-# dfTemp= dfTidy.set_index(['fileID','trialID'])
-
-# dfTemp.loc[ind,'inPort']= 1
-
-# dfTemp.reset_index(inplace=True)
-
-dfTidy.set_index(['fileID','trialID'], inplace=True)
-
-dfTidy.loc[ind,'inPort']= 1
-
-dfTidy.reset_index(inplace=True)
+# #now just need to check if inPort by seeing if port exit precedes port entry (is the closest timestamp a port entry or exit)
+# # ~~alternatively could probably go based off UStime but want to mirror matlab 
+# # so compare
 
 
-
-# test= dfTidy.columns
-
-# #id events that happen before or at trial start
-# test= dfTidy.loc[dfTidy.eventTime-dfTidy.trialStart<=0]
-
-# test2= test.loc[test.fileID==test.fileID.min()]
-
-# sns.relplot(data=test2, x='eventTime', y='trialID', hue='eventType')
-
-
-# test2= test.copy()
-# sns.relplot(data=test2, x='eventTime', y='fileID', hue='eventType')
-
-
-#finding lots of UStime, some PEtime, some lickTime
-
-# #latency is not exactly 0 for some reason there are very small differences
-# test= dfTidy.loc[dfTidy.eventLatency==0]
-
-# test= dfTidy.loc[dfTidy.eventLatency.round()==0]
-
-# test2= test.loc[test.fileID==test.fileID.min()]
-
-
-# sns.relplot(data=test2, x='eventTime', y='trialID', hue='eventType')
-
-
-#they're included in the cumcount() of events
-#eg trialUS, trialPE, trialLick
-
-#TODO: lick cleaning mirroring matlab
-
-#%% Lick cleaning
-
-# exclude licks on a trial-by-trial basis if animal is not 'inPort' when licks
-
-#- subset trials where not 'inPort'
-
-dfTemp= dfTidy.loc[dfTidy.inPort!=1].copy()
-
-#- get first PE time for each trial, compare lick times against this
-test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
-
-
-# If not an InPort trial, Delete licks with latency < PE
+# ## get the first eventTime for each eventType for each trial
+# ## unstack and
+# ## compare PEtime and out, if out occurs first, mark as inPort
 
 # test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
 
+# # hitting an error here because of big dataframe in debug mode, pandas version specific...https://github.com/pandas-dev/pandas/issues/47069
 # test2= test.unstack()
 
 # ind= []
-# ind= test2.lox < test2.PEtime
+# ind= test2.out < test2.PEtime
 
-# %if this IS an inPort trial, keep the raw pre-PE licks (since they may still be valid)
+# #a
+# # ind= ind.values
+
+# # test3= test2.reset_index();
+
+# # test4= test3.loc[ind,:]
+
+# # # #have the trials, now merge back into dfTidy
+
+# # # test5= test4.set_index(['fileID','trialID'])
+
+# # # dfTemp= dfTidy.set_index(['fileID','trialID'])
+
+# # # dfTemp= dfTemp.merge(test5)
+
+# #b- good
+# #try with simply indexing 'fileID','trialID'
+# #since this is the index of the groupby results, we can set index on these in dfTidy and assign variable accordingly
 
 # ind= []
-# ind= dfTidy.inPort==1
+# ind= test2.out < test2.PEtime
 
-# test= dfTidy[ind & dfTidy.eventType=='lickTime']
+# # dfTemp= dfTidy.set_index(['fileID','trialID'])
+
+# # dfTemp.loc[ind,'inPort']= 1
+
+# # dfTemp.reset_index(inplace=True)
+
+# dfTidy.set_index(['fileID','trialID'], inplace=True)
+
+# dfTidy.loc[ind,'inPort']= 1
+
+# dfTidy.reset_index(inplace=True)
+
+
+
+# # test= dfTidy.columns
+
+# # #id events that happen before or at trial start
+# # test= dfTidy.loc[dfTidy.eventTime-dfTidy.trialStart<=0]
+
+# # test2= test.loc[test.fileID==test.fileID.min()]
+
+# # sns.relplot(data=test2, x='eventTime', y='trialID', hue='eventType')
+
+
+# # test2= test.copy()
+# # sns.relplot(data=test2, x='eventTime', y='fileID', hue='eventType')
+
+
+# #finding lots of UStime, some PEtime, some lickTime
+
+# # #latency is not exactly 0 for some reason there are very small differences
+# # test= dfTidy.loc[dfTidy.eventLatency==0]
+
+# # test= dfTidy.loc[dfTidy.eventLatency.round()==0]
+
+# # test2= test.loc[test.fileID==test.fileID.min()]
+
+
+# # sns.relplot(data=test2, x='eventTime', y='trialID', hue='eventType')
+
+
+# #they're included in the cumcount() of events
+# #eg trialUS, trialPE, trialLick
+
+# #TODO: lick cleaning mirroring matlab
+
+#%% TODO: Lick cleaning
+
+# # exclude licks on a trial-by-trial basis if animal is not 'inPort' when licks
+
+# #- subset trials where not 'inPort'
+
+# dfTemp= dfTidy.loc[dfTidy.inPort!=1].copy()
+
+# #- get first PE time for each trial, compare lick times against this
+# test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
+
+
+# # If not an InPort trial, Delete licks with latency < PE
+
+# # test= dfTidy.groupby(['fileID','trialID','eventType'])['eventTime'].first()
+
+# # test2= test.unstack()
+
+# # ind= []
+# # ind= test2.lox < test2.PEtime
+
+# # %if this IS an inPort trial, keep the raw pre-PE licks (since they may still be valid)
+
+# # ind= []
+# # ind= dfTidy.inPort==1
+
+# # test= dfTidy[ind & dfTidy.eventType=='lickTime']
 
 
 #%% Count events within 10s of cue onset (cue duration in final stage)  
@@ -1033,6 +1036,8 @@ ind= test2.out < test2.PEtime
 
 dfTidy.set_index(['fileID','trialID'], inplace=True)
 
+dfTidy['inPort']= None
+
 dfTidy.loc[ind,'inPort']= 1
 
 dfTidy.reset_index(inplace=True)
@@ -1094,6 +1099,65 @@ dfTidy.loc[ind,'trialOutcomeBeh10s']= 'inPort+'+dfTidy.trialOutcomeBeh10s
 
 # #drop inPort column (redundant now)
 dfTidy= dfTidy.drop(['inPort'], axis=1)
+
+# debugging event classification on these trials
+test= dfTidy[((dfTidy.trialOutcomeBeh10s.str.contains('inPort') )& (dfTidy.trialType=='DStime'))]
+test= test[test.eventTime.notnull()]
+
+#%%--- VIZ events in trials by outcome - DS only... reviewing prior to encoding model
+dfPlot= dfTidy[dfTidy.trialType=='DStime']
+
+dfPlot= dfPlot[dfPlot.eventTime.notnull()]
+
+#cumcount of trialIDs between subj
+trialIDpooled= dfPlot.groupby(['fileID', 'trialID'])['trialID'].cumcount()
+# dfTemp = dfTemp.loc[dfTemp.groupby(['fileID','trialID']).cumcount() == 0].copy()
+
+ind= dfPlot.groupby(['fileID','trialID']).cumcount() == 0
+
+dfTemp= dfPlot.loc[ind]
+
+#make 1 and then use cumsum() to cumulatively count series (cumcount seems limited to groupbys)
+dfTemp.loc[ind,'trialIDpooled']= 1; 
+
+dfTemp['trialIDpooled']= dfTemp.trialIDpooled.cumsum()
+
+dfPlot.loc[ind, 'trialIDpooled'] = dfTemp.trialIDpooled
+
+# dfTidy.loc[:, 'trialIDpooled'] = dfTemp['trialID'].transform('cumcount') #dfTidy.groupby(['fileID','trialID']).transform('cumcount')
+
+dfPlot.loc[:, 'trialIDpooled'] = dfPlot.groupby(['fileID','trialID'])['trialIDpooled'].fillna(method='ffill')
+
+
+# --combine/flatten 'lick' eventTypes that were redefined as valid, prior to cumcount
+dfPlot.eventType= dfPlot.eventType.astype('str')
+
+dfPlot.loc[dfPlot.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickValid'
+
+#subset to 1 observation per eventType per trial
+dfPlot= dfPlot[dfPlot.groupby(['trialIDpooled','eventType']).cumcount()==0]
+
+# remove unusued categories for faceting
+# dfPlot.eventType= dfPlot.eventType.cat.remove_unused_categories()
+
+# sns.relplot(data= dfPlot, col= 'trialOutcomeBeh10s', kind='scatter', x='eventLatency', y='trialIDpooled', hue='eventType' )
+# sns.displot(data= dfPlot, col= 'trialOutcomeBeh10s', kind='hist', x='eventLatency', hue='eventType' )
+#pretty good
+sns.displot(data= dfPlot, col= 'eventType', kind='hist', x='eventLatency', hue='trialOutcomeBeh10s' )
+
+#want clear view of count of event types by outcome (to make sure i can filter by outcome for encoding model)
+# sns.catplot(data= dfPlot, col= 'trialOutcomeBeh10s', kind='count', x='eventType', hue='eventType' )
+# sns.catplot(data= dfPlot, kind='count', x='eventType', hue='trialOutcomeBeh10s' )
+sns.catplot(data= dfPlot, kind='count', x='trialOutcomeBeh10s', hue='eventType' )
+
+
+
+
+# sns.catplot(data= dfPlot, kind='count', x='trialOutcomeBeh10s', hue='eventType' )
+
+
+#- TODO: Include trials with at least 1 of each event
+
 
 
 #%% Calculate Probability of behavioral outcome for each trial type. 
@@ -1181,6 +1245,10 @@ dfTidy= dfTidy.merge(dfTemp, how='left', on=groupHierarchy)
 # basic assumption here is that reward is consumed by the next trial
 # this should leave lickTimes during pre-cue I think as unspecified
 
+# reset/overwrite with unclassified for debugging
+dfTidy.loc[dfTidy.eventType.str.contains('lick')==True, 'eventType']= 'lickTime'
+
+
 dfTidy.eventType= dfTidy.eventType.astype(str)
 
 dfTemp= dfTidy.loc[dfTidy.eventType.str.contains('lick')==True].copy()
@@ -1202,8 +1270,9 @@ dfTemp.loc[((dfTemp.trialType=='DStime') & ((dfTemp.epoch=='DStime')| (dfTemp.ep
 # test= dfTemp.loc[((dfTemp.trialType=='DStime') & (dfTemp.epoch=='ITI-postPE'))]
 # test2= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)]
 
-dfTemp.loc[((dfTemp.trialType=='DStime') & (dfTemp.epoch=='ITI-postPE')), 'eventType']= 'lickPreUS'
+dfTemp.loc[((dfTemp.trialType=='DStime') & ((dfTemp.trialOutcomeBeh10s=='PE') | (dfTemp.trialOutcomeBeh10s=='PE+lick')) & (dfTemp.epoch=='ITI-postPE')), 'eventType']= 'lickPreUS'
 
+#  What about inPort trials?
 
 #some flexibility for postUS licks
 #just defining these as lickUS also so should be guranteeed to capture first reward licks (that is the most important)
@@ -1214,6 +1283,8 @@ dfTemp.loc[dfTemp.epoch.str.contains('postUS'), 'eventType']= 'lickUS'
 
 dfTemp.loc[(dfTemp.epoch=='UStime'), 'eventType']= 'lickUS'
 
+# currently leaves very late licks (in precue period for next trial) unclassified as simply 'lickTime'
+
 #--TODO: Clean licks prior to PE 
 # exclude licks on a trial-by-trial basis if animal is not 'inPort' when licks
 
@@ -1223,9 +1294,14 @@ test2= dfTemp.trialOutcomeBeh10s.unique()
 
 #review remaining unclassified licks (on DS trials only; NS trials are still not well defined)
 test3= dfTemp.loc[(dfTemp.eventType=='lickTime') &( dfTemp.trialType=='DStime')]
+#expect remaining on noPE trials, so check for others
+test4= test3.loc[(test3.trialOutcomeBeh10s!='noPE')]
+
 
 #review specific trials with issue
-test4= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)]
+# test4= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)] #fixed
+test4= dfTidy.loc[(dfTidy.fileID==294) & (dfTidy.trialID==48)]
+
 
 # licks shouldn't be counted if in
 
@@ -1244,7 +1320,7 @@ dfTidy.loc[dfTemp.index, 'eventType']= dfTemp.eventType.copy()
 dfTidy.eventType= dfTidy.eventType.astype('category')
 
 #review specific trials with issue post eventType reclassification
-test5= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)]
+# test5= dfTidy.loc[(dfTidy.fileID==58) & (dfTidy.trialID==21)]
 
 #%% Refine PE eventType to PEcue
 dfTidy.eventType= dfTidy.eventType.astype(str)

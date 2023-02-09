@@ -221,13 +221,273 @@ contVars= ['reblue','repurple']
 
 # #may be able to add regression line to jointplot here
 
+#%% Exclude subjects
+
+subjToExclude= [10, 16, 17, 20]
+
+dfTidy= dfTidy.loc[~dfTidy.subject.isin(subjToExclude)]
+
+
+#%% ---- DP 2023-02-09 VIZ EVENT LATENCIES PRIOR TO EXCLUSION ---
+
+
+#%%-- add pooled trialID between subjects for viz of event latency distribution?
+dfTemp=dfTidy.copy()
+
+# #get unique trialID cumcount pooled across all sessions for plotting 
+# dfTidy['trialIDpooled']= None
+
+# # dfTemp = dfTemp.loc[dfTemp.groupby(['fileID','trialID']).cumcount() == 0].copy()
+
+# ind= dfTemp.groupby(['fileID','trialID']).cumcount() == 0
+
+# dfTemp= dfTemp.loc[ind]
+
+# #make 1 and then use cumsum() to cumulatively count series (cumcount seems limited to groupbys)
+# dfTemp.loc[ind,'trialIDpooled']= 1; 
+
+# dfTemp['trialIDpooled']= dfTemp.trialIDpooled.cumsum()
+
+# dfTidy.loc[ind, 'trialIDpooled'] = dfTemp.trialIDpooled
+
+# # dfTidy.loc[:, 'trialIDpooled'] = dfTemp['trialID'].transform('cumcount') #dfTidy.groupby(['fileID','trialID']).transform('cumcount')
+
+# dfTidy.loc[:, 'trialIDpooled'] = dfTidy.groupby(['fileID','trialID'])['trialIDpooled'].fillna(method='ffill')
+
+
+# #get unique trialID cumcount within-subject across all sessions for plotting 
+# # -Note Redefining here after epoch/trial reclassification in behavior script
+# dfTemp= dfTidy.copy()
+
+# dfTidy['trialIDpooled']= None
+
+# # dfTemp = dfTemp.loc[dfTemp.groupby(['fileID','trialID']).cumcount() == 0].copy()
+
+# #- subset to 1 observation per file per trial per subject
+# ind= dfTemp.groupby(['fileID','trialID', 'subject']).cumcount() == 0
+
+# dfTemp= dfTemp.loc[ind]
+
+# #make 1 and then use cumsum() to cumulatively count series (cumcount seems limited to groupbys)
+# dfTemp.loc[ind,'trialCountThisSubj']= 1; 
+
+# dfTemp['trialCountThisSubj']= dfTemp.trialCountThisSubj.cumsum()
+
+# dfTidy.loc[ind, 'trialCountThisSubj'] = dfTemp.trialCountThisSubj
+
+# # dfTidy.loc[:, 'trialIDpooled'] = dfTemp['trialID'].transform('cumcount') #dfTidy.groupby(['fileID','trialID']).transform('cumcount')
+
+# dfTidy.loc[:, 'trialCountThisSubj'] = dfTidy.groupby(['subject','fileID','trialID'])['trialCountThisSubj'].fillna(method='ffill')
+
+#%-- Add cumulative count of trials within- and between-stage (could be useful for viz of raw training data e.g. latency including every trial)
+
+#subset to 1 obs per trial for counting
+from customFunctions import subsetLevelObs
+groupHierarchyTrialID=['fileID','trialID']
+dfTemp= subsetLevelObs(dfTidy, groupHierarchyTrialID).copy()
+
+#cumulative between-stage trialCount
+dfTemp.loc[:,'trialCountThisSubj']= dfTemp.groupby(['subject']).transform('cumcount').copy()
+
+#within-stage trialCount
+dfTemp.loc[:,'trialCountThisStage']= dfTemp.groupby(['subject','stage']).transform('cumcount').copy()
+
+#pooled cumulative trialID count across all subj/sessions
+dfTemp['trialIDpooled']= 1; 
+dfTemp['trialIDpooled']= dfTemp.trialIDpooled.cumsum()
+
+
+#merge to save as new column in dfTidy
+#overwrite original values
+dfTidy['trialIDpooled']= None
+dfTidy['trialCountThisStage']= None
+dfTidy['trialCountThisSubj']= None
+
+#drop old values
+dfTidy= dfTidy.drop(['trialIDpooled','trialCountThisStage','trialCountThisSubj'], axis=1)
+
+
+dfTemp= dfTemp.loc[:,groupHierarchyTrialID+['trialCountThisSubj']+['trialCountThisStage']+['trialIDpooled']]
+
+dfTidy = dfTidy.merge(dfTemp, how='left', on=groupHierarchyTrialID).copy()
+
+# viz validation
+test= dfTidy.loc[(dfTidy.fileID==432) & (dfTidy.trialID==27)]
+
+#%%--- viz input for regression prior to refining
+
+#define events to correlate (e.g. drop the NStimes since they're a separate trialType)
+corrEvents= ['DStime','PEcue','lickPreUS','lickUS', 'UStime']
+
+
+#get the relative latency from trialStart for each eventType for each trial
+groupHierarchyEventType= ['stage','trainDayThisStage', 'subject', 'fileID', 'trialType', 'trialID', 'trialCountThisSubj', 'trialIDpooled', 'trialOutcomeBeh10s', 'eventType']
+
+##--- Limit viz to First event per type per trial ; get the relative latency from trialStart for each eventType for each trial
+corrInput= dfTidy.groupby(groupHierarchyEventType, observed=True, as_index=False)['eventLatency'].first()    
+
+
+#subset DS trials
+corrInput= corrInput.loc[corrInput.trialType=='DStime']
+
+#drop unwanted eventTypes
+corrInput= corrInput.loc[corrInput.eventType.isin(corrEvents)]
+
+
+
+#-- Plot of event timings going into regression (just double checking reasonable times)
+dfPlot= corrInput.copy()
+
+dfPlot= dfPlot.loc[dfPlot.eventType.isin(corrEvents)].copy()
+
+# make subj categorical var for plotting
+dfPlot.subject= dfPlot.subject.astype('str')
+dfPlot.subject= dfPlot.subject.astype('category')
+
+#remove all unused categories from vars (so sns doesn't plot empty labels)#
+ind= dfPlot.dtypes=='category'
+ind= dfPlot.columns[ind]
+
+for col in ind:
+    dfPlot[col]= dfPlot[col].cat.remove_unused_categories()
+
+
+#%% NEW PLOTS
+
+g= sns.catplot(data=dfPlot, y='eventType', x='eventLatency', row='subject', hue='eventType')
+g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+
+
+
+#-- LATENCY DISTRIBUTIONS BY EVENT TYPE 
+
+# g= sns.displot(data=dfPlot, kind='ecdf', x='eventLatency', col='subject', hue='eventType')
+# g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+# g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+
+g= sns.displot(data=dfPlot, kind='ecdf', x='eventLatency', col='eventType', hue='subject', palette='Set2')
+g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+
+#- By trial behavioral outcome
+g= sns.displot(data=dfPlot, kind='ecdf', x='eventLatency', col='eventType', row='trialOutcomeBeh10s', hue='subject', palette='Set2')
+g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+
+#-- DETAILED PLOTS OF LATENCIES BY SUBJECT: TRYING TO CAPTURE VARIATIONS IN BEHAVIOR BETWEEN-SUBJECTS
+    #things like relative count of trialOutcomeBeh10s (are they waiting in port/being selective?)
+    #how fast do they respond typically?
+    
+#---- Combine trial behavioral outcomes into appropriate categories for legibility #TODO: move this to behavior analyses
+# combine noPE / unrewarded trials
+outcomeNoPE= ['noPE','noPE+lick']
+outcomeInPort= ['inPort+PE+lick','inPort+noPE+lick', 'inPort+PE', 'inPort+noPE']
+outcomePE= ['PE+lick','PE']
+
+dfPlot.trialOutcomeBeh10s= dfPlot.trialOutcomeBeh10s.astype('string').copy()
+
+dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomeNoPE),'trialOutcomeBeh10s']= 'No PE trial'
+dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomeInPort),'trialOutcomeBeh10s']= 'In Port trial'
+dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomePE),'trialOutcomeBeh10s']= 'PE trial'
+
+dfPlot.trialOutcomeBeh10s= dfPlot.trialOutcomeBeh10s.astype('category').copy()
+
+
+    
+    
+#- plot of all individual trials by outcome
+for subj in dfPlot.subject.unique():
+    dfPlot2= dfPlot[dfPlot.subject==subj]
+    
+    g= sns.relplot(data=dfPlot2, y='trialCountThisSubj', x='eventLatency', col='trialOutcomeBeh10s', hue='eventType', alpha=0.8)
+    g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+    g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+    
+    g.fig.suptitle('subj-'+subj)
+
+# reviewing weird trials
+# test= dfPlot.loc[(dfPlot.subject=='19.0') & (dfPlot.trialCountThisSubj==2601)]
+
+# test2= dfTidy[((dfTidy.fileID==432) & (dfTidy.trialID==27))]
+
+test= dfPlot[(dfPlot.subject=='13.0') & (dfPlot.trialCountThisSubj.isin([634,689]))]
+
+test2= dfTidy[((dfTidy.fileID==212) & (dfTidy.trialID==24))]
+
+
+
+#%% -----END new viz 2023-02-09 ----
+
+
+#%% DP 2023-02-09 new trial inclusion based on presence of model events within time window
+
+#time post- trial start for model: require events with latency within this time 
+postEventTime= 15 *fs
+
+
+#define events to include in model- this will define here which trials are explicitly included
+# must have 1 event per type per trial to be in model
+eventsToInclude= ['DStime','PEcue','lickUS']
+
+
+#- get the relative latency from trialStart for each eventType for each trial
+# get first event time for each trial for each eventType
+groupHierarchyEventType= ['stage','trainDayThisStage', 'subject', 'fileID', 'trialType', 'trialID', 'trialCountThisSubj', 'trialIDpooled', 'trialOutcomeBeh10s', 'eventType']
+
+# dfTemp= dfTidy.groupby(groupHierarchyEventType, observed=True, as_index=False)['eventLatency'].first()    
+
+dfTemp= dfTidy.groupby(groupHierarchyEventType, observed=False, as_index=False)['eventLatency'].first() 
+
+
+#Only include DS trials
+dfTemp= dfTemp.loc[dfTemp.trialType=='DStime']
+
+#drop unwanted eventTypes
+dfTemp= dfTemp.loc[dfTemp.eventType.isin(eventsToInclude)]
+
+#- Check if there's an event of each type WITHIN TIME RANGE OF MODEL for this trial
+
+#mark latencies beyond model time window
+dfTemp['exclude']= None
+
+dfTemp.loc[dfTemp.eventLatency>postEventTime, 'exclude']= 1
+
+
+# ---- a bit simpler groupby and unstack
+dfTemp= dfTidy.groupby(['fileID','trialID','eventType']).eventLatency.first()
+
+dfTemp2= dfTemp.unstack()
+
+ind= []
+ind= test2.out < test2.PEtime
+
+
+#set index on fileID, trialID and see if any values are missing
+dfTemp2= dfTemp.set_index(['fileID','trialID'])
+
+
+
+
+
 
 #%% EXCLUDE TRIALS based on behavior
 # exclude inPort trials
 
-ind= []
-ind= dfTidy.trialOutcomeBeh10s.str.contains('inPort')
+# ind= []
+# ind= dfTidy.trialOutcomeBeh10s.str.contains('inPort')
 
+
+#RESTRICT explicitly TO PE+Lick OUTCOME TRIALS
+ind=[]
+ind= dfTidy.trialOutcomeBeh10s.astype('str')=='PE+lick'
+ind= ~ind
+
+
+# TODO: Explicitly require 1 of each event per trial for model 
+
+
+#TODO: Consider extending the time window to capture >10s cue duration events (eg late PE-> still valid USlicks that may not be counted based on behavioral outcome prior defined)
 
 #just make the signal nan
 dfTidy.loc[ind,'reblue']= None
@@ -301,13 +561,16 @@ filterWindow= 40
 # modeSignalNorm= 'dffMatlab'
 
 modeSignalNorm= 'airPLS' #simply for filenames
-0
+
 ## Define whether to z-score peri-event dF/F or keep as dF/F
 
 modePeriEventNorm= 'z'
 
+
 # modePeriEventNorm= 'raw'
 
+## remove artifacts or not?
+removeArtifacts= True
 
 
 #todo: save the OG signal here to compare against post-python preprocessing ? memory intensive
@@ -346,15 +609,29 @@ eventVars= dfTidy.eventType.unique()
 
 # eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
 
+# eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+
 eventsToInclude= ['DStime','PEcue','lickUS']
 
 # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
 # OVERWRITING all lick events with undefined type
 
-dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
+
+# - overwrite all equally
+# dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
+
+# - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
+dfTidy.eventType= dfTidy.eventType.astype('str')
+
+dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
+
+dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
+
 
 eventsToInclude= ['DStime','PEcue','lickTime']
 
+dfTidy.eventType= dfTidy.eventType.astype('category')
+eventVars= dfTidy.eventType.unique()
 
 
 
@@ -396,7 +673,9 @@ test= dfTidy.columns
 fs= 40
 
 preEventTime= 5 *fs # seconds x fs
-postEventTime= 10 *fs
+# postEventTime= 10 *fs
+postEventTime= 15 *fs
+
 
 #time window to normalize against
 baselineTime= 10*fs
@@ -629,7 +908,23 @@ for subj in corrInput.subject.unique():
     saveFigCustom(f, 'subj-'+str(subj)+'-encodingInput-eventLatencies', savePath)
 
 
+#dp 2023-02-08 new plot of latencies
+#-- Plot of event timings going into regression (just double checking reasonable times)
+dfPlot= corrInput.copy()
 
+dfPlot= dfPlot.loc[dfPlot.eventType.isin(eventsToInclude)].copy()
+
+#remove all unused categories from vars (so sns doesn't plot empty labels)
+ind= dfPlot.dtypes=='category'
+ind= dfPlot.columns[ind]
+
+for col in ind:
+    dfPlot[col]= dfPlot[col].cat.remove_unused_categories()
+
+
+g= sns.catplot(data=dfPlot, y='eventType', x='eventLatency', row='subject', hue='eventType')
+g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
 
 
 
@@ -1519,7 +1814,12 @@ thresholdArtifact= 15
 #dp 2022-09-12 dff conditional here means prior airPLS results had extreme 'artifacts' removed
 
 # if (modeSignalNorm!= 'dff') & (modePeriEventNorm=='z'):
-if (modeSignalNorm!= 'raw') & (modePeriEventNorm=='z'):
+# if (modeSignalNorm!= 'raw') & (modePeriEventNorm=='z'):
+
+#dp 2023-02-08 prior models were excluding some artifacts. leave them since airPLS df signal computed in matlab. 
+# model on this date only had 1 trial excluded it seems
+if removeArtifacts==True:
+
 
     
     
