@@ -438,7 +438,12 @@ groupHierarchyEventType= ['stage','trainDayThisStage', 'subject', 'fileID', 'tri
 
 # dfTemp= dfTidy.groupby(groupHierarchyEventType, observed=True, as_index=False)['eventLatency'].first()    
 
-dfTemp= dfTidy.groupby(groupHierarchyEventType, observed=False, as_index=False)['eventLatency'].first() 
+
+#TODO- for eventType specifically may want observed=False here (but not for all groupers)
+groupHierarchyEventType= ['stage','trainDayThisStage', 'subject', 'fileID', 'trialType', 'trialID', 'trialCountThisSubj', 'trialIDpooled', 'trialOutcomeBeh10s', 'eventType']
+
+dfTemp= dfTidy.groupby(groupHierarchyEventType, observed=False, as_index=False)['eventLatency'].first()    
+
 
 
 #Only include DS trials
@@ -456,6 +461,7 @@ dfTemp.loc[dfTemp.eventLatency>postEventTime, 'exclude']= 1
 
 
 # ---- a bit simpler groupby and unstack
+# strategy here is like behaviorAnalysis inPort definition section
 
 #-get first latency value for first event of each type in every trial
 # dfTemp= dfTidy.groupby(['fileID','trialID','eventType'])['eventLatency'].first()
@@ -469,13 +475,20 @@ ind= []
 ind= dfTemp.eventLatency < (postEventTime/fs)
 dfTemp.loc[ind, 'exclude']= 1
 
-#-set index on 'fileID','trialID','eventType' and unstack for easy comparisons
+#-check to see if any eventTypes are missing from each trial
+#set index on 'fileID','trialID','eventType' and unstack for easy comparisons
 #unstack for easy visual comparison (and any() check)
 
 dfTemp2= dfTemp.set_index(['fileID','trialID', 'eventType']).copy()
 
 dfTemp3= dfTemp2['eventLatency'].unstack().copy()
 
+# identify trials with missing eventTypes
+ind=[]
+ind= dfTemp3.isnull().any(axis=1)
+
+#mark these trials missing events for exclusion
+dfTemp.loc[ind, 'exclude']= 1
 
 #set index on fileID, trialID and see if any values are missing
 # dfTemp2= dfTemp.set_index(['fileID','trialID'])
