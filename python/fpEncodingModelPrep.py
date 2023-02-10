@@ -232,89 +232,91 @@ dfTidy= dfTidy.loc[~dfTidy.subject.isin(subjToExclude)]
 
 
 #%%-- add pooled trialID between subjects for viz of event latency distribution?
-dfTemp=dfTidy.copy()
+# moved to behavior analysis
+# dfTemp=dfTidy.copy()
 
-# #get unique trialID cumcount pooled across all sessions for plotting 
-# dfTidy['trialIDpooled']= None
+# # #get unique trialID cumcount pooled across all sessions for plotting 
+# # dfTidy['trialIDpooled']= None
 
-# # dfTemp = dfTemp.loc[dfTemp.groupby(['fileID','trialID']).cumcount() == 0].copy()
+# # # dfTemp = dfTemp.loc[dfTemp.groupby(['fileID','trialID']).cumcount() == 0].copy()
 
-# ind= dfTemp.groupby(['fileID','trialID']).cumcount() == 0
+# # ind= dfTemp.groupby(['fileID','trialID']).cumcount() == 0
 
-# dfTemp= dfTemp.loc[ind]
+# # dfTemp= dfTemp.loc[ind]
 
-# #make 1 and then use cumsum() to cumulatively count series (cumcount seems limited to groupbys)
-# dfTemp.loc[ind,'trialIDpooled']= 1; 
+# # #make 1 and then use cumsum() to cumulatively count series (cumcount seems limited to groupbys)
+# # dfTemp.loc[ind,'trialIDpooled']= 1; 
 
+# # dfTemp['trialIDpooled']= dfTemp.trialIDpooled.cumsum()
+
+# # dfTidy.loc[ind, 'trialIDpooled'] = dfTemp.trialIDpooled
+
+# # # dfTidy.loc[:, 'trialIDpooled'] = dfTemp['trialID'].transform('cumcount') #dfTidy.groupby(['fileID','trialID']).transform('cumcount')
+
+# # dfTidy.loc[:, 'trialIDpooled'] = dfTidy.groupby(['fileID','trialID'])['trialIDpooled'].fillna(method='ffill')
+
+
+# # #get unique trialID cumcount within-subject across all sessions for plotting 
+# # # -Note Redefining here after epoch/trial reclassification in behavior script
+# # dfTemp= dfTidy.copy()
+
+# # dfTidy['trialIDpooled']= None
+
+# # # dfTemp = dfTemp.loc[dfTemp.groupby(['fileID','trialID']).cumcount() == 0].copy()
+
+# # #- subset to 1 observation per file per trial per subject
+# # ind= dfTemp.groupby(['fileID','trialID', 'subject']).cumcount() == 0
+
+# # dfTemp= dfTemp.loc[ind]
+
+# # #make 1 and then use cumsum() to cumulatively count series (cumcount seems limited to groupbys)
+# # dfTemp.loc[ind,'trialCountThisSubj']= 1; 
+
+# # dfTemp['trialCountThisSubj']= dfTemp.trialCountThisSubj.cumsum()
+
+# # dfTidy.loc[ind, 'trialCountThisSubj'] = dfTemp.trialCountThisSubj
+
+# # # dfTidy.loc[:, 'trialIDpooled'] = dfTemp['trialID'].transform('cumcount') #dfTidy.groupby(['fileID','trialID']).transform('cumcount')
+
+# # dfTidy.loc[:, 'trialCountThisSubj'] = dfTidy.groupby(['subject','fileID','trialID'])['trialCountThisSubj'].fillna(method='ffill')
+
+# #%-- Add cumulative count of trials within- and between-stage (could be useful for viz of raw training data e.g. latency including every trial)
+
+# #subset to 1 obs per trial for counting
+# from customFunctions import subsetLevelObs
+# groupHierarchyTrialID=['fileID','trialID']
+# dfTemp= subsetLevelObs(dfTidy, groupHierarchyTrialID).copy()
+
+# #cumulative between-stage trialCount
+# dfTemp.loc[:,'trialCountThisSubj']= dfTemp.groupby(['subject']).transform('cumcount').copy()
+
+# #within-stage trialCount
+# dfTemp.loc[:,'trialCountThisStage']= dfTemp.groupby(['subject','stage']).transform('cumcount').copy()
+
+# #pooled cumulative trialID count across all subj/sessions
+# dfTemp['trialIDpooled']= 1; 
 # dfTemp['trialIDpooled']= dfTemp.trialIDpooled.cumsum()
 
-# dfTidy.loc[ind, 'trialIDpooled'] = dfTemp.trialIDpooled
 
-# # dfTidy.loc[:, 'trialIDpooled'] = dfTemp['trialID'].transform('cumcount') #dfTidy.groupby(['fileID','trialID']).transform('cumcount')
-
-# dfTidy.loc[:, 'trialIDpooled'] = dfTidy.groupby(['fileID','trialID'])['trialIDpooled'].fillna(method='ffill')
-
-
-# #get unique trialID cumcount within-subject across all sessions for plotting 
-# # -Note Redefining here after epoch/trial reclassification in behavior script
-# dfTemp= dfTidy.copy()
-
+# #merge to save as new column in dfTidy
+# #overwrite original values
 # dfTidy['trialIDpooled']= None
+# dfTidy['trialCountThisStage']= None
+# dfTidy['trialCountThisSubj']= None
 
-# # dfTemp = dfTemp.loc[dfTemp.groupby(['fileID','trialID']).cumcount() == 0].copy()
-
-# #- subset to 1 observation per file per trial per subject
-# ind= dfTemp.groupby(['fileID','trialID', 'subject']).cumcount() == 0
-
-# dfTemp= dfTemp.loc[ind]
-
-# #make 1 and then use cumsum() to cumulatively count series (cumcount seems limited to groupbys)
-# dfTemp.loc[ind,'trialCountThisSubj']= 1; 
-
-# dfTemp['trialCountThisSubj']= dfTemp.trialCountThisSubj.cumsum()
-
-# dfTidy.loc[ind, 'trialCountThisSubj'] = dfTemp.trialCountThisSubj
-
-# # dfTidy.loc[:, 'trialIDpooled'] = dfTemp['trialID'].transform('cumcount') #dfTidy.groupby(['fileID','trialID']).transform('cumcount')
-
-# dfTidy.loc[:, 'trialCountThisSubj'] = dfTidy.groupby(['subject','fileID','trialID'])['trialCountThisSubj'].fillna(method='ffill')
-
-#%-- Add cumulative count of trials within- and between-stage (could be useful for viz of raw training data e.g. latency including every trial)
-
-#subset to 1 obs per trial for counting
-from customFunctions import subsetLevelObs
-groupHierarchyTrialID=['fileID','trialID']
-dfTemp= subsetLevelObs(dfTidy, groupHierarchyTrialID).copy()
-
-#cumulative between-stage trialCount
-dfTemp.loc[:,'trialCountThisSubj']= dfTemp.groupby(['subject']).transform('cumcount').copy()
-
-#within-stage trialCount
-dfTemp.loc[:,'trialCountThisStage']= dfTemp.groupby(['subject','stage']).transform('cumcount').copy()
-
-#pooled cumulative trialID count across all subj/sessions
-dfTemp['trialIDpooled']= 1; 
-dfTemp['trialIDpooled']= dfTemp.trialIDpooled.cumsum()
+# #drop old values
+# dfTidy= dfTidy.drop(['trialIDpooled','trialCountThisStage','trialCountThisSubj'], axis=1)
 
 
-#merge to save as new column in dfTidy
-#overwrite original values
-dfTidy['trialIDpooled']= None
-dfTidy['trialCountThisStage']= None
-dfTidy['trialCountThisSubj']= None
+# dfTemp= dfTemp.loc[:,groupHierarchyTrialID+['trialCountThisSubj']+['trialCountThisStage']+['trialIDpooled']]
 
-#drop old values
-dfTidy= dfTidy.drop(['trialIDpooled','trialCountThisStage','trialCountThisSubj'], axis=1)
+# dfTidy = dfTidy.merge(dfTemp, how='left', on=groupHierarchyTrialID).copy()
 
+# # viz validation
+# test= dfTidy.loc[(dfTidy.fileID==432) & (dfTidy.trialID==27)]
 
-dfTemp= dfTemp.loc[:,groupHierarchyTrialID+['trialCountThisSubj']+['trialCountThisStage']+['trialIDpooled']]
-
-dfTidy = dfTidy.merge(dfTemp, how='left', on=groupHierarchyTrialID).copy()
-
-# viz validation
-test= dfTidy.loc[(dfTidy.fileID==432) & (dfTidy.trialID==27)]
-
-#%%--- viz input for regression prior to refining
+#%%--- viz behavior prior to refining input for regression
+#time post- trial start for model: require events with latency within this time 
 
 #define events to correlate (e.g. drop the NStimes since they're a separate trialType)
 corrEvents= ['DStime','PEcue','lickPreUS','lickUS', 'UStime']
@@ -379,19 +381,20 @@ g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2,
     #things like relative count of trialOutcomeBeh10s (are they waiting in port/being selective?)
     #how fast do they respond typically?
     
-#---- Combine trial behavioral outcomes into appropriate categories for legibility #TODO: move this to behavior analyses
-# combine noPE / unrewarded trials
-outcomeNoPE= ['noPE','noPE+lick']
-outcomeInPort= ['inPort+PE+lick','inPort+noPE+lick', 'inPort+PE', 'inPort+noPE']
-outcomePE= ['PE+lick','PE']
+#     #moved to behavior analysis
+# #---- Combine trial behavioral outcomes into appropriate categories for legibility #TODO: move this to behavior analyses
+# # combine noPE / unrewarded trials
+# outcomeNoPE= ['noPE','noPE+lick']
+# outcomeInPort= ['inPort+PE+lick','inPort+noPE+lick', 'inPort+PE', 'inPort+noPE']
+# outcomePE= ['PE+lick','PE']
 
-dfPlot.trialOutcomeBeh10s= dfPlot.trialOutcomeBeh10s.astype('string').copy()
+# dfPlot.trialOutcomeBeh10s= dfPlot.trialOutcomeBeh10s.astype('string').copy()
 
-dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomeNoPE),'trialOutcomeBeh10s']= 'No PE trial'
-dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomeInPort),'trialOutcomeBeh10s']= 'In Port trial'
-dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomePE),'trialOutcomeBeh10s']= 'PE trial'
+# dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomeNoPE),'trialOutcomeBeh10s']= 'No PE trial'
+# dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomeInPort),'trialOutcomeBeh10s']= 'In Port trial'
+# dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomePE),'trialOutcomeBeh10s']= 'PE trial'
 
-dfPlot.trialOutcomeBeh10s= dfPlot.trialOutcomeBeh10s.astype('category').copy()
+# dfPlot.trialOutcomeBeh10s= dfPlot.trialOutcomeBeh10s.astype('category').copy()
 
 
     
@@ -424,25 +427,60 @@ test2= dfTidy[((dfTidy.fileID==212) & (dfTidy.trialID==24))]
 
 #time post- trial start for model: require events with latency within this time 
 fs=40
-postEventTime= 15 *fs
-
+postEventTime= 10
 
 #define events to include in model- this will define here which trials are explicitly included
 # must have 1 event per type per trial to be in model
-eventsToInclude= ['DStime','PEcue','lickUS']
+# eventsToInclude= ['DStime','PEcue','lickUS']
+
+
+# # #define which eventTypes to include!
+# #for correlation should keep all
+# eventVars= dfTidy.eventType.unique()
+
+# eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
+
+# eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+
+# eventsToInclude= ['DStime','PEcue','lickUS']
+
+# # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
+# # OVERWRITING all lick events with undefined type
+
+
+# - overwrite all equally
+# dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
+
+# - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
+dfTidy.eventType= dfTidy.eventType.astype('str')
+
+dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
+
+dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
+
+
+eventsToInclude= ['DStime','PEcue','lickTime']
+
+dfTidy.eventType= dfTidy.eventType.astype('category')
+eventVars= dfTidy.eventType.unique()
+
+
+
+
+
+
 
 
 #- get the relative latency from trialStart for each eventType for each trial
 # get first event time for each trial for each eventType
 groupHierarchyEventType= ['stage','trainDayThisStage', 'subject', 'fileID', 'trialType', 'trialID', 'trialCountThisSubj', 'trialIDpooled', 'trialOutcomeBeh10s', 'eventType']
 
-# dfTemp= dfTidy.groupby(groupHierarchyEventType, observed=True, as_index=False)['eventLatency'].first()    
+dfTemp= dfTidy.groupby(groupHierarchyEventType, observed=True, as_index=False)['eventLatency'].first()    
 
 
 #TODO- for eventType specifically may want observed=False here (but not for all groupers)
-groupHierarchyEventType= ['stage','trainDayThisStage', 'subject', 'fileID', 'trialType', 'trialID', 'trialCountThisSubj', 'trialIDpooled', 'trialOutcomeBeh10s', 'eventType']
 
-dfTemp= dfTidy.groupby(groupHierarchyEventType, observed=False, as_index=False)['eventLatency'].first()    
+# dfTemp= dfTidy.groupby(groupHierarchyEventType, observed=False, as_index=False)['eventLatency'].first()    
 
 
 
@@ -457,7 +495,7 @@ dfTemp= dfTemp.loc[dfTemp.eventType.isin(eventsToInclude)]
 #mark latencies beyond model time window
 dfTemp['exclude']= None
 
-dfTemp.loc[dfTemp.eventLatency>postEventTime, 'exclude']= 1
+dfTemp.loc[dfTemp.eventLatency>(postEventTime*fs), 'exclude']= 1
 
 
 # ---- a bit simpler groupby and unstack
@@ -472,7 +510,7 @@ dfTemp= dfTemp.loc[dfTemp.eventType.isin(eventsToInclude)]
 
 #-check to see if latencies are within model time window, if not make null
 ind= []
-ind= dfTemp.eventLatency < (postEventTime/fs)
+ind= dfTemp.eventLatency > (postEventTime)
 dfTemp.loc[ind, 'exclude']= 1
 
 #-check to see if any eventTypes are missing from each trial
@@ -488,14 +526,96 @@ ind=[]
 ind= dfTemp3.isnull().any(axis=1)
 
 #mark these trials missing events for exclusion
-dfTemp.loc[ind, 'exclude']= 1
+dfTemp.set_index(['fileID','trialID'], inplace=True)
+dfTemp.loc[ind, 'exclude']= 2
 
-#set index on fileID, trialID and see if any values are missing
-# dfTemp2= dfTemp.set_index(['fileID','trialID'])
+# dfTemp.reset_index(inplace=True)
+
+# dfTidy['exclude']= None
+
+# note with merge it seems to have memory issues if left df has nans? https://stackoverflow.com/questions/47386405/memoryerror-when-i-merge-two-pandas-data-frames
+dfTemp= dfTemp['exclude']
+
+dfTidy = dfTidy.merge(dfTemp, how='left', on=['fileID','trialID'])
+
+#review count of trials remaining by ses 
+test= dfTidy.groupby(['subject','stage','trainDayThisStage','trialType','exclude'], observed=True, dropna=False)['trialID'].nunique().copy()
+
+test2= test.reset_index()
+
+test2= test2[test2.trialType=='DStime']
+
+#viz trial count by session, trying to determine exclusion criteria, how many excluded, and how many session
+dfPlot= test2.loc[test2.exclude.isnull()] #included trials
+
+dfPlot.stage= dfPlot.stage.cat.remove_unused_categories()
+
+sns.relplot(data=dfPlot, col='stage', x='trainDayThisStage', y='trialID', hue='subject', palette='Set2', kind='line', style='subject', dashes=False, markers=True, alpha=0.7)
 
 
 
+# # # just set index and assign instead of mem-intensive merging?
+# #can't handle non-unique multi-index
+# dfTidy.set_index(['fileID','trialID'],inplace=True)
 
+
+#get ind for excluded trials and assign 
+#get index of trials to be excluded (use where() to get actual fileID,trialID for matching up with dfTidy)
+
+# debugging assignment with file subset
+
+# test= dfTidy[(dfTidy.fileID==8)]
+
+# #method 1 - set index fileID, trialID and simply assign 
+# # error bc non-unique multiindex
+# test2= test.set_index(['fileID','trialID'])
+
+# ind2= np.where(dfTemp['exclude'].notnull())
+
+# test2[ind2]
+
+## method 2- merge
+# testRight= dfTemp['exclude']
+# testMerge = test.merge(testRight, how='left', on=['fileID','trialID']).copy()
+
+# merge into df.
+# note with merge it seems to have memory issues if left df has nans? https://stackoverflow.com/questions/47386405/memoryerror-when-i-merge-two-pandas-data-frames
+# dfTidy = dfTidy.merge(testRight, how='left', on=['fileID','trialID'])
+
+
+# #- need to find the fileID,trialID indexd (not just boolean) because dfTidy has more?
+
+# ind= []
+# ind= dfTemp['exclude'].notnull()
+
+# # dfTidy['exclude',ind] = dfTemp[ind,'exclude']
+
+# #below example
+
+# #get index of trials to be excluded (use where() to get actual fileID,trialID for matching up with dfTidy)
+# ind2= np.where(dfTemp['exclude'].notnull())
+
+
+# #get index of trials to be excluded (use where() to get actual fileID,trialID for matching up with dfTidy)
+# ind2= dfTemp.index
+
+# #failed
+# dfTidy.loc[ind2,'exclude']= dfTemp.loc[ind2,'exclude']
+
+# dfTidy.loc[ind2,'exclude']=1
+
+# # # check if each of these #3 trials are in either of the prior 2. Remaining False are not.
+# # test= ((ind1[indTest]) | (ind2[indTest]))
+
+# # indNew= indTest[np.where(test==False)]
+
+# # #these are the trials unique to case 3 (UStime but no PE. some also have no Out)
+# # dfTemp4= dfTemp2.loc[indNew]
+
+# # # Mark only these explicitly as 3
+# # ind= []
+# # ind= indNew
+# # dfTidy.loc[ind,'inPort']= 3
 
 
 #%% EXCLUDE TRIALS based on behavior
@@ -505,14 +625,20 @@ dfTemp.loc[ind, 'exclude']= 1
 # ind= dfTidy.trialOutcomeBeh10s.str.contains('inPort')
 
 
-#RESTRICT explicitly TO PE+Lick OUTCOME TRIALS
-ind=[]
-ind= dfTidy.trialOutcomeBeh10s.astype('str')=='PE+lick'
-ind= ~ind
+# #RESTRICT explicitly TO PE+Lick OUTCOME TRIALS
+# ind=[]
+# ind= dfTidy.trialOutcomeBeh10s.astype('str')=='PE+lick'
+# ind= ~ind
 
 
-# TODO: Explicitly require 1 of each event per trial for model 
+# # Explicitly require 1 of each event per trial for model 
+# # Defined above
+# # setting index on fileID, trialID to match above 
+# ind = dfTemp.exclude.notnull()
 
+# dfTidy= dfTidy.set_index(['fileID','trialID'])
+
+ind= dfTidy.exclude.isnull()
 
 #TODO: Consider extending the time window to capture >10s cue duration events (eg late PE-> still valid USlicks that may not be counted based on behavioral outcome prior defined)
 
@@ -520,6 +646,7 @@ ind= ~ind
 dfTidy.loc[ind,'reblue']= None
 dfTidy.loc[ind, 'repurple']= None
 
+# dfTidy.reset_index(inplace=True)
 
 #%% FP preprocessing- df/f
 
@@ -597,7 +724,9 @@ modePeriEventNorm= 'z'
 # modePeriEventNorm= 'raw'
 
 ## remove artifacts or not?
-removeArtifacts= True
+# removeArtifacts= True
+removeArtifacts= False
+
 
 
 #todo: save the OG signal here to compare against post-python preprocessing ? memory intensive
@@ -629,36 +758,36 @@ nSessionsToInclude= 0#2
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
 
+#moving higher
+# # #define which eventTypes to include!
+# #for correlation should keep all
+# eventVars= dfTidy.eventType.unique()
 
-# #define which eventTypes to include!
-#for correlation should keep all
-eventVars= dfTidy.eventType.unique()
+# # eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
 
-# eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
+# # eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
 
-# eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+# eventsToInclude= ['DStime','PEcue','lickUS']
 
-eventsToInclude= ['DStime','PEcue','lickUS']
-
-# DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
-# OVERWRITING all lick events with undefined type
-
-
-# - overwrite all equally
-# dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
-
-# - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
-dfTidy.eventType= dfTidy.eventType.astype('str')
-
-dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
-
-dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
+# # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
+# # OVERWRITING all lick events with undefined type
 
 
-eventsToInclude= ['DStime','PEcue','lickTime']
+# # - overwrite all equally
+# # dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
 
-dfTidy.eventType= dfTidy.eventType.astype('category')
-eventVars= dfTidy.eventType.unique()
+# # - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
+# dfTidy.eventType= dfTidy.eventType.astype('str')
+
+# dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
+
+# dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
+
+
+# eventsToInclude= ['DStime','PEcue','lickTime']
+
+# dfTidy.eventType= dfTidy.eventType.astype('category')
+# eventVars= dfTidy.eventType.unique()
 
 
 
