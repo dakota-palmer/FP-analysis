@@ -630,7 +630,10 @@ dfTemp.loc[(df.eventType=='NStime'),'trialType']= 'NStime'
 df.loc[:,'trialID']= dfTemp.trialID
 df.loc[:,'trialType']= dfTemp.trialType
 
-df.loc[:,'trialStart']= dfTemp.cutTime
+# DP 2023-02-16 TrialStart should be based on Actual EventTime, not binned cutTime
+# df.loc[:,'trialStart']= dfTemp.cutTime
+df.loc[:,'trialStart']= dfTemp.eventTime
+
 
 #assume entire cue duration here
 df.loc[:,'trialEnd']= dfTemp.cutTime+dfTemp.cueDur

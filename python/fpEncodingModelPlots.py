@@ -59,9 +59,9 @@ print(subjectsToExclude)
 fs= 40
 
 preEventTime= 5 *fs
-# postEventTime= 10 *fs
+postEventTime= 10 *fs
 
-postEventTime= 15 *fs
+# postEventTime= 15 *fs
 
 
 cueTimeOfInfluence= 2*fs
@@ -124,11 +124,28 @@ dfEncoding= dfEncoding.reset_index()
 #%% Set fixed order of eventVars for consistent hue/color faceting
 
 
-#- Manual; DS events specifically
+# #- Manual; DS events specifically
 
-eventOrder= ['DStime','PEcue','lickPreUS','lickUS']
+# eventOrder= ['DStime','PEcue','lickPreUS','lickUS']
 
-eventOrder= ['DStime','PEcue','lickTime']
+# eventOrder= ['DStime','PEcue','lickTime']
+
+
+# - auto; pull from dfEncoding and assume shared among files
+# eventOrder= dfEncoding.loc[0,'eventVars'][0]
+
+dfTemp= dfEncoding.loc[[0]].reset_index().copy() #reset index so can just retrieve values with [0]
+    
+
+eventOrder= dfTemp['eventVars']
+
+  
+eventOrder= eventOrder[0][0]
+  
+# dp 2023-02-09 eventVars imported with extra categoricals, use np.unique to remove unused categories bc categorical list format weird at this point 
+eventOrder= np.unique(eventOrder)
+
+
 
 
 # - TODO: default should be pd categorical order if categorical dtype
@@ -493,9 +510,12 @@ for subj in dfEncoding.subject.unique():
         # # test=  integrate.trapezoid(kernels.loc[ind,'beta'])
         
         # # #below 3 yield equivalent result.
-        # # test1=  integrate.trapezoid(kernels.loc[ind,'beta'], x= kernels.loc[ind,'timeShift'])
-        # # test2=  integrate.trapezoid(kernels.loc[ind,'beta'], dx= aucDx)
-        # # test3=  integrate.trapezoid(kernels.loc[ind,'beta'], x= kernels.loc[ind,'timeShift'], dx= aucDx)
+        # test1=  integrate.trapezoid(kernels.loc[ind,'beta'], x= kernels.loc[ind,'timeShift'])
+        # test2=  integrate.trapezoid(kernels.loc[indEvent,'beta'], dx= aucDx)
+        
+        # test2b=  integrate.cumulative_trapezoid(kernels.loc[indEvent,'beta'], dx= aucDx)
+
+        # test3=  integrate.trapezoid(kernels.loc[ind,'beta'], x= kernels.loc[ind,'timeShift'], dx= aucDx)
 
         
         
@@ -512,8 +532,141 @@ for subj in dfEncoding.subject.unique():
         
         kernels.loc[ind,'betaAUCpostEvent']= integrate.trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'])
         
+       #  # dp 2023-02-13 cumulative AUC
+       #  #integrate every 1s
+       #  aucDx= 1*fs
+       #  # aucCum= integrate.cumulative_trapezoid(kernels.loc[indEvent,'beta'], dx=aucDx)      
+       #  #reset auc to 0 at intervals?
+       #  aucCum= integrate.cumulative_trapezoid(kernels.loc[indEvent,'beta'], dx=aucDx, initial=0)     
+       #  # aucCum= integrate.cumulative_trapezoid(kernels.loc[indEvent,'beta'], initial=0)     
 
+
+       #  # # add placeholder 0 for first timestamp, dont have to do if call initial=0
+       #  # # aucCum= [0, aucCum[:]]
+       #  # aucCum= np.insert(aucCum,0,0)
+        
+       #  kernels.loc[indEvent,'AUCcum']= aucCum
+        
+       #  # #-debugging viz - beta vs cumulative auc
+       #  # dfPlot= kernels[indEvent]
+       #  # g= sns.relplot(data=dfPlot, x='timeShift', y='AUCcum', row='eventType', kind='line')
+       #  # g.map_dataframe(sns.lineplot, x='timeShift', y='beta')
+
+
+        #2023-02-13 
+       #  #---instead of cumulative AUC, calculate more binned aucs resetting at 0 between
+       #  #define time in s to include in AUC (want equivalent time for pre & post comparison)
+       #  aucTime= 1  
+       
+       # # # #define sampling rate of AUC
+       # #  aucDx= aucTime*fs
+       
+       # # #define number of bins in AUC
+        aucDx= aucTime*fs
+       
+        
+       #calculate AUC for every time bin throughout peri-event window
+       
+        indEvent2= np.where(indEvent)
+       
+       # testInd2= kernels.loc[indEvent,'timeShift']
+       
+        # Can use :: slice operator to index and get slices corresponding to every time bin (defined by fs)
+        # this will return index of timeShift broken down corresponding to aucDx intervals
+        tBins= kernels.loc[indEvent,'timeShift']
+        
+        tBins= tBins[0::aucDx]
+        
+        tBinsInd= tBins.index
+        
+        
+        # timeBinInd= tBins[0::aucDx].index
+
+        # test= np.arange(timeBinInd,1)
+
+
+       #label time bins in kernels df, will be used for AUC calc
+       # simply mark by index and use ffill()
+        kernels.loc[tBinsInd, 'timeBin']= tBins[tBinsInd]
+        kernels['timeBin']= kernels.groupby(['eventType'])['timeBin'].transform('fillna', method='ffill')
+
+       # # loop thru all but last bin index for comparison
+       #  for thisBin in range(len(tBinsInd)-1):
+       #       # binStart= timeBin.index
+             
+       #       binStart= tBinsInd[thisBin]
+       #       binEnd= tBinsInd[thisBin+1]
+             
+       #       #get index of all values matching this bin within df
+       #       # to do so simple comparison against indEvent
+       #       indEvent2= np.where(indEvent)
+             
+       #       indThisBin= indEvent2[((indEvent2> binStart) & (indEvent2< binEnd))]
+             
+       #-now with timebins labelled, Compute AUC within each timebin
+       
+        for thisBin in kernels.loc[indEvent2, 'timeBin'].unique():
+            ind=[]
+            ind= kernels.timeBin==thisBin
+            
+            ind= (ind) & (indEvent)
+            
+            # aucCum= integrate.cumulative_trapezoid(kernels.loc[ind,'beta'], dx=aucDx, initial=0)     
+            # auc=  integrate.trapezoid(kernels.loc[ind,'beta'], dx=aucDx)    
+             
+            auc=  integrate.trapezoid(kernels.loc[ind,'beta'],  kernels.loc[ind,'timeShift'])    
+
+            aucCum= integrate.cumulative_trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'], initial=0)     
+
+            
+            #assign back to df
+            kernels.loc[ind, 'aucBinned']= auc
+            kernels.loc[ind,'aucCumBinned']= aucCum
+             
+            
+        #instead of above method, simply compute?
+
+           
+       
+        
+       # # #testing scipy.integrate parameters
+       # # giving time range x gives more interpretable values (distro is same)
+       # # test=  integrate.trapezoid(kernels.loc[ind,'beta'])
+       
+       # # # #below , 1 and 3 yield same result. 2 is different
+       #  test1=  integrate.trapezoid(kernels.loc[ind,'beta'], x= kernels.loc[ind,'timeShift'])
+       #  test2=  integrate.trapezoid(kernels.loc[ind,'beta'], dx= aucDx)
+       #  test3=  integrate.trapezoid(kernels.loc[ind,'beta'], x= kernels.loc[ind,'timeShift'], dx= aucDx)
+
+       #  test1=  integrate.trapezoid(kernels.loc[indEvent,'beta'], x= kernels.loc[indEvent,'timeShift'])
+       #  test2=  integrate.trapezoid(kernels.loc[indEvent,'beta'], dx= aucDx)
+       #  test3=  integrate.trapezoid(kernels.loc[indEvent,'beta'], x= kernels.loc[indEvent,'timeShift'], dx= aucDx)
     
+       #   test1=  integrate.trapezoid(kernels.loc[indEvent,'beta'], x= kernels.loc[indEvent,'timeShift'])
+       #   test2=  integrate.trapezoid(kernels.loc[indEvent,'beta'], dx= aucDx)
+       #   test3=  integrate.trapezoid(kernels.loc[indEvent,'beta'], x= kernels.loc[indEvent,'timeShift'], dx= aucDx)
+
+
+        # want an output of AUC at every time interval. not getting it (just getting 1 value)
+
+       
+       # ind= []
+       # ind= (indEvent) & (kernels.timeShift<0) & (kernels.timeShift>= -aucTime) #pre-event
+       
+       # # kernels.loc[ind,'betaAUCpreEvent']= integrate.trapezoid(kernels.loc[ind,'beta'])
+       # kernels.loc[ind,'betaAUCpreEvent']= integrate.trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'])
+
+       
+       
+       # ind= []
+       # ind= (indEvent) & (kernels.timeShift>0) & (kernels.timeShift <=aucTime) #post-event
+       
+       # kernels.loc[ind,'betaAUCpostEvent']= integrate.trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'])
+       
+    
+    
+    
+
     #add data to from this subject to larger df, kernelsAll
     kernels['subject']= subj
     
@@ -526,7 +679,75 @@ for subj in dfEncoding.subject.unique():
 
 #reset index after combining
 kernelsAll= kernelsAll.reset_index()
-    
+
+
+#-debugging viz - beta vs cumulative auc
+dfPlot= kernels.copy()
+
+g= sns.relplot(data=dfPlot, x='timeShift', y='aucBinned', col='eventType', hue='eventType', kind='line')
+g= sns.relplot(data=dfPlot, x='timeShift', y='aucCumBinned', col='eventType', hue='eventType', kind='line')
+
+# g.map_dataframe(sns.lineplot, x='timeShift', y='beta', hue='eventType')
+g= sns.relplot(data=dfPlot, x='timeShift', y='beta', col='eventType', hue='eventType', kind='line')
+
+
+# compare beta, beta AUC binned, and cumulative beta AUC across subj
+# f, ax = plt.subplots(3, 1)
+dfPlot= kernelsAll
+
+# older black filled area
+# g= sns.relplot(data=dfPlot, x='timeShift', y='aucBinned', col='eventType', row='subject', hue='subject', kind='line', palette='Set2')
+# g = g.map_dataframe(plt.fill_between, 'timeShift', 'aucBinned', color='black', alpha=0.2)
+# g.map(plt.axvline,x=0, linestyle='--', color='black', linewidth=2)
+
+# g= sns.relplot(data=dfPlot, x='timeShift', y='aucCumBinned', col='eventType', row='subject', hue='subject', kind='line', palette='Set2')
+# g = g.map_dataframe(plt.fill_between, 'timeShift', 'aucCumBinned', color='black', alpha=0.2)
+# g.map(plt.axvline,x=0, linestyle='--', color='black', linewidth=2)
+
+# g= sns.relplot(data=dfPlot, x='timeShift', y='beta', col='eventType', row='subject', hue='subject', kind='line', palette='Set2')
+# g = g.map_dataframe(plt.fill_between, 'timeShift', 'beta', color='black', alpha=0.2)
+# g.map(plt.axvline,x=0, linestyle='--', color='black', linewidth=2)
+
+
+# g= sns.relplot(data=dfPlot, x='timeShift', y='beta', row='subject', hue='eventType', kind='line')
+# # g = g.map_dataframe(plt.fill_between, 'timeShift', 'beta', color='black', alpha=0.2)
+# g = g.map_dataframe(plt.fill_between, 'timeShift', 'beta', alpha=0.2)
+# g.map(plt.axvline,x=0, linestyle='--', color='black', linewidth=2)
+
+# g= sns.FacetGrid(dfPlot, row='subject', hue='eventType', col='eventType')
+g= sns.FacetGrid(dfPlot, row='subject', hue='eventType', col='eventType', sharey=False)
+g.map_dataframe(sns.lineplot, x='timeShift', y='aucBinned')
+g = g.map_dataframe(plt.fill_between, 'timeShift', 'aucBinned', alpha=0.2)
+g.map(plt.axvline,x=0, linestyle='--', color='black', linewidth=2)
+saveFigCustom(g,modelStr+'allSubj-'+'comparison_aucBinned', savePath)
+
+
+# g= sns.FacetGrid(dfPlot, row='subject', hue='eventType', col='eventType')
+g= sns.FacetGrid(dfPlot, row='subject', hue='eventType', col='eventType', sharey=False)
+g.map_dataframe(sns.lineplot, x='timeShift', y='aucCumBinned')
+g = g.map_dataframe(plt.fill_between, 'timeShift', 'aucCumBinned', alpha=0.2)
+g.map(plt.axvline,x=0, linestyle='--', color='black', linewidth=2)
+saveFigCustom(g,modelStr+'allSubj-'+'comparison_aucCumBinned', savePath)
+
+
+# g= sns.FacetGrid(dfPlot, row='subject', hue='eventType', col='eventType')
+g= sns.FacetGrid(dfPlot, row='subject', hue='eventType', col='eventType', sharey=False)
+g.map_dataframe(sns.lineplot, x='timeShift', y='beta')
+g = g.map_dataframe(plt.fill_between, 'timeShift', 'beta', alpha=0.2)
+g.map(plt.axvline,x=0, linestyle='--', color='black', linewidth=2)
+saveFigCustom(g,modelStr+'allSubj-'+'comparison_beta', savePath)
+
+
+
+#- nice plot with filled area (facet grid by hue retains correct color)
+# g= sns.FacetGrid(dfPlot, row='subject', hue='eventType')
+g= sns.FacetGrid(dfPlot, row='subject', hue='eventType', sharey=False)
+g.map_dataframe(sns.lineplot,data=dfPlot, x='timeShift', y='beta')
+g.map_dataframe(plt.fill_between, 'timeShift', 'beta', alpha=0.2)
+saveFigCustom(g,modelStr+'allSubj-'+'comparison_beta-B', savePath)
+
+
+
     # for eventCol in range(len(eventVars)):
     #     if eventCol==0:
     #         ind= np.arange(0,(eventCol+1)*len(np.arange(-preEventTime,postEventShift)))
@@ -656,7 +877,6 @@ for subj in dfEncoding.subject.unique():
 dfPredictedAll= dfPredictedAll.reset_index()
 
 
-
 #%%  TODO: linear sum of kernels at time=0
 
 # # TODO: sum Kernels as prediction (like in the Parker 2016 paper)
@@ -755,20 +975,20 @@ f, ax = plt.subplots(1, 4)
 
 
 #actual periDS
-g= sns.lineplot(ax=ax[0], data=dfPredictedAll, x='timeLock',y='y',hue='subject', alpha=0.3)
+g= sns.lineplot(ax=ax[0], data=dfPredictedAll, x='timeLock',y='y',hue='subject', alpha=0.3, palette='Set2')
 g= sns.lineplot(ax=ax[0], data=dfPredictedAll, x='timeLock',y='y', color='black')
 g.set(title=('actual peri-DS signal'))
 
 
 #linear sum of coefficients
-g= sns.lineplot(ax=ax[1], data=kernelsAll, x='timeShift',y='beta',hue='subject', alpha=0.3)
+g= sns.lineplot(ax=ax[1], data=kernelsAll, x='timeShift',y='beta',hue='subject', alpha=0.3, palette='Set2')
 g= sns.lineplot(ax=ax[1], data=kernelsAll, x='timeShift',y='beta', color='black')
 g.set(title=('Prediction= linear sum of coef kernels'))
 
 ax[1].sharey= ax[0]
 
 # model.predict() of raw input data
-g= sns.lineplot(ax=ax[2], data=dfPredictedAll, x='timeLock',y='yPredicted',hue='subject', alpha=0.3)
+g= sns.lineplot(ax=ax[2], data=dfPredictedAll, x='timeLock',y='yPredicted',hue='subject', alpha=0.3, palette='Set2')
 g= sns.lineplot(ax=ax[2], data=dfPredictedAll, x='timeLock',y='yPredicted', color='black')
 g.set(title=('Prediction= model.predict(raw input)'))
 
@@ -785,7 +1005,7 @@ ax[2].sharey= ax[0]
 
 #-- R2 plot
 g= sns.barplot(ax=ax[3],data= dfPredictedAll, y='r2')
-g= sns.barplot(ax=ax[3],data= dfPredictedAll, x='subject', y='r2', hue='subject', palette='flare')
+g= sns.barplot(ax=ax[3],data= dfPredictedAll, x='subject', y='r2', hue='subject', palette='Set2') #, palette='flare')
 
 
 
@@ -967,16 +1187,17 @@ saveFigCustom(f, modelStr+'-allSubj-'+'model-prediction', savePath)
 
 #%% TODO: Retrieve other peri-event data 
 
-#to make plots of peri-event signals that were inputs to the model (alongside kernels for comparison)
+# to make plots of peri-event signals that were inputs to the model (alongside kernels for comparison)
 
-#Matching up fileIDs, load the peri-event FP data (from another df) OR compute here from dfTidyAnalyzed
+# Matching up fileIDs & trialIDs, load the peri-event FP data (from another df) OR compute here from dfTidyAnalyzed
 
 
 # get dates for each subject (for matlab comparison) 
-#get fileIDs included in model
+# get fileIDs included in model
 # test= kernelsAll.groupby(['subject'])['date'].unique()
 
-fileIDsModel= kernelsAll.groupby(['fileID'])['fileID'].unique()
+# dp comment out 2023-02-14, restrict observations next section
+# fileIDsModel= kernelsAll.groupby(['fileID'])['fileID'].unique()
 
 
 # #%% Load previously saved dfTidyAnalyzed (and other vars) from pickle
@@ -990,27 +1211,140 @@ for key in my_shelf:
     globals()[key]=my_shelf[key]
 my_shelf.close()
 
-
+# dp comment out 2023-02-14, restrict observations next section
 # Subset only fileIDs included in model
-ind= dfTidy.fileID.isin(fileIDsModel)
+# ind= dfTidy.fileID.isin(fileIDsModel)
 
-dfTidy= dfTidy.loc[ind,:]
+# dfTidy= dfTidy.loc[ind,:]
 
 
 #%% RUN PERI EVENT PLOT CODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # below copied from fpPeriEventTidy.py
  
-#%% Define events to include in peri-event analyses
+#%% dp 2023-02-13 should copy event timings and types from model input exactly, since exclusion / refinement happens
 
-# eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
+#build list of fileID, trialIDs included in model input
+included=[]
 
-eventsToInclude= kernels.eventType.unique()
+for subj in dfEncoding.subject.unique():
+#-get data for this subj from df
+    ind= np.where(dfEncoding.subject==subj)
+    
+    dfTemp= dfEncoding.loc[ind].reset_index().copy() #reset index so can just retrieve values with [0]
+      
+    
+    group= dfTemp['modelInput'][0][0].copy()
 
-eventVars=eventsToInclude
+    eventVars= dfTemp['eventVars']
+    
+    eventVars= eventVars[0][0]
+      
+    # dp 2023-02-09 eventVars imported with extra categoricals, use np.unique to remove unused categories bc categorical list format weird at this point 
+    eventVars= np.unique(eventVars)
+    
+    
+    # Set Index on fileID, trialID combos included in modelInputs, overwrite eventTypes and eventTimings
+    group= group.set_index(['fileID','trialID'])
+    # included= [included, group.index]
+    
+    included= np.append(included, group.index)
+    
+    
+# includedInd= pd.MultiIndex(included)
+# test= pd.MultiIndex.from_arrays(included, names=('fileID', 'trialID'))
+
+    
+# included = pd.unique(included)
+    
+# convert to multiindex for easy matching up with df
+ind = pd.MultiIndex.from_tuples(included, names=["fileID", "trialID"])
+
+# reduce to unique fileID, trialID combos
+
+ind= ind.drop_duplicates(keep='first')
+
+#subset only included trials
+# Instead of subsetting, make eventTypes nan in these trials (so can do z scoring appropriately)
+# this should allow bleedthru between trials & correct baselines?
+
+dfTidy.set_index(['fileID','trialID'], inplace=True)
+
+# dfTidy= dfTidy.loc[included]
+
+# dfTidy.loc[included, 'eventType']= None
+dfTidy.loc[ind, 'eventType']= None
+
+
+dfTidy.reset_index(inplace=True)
+
+
+#-- Exclude fileIDs we don't need (lots of memory saved)
+# get fileIDs from included multiindex and subset to only these
+dfTidy.set_index(['fileID'], inplace=True)
+
+ind= ind.get_level_values(0)
+
+dfTidy= dfTidy.loc[ind]
+
+dfTidy.reset_index(inplace=True)
+    
+#%% 2023-02-14 saving memory by eliminating data
+
+# test= dfTidy.memory_usage()
+# test2= dfTidy.dtypes
+
+colToInclude=['fileID','trialID','eventType','reblue','subject']
+
+dfTidy= dfTidy.loc[:,dfTidy.columns.isin(colToInclude)]
+
+
+dfTidy.subject= dfTidy.subject.astype('category')
+dfTidy.fileID= dfTidy.fileID.astype('category')
+dfTidy.trialID= dfTidy.fileID.astype('category')
+
+
+#%% 2023-02-13 Edit events matching encoding prep to include in peri-event analyses-- copy from encoding model prep
+
+# # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
+
+# eventsToInclude= kernels.eventType.unique()
+
+# eventVars=eventsToInclude
+
+# # eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
+
+# # eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+
+# # #define which eventTypes to include!
+# #for correlation should keep all
+# eventVars= dfTidy.eventType.unique()
 
 # eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
 
 # eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+
+eventsToInclude= ['DStime','PEcue','lickUS']
+
+# # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
+# # OVERWRITING all lick events with undefined type
+
+
+# # a - overwrite all equally
+# dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
+
+# # b - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
+# dfTidy.eventType= dfTidy.eventType.astype('str')
+
+# dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
+
+# dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
+
+
+# eventsToInclude= ['DStime','PEcue','lickTime']
+
+# dfTidy.eventType= dfTidy.eventType.astype('category')
+# eventVars= dfTidy.eventType.unique()
+
 
 
 #define trial vars to use as baseline (cues)
@@ -1022,9 +1356,9 @@ baselineEvents= ['DStime']#, 'NStime']
 
 # modeSignalNorm= 'raw'
 
-modeSignalNorm= 'dff' 
+# modeSignalNorm= 'dff' 
 
-# modeSignalNorm= 'airPLS' #simply for filenames
+modeSignalNorm= 'airPLS' #simply for filenames
 
 ## Define whether to z-score peri-event dF/F or keep as dF/F
 
@@ -1035,7 +1369,9 @@ modePeriEventNorm= 'z'
 fs= 40 #sampling frequency= 40hz
 
 preEventTime= 5 *fs # seconds x fs
-postEventTime= 15 *fs
+# postEventTime= 15 *fs
+postEventTime= 10 *fs
+
 
 baselineTime= 10*fs
 
@@ -1121,7 +1457,7 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
             continue
         
         #round timeLock so that we have exact shared X values for stats and viz!
-        timLock= np.round(timeLock, decimals=3)
+        timeLock= np.round(timeLock, decimals=3)
     
         
     return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock
@@ -1149,7 +1485,7 @@ for name, group in groups:
                     continue
                     
             
-                df= group
+                # df= group
                 signalCol='reblue'
                 eventCol= thisEventType
                 preEventTime= preEventTime
@@ -1182,12 +1518,16 @@ for name, group in groups:
 
 # ---- Plot Kernels alongside Peri-Event z scored traces 
 
+#freeing up some memory
+# del group, groups, timeLock, trialIDtimeLock, dfPlot, dfPlot2, dfPlot3, zEvent, zEventBaseline
+
+
 #subset data
-dfPlot= dfTidy.copy()
+# dfPlot= dfTidy.copy()
 
 for thisBaselineEventType in baselineEvents:
     
-    f, ax = plt.subplots(2,len(eventsToInclude), sharey=True, sharex=True)
+    f, ax = plt.subplots(2,len(eventsToInclude), sharey=False, sharex=True)
     
     for thisEventType in eventsToInclude:
             
@@ -1205,14 +1545,21 @@ for thisBaselineEventType in baselineEvents:
         z= 'trialIDtimeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
         
         # axes= np.where(eventsToInclude==thisEventType)
-        axes= np.where(thisEventType== eventsToInclude)
-        axes= axes[0][0] #returning nested array for some reason
+        # axes= np.where(thisEventType== eventsToInclude)
+        
+        # axes= axes[0][0] #returning nested array for some reason
+    
+        #2023-02-14 above np.where method stopped working reliably so using this
+        axes= eventsToInclude.index(thisEventType)
+
     
         # here there is error potential bleedthrough between trials. idk how seaborn is grouping the data for this
         # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
 
         # woof this is looking wquite different
-        g= sns.lineplot(ax= ax[0,axes],  data=dfPlot, sort=False, x=x,y=y, hue='subject', legend='full')
+        # g= sns.lineplot(ax= ax[0,axes],  data=dfPlot, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
+        g= sns.lineplot(ax= ax[0,axes],  data=dfTidy, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
+
 
         #style- no
         # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, style=z, hue='subject', legend='full')
@@ -1227,8 +1574,12 @@ for thisBaselineEventType in baselineEvents:
 
         #drop na then set index?
         # issue here I think bc non unique trialIDs? 
-        dfPlot2= dfPlot.loc[dfPlot[z].notnull()]
-        dfPlot2= dfPlot.set_index([z])
+        # dfPlot2= dfPlot.loc[dfPlot[z].notnull()]
+        # dfPlot2= dfPlot.set_index([z])
+        
+        dfPlot2= dfTidy.loc[dfTidy[z].notnull()]
+        dfPlot2= dfTidy.set_index([z])
+        
         
         # g= sns.lineplot(ax= ax[0,axes],  data=dfPlot2, x=x,y=y, hue='subject', legend='full')
 
@@ -1258,19 +1609,35 @@ for thisBaselineEventType in baselineEvents:
         #-- subplot kernels
         dfPlot3= kernelsAll.loc[kernelsAll.eventType==thisEventType]
         
-        g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha=0.3)
+        # g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha=0.3)
+        g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'subject', hue_order=eventOrder, alpha=0.3, palette='Set2')
 
-        g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+        g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2, color='black')#, palette='dark') #mean
 
-
+    
         g.set(title=('allSubj-kernels-'))#+modeCue+'-trials-'+modeSignal))
         g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
 
 
+# #%% Manual of above bc memory errors?
+# f, ax = plt.subplots(2,len(eventsToInclude), sharey=True, sharex=True)
+
+
+# z= 'trialIDtimeLock-z-periDS-DStime'
+# x= 'timeLock-z-periDS-DStime'
+# y='blue-z-periDS-DStime' 
+
+# indPlot= dfTidy[z].notnull()
+
+# # indPlot= np.where(dfTidy[z].notnull())
+
+# # g= sns.lineplot(ax= ax[0,0],  data=dfTidy, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
+# g= sns.lineplot(ax= ax[0,0],  data=dfTidy, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
+
+
+
         #%% 
         # saveFigCustom(f, 'allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials', savePath)
-
-
 
 
 

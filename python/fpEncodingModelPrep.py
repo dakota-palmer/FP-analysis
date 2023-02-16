@@ -231,8 +231,8 @@ dfTidy= dfTidy.loc[~dfTidy.subject.isin(subjToExclude)]
 
 #%% DEBUGGING
 
-# #TESTING with subset
-dfTidy= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.max()]
+# # #TESTING with subset
+# dfTidy= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.max()]
 
 
 
@@ -454,27 +454,27 @@ postEventTime= 10
 
 # eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
 
-# eventsToInclude= ['DStime','PEcue','lickUS']
+eventsToInclude= ['DStime','PEcue','lickUS']
 
 # # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
 # # OVERWRITING all lick events with undefined type
 
 
-# - overwrite all equally
-# dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
+# # # a - overwrite all equally
+# # dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
 
-# - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
-dfTidy.eventType= dfTidy.eventType.astype('str')
+# # b - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
+# dfTidy.eventType= dfTidy.eventType.astype('str')
 
-dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
+# dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
 
-dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
+# dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
 
 
-eventsToInclude= ['DStime','PEcue','lickTime']
+# eventsToInclude= ['DStime','PEcue','lickTime']
 
-dfTidy.eventType= dfTidy.eventType.astype('category')
-eventVars= dfTidy.eventType.unique()
+# dfTidy.eventType= dfTidy.eventType.astype('category')
+# eventVars= dfTidy.eventType.unique()
 
 
 
@@ -651,6 +651,24 @@ sns.relplot(data=dfPlot, col='stage', x='trainDayThisStage', y='trialID', hue='s
 # # dfTidy.loc[ind,'inPort']= 3
 
 
+#%% Exclude trials based on trial outcome - mark for exclusion
+
+# Exclude inPort trials
+# can still have all events with this outcome, so explicitly exclude
+
+ind= []
+ind= dfTidy.trialOutcomeBeh10s=='inPort'
+
+dfTidy.loc[ind,'exclude']= True
+
+# Exclude noPE trials
+#somehow had one left so explicitly limit
+ind= []
+ind= dfTidy.trialOutcomeBeh10s=='noPE'
+
+dfTidy.loc[ind,'exclude']= True
+
+
 #%% EXCLUDE TRIALS based on behavior
 # exclude inPort trials
 
@@ -679,10 +697,124 @@ ind= dfTidy.exclude.notnull()
 # dfTidy.loc[ind,'reblue']= None
 # dfTidy.loc[ind, 'repurple']= None
 
-#instead of eliminating signal on excluded trials, eliminate event timings (no baseline event= no periEvent), this should allow bleedthru between trials & correct baselines
+#instead of eliminating signal on excluded trials, eliminate event timings (no baseline event= no periEvent)
+# this should allow bleedthru between trials & correct baselines?
 dfTidy.loc[ind,'eventType']=None
 
 # dfTidy.reset_index(inplace=True)
+
+# NEED TO EXCLUDE IN PORT TOO
+
+#%% DP 2023-02-11 view all trials post-exclusion remaining included behavior
+
+#events to viz
+corrEvents= eventsToInclude
+
+#get the relative latency from trialStart for each eventType for each trial
+groupHierarchyEventType= ['stage','trainDayThisStage', 'subject', 'fileID', 'trialType', 'trialID', 'trialCountThisSubj', 'trialIDpooled', 'trialOutcomeBeh10s', 'eventType']
+
+##--- Limit viz to First event per type per trial ; get the relative latency from trialStart for each eventType for each trial
+
+#subset to included trials remaining
+dfPlot= dfTidy[dfTidy.exclude.isnull()]
+
+corrInput= dfPlot.groupby(groupHierarchyEventType, observed=True, as_index=False)['eventLatency'].first()    
+
+
+#subset DS trials
+corrInput= corrInput.loc[corrInput.trialType=='DStime']
+
+#drop unwanted eventTypes
+corrInput= corrInput.loc[corrInput.eventType.isin(corrEvents)]
+
+
+
+#-- Plot of event timings going into regression (just double checking reasonable times)
+dfPlot= corrInput.copy()
+
+dfPlot= dfPlot.loc[dfPlot.eventType.isin(corrEvents)].copy()
+
+# make subj categorical var for plotting
+dfPlot.subject= dfPlot.subject.astype('str')
+dfPlot.subject= dfPlot.subject.astype('category')
+
+#remove all unused categories from vars (so sns doesn't plot empty labels)#
+ind= dfPlot.dtypes=='category'
+ind= dfPlot.columns[ind]
+
+for col in ind:
+    dfPlot[col]= dfPlot[col].cat.remove_unused_categories()
+
+
+#% NEW PLOTS
+
+# g= sns.catplot(data=dfPlot, y='eventType', x='eventLatency', row='subject', hue='eventType')
+g= sns.catplot(data=dfPlot, y='eventType', x='eventLatency', row='subject', col= 'stage', hue='eventType')
+g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+
+
+
+#-- LATENCY DISTRIBUTIONS BY EVENT TYPE 
+
+# g= sns.displot(data=dfPlot, kind='ecdf', x='eventLatency', col='subject', hue='eventType')
+# g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+# g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+
+g= sns.displot(data=dfPlot, kind='ecdf', x='eventLatency', col='eventType', hue='subject', palette='Set2')
+g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+
+#- By trial behavioral outcome
+g= sns.displot(data=dfPlot, kind='ecdf', x='eventLatency', col='eventType', row='trialOutcomeBeh10s', hue='subject', palette='Set2')
+g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+
+#-- DETAILED PLOTS OF LATENCIES BY SUBJECT: TRYING TO CAPTURE VARIATIONS IN BEHAVIOR BETWEEN-SUBJECTS
+    #things like relative count of trialOutcomeBeh10s (are they waiting in port/being selective?)
+    #how fast do they respond typically?
+    
+#     #moved to behavior analysis
+# #---- Combine trial behavioral outcomes into appropriate categories for legibility #TODO: move this to behavior analyses
+# # combine noPE / unrewarded trials
+# outcomeNoPE= ['noPE','noPE+lick']
+# outcomeInPort= ['inPort+PE+lick','inPort+noPE+lick', 'inPort+PE', 'inPort+noPE']
+# outcomePE= ['PE+lick','PE']
+
+# dfPlot.trialOutcomeBeh10s= dfPlot.trialOutcomeBeh10s.astype('string').copy()
+
+# dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomeNoPE),'trialOutcomeBeh10s']= 'No PE trial'
+# dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomeInPort),'trialOutcomeBeh10s']= 'In Port trial'
+# dfPlot.loc[dfPlot.trialOutcomeBeh10s.isin(outcomePE),'trialOutcomeBeh10s']= 'PE trial'
+
+# dfPlot.trialOutcomeBeh10s= dfPlot.trialOutcomeBeh10s.astype('category').copy()
+
+
+    
+    
+#- plot of all individual trials by outcome
+for subj in dfPlot.subject.unique():
+    dfPlot2= dfPlot[dfPlot.subject==subj]
+    
+    g= sns.relplot(data=dfPlot2, y='trialCountThisSubj', x='eventLatency', col='trialOutcomeBeh10s', hue='eventType', alpha=0.8)
+    g.map(plt.axvline, x=10, linestyle='--', color='black', linewidth=2, alpha=0.5)
+    g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2, alpha=0.5)
+    
+    g.fig.suptitle('subj-'+subj)
+
+# reviewing weird trials
+# test= dfPlot.loc[(dfPlot.subject=='19.0') & (dfPlot.trialCountThisSubj==2601)]
+
+# test2= dfTidy[((dfTidy.fileID==432) & (dfTidy.trialID==27))]
+
+test= dfPlot[(dfPlot.subject=='13.0') & (dfPlot.trialCountThisSubj.isin([634,689]))]
+
+test2= dfTidy[((dfTidy.fileID==212) & (dfTidy.trialID==24))]
+
+
+
+
+
 
 #%% FP preprocessing- df/f
 
@@ -789,7 +921,7 @@ if modeSignalNorm== 'dff':
 stagesToInclude= [7]
 
 #number of sessions to include, 0 includes final session of this stage+n
-nSessionsToInclude= 0#2
+nSessionsToInclude= 2#0#2
 
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
