@@ -73,9 +73,10 @@ excludeDate= [] # ['20210604']
 df= df[~df.date.isin(excludeDate)]
 
 # #hitting memory cap, going to subset specific stages to reduce data 
-stagesToInclude= [1.,2.,3., 4., 5.0, 6.0, 7.0]#, 8., 11.0, 12.0]
+# stagesToInclude= [1.,2.,3., 4., 5.0, 6.0, 7.0]#, 8., 11.0, 12.0]
 # 
 # stagesToInclude= [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
+stagesToInclude= [5,6,7]
 # stagesToInclude= df.stage.unique()
 df= df.loc[df.stage.isin(stagesToInclude)]
 
@@ -132,6 +133,11 @@ df.dtypes
 #change dtypes if needed
 # df.cutTime=df.cutTime.astype('float64')
 df.fileID= df.fileID.astype('int')
+
+
+#%% Debugging just a couple files
+
+# df= df.loc[df.fileID.isin([9,418,175])]
 
 #%% Define Event variables for your experiment 
 #make a list of all of the Event Types so that we can melt them together into one variable
@@ -209,6 +215,8 @@ if experimentType.__contains__('Opto'):
 
 
 #%% Tidying: All events in single column, add trialID and trialType that matches trial 1-60 through each session.
+
+#%- dp 2023-02-16... messy but ultimately this section places events into time bins (cutTime). eventTimes are recorded separately.
 
 #% consolidate event vars into single column
 
@@ -458,6 +466,10 @@ df['trialID'] = df[(df.eventType == 'DStime') | (
 df.loc[df.trialID.notna(),'trialType']= df.eventType
 
 
+#%% dp 2023-02-16 examining time binning of events & differences between eventTime & cutTime
+
+# test= df.loc[df.eventTime.notnull()]
+
 
 #%% Assign more specific trialTypes based on trialVars (OPTO ONLY specific for now)
 if experimentType.__contains__('Opto'):
@@ -630,18 +642,23 @@ dfTemp.loc[(df.eventType=='NStime'),'trialType']= 'NStime'
 df.loc[:,'trialID']= dfTemp.trialID
 df.loc[:,'trialType']= dfTemp.trialType
 
-# DP 2023-02-16 TrialStart should be based on Actual EventTime, not binned cutTime
+# DP 2023-02-16 TrialStart, End, etc. Calculations should be based on Actual EventTime, not binned cutTime !!
+
 # df.loc[:,'trialStart']= dfTemp.cutTime
 df.loc[:,'trialStart']= dfTemp.eventTime
 
 
 #assume entire cue duration here
-df.loc[:,'trialEnd']= dfTemp.cutTime+dfTemp.cueDur
+# df.loc[:,'trialEnd']= dfTemp.cutTime+dfTemp.cueDur
+df.loc[:,'trialEnd']= dfTemp.eventTime+dfTemp.cueDur
+
+
 
 #use 10s as pre-cue time
 preCueDur= 10;
 
-df.loc[:,'preTrialStart']= dfTemp.cutTime-preCueDur
+# df.loc[:,'preTrialStart']= dfTemp.cutTime-preCueDur
+df.loc[:,'preTrialStart']= dfTemp.eventTime-preCueDur
 
 
 # dfTemp.loc[:,'nextTrialStart']= dfTemp.groupby(['fileID','trialID'])['trialStart'].shift(-1).copy()

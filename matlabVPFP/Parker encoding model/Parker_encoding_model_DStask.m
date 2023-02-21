@@ -22,7 +22,7 @@ load(uigetfile('*.mat')); %choose the subjDataAnalyzed.mat file to open for your
   
 
 condition = 'data_to_input' %/example';
-subjects =  1%[1:numel(files)]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
+subjects =  [1:numel(files)]%1%[1:numel(files)]%:278; %only one example file was included- I think there should be 1 file per subject...I guess in our case it's 1 per subj -dp
 
 
 for subject=1:numel(subjects)
@@ -299,10 +299,31 @@ for subject=1:numel(subjects)
                     %we've normalized all timestamps above, now go into
                     %peri-cue periods and replace those values with values used
                     %in heatplots
-                tsToNormalize(:,cue)= [find(currentSubj(thisSessionInd).raw.cutTime==currentSubj(thisSessionInd).periDS.periDSwindow(:,1,cue)):find(currentSubj(thisSessionInd).raw.cutTime==currentSubj(thisSessionInd).periDS.periDSwindow(:,end,cue))];
+%                 tsToNormalize(:,cue)= [find(currentSubj(thisSessionInd).raw.cutTime==currentSubj(thisSessionInd).periDS.periEventWindow(:,1,cue)):find(currentSubj(thisSessionInd).raw.cutTime==currentSubj(thisSessionInd).periDS.periEventWindow(:,end,cue))];
+                tsToNormalize(:,cue)= [find(currentSubj(thisSessionInd).raw.cutTime==currentSubj(thisSessionInd).periDS.periEventWindow(:,1,cue)):find(currentSubj(thisSessionInd).raw.cutTime==currentSubj(thisSessionInd).periDS.periEventWindow(:,end,cue))];
 
-                gcamp_normalized(tsToNormalize(:,cue))= (g_output.reblue{1,session}(tsToNormalize(:,cue))-currentSubj(thisSessionInd).periDS.baselineMeanblue(cue))/currentSubj(thisSessionInd).periDS.baselineStdblue(cue);
+%                 gcamp_normalized(tsToNormalize(:,cue))= (g_output.reblue{1,session}(tsToNormalize(:,cue))-currentSubj(thisSessionInd).periDS.baselineMeanblue(cue))/currentSubj(thisSessionInd).periDS.baselineStdblue(cue);
 
+                %-- dp 2022-02-16 recalculating baselines (not saved in more
+                % recent periEventAnalysis)
+                %use interp() to get fp during this baseline range 
+                tRangeBaseline= [];
+                tRangeBaseline= currentSubj(session).periDS.baselineWindow(:,:,cue);
+                
+                baselineBlue=[]; baselinePurple=[]; baselineMeanBlue=[]; baselineMeanPurple=[]; baselineStdBlue=[]; baselineStdPurple=[];
+                baselineBlue= interp1(currentSubj(session).raw.cutTime, currentSubj(session).raw.reblue, tRangeBaseline)';
+                baselinePurple= interp1(currentSubj(session).raw.cutTime, currentSubj(session).raw.repurple, tRangeBaseline)';
+
+                %get mean and std during baseline for Z score
+                baselineMeanBlue= nanmean(baselineBlue); %baseline mean blue 10s prior to DS onset
+                baselineStdBlue= nanstd(baselineBlue); %baseline std blue 10s prior to DS onset 
+                baselineMeanPurple= nanmean(baselinePurple); %baseline mean blue 10s prior to DS onset
+                baselineStdPurple= nanstd(baselinePurple); %baseline std blue 10s prior to DS onset 
+                %--
+                
+                gcamp_normalized(tsToNormalize(:,cue))= (g_output.reblue{1,session}(tsToNormalize(:,cue))-(baselineMeanBlue)/baselineStdBlue);
+
+                
                 %save new peri-cue data from normalized trace (with same
                 %parameters, these timestamps should look the same)
                 currentSubj(thisSessionInd).deconvolution.periDS.DSzblueNormalized(:,:,cue)= gcamp_normalized(preEventTimeDS:postEventTimeDS);
@@ -460,8 +481,12 @@ for subject=1:numel(subjects)
     %     cons={'DS','NS','poxDS','loxDS'};%...
     %     con_shift=[1, 1, 0, 0]; %stimulus events time window is 0:8s, action events it is -2:6s, this defines when to time-lock
 
-        cons= {'DS', 'poxDS'};
-        con_shift= [0,0];
+%         cons= {'DS', 'poxDS'};
+        cons= {'DS', 'poxDS', 'loxDS'};
+
+%         con_shift= [0,0];
+        con_shift= [0,0,0];
+
 
         %---- Regression data prep ----
 
@@ -537,8 +562,8 @@ for subject=1:numel(subjects)
                 %NORMAL REGRESSION
             elseif strcmp(type1,'time_shift')==1 %IF running in time shifted mode
                 x_con=[];
-                shift_back=g_output.samp_rate*time_back;   %how many timestamps do I shift backwards
-                shift_forward=g_output.samp_rate*time_forward; %how many timestamps do I shift forwards
+                shift_back=g_output.samp_rate(session)*time_back;   %how many timestamps do I shift backwards
+                shift_forward=g_output.samp_rate(session)*time_forward; %how many timestamps do I shift forwards
                 %             gcamp_temp=gcamp_y(shift_forward+1:end-shift_back);
                 gcamp_temp=gcamp_y;
 
@@ -861,7 +886,10 @@ for subject=1:numel(subjects)
     end %end con loop
     subplot(numel(cons)+1, 1, con+1); hold on; title('modeled vs. actual GCaMP');
     plot(timeLock,nanmean(gcamp_model_sum,2), 'k');
-    plot(timeLock,currentSubj(thisSessionInd).periDS.DSzblueMean, 'b');
+    
+%     plot(timeLock,currentSubj(thisSessionInd).periDS.DSzblueMean, 'b');
+    plot(currentSubj(thisSessionInd).periDS.timeLock,currentSubj(thisSessionInd).periDS.DSzblueMean, 'b');
+
     legend('mean modeled trace (sum kernels)', 'mean actual trace (z scored based on pre-cue baseline)');
     
     saveas(gcf, strcat(pwd,'\outputFigs\', files{subject},'_modeled465','.fig'))

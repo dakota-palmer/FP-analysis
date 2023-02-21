@@ -450,22 +450,44 @@ sapply(df, class)
 
 #%%-- Subset data ## 
 #Remove missing/invalid observations 
-df_Sub_A= df
+# df_Sub_A= df
+
+#- Can only include laserTrial for StimLength >0
+df_Sub_A= df[df$StimLength != 0,]
+
 
 #%%-- Run LME ##
 
-model= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
+model= lmerTest::lmer('ResponseProb ~ Projection * CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
 
 
 model_anova<- anova(model)
+
+#2023-02-21 all grouped together, projection * cueID interaction
 
 
 #%%-- Run Follow-up post-hoc tests ####
 
 #- Signifcant interaction term, want to follow-up and estimate main effects
 
+# -- Interaction plot
+#- Viz interaction plot & save
+figName= "vp-vta_fig4CD_stats_A_interactionPlot.pdf"
+setwd(pathOutput)
+pdf(file=figName)
 
-#-- Pairwise comparisons (t test) between TrialOutcome
+emmip(model, LaserTrial ~ StimLength | CueID | Projection )
+
+dev.off()
+setwd(pathWorking)
+
+#- Pairwise T- tests
+EMM <- emmeans(model, ~ LaserTrial | StimLength | CueID | Projection)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+
+# Pairwise results- no significant contrasts
 
 
 #- Pairwise T- tests
@@ -477,10 +499,10 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 #%%-- Save output to variables between tests  ####
 # trying to keep code mostly generalizable and just save custom names at end
 # all the results into descriptive variables between tests
-fig2D_stats_A_0_description= "Figure 4CD: DS opto all"
-fig2D_stats_A_1_model= model
-fig2D_stats_A_2_model_anova= model_anova
-fig2D_stats_A_3_model_post_hoc_pairwise= tPairwise 
+fig4C_stats_A_0_description= "Figure 4C: DS opto all"
+fig4C_stats_A_1_model= model
+fig4C_stats_A_2_model_anova= model_anova
+fig4C_stats_A_3_model_post_hoc_pairwise= tPairwise 
 
 
 #%%-- Save output to File ####
@@ -488,7 +510,7 @@ fig2D_stats_A_3_model_post_hoc_pairwise= tPairwise
 setwd(pathOutput)
 
 
-sink("vp-vta_fig2D_stats_A_PEvsNoPE_DS.txt")
+sink("vp-vta_fig4C_stats_A_PEvsNoPE_DS.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig2D_stats_A_0_description)
@@ -500,17 +522,17 @@ print('2)---- ANOVA of LME:')
 print(fig2D_stats_A_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:')
-print(fig2D_stats_A_3_model_post_hoc_pairwise)
+print(fig4C_stats_A_3_model_post_hoc_pairwise)
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 setwd(pathWorking)
 
-## ----- FIGURE 1D ---------------------------------------------------------####
+## ----- FIGURE 4D ---------------------------------------------------------####
 
 #%%-- Load data from .pkl ####
 
-pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig1d.pkl"
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig4cd.pkl"
 
 df <- pd$read_pickle(pathData)
 
@@ -519,15 +541,22 @@ df <- pd$read_pickle(pathData)
 summary(df)
 
 #verify dtypes imported properly
-sapply(df, class) 
+sapply(df, class)
 
-#%% Figure 1D Stats A -- Compare DS vs NS PE Ratio--####
+#%% Figure 4D Stats A -- Compare within-projection. DS PE Ratio by Cue * Laser--####
 
-#%%-- Subset data ## 
-#Remove missing/invalid observations 
-#only include the late trainPhase (when NS is present)
+#%%-- Subset data ##
+#Remove missing/invalid observations
 
-df_Sub_A= df[df$trainPhase=='late',]
+#- Can only include laserTrial for StimLength >0
+df_Sub_A= df[df$StimLength != 0,]
+
+df_Sub_A_VTA= df_Sub_A[df_Sub_A$Projection=='VTA',]
+
+# df_Sub_VTA_DS= df_Sub_VTA[df_Sub_VTA$CueID=='DS',]
+
+df_Sub_A_mdThal= df_Sub_A[df_Sub_A$Projection=='mdThal',]
+
 
 #since we've dropped levels(categories) from the factor(categorical) variable trainDayThisPhase, drop accordingly for stats to work out
 # droplevels(df_Sub_A$trainDayThisPhase)
@@ -536,29 +565,69 @@ df_Sub_A= df[df$trainPhase=='late',]
 
 #%%-- Run LME ##
 
-model= lmerTest::lmer('trialTypePEProb10s  ~ trialType * trainDayThisPhase + (1|subject)', data=df_Sub_A)
+
+  #VTA projection
+    #-Probability
+model_prob_VTA= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
+model_prob_anova_VTA<- anova(model_prob_VTA)
+    #-Latency
+model_latency_VTA= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
+model_latency_anova_VTA<- anova(model_latency_VTA)
+
+ #mdThal projection
+    #-Probability
+model_prob_mdThal= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
+model_prob_anova_mdThal<- anova(model_prob_mdThal)
+    #-Latency
+model_latency_mdThal= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
+model_latency_anova_mdThal<- anova(model_latency_mdThal)
 
 
-model_anova<- anova(model)
+#2023-02-21
+#4C) PE Prob results 
+  # mdThal: Only significant effect = CueID
+  # VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
+#4D) PE Latency results
+  #mdThal: Only significant effect= CueID
+  #VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
 
 
 #%%-- Run Follow-up post-hoc tests ####
 
 #-- Pairwise comparisons (t test) between TrialOutcome
 #- Viz interaction plot & save
-figName= "vp-vta_fig1D_stats_A_interactionPlot.pdf"
+figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
 setwd(pathOutput)
 pdf(file=figName)
 
-emmip(model, trialType ~ trainDayThisPhase)
+emmip(model_prob_VTA, LaserTrial ~ StimLength | CueID )
 
 dev.off()
 setwd(pathWorking)
 
 #- Pairwise T- tests
-EMM <- emmeans(model, ~ trialType | trainDayThisPhase)   # where treat has 2 levels
+EMM <- emmeans(model_prob_VTA, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+# 2023-02-21 posthoc comparison results: No significant contrasts. 
+
+# 
+# 
+# #-- Makes sense to examine effects of laser duration separately for cue type?
+# df_Sub_VTA_DS= df_Sub_VTA[df_Sub_VTA$CueID=='DS',]
+# df_Sub_VTA_NS= df_Sub_VTA[df_Sub_VTA$CueID=='NS',]
+# 
+# 
+# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
+# setwd(pathOutput)
+# pdf(file=figName)
+# 
+# emmip(model_prob_VTA, CueID ~ LaserTrial * StimLength )
+# 
+# dev.off()
+# setwd(pathWorking)
+
 
 
 #%%-- Save output to variables between tests  ####
@@ -567,14 +636,14 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 fig1D_stats_A_0_description= "Figure 1D: Late Training DS vs NS PE Ratio"
 fig1D_stats_A_1_model= model
 fig1D_stats_A_2_model_anova= model_anova
-fig1D_stats_A_3_model_post_hoc_pairwise= tPairwise 
+fig1D_stats_A_3_model_post_hoc_pairwise= tPairwise
 
 
 
 #%% Figure 1D Stats B -- Learning DS PE Ratio--####
 
-#%%-- Subset data ## 
-#Remove missing/invalid observations 
+#%%-- Subset data ##
+#Remove missing/invalid observations
 #include only DS PE Ratios, across both phases
 df_Sub_B= df[df$trialType=='DStime',]
 
@@ -598,9 +667,9 @@ model_anova<- anova(model)
 # figName= "vp-vta_fig1D_stats_B_interactionPlot.pdf"
 # setwd(pathOutput)
 # pdf(file=figName)
-# 
+#
 # emmip(model, trialType ~ trainDayThisPhase)
-# 
+#
 # dev.off()
 # setwd(pathWorking)
 
@@ -613,34 +682,12 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 #%%-- Save output to variables between tests  ####
 # trying to keep code mostly generalizable and just save custom names at end
 # all the results into descriptive variables between tests
-fig1D_stats_B_0_description= "Figure 1D:  Learning- DS PE Ratio early & late"
-fig1D_stats_B_1_model= model
-fig1D_stats_B_2_model_anova= model_anova
-fig1D_stats_B_3_model_post_hoc_pairwise= tPairwise 
+
 
 
 #%%-- Save output to File ####
 # B
-setwd(pathOutput)
 
-
-sink("vp-vta_fig1D_stats_B_Learning_DS_PE_Ratio.txt")
-'------------------------------------------------------------------------------'
-'0)---- Description --: '
-print(fig1D_stats_B_0_description)
-'------------------------------------------------------------------------------'
-print('1)---- LME:')
-print(summary(fig1D_stats_B_1_model))
-'------------------------------------------------------------------------------'
-print('2)---- ANOVA of LME:')
-print(fig1D_stats_B_2_model_anova)
-'------------------------------------------------------------------------------'
-print('3)---- Posthoc pairwise:')
-print(fig1D_stats_B_3_model_post_hoc_pairwise)
-'---- END ---------------------------------------------------------------------'
-sink()  # returns output to the console
-
-setwd(pathWorking)
 
 
 

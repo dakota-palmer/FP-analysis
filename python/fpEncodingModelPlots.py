@@ -64,11 +64,12 @@ postEventTime= 10 *fs
 # postEventTime= 15 *fs
 
 
-cueTimeOfInfluence= 2*fs
+cueTimeOfInfluence= 10*fs#2*fs
 #%% Get all .pkl files in encoding model output folder (1 per subj)
     
 dataPath= r'./_output/fpEncodingModelStats/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
 
+# dataPath= r'./_output/fpEncodingModelStats/2023-02-20-bigds/'
 
 
 files= []
@@ -449,6 +450,17 @@ for subj in dfEncoding.subject.unique():
         #     eventType_lasso[indEvent]= eventVars[eventCol]
     
     b= model.coef_
+
+
+# #-dp 2023-02-21 getting rid of accidental extra ds kernels?
+#     test=group.columns[642:16240]
+    
+#     # group.iloc[:,(642:16240)]
+#     # group= group[~group.columns.isin(test)]
+#     group= group.drop(test, axis='columns')
+#     X= X[~np.arange(642,16241,1)]
+    
+    
 
 
 #-now actually get kernels

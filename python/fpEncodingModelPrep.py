@@ -231,11 +231,18 @@ dfTidy= dfTidy.loc[~dfTidy.subject.isin(subjToExclude)]
 
 #%% DEBUGGING
 
-# # #TESTING with subset
-# dfTidy= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.max()]
+# # # #TESTING with subset of files
+# # dfTidy= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.max()]#
+# dfTidy= dfTidy.loc[dfTidy.fileID.isin([9,175,418])]
 
 
+# # # 2023-02-16
+# # # checking time binning / cutTime 
 
+# # test= dfTidy.set_index(['fileID','cutTime'])
+# # ind= test.index.duplicated(keep=False)
+
+# # test= test[ind]
 
 #%% ---- DP 2023-02-09 VIZ EVENT LATENCIES PRIOR TO EXCLUSION ---
 
@@ -446,15 +453,15 @@ postEventTime= 10
 # eventsToInclude= ['DStime','PEcue','lickUS']
 
 
-# # #define which eventTypes to include!
-# #for correlation should keep all
-# eventVars= dfTidy.eventType.unique()
+# # # #define which eventTypes to include!
+# # #for correlation should keep all
+# # eventVars= dfTidy.eventType.unique()
 
-# eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
+# # eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
 
-# eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+# # eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
 
-eventsToInclude= ['DStime','PEcue','lickUS']
+# eventsToInclude= ['DStime','PEcue','lickUS']
 
 # # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
 # # OVERWRITING all lick events with undefined type
@@ -464,17 +471,17 @@ eventsToInclude= ['DStime','PEcue','lickUS']
 # # dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
 
 # # b - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
-# dfTidy.eventType= dfTidy.eventType.astype('str')
+dfTidy.eventType= dfTidy.eventType.astype('str')
 
-# dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
+dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
 
-# dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
+dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
 
 
-# eventsToInclude= ['DStime','PEcue','lickTime']
+eventsToInclude= ['DStime','PEcue','lickTime']
 
-# dfTidy.eventType= dfTidy.eventType.astype('category')
-# eventVars= dfTidy.eventType.unique()
+dfTidy.eventType= dfTidy.eventType.astype('category')
+eventVars= dfTidy.eventType.unique()
 
 
 
@@ -921,7 +928,7 @@ if modeSignalNorm== 'dff':
 stagesToInclude= [7]
 
 #number of sessions to include, 0 includes final session of this stage+n
-nSessionsToInclude= 2#0#2
+nSessionsToInclude= 2
 
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
@@ -1326,21 +1333,25 @@ g.map(plt.axvline, x=postEventTime/fs, linestyle='--', color='red', linewidth=2,
 # #may be able to add regression line to jointplot here
 
 
-#%% Define custom Z score function
+#%% Define custom Z score function- Based on actual timestamps (not time bins)
 # FOR TIDY DATA, SINGLE eventType COLUMN
+
+# #debugging vars
+# df= dfTidy.loc[dfTidy.fileID==dfTidy.fileID.max()]
+
+# signalCol= 'reblue'
+# eventCol='DStime'
+# eventColBaseline='DStime'
+
 
 #assume input eventCol is binary coded event timestamp, with corresponding cutTime value
 def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColBaseline, baselineTime):
     
-    #want to groupby trial but can't strictly since want pre-cue data as baseline
-    #rearrange logical strucutre here a bit, go through and find all of the baseline events
-    #then find the get the first event in this trial. TODO: For now assuming 1 baseline event= 1 trial (e.g. 60 cues, 1 per trialID) 
-    preIndBaseline= df.index[df.eventType==eventColBaseline]-preEventTime
-    #end baseline at timestamp prior to baseline event onset
-    postIndBaseline= df.index[df.eventType==eventColBaseline]-1
-
-
-    ##initialize resulting series, which will be a column that aligns with original df index
+    #dp 2023-02-16 this method relies on fs and time binning... should be based on actual eventTimes 
+    
+    #- 0) initialize returned series
+     
+     #initialize resulting series, which will be a column that aligns with original df index
     zResult= np.empty(df.shape[0])
     zResult= pd.Series(zResult, dtype='float64')
     zResult.loc[:]= None
@@ -1350,115 +1361,421 @@ def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColB
     rawResult= pd.Series(rawResult, dtype='float64')
     rawResult.loc[:]= None
     rawResult.index= df.index
-    
+     
     timeLock= np.empty(df.shape[0])
     timeLock= pd.Series(timeLock, dtype='float64')
     timeLock.loc[:]= None
     timeLock.index= df.index
-    
+     
     #save label cols for easy faceting
     zEventBaseline= np.empty(df.shape[0])
     zEventBaseline= pd.Series(zEventBaseline, dtype='string')
     zEventBaseline.loc[:]= None
     zEventBaseline.index= df.index
-    
+   
     zEvent= np.empty(df.shape[0])
     zEvent= pd.Series(zEvent, dtype='string')
     zEvent.loc[:]= None
     zEvent.index= df.index
-
+   
     #new trialID based on timeLock (since it will bleed through trials)
     trialIDtimeLock= np.empty(df.shape[0])
     trialIDtimeLock= pd.Series(zEventBaseline, dtype='float64')
     trialIDtimeLock.loc[:]= None
     trialIDtimeLock.index= df.index
     
-    #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
-    #RESTRICTING to 1st event in trial
-    for event in range(preIndBaseline.size):
-        #assumes 1 unique trialID per baseline event!!!
-        trial= df.loc[postIndBaseline[event]+1,'trialID']
+    #- 1) ? overwrite cutTime with actual timestamps where valid
+    ind= []
+    ind= df.eventTime.notnull()
+
+    df.loc[ind,'cutTime']= df.loc[ind,'eventTime']
+    
+    # 2)- Get timestamps corresponding to baseline window for z scoring- Do explicit timestamp comparison instead of timebin based indexing
+    
+    refEventTime= df.loc[df.eventType==eventColBaseline, 'eventTime'] 
+    
+    baselineStartTime= df.loc[df.eventType==eventColBaseline, 'eventTime'] - (preEventTime/fs)
+    
+    baselineEndTime= df.loc[df.eventType==eventColBaseline, 'eventTime'] 
+
+    # extract values from series for direct comparison/to use as index
+    # baselineStartTime= baselineStartTime.iloc[0]
+    # baselineEndTime= baselineEndTime.iloc[0]
+
         
+    
+    # 3)- loop through each reference event, calculate baseline and z score
+    #- Loop through and get the timelock events within this trial for each reference event... Retain only the first timelock event per trial
+    for event in range(refEventTime.size):
+        #assumes 1 unique trialID per baseline event!!!
+        trial= df.loc[df.eventTime==refEventTime.iloc[event],'trialID']
+        
+        # extract the value from series 
+        trial= trial.iloc[0]
+        
+        # - subset this trial and find events within to timelock 
         dfTemp= df.loc[df.trialID==trial].copy()
         
         #get events in this trial
         dfTemp= dfTemp.loc[dfTemp.eventType==eventCol]
         
-        #get index of only first event in this trial
+
+        
         try: #embed in try: in case there are no events
+           
+        #4) get index of only first event in this trial
+            dfTemp= dfTemp.iloc[0]
         
-        #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
-            preInd= dfTemp.index[0]- preEventTime
-            postInd=dfTemp.index[0] +postEventTime
+        #5) Use timestamps to establish Pre- and Post- event window
+            timeLockStart= dfTemp.eventTime - (preEventTime/fs)
+            timeLockEnd= dfTemp.eventTime + (postEventTime/fs)
             
-            raw= df.loc[preInd:postInd, signalCol].copy()
-            baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol].copy()
+            # timeLockStart= timeLockStart.iloc[0]
+            # timeLockEnd= timeLockEnd.iloc[0]
+
             
-            #may need raw.COPY() here for proper assignment into zResult. otherwise equivalent to raw
+            #6) Grab signal within Baseline time window & Grab signal within Event time window... explicitly comparing cutTime values
+            indBaseline= ((df.cutTime >= baselineStartTime.iloc[event]) & (df.cutTime < baselineEndTime.iloc[event]))
+            
+            baseline= df.loc[indBaseline, signalCol]
+            
+            indEvent=  ((df.cutTime >= timeLockStart) & (df.cutTime < timeLockEnd))
+            
+            raw= df.loc[indEvent, signalCol]
+            
+            #7) Compute z score
             z= (raw.copy()-baseline.mean())/(baseline.std())
+             
+            #8) Timelock alignment 
+            # #- ensure that timeLock values are shared between all trials 
+            # #round timeLock so that we have exact shared X values for stats and viz!
+            # timeLock= df.loc[indEvent,'cutTime']- dfTemp.eventTime
+            # timeLock= np.round(timeLock, decimals=3)
+ 
+            # make a 'timelock' axis, shared in common between all trials
+            # need time bins to match up precisely for stats/faceting/grouping correctly
+            timeLockManual= np.arange(-preEventTime/fs,postEventTime/fs,1/fs)
             
-            # #dp debugging manual calculation check- looks good
-            # test0= raw.copy()
-            # test1= (test0-baseline.mean())
-            # test2= (baseline.std())
-            # test3= test1/test2
+            timeLockManual[preEventTime]= 0 #manually assign 0 point
             
-            # all(test3==z)
-                
-            zResult.loc[preInd:postInd]= z.copy() #assignment not working?
-            
-            # zResult.loc[preInd:postInd]= z.values #assignment not working?
-
-            
-            rawResult.loc[preInd:postInd]= raw.copy()
-            
-            timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
-    
-
-        #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
-            zEventBaseline.loc[preInd:postInd]= eventColBaseline
-            
-            zEvent.loc[preInd:postInd]= eventCol
-            
-            trialIDtimeLock.loc[preInd:postInd]= event
-            
-            #debugging- indexing assignment issue??
-            #zResult is same as raw. z is indeed different but not assigning correctly
-            test1= z
-            test2= zResult.loc[preInd:postInd]
-            test3= raw
-            test4= rawResult.loc[preInd:postInd]
-              
-            # #-- dp examining specific trial
-            # f, ax= plt.subplots(1,2, sharex=True, sharey=False) 
-            
-            # g= sns.lineplot(ax= ax[0], x=timeLock, y=zResult, color='black', linewidth=1.5)
-            
-            # g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, color='black', linewidth=1.5)
+            # #TODO: Save these trial by trial data?
+            # # #making df for debugging / easy viz
+            # dfPeriEvent= pd.DataFrame()   
+            # dfPeriEvent['timeLock']= timeLock
+            # dfPeriEvent['raw']= raw
+            # dfPeriEvent['z']= z
+ 
+            #9) return results, indexed for assignment back to df
+            # indEvent= np.where(indEvent)
         
-            # g.fig.suptitle('event#'+event)
-
+            zResult.loc[indEvent]= z.copy()            
+            
+            rawResult.loc[indEvent]= raw.copy()
+            
+            
+            timeLock.loc[indEvent]= timeLockManual.copy()
     
+        #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
+            zEventBaseline.loc[indEvent]= eventColBaseline
+            
+            zEvent.loc[indEvent]= eventCol
+            
+            trialIDtimeLock.loc[indEvent]= event
+            
+            
         except:
             continue
         
-        #round timeLock so that we have exact shared X values for stats and viz!
-        timeLock= np.round(timeLock, decimals=3)
+    return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock, rawResult
+
+        
+    
+    
+#     #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
+#         zEventBaseline.loc[preInd:postInd]= eventColBaseline
+        
+#         zEvent.loc[preInd:postInd]= eventCol
+        
+#         trialIDtimeLock.loc[preInd:postInd]= event
+        
+
+# #--- old
+        
+#         #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
+#             preInd= dfTemp.index[0]- preEventTime
+#             postInd=dfTemp.index[0] +postEventTime
+            
+#             raw= df.loc[preInd:postInd, signalCol].copy()
+#             baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol].copy()
+            
+#             #may need raw.COPY() here for proper assignment into zResult. otherwise equivalent to raw
+#             z= (raw.copy()-baseline.mean())/(baseline.std())
+            
+    
+    
+#     #want to groupby trial but can't strictly since want pre-cue data as baseline
+#     #rearrange logical strucutre here a bit, go through and find all of the baseline events
+#     #then find the get the first event in this trial. TODO: For now assuming 1 baseline event= 1 trial (e.g. 60 cues, 1 per trialID) 
+#     preIndBaseline= df.index[df.eventType==eventColBaseline]-preEventTime
+#     #end baseline at timestamp prior to baseline event onset
+#     postIndBaseline= df.index[df.eventType==eventColBaseline]-1
+
+
+#     ##initialize resulting series, which will be a column that aligns with original df index
+#     zResult= np.empty(df.shape[0])
+#     zResult= pd.Series(zResult, dtype='float64')
+#     zResult.loc[:]= None
+#     zResult.index= df.index
+    
+#     rawResult= np.empty(df.shape[0])
+#     rawResult= pd.Series(rawResult, dtype='float64')
+#     rawResult.loc[:]= None
+#     rawResult.index= df.index
+    
+#     timeLock= np.empty(df.shape[0])
+#     timeLock= pd.Series(timeLock, dtype='float64')
+#     timeLock.loc[:]= None
+#     timeLock.index= df.index
+    
+#     #save label cols for easy faceting
+#     zEventBaseline= np.empty(df.shape[0])
+#     zEventBaseline= pd.Series(zEventBaseline, dtype='string')
+#     zEventBaseline.loc[:]= None
+#     zEventBaseline.index= df.index
+    
+#     zEvent= np.empty(df.shape[0])
+#     zEvent= pd.Series(zEvent, dtype='string')
+#     zEvent.loc[:]= None
+#     zEvent.index= df.index
+
+#     #new trialID based on timeLock (since it will bleed through trials)
+#     trialIDtimeLock= np.empty(df.shape[0])
+#     trialIDtimeLock= pd.Series(zEventBaseline, dtype='float64')
+#     trialIDtimeLock.loc[:]= None
+#     trialIDtimeLock.index= df.index
+    
+#     #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
+#     #RESTRICTING to 1st event in trial
+#     for event in range(preIndBaseline.size):
+#         #assumes 1 unique trialID per baseline event!!!
+#         trial= df.loc[postIndBaseline[event]+1,'trialID']
+        
+#         dfTemp= df.loc[df.trialID==trial].copy()
+        
+#         #get events in this trial
+#         dfTemp= dfTemp.loc[dfTemp.eventType==eventCol]
+        
+#         #get index of only first event in this trial
+#         try: #embed in try: in case there are no events
+        
+#         #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
+#             preInd= dfTemp.index[0]- preEventTime
+#             postInd=dfTemp.index[0] +postEventTime
+            
+#             raw= df.loc[preInd:postInd, signalCol].copy()
+#             baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol].copy()
+            
+#             #may need raw.COPY() here for proper assignment into zResult. otherwise equivalent to raw
+#             z= (raw.copy()-baseline.mean())/(baseline.std())
+            
+#             # #dp debugging manual calculation check- looks good
+#             # test0= raw.copy()
+#             # test1= (test0-baseline.mean())
+#             # test2= (baseline.std())
+#             # test3= test1/test2
+            
+#             # all(test3==z)
+                
+#             zResult.loc[preInd:postInd]= z.copy() #assignment not working?
+            
+#             # zResult.loc[preInd:postInd]= z.values #assignment not working?
+
+            
+#             rawResult.loc[preInd:postInd]= raw.copy()
+            
+#             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
+    
+
+#         #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
+#             zEventBaseline.loc[preInd:postInd]= eventColBaseline
+            
+#             zEvent.loc[preInd:postInd]= eventCol
+            
+#             trialIDtimeLock.loc[preInd:postInd]= event
+            
+#             #debugging- indexing assignment issue??
+#             #zResult is same as raw. z is indeed different but not assigning correctly
+#             test1= z
+#             test2= zResult.loc[preInd:postInd]
+#             test3= raw
+#             test4= rawResult.loc[preInd:postInd]
+              
+#             # #-- dp examining specific trial
+#             # f, ax= plt.subplots(1,2, sharex=True, sharey=False) 
+            
+#             # g= sns.lineplot(ax= ax[0], x=timeLock, y=zResult, color='black', linewidth=1.5)
+            
+#             # g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, color='black', linewidth=1.5)
+        
+#             # g.fig.suptitle('event#'+event)
+
+    
+#         except:
+#             continue
+        
+#         #round timeLock so that we have exact shared X values for stats and viz!
+#         timeLock= np.round(timeLock, decimals=3)
       
-        #debugging
+#         #debugging
         
-        # #z score Result and raw Result are equivalent. why
-        # test1=(zResult[zResult.notnull()])
-        # test2=(rawResult[rawResult.notnull()])
+#         # #z score Result and raw Result are equivalent. why
+#         # test1=(zResult[zResult.notnull()])
+#         # test2=(rawResult[rawResult.notnull()])
         
-        # all(test1==test2)
+#         # all(test1==test2)
         
-        # #individually they are different
+#         # #individually they are different
         
 
     
         
-    return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock, rawResult
+    # return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock, rawResult
+        
+
+
+#%% Define custom Z score function
+# FOR TIDY DATA, SINGLE eventType COLUMN
+
+# #assume input eventCol is binary coded event timestamp, with corresponding cutTime value
+# def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColBaseline, baselineTime):
+    
+#     #want to groupby trial but can't strictly since want pre-cue data as baseline
+#     #rearrange logical strucutre here a bit, go through and find all of the baseline events
+#     #then find the get the first event in this trial. TODO: For now assuming 1 baseline event= 1 trial (e.g. 60 cues, 1 per trialID) 
+#     preIndBaseline= df.index[df.eventType==eventColBaseline]-preEventTime
+#     #end baseline at timestamp prior to baseline event onset
+#     postIndBaseline= df.index[df.eventType==eventColBaseline]-1
+
+
+#     ##initialize resulting series, which will be a column that aligns with original df index
+#     zResult= np.empty(df.shape[0])
+#     zResult= pd.Series(zResult, dtype='float64')
+#     zResult.loc[:]= None
+#     zResult.index= df.index
+    
+#     rawResult= np.empty(df.shape[0])
+#     rawResult= pd.Series(rawResult, dtype='float64')
+#     rawResult.loc[:]= None
+#     rawResult.index= df.index
+    
+#     timeLock= np.empty(df.shape[0])
+#     timeLock= pd.Series(timeLock, dtype='float64')
+#     timeLock.loc[:]= None
+#     timeLock.index= df.index
+    
+#     #save label cols for easy faceting
+#     zEventBaseline= np.empty(df.shape[0])
+#     zEventBaseline= pd.Series(zEventBaseline, dtype='string')
+#     zEventBaseline.loc[:]= None
+#     zEventBaseline.index= df.index
+    
+#     zEvent= np.empty(df.shape[0])
+#     zEvent= pd.Series(zEvent, dtype='string')
+#     zEvent.loc[:]= None
+#     zEvent.index= df.index
+
+#     #new trialID based on timeLock (since it will bleed through trials)
+#     trialIDtimeLock= np.empty(df.shape[0])
+#     trialIDtimeLock= pd.Series(zEventBaseline, dtype='float64')
+#     trialIDtimeLock.loc[:]= None
+#     trialIDtimeLock.index= df.index
+    
+#     #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
+#     #RESTRICTING to 1st event in trial
+#     for event in range(preIndBaseline.size):
+#         #assumes 1 unique trialID per baseline event!!!
+#         trial= df.loc[postIndBaseline[event]+1,'trialID']
+        
+#         dfTemp= df.loc[df.trialID==trial].copy()
+        
+#         #get events in this trial
+#         dfTemp= dfTemp.loc[dfTemp.eventType==eventCol]
+        
+#         #get index of only first event in this trial
+#         try: #embed in try: in case there are no events
+        
+#         #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
+#             preInd= dfTemp.index[0]- preEventTime
+#             postInd=dfTemp.index[0] +postEventTime
+            
+#             raw= df.loc[preInd:postInd, signalCol].copy()
+#             baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol].copy()
+            
+#             #may need raw.COPY() here for proper assignment into zResult. otherwise equivalent to raw
+#             z= (raw.copy()-baseline.mean())/(baseline.std())
+            
+#             # #dp debugging manual calculation check- looks good
+#             # test0= raw.copy()
+#             # test1= (test0-baseline.mean())
+#             # test2= (baseline.std())
+#             # test3= test1/test2
+            
+#             # all(test3==z)
+                
+#             zResult.loc[preInd:postInd]= z.copy() #assignment not working?
+            
+#             # zResult.loc[preInd:postInd]= z.values #assignment not working?
+
+            
+#             rawResult.loc[preInd:postInd]= raw.copy()
+            
+#             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
+    
+
+#         #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
+#             zEventBaseline.loc[preInd:postInd]= eventColBaseline
+            
+#             zEvent.loc[preInd:postInd]= eventCol
+            
+#             trialIDtimeLock.loc[preInd:postInd]= event
+            
+#             #debugging- indexing assignment issue??
+#             #zResult is same as raw. z is indeed different but not assigning correctly
+#             test1= z
+#             test2= zResult.loc[preInd:postInd]
+#             test3= raw
+#             test4= rawResult.loc[preInd:postInd]
+              
+#             # #-- dp examining specific trial
+#             # f, ax= plt.subplots(1,2, sharex=True, sharey=False) 
+            
+#             # g= sns.lineplot(ax= ax[0], x=timeLock, y=zResult, color='black', linewidth=1.5)
+            
+#             # g= sns.lineplot(ax= ax[1], x=timeLock, y=raw, color='black', linewidth=1.5)
+        
+#             # g.fig.suptitle('event#'+event)
+
+    
+#         except:
+#             continue
+        
+#         #round timeLock so that we have exact shared X values for stats and viz!
+#         timeLock= np.round(timeLock, decimals=3)
+      
+#         #debugging
+        
+#         # #z score Result and raw Result are equivalent. why
+#         # test1=(zResult[zResult.notnull()])
+#         # test2=(rawResult[rawResult.notnull()])
+        
+#         # all(test1==test2)
+        
+#         # #individually they are different
+        
+
+    
+        
+#     return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock, rawResult
         
 
 
@@ -1549,7 +1866,7 @@ groups= dfTidy.groupby('fileID')
 for name, group in groups:
     for signal in contVars: #loop through each signal (465 & 405)
         #-- peri-DS 
-        z, timeLock, zEventBaseline, zEvent, trialIDtimeLock, raw=  zscoreCustom(group, signal, 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
+        z, timeLock, zEventBaseline, zEvent, trialIDtimeLock, raw= zscoreCustom(group, signal, 'DStime', preEventTime, postEventTime,'DStime', baselineTime)
         dfTidy.loc[group.index,signal+'-z-periDS']= z
         dfTidy.loc[group.index,'timeLock-z-periDS-DStime']= timeLock
         dfTidy.loc[group.index, ['trialIDtimeLock-z-periDS']]= trialIDtimeLock
@@ -1963,7 +2280,9 @@ del dfTemp
 #for example, we may want to limit the timeShifts applied (influence in model) to within +2s after cue onset
 
 
-cueTimeOfInfluence= 2*fs
+# cueTimeOfInfluence= 2*fs
+
+cueTimeOfInfluence= postEventTime
 
 
 
@@ -2121,6 +2440,16 @@ for eventCol in eventVars: #.categories:
 #     dfTemp.loc[:,(eventVars.categories+'+'+(str(shiftNum)))]= pd.NA
 
 #TODO: May want scipy sparse matrix instead, more efficient than pandas?
+
+
+#%% dp debugging
+# # # 2023-02-16
+# # checking time binning / cutTime 
+
+# test= dfTemp.set_index(['fileID','cutTime'])
+# ind= test.index.duplicated(keep=False)
+
+# test= test[ind]
 
 #%% Drop original, unshifted event times (we should now have duplicate col for timeshift=0 now)
 

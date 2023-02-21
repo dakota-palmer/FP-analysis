@@ -701,6 +701,10 @@ dfTidy= dfTidy.reset_index().set_index(['eventID'])
 
 #----- dp 2023-02-08 TODO: this is based on eventTime and for FP should be based on cutTime since eventTimes mostly nan but FP signal occurs continuously!!  
 
+# 2023-02-16 still need to reconcile the two... before commit today noticed latency values incorrect based on cutTime  (trialStart was defined by cutTime and not eventTime. And cutTime binning slightly shifted)
+
+
+
 #add epoch column
 #for now could be as simple as reversing trialID transformations for ITI+Pre-Cue, will make current ITIs fall within same trialID
 dfTidy.loc[:,'epoch']= dfTidy.loc[:,'trialType'].copy()

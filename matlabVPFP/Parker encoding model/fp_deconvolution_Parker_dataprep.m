@@ -19,7 +19,8 @@ savePath= strcat(pwd,'\data_to_input\');
 %Exclude subjects here if necessary
 % excludedSubjs= {}'%{'rat12','rat13'}; %cell array with strings of excluded subj fieldnames
 % 
-excludedSubjs= {'rat12','rat13','rat17'}; %cell array with strings of excluded subj fieldnames
+% excludedSubjs= {'rat12','rat13','rat17'}; %cell array with strings of excluded subj fieldnames
+excludedSubjs= {'rat10','rat17', 'rat16','rat20'}; %cell array with strings of excluded subj fieldnames
 
 
 subjDataAnalyzed= rmfield(subjDataAnalyzed,excludedSubjs);
@@ -40,14 +41,15 @@ for subj= 1:numel(subjectsAnalyzed)
    subjDataAnalyzed.(subjectsAnalyzed{subj})(excludedSessions)= []; 
    
    currentSubj= subjDataAnalyzed.(subjectsAnalyzed{subj});
-%    excludedSessions= [];
-%    for session= 1:numel(currentSubj) %loop through again and get rid of all except final day
-%        if session<numel(currentSubj)
-%            excludedSessions= cat(2,excludedSessions,session);
-%        end
-%    end%end session loop 2
-%    
-%    subjDataAnalyzed.(subjectsAnalyzed{subj})(excludedSessions)= []; 
+   
+   excludedSessions= [];
+   for session= 1:numel(currentSubj) %loop through again and get rid of all except final day
+       if session<numel(currentSubj)
+           excludedSessions= cat(2,excludedSessions,session);
+       end
+   end%end session loop 2
+   
+   subjDataAnalyzed.(subjectsAnalyzed{subj})(excludedSessions)= []; 
    
 end %end subj loop
 
