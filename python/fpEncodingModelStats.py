@@ -148,6 +148,11 @@ subjToExclude= [10, 16, 17, 20]
 dfTemp= dfTemp.loc[~dfTemp.subject.isin(subjToExclude)]
 
 
+# subjToExclude= [8,9,11]
+
+# dfTemp= dfTemp.loc[~dfTemp.subject.isin(subjToExclude)]
+
+
 #%% Run regression model & save output
 #TODO: How to handle different subjects? should run separately in loop or use as predictor?
 #unlike matlab version of code this is one big table with everything

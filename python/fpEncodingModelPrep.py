@@ -461,7 +461,7 @@ postEventTime= 10
 
 # # eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
 
-# eventsToInclude= ['DStime','PEcue','lickUS']
+eventsToInclude= ['DStime','PEcue','lickUS']
 
 # # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
 # # OVERWRITING all lick events with undefined type
@@ -470,18 +470,18 @@ postEventTime= 10
 # # # a - overwrite all equally
 # # dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
 
-# # b - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
-dfTidy.eventType= dfTidy.eventType.astype('str')
+# # # b - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
+# dfTidy.eventType= dfTidy.eventType.astype('str')
 
-dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
+# dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
 
-dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
+# dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
 
 
-eventsToInclude= ['DStime','PEcue','lickTime']
+# eventsToInclude= ['DStime','PEcue','lickTime']
 
-dfTidy.eventType= dfTidy.eventType.astype('category')
-eventVars= dfTidy.eventType.unique()
+# dfTidy.eventType= dfTidy.eventType.astype('category')
+# eventVars= dfTidy.eventType.unique()
 
 
 
@@ -928,7 +928,7 @@ if modeSignalNorm== 'dff':
 stagesToInclude= [7]
 
 #number of sessions to include, 0 includes final session of this stage+n
-nSessionsToInclude= 2
+nSessionsToInclude= 0#2
 
 # #no exclusion (except null/nan)
 # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
@@ -942,7 +942,7 @@ nSessionsToInclude= 2
 
 # # eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
 
-# eventsToInclude= ['DStime','PEcue','lickUS']
+eventsToInclude= ['DStime','PEcue','lickUS']
 
 # # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
 # # OVERWRITING all lick events with undefined type
@@ -1003,8 +1003,11 @@ dfTidy= dfTidy.drop('maxSesThisStage', axis=1)
 #%% Define peri-event z scoring parameters
 fs= 40
 
-preEventTime= 5 *fs # seconds x fs
+# preEventTime= 5 *fs # seconds x fs
 # postEventTime= 10 *fs
+preEventTime= 2 *fs # seconds x fs
+
+
 postEventTime= postEventTime *fs
 
 

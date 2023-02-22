@@ -1380,7 +1380,9 @@ modePeriEventNorm= 'z'
 #%% Define peri-event z scoring parameters
 fs= 40 #sampling frequency= 40hz
 
-preEventTime= 5 *fs # seconds x fs
+# preEventTime= 5 *fs # seconds x fs
+preEventTime= 2 *fs # seconds x fs
+
 # postEventTime= 15 *fs
 postEventTime= 10 *fs
 
