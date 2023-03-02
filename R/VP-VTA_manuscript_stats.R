@@ -512,6 +512,14 @@ modelLatency_anova_mdThal<- anova(modelLatency)
 #%%-- Save output to variables between tests  ####
 # trying to keep code mostly generalizable and just save custom names at end
 # all the results into descriptive variables between tests
+fig4C_stats_B_Pooled_0_description= "Figure 4C: DS Task opto, No Laser Sessions, PE prob, pooled projections"
+fig4C_stats_B_Pooled_1_model= model_pooled
+fig4C_stats_B_Pooled_2_model_anova= model_anova_pooled
+
+fig4C_stats_B_Pooled_0_description= "Figure 4D: DS Task opto, No Laser Sessions, PE Latency, pooled projections"
+fig4C_stats_B_Pooled_1_model= modelLatency_pooled
+fig4C_stats_B_Pooled_2_model_anova= modelLatency_anova_pooled
+
 fig4C_stats_B_VTA_0_description= "Figure 4C: DS Task opto, No Laser Sessions, PE prob, VTA"
 fig4C_stats_B_VTA_1_model= model_VTA
 fig4C_stats_B_VTA_2_model_anova= model_anova_VTA
@@ -524,7 +532,7 @@ fig4D_stats_B_VTA_0_description= "Figure 4D: DS Task opto, No Laser Sessions, PE
 fig4D_stats_B_VTA_1_model= modelLatency_VTA
 fig4D_stats_B_VTA_2_model_anova= modelLatency_anova_VTA
 
-fig4D_stats_B_mdThal_0_description= "Figure 4C: DS Task opto, No Laser Sessions, PE Latency, mdThal"
+fig4D_stats_B_mdThal_0_description= "Figure 4D: DS Task opto, No Laser Sessions, PE Latency, mdThal"
 fig4D_stats_B_mdThal_1_model= modelLatency_mdThal
 fig4D_stats_B_mdThal_2_model_anova= modelLatency_anova_mdThal
 
@@ -700,25 +708,25 @@ modelLatency= lmerTest::lmer('RelLatency ~ Projection * CueID * LaserTrial * Sti
 model_pooled= model
 model_anova_pooled<- anova(model)
 modelLatency_pooled= modelLatency
-modelLatency_anova_pooled= modelLatency_anova
+modelLatency_anova_pooled= anova(modelLatency)
 
 #-- VTA
   #VTA projection
     #-Probability
-model_prob_VTA= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
-model_prob_anova_VTA<- anova(model_prob_VTA)
+model_VTA= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
+model_anova_VTA<- anova(model_VTA)
     #-Latency
-model_latency_VTA= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
-model_latency_anova_VTA<- anova(model_latency_VTA)
+modelLatency_VTA= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
+modelLatency_anova_VTA<- anova(modelLatency_VTA)
 
 #-- mdThal
  #mdThal projection
     #-Probability
-model_prob_mdThal= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
-model_prob_anova_mdThal<- anova(model_prob_mdThal)
+model_mdThal= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
+model_anova_mdThal<- anova(model_mdThal)
     #-Latency
-model_latency_mdThal= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
-model_latency_anova_mdThal<- anova(model_latency_mdThal)
+modelLatency_mdThal= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
+modelLatency_anova_mdThal<- anova(modelLatency_mdThal)
 
 
 
@@ -763,33 +771,61 @@ setwd(pathWorking)
 # setwd(pathOutput)
 # pdf(file=figName)
 # 
-# emmip(model_prob_VTA, LaserTrial ~ StimLength | CueID )
+# emmip(model_VTA, LaserTrial ~ StimLength | CueID )
 # 
 # dev.off()
 # setwd(pathWorking)
 
 #- Pairwise T- tests
-EMM <- emmeans(model_prob_VTA, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
+
+#-- Pooled
+EMM <- emmeans(model_pooled, ~ LaserTrial | StimLength | CueID | Projection)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwise_prob_Pooled= tPairwise
+
+EMM <- emmeans(modelLatency_pooled, ~ LaserTrial | StimLength | CueID | Projection)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwise_latency_Pooled= tPairwise
+
+
+#-- VTA
+EMM <- emmeans(model_VTA, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_VTA= tPairwise
 
+# #-- 2
+# # CueID:LaserTrial:StimLength 0.1292  0.1292     1 85.28   4.4146 0.03858 *  
+# 
+# EMM <- emmeans(model_VTA, ~ CueID | LaserTrial | StimLength)   # where treat has 2 levels
+# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+# 
+# tPairwise_prob_VTA2= tPairwise  
+# 
+# #--2
 
-EMM <- emmeans(model_latency_VTA, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
+
+EMM <- emmeans(modelLatency_VTA, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_latency_VTA= tPairwise
 
+#-- mdThal
 
-EMM <- emmeans(model_prob_mdThal, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
+EMM <- emmeans(model_mdThal, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_mdThal= tPairwise
 
-EMM <- emmeans(model_latency_mdThal, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
+EMM <- emmeans(modelLatency_mdThal, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
@@ -808,7 +844,7 @@ tPairwise_latency_mdThal= tPairwise
 # setwd(pathOutput)
 # pdf(file=figName)
 # 
-# emmip(model_prob_VTA, CueID ~ LaserTrial * StimLength )
+# emmip(model_VTA, CueID ~ LaserTrial * StimLength )
 # 
 # dev.off()
 # setwd(pathWorking)
@@ -818,10 +854,69 @@ tPairwise_latency_mdThal= tPairwise
 #%%-- Save output to variables between tests  ####
 # trying to keep code mostly generalizable and just save custom names at end
 # all the results into descriptive variables between tests
-fig1D_stats_A_0_description= "Figure 1D: Late Training DS vs NS PE Ratio"
-fig1D_stats_A_1_model= model
-fig1D_stats_A_2_model_anova= model_anova
-fig1D_stats_A_3_model_post_hoc_pairwise= tPairwise
+
+fig4C_stats_A_Pooled_0_description= "Figure 4C: DS Task opto, Laser Sessions, PE prob, pooled projections"
+fig4C_stats_A_Pooled_1_model= model_pooled
+fig4C_stats_A_Pooled_2_model_anova= model_anova_pooled
+fig4C_stats_A_Pooled_3_model_post_hoc_pairwise= tPairwise_prob_Pooled
+
+fig4C_stats_A_Pooled_0_description= "Figure 4D: DS Task opto, Laser Sessions, PE Latency, pooled projections"
+fig4C_stats_A_Pooled_1_model= modelLatency_pooled
+fig4C_stats_A_Pooled_2_model_anova= modelLatency_anova_pooled
+fig4D_stats_A_Pooled_3_model_post_hoc_pairwise= tPairwise_latency_Pooled
+
+
+fig4C_stats_A_VTA_0_description= "Figure 4C: DS Task opto, Laser Sessions, PE prob, VTA"
+fig4C_stats_A_VTA_1_model= model_VTA
+fig4C_stats_A_VTA_2_model_anova= model_anova_VTA
+fig4C_stats_A_VTA_3_model_post_hoc_pairwise= tPairwise_prob_VTA
+
+
+fig4C_stats_A_mdThal_0_description= "Figure 4C: DS Task opto, Laser Sessions, PE prob, mdThal"
+fig4C_stats_A_mdThal_1_model= model_mdThal
+fig4C_stats_A_mdThal_2_model_anova= model_anova_mdThal
+fig4C_stats_A_mdThal_3_model_post_hoc_pairwise= tPairwise_prob_mdThal
+
+
+fig4D_stats_A_VTA_0_description= "Figure 4D: DS Task opto, Laser Sessions, PE Latency, VTA"
+fig4D_stats_A_VTA_1_model= modelLatency_VTA
+fig4D_stats_A_VTA_2_model_anova= modelLatency_anova_VTA
+fig4D_stats_A_VTA_3_model_post_hoc_pairwise= tPairwise_latency_VTA
+
+
+fig4D_stats_A_mdThal_0_description= "Figure 4D: DS Task opto, Laser Sessions, PE Latency, mdThal"
+fig4D_stats_A_mdThal_1_model= modelLatency_mdThal
+fig4D_stats_A_mdThal_2_model_anova= modelLatency_anova_mdThal
+fig4D_stats_A_mdThal_3_model_post_hoc_pairwise= tPairwise_latency_mdThal
+
+# 
+# #--- Followup: specifically examine DS trials 
+# df_Sub_C_VTA= df_Sub_A_VTA[df_Sub_A_VTA$CueID=='DS',]
+# #VTA projection
+# #-Probability
+# model_VTA= lmerTest::lmer('ResponseProb ~ LaserTrial * StimLength + (1|Subject)', data=df_Sub_C_VTA)
+# model_anova_VTA<- anova(model_VTA)
+# #-Latency
+# modelLatency_VTA= lmerTest::lmer('RelLatency ~ LaserTrial * StimLength + (1|Subject)', data=df_Sub_C_VTA)
+# modelLatency_anova_VTA<- anova(modelLatency_VTA)
+# 
+# # pairwise
+# emmip(model_VTA, LaserTrial ~ StimLength)
+# 
+# EMM <- emmeans(model_VTA, ~ LaserTrial | StimLength)   # where treat has 2 levels
+# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+# 
+# tPairwise_VTA= tPairwise
+
+
+
+#%% -- Figure 4CD Save output
+
+# fig1D_stats_A_0_description= "Figure 1D: Late Training DS vs NS PE Ratio"
+# fig1D_stats_A_1_model= model
+# fig1D_stats_A_2_model_anova= model_anova
+# fig1D_stats_A_3_model_post_hoc_pairwise= tPairwise
 
 
 
@@ -871,8 +966,121 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 
 #%%-- Save output to File ####
-# B
+setwd(pathOutput)
 
+#------Pooled
+
+sink("vp-vta_fig4C_stats_A_LaserSessions_Pooled.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4C_stats_A_Pooled_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4C_stats_A_Pooled_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4C_stats_A_2_Pooled_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+sink("vp-vta_fig4D_stats_A_LaserSessions_Pooled.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4D_stats_A_Pooled_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4D_stats_A_Pooled_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4D_stats_A_2_Pooled_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+#------ VTA
+
+sink("vp-vta_fig4C_stats_A_LaserSessions_VTA.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4C_stats_A_VTA_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4C_stats_A_VTA_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4C_stats_A_2_VTA_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+print(summary(fig4C_stats_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+sink("vp-vta_fig4D_stats_A_LaserSessions_VTA.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4D_stats_A_VTA_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4D_stats_A_VTA_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4D_stats_A_2_VTA_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+print(summary(fig4D_stats_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+#------ mdThal
+
+sink("vp-vta_fig4C_stats_A_LaserSessions_mdThal.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4C_stats_A_mdThal_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4C_stats_A_mdThal_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4C_stats_A_2_mdThal_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+sink("vp-vta_fig4D_stats_A_LaserSessions_mdThal.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4D_stats_A_mdThal_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4D_stats_A_mdThal_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4D_stats_A_2_mdThal_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+#- return to working directory after saving
+setwd(pathWorking)
 
 
 
