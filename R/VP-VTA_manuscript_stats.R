@@ -516,9 +516,9 @@ fig4C_stats_B_Pooled_0_description= "Figure 4C: DS Task opto, No Laser Sessions,
 fig4C_stats_B_Pooled_1_model= model_pooled
 fig4C_stats_B_Pooled_2_model_anova= model_anova_pooled
 
-fig4C_stats_B_Pooled_0_description= "Figure 4D: DS Task opto, No Laser Sessions, PE Latency, pooled projections"
-fig4C_stats_B_Pooled_1_model= modelLatency_pooled
-fig4C_stats_B_Pooled_2_model_anova= modelLatency_anova_pooled
+fig4D_stats_B_Pooled_0_description= "Figure 4D: DS Task opto, No Laser Sessions, PE Latency, pooled projections"
+fig4D_stats_B_Pooled_1_model= modelLatency_pooled
+fig4D_stats_B_Pooled_2_model_anova= modelLatency_anova_pooled
 
 fig4C_stats_B_VTA_0_description= "Figure 4C: DS Task opto, No Laser Sessions, PE prob, VTA"
 fig4C_stats_B_VTA_1_model= model_VTA
@@ -536,6 +536,123 @@ fig4D_stats_B_mdThal_0_description= "Figure 4D: DS Task opto, No Laser Sessions,
 fig4D_stats_B_mdThal_1_model= modelLatency_mdThal
 fig4D_stats_B_mdThal_2_model_anova= modelLatency_anova_mdThal
 
+
+#%%-- Save output to File ####
+setwd(pathOutput)
+
+#------Pooled
+
+sink("vp-vta_fig4C_stats_B_NoLaserSessions_Pooled.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4C_stats_B_Pooled_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4C_stats_B_Pooled_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4C_stats_B_Pooled_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+sink("vp-vta_fig4D_stats_B_NoLaserSessions_Pooled.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4D_stats_B_Pooled_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4D_stats_B_Pooled_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4D_stats_B_Pooled_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+#------ VTA
+
+sink("vp-vta_fig4C_stats_B_NoLaserSessions_VTA.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4C_stats_B_VTA_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4C_stats_B_VTA_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4C_stats_B_VTA_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+print(summary(fig4C_stats_B_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+sink("vp-vta_fig4D_stats_B_NoLaserSessions_VTA.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4D_stats_B_VTA_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4D_stats_B_VTA_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4D_stats_B_VTA_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+print(summary(fig4D_stats_B_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+#------ mdThal
+
+sink("vp-vta_fig4C_stats_B_NoLaserSessions_mdThal.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4C_stats_B_mdThal_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4C_stats_B_mdThal_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4C_stats_B_mdThal_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+sink("vp-vta_fig4D_stats_B_NoLaserSessions_mdThal.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig4D_stats_B_mdThal_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig4D_stats_B_mdThal_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig4D_stats_B_mdThal_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+#- return to working directory after saving
+setwd(pathWorking)
 
 
 #--- ^&&& clean
@@ -860,9 +977,9 @@ fig4C_stats_A_Pooled_1_model= model_pooled
 fig4C_stats_A_Pooled_2_model_anova= model_anova_pooled
 fig4C_stats_A_Pooled_3_model_post_hoc_pairwise= tPairwise_prob_Pooled
 
-fig4C_stats_A_Pooled_0_description= "Figure 4D: DS Task opto, Laser Sessions, PE Latency, pooled projections"
-fig4C_stats_A_Pooled_1_model= modelLatency_pooled
-fig4C_stats_A_Pooled_2_model_anova= modelLatency_anova_pooled
+fig4D_stats_A_Pooled_0_description= "Figure 4D: DS Task opto, Laser Sessions, PE Latency, pooled projections"
+fig4D_stats_A_Pooled_1_model= modelLatency_pooled
+fig4D_stats_A_Pooled_2_model_anova= modelLatency_anova_pooled
 fig4D_stats_A_Pooled_3_model_post_hoc_pairwise= tPairwise_latency_Pooled
 
 
@@ -979,7 +1096,7 @@ print('1)---- LME:')
 print(summary(fig4C_stats_A_Pooled_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig4C_stats_A_2_Pooled_model_anova)
+print(fig4C_stats_A_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 # print(fig4C_stats_A_3_model_post_hoc_pairwise)
@@ -996,7 +1113,7 @@ print('1)---- LME:')
 print(summary(fig4D_stats_A_Pooled_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig4D_stats_A_2_Pooled_model_anova)
+print(fig4D_stats_A_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 # print(fig4C_stats_A_3_model_post_hoc_pairwise)
@@ -1015,7 +1132,7 @@ print('1)---- LME:')
 print(summary(fig4C_stats_A_VTA_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig4C_stats_A_2_VTA_model_anova)
+print(fig4C_stats_A_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 # print(fig4C_stats_A_3_model_post_hoc_pairwise)
@@ -1034,7 +1151,7 @@ print('1)---- LME:')
 print(summary(fig4D_stats_A_VTA_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig4D_stats_A_2_VTA_model_anova)
+print(fig4D_stats_A_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 print(summary(fig4D_stats_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
@@ -1054,7 +1171,7 @@ print('1)---- LME:')
 print(summary(fig4C_stats_A_mdThal_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig4C_stats_A_2_mdThal_model_anova)
+print(fig4C_stats_A_mdThal_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 # print(fig4C_stats_A_3_model_post_hoc_pairwise)
@@ -1071,7 +1188,7 @@ print('1)---- LME:')
 print(summary(fig4D_stats_A_mdThal_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig4D_stats_A_2_mdThal_model_anova)
+print(fig4D_stats_A_mdThal_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 # print(fig4C_stats_A_3_model_post_hoc_pairwise)
@@ -1081,6 +1198,8 @@ sink()  # returns output to the console
 
 #- return to working directory after saving
 setwd(pathWorking)
+
+
 
 
 
