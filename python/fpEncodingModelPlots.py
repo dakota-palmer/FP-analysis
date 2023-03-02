@@ -58,7 +58,9 @@ print(subjectsToExclude)
 
 fs= 40
 
-preEventTime= 5 *fs
+# preEventTime= 5 *fs
+preEventTime= 2 *fs
+
 postEventTime= 10 *fs
 
 # postEventTime= 15 *fs
@@ -116,6 +118,17 @@ for file in range(len(files)):
     
     # dfEncoding.iloc[file,:]= dfTemp.iloc[file,:]
     
+#%% Exclude or include low R2 subjects (a priori)
+
+modeExclude= ''
+
+
+# modeExclude= 'exclude-LowR2-Subj'
+
+
+if modeExclude== 'exclude-LowR2-Subj':
+    subjectsToExclude= [13,14]
+    
 #%% Exclude subjectsToExclude
 
 dfEncoding= dfEncoding.loc[~dfEncoding.subject.isin(subjectsToExclude)]
@@ -167,7 +180,7 @@ dfTemp.nSessions= dfTemp.nSessions+1
 
 dfTemp= dfTemp.astype('str').copy()
 
-modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-sessions-'+ dfTemp.loc[0,'modeCue']+ '-'+ dfTemp.loc[0,'modeSignal']
+modelStr= 'stage-'+dfTemp.loc[0,'modelStage']+'-'+ dfTemp.loc[0,'nSessions']+ '-sessions-'+ dfTemp.loc[0,'modeCue']+ '-'+ dfTemp.loc[0,'modeSignal'] + '_' + modeExclude
 
 
 
@@ -512,8 +525,13 @@ for subj in dfEncoding.subject.unique():
         #compute AUC separately Pre- and Post- Event
         
         #define time in s to include in AUC (want equivalent time for pre & post comparison)
-        aucTime= 2  
-        
+        # Duration of time over which to commpute "Pre" & "Post" event AUC
+        # aucTime= 2  
+        # aucTime= 1
+        aucTime= 5
+
+
+
         # #define sampling rate of AUC
         # aucDx= 1/fs
         
@@ -536,13 +554,22 @@ for subj in dfEncoding.subject.unique():
         
         # kernels.loc[ind,'betaAUCpreEvent']= integrate.trapezoid(kernels.loc[ind,'beta'])
         kernels.loc[ind,'betaAUCpreEvent']= integrate.trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'])
-
+        
+        kernels.loc[ind,'betaAUCpreEventCum']= integrate.cumulative_trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'], initial=0)
         
         
         ind= []
         ind= (indEvent) & (kernels.timeShift>0) & (kernels.timeShift <=aucTime) #post-event
         
         kernels.loc[ind,'betaAUCpostEvent']= integrate.trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'])
+        
+              
+       # #  # #-debugging viz - beta vs cumulative auc
+       #  dfPlot= kernels[indEvent]
+       #  g= sns.relplot(data=dfPlot, x='timeShift', y='beta', row='eventType', kind='line')
+       #  g.map_dataframe(sns.lineplot, x='timeShift', y='aucCumBinned', color='orange')
+       #  g.map_dataframe(sns.lineplot, x='betaAUCpreEventCum', y='beta', color='green')
+        
         
        #  # dp 2023-02-13 cumulative AUC
        #  #integrate every 1s
@@ -573,6 +600,9 @@ for subj in dfEncoding.subject.unique():
        # # # #define sampling rate of AUC
        # #  aucDx= aucTime*fs
        
+       #define duration of time bins to include in cumulative/binned AUC
+        aucTime= 1
+      
        # # #define number of bins in AUC
         aucDx= aucTime*fs
        
@@ -674,10 +704,7 @@ for subj in dfEncoding.subject.unique():
        # ind= (indEvent) & (kernels.timeShift>0) & (kernels.timeShift <=aucTime) #post-event
        
        # kernels.loc[ind,'betaAUCpostEvent']= integrate.trapezoid(kernels.loc[ind,'beta'], kernels.loc[ind,'timeShift'])
-       
-    
-    
-    
+           
 
     #add data to from this subject to larger df, kernelsAll
     kernels['subject']= subj
@@ -691,6 +718,16 @@ for subj in dfEncoding.subject.unique():
 
 #reset index after combining
 kernelsAll= kernelsAll.reset_index()
+
+
+    
+    #  # #-debugging viz - beta vs cumulative auc
+dfPlot= kernelsAll#[indEvent]
+g= sns.relplot(data=dfPlot, x='timeShift', y='beta', row='eventType', kind='line')
+g.map_dataframe(sns.lineplot, x='timeShift', y='aucCumBinned', color='orange')
+g.map_dataframe(sns.lineplot, x='timeShift', y='betaAUCpreEventCum', color='green')
+
+# g.map_dataframe(sns.lineplot, x='timeShift', y='betaAUCpostEventCum', color='purple')
 
 
 #-debugging viz - beta vs cumulative auc
@@ -1038,10 +1075,10 @@ saveFigCustom(f, modelStr+'allSubj-'+'kernels', savePath)
             
 #%% Plot kernels & predicted data
 
- 
+
 f, ax = plt.subplots(3, 1)
 
-g= sns.lineplot(ax=ax[0,], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+g= sns.lineplot(ax=ax[0,], data=kernelsAll,  x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, style='subject', alpha=0.3)
 
 g= sns.lineplot(ax=ax[0,], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2, palette='dark') #mean
 
@@ -1072,6 +1109,8 @@ g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
 
 saveFigCustom(f, modelStr+'allSubj-'+'model-prediction', savePath)
 
+
+
 # saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal, savePath)
 
 #-- R2 plot
@@ -1096,7 +1135,9 @@ g= sns.lineplot(ax=ax[0], data=kernelsAll, x='timeShift',y='beta',hue= 'eventTyp
 g.legend().remove()
 
 #AUC pre-event
-g= sns.barplot(ax= ax[1], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder)
+# g= sns.barplot(ax= ax[1], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.boxplot(ax= ax[1], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder)
 
 g= sns.scatterplot(ax= ax[1], data= kernelsAll, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
 
@@ -1106,7 +1147,10 @@ g.legend().remove()
 
 
 #AUC post-event
-g= sns.barplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+# g= sns.barplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.boxplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+
 
 g= sns.scatterplot(ax= ax[2], data= kernelsAll, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
 
@@ -1123,6 +1167,487 @@ ax[2].get_shared_y_axes().join(ax[1], ax[2])
 saveFigCustom(f, modelStr+'allSubj-'+'kernelsAUC', savePath)
 
 
+#-- MEDIAN
+
+f, ax = plt.subplots(1, 3)
+
+
+#kernels
+g= sns.lineplot(ax=ax[0], data=kernelsAll, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha= 0.3) #, style='subject', alpha=0.3)
+
+
+g= sns.lineplot(ax=ax[0], data=kernelsAll, estimator='median', x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+
+g.legend().remove()
+
+#AUC pre-event
+# g= sns.barplot(ax= ax[1], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.boxplot(ax= ax[1], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.scatterplot(ax= ax[1], data= kernelsAll, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+
+g= sns.lineplot(ax= ax[1], data=kernelsAll, units='subject', estimator=None, x='eventType', y='betaAUCpreEvent', color='gray', alpha=0.3)
+
+g= sns.lineplot(ax= ax[1], data=kernelsAll, estimator='median', ci=None, x='eventType', y='betaAUCpreEvent', color='black', linewidth=1.5, alpha=0.8)
+g= sns.lineplot(ax= ax[1], data=kernelsAll, estimator='mean', ci=None, x='eventType', y='betaAUCpreEvent', color='purple', linewidth=1.5, alpha=0.8)
+
+
+g.legend().remove()
+
+
+#AUC post-event
+# g= sns.barplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.boxplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+
+
+g= sns.scatterplot(ax= ax[2], data= kernelsAll, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+
+g= sns.lineplot(ax= ax[2], data=kernelsAll, units='subject', estimator=None, x='eventType', y='betaAUCpostEvent', color='gray', alpha=0.3)
+
+g= sns.lineplot(ax= ax[2], data=kernelsAll, estimator='median', ci=None, x='eventType', y='betaAUCpostEvent', color='black', linewidth=1.5, alpha=0.8)
+g= sns.lineplot(ax= ax[2], data=kernelsAll, estimator='mean', ci=None, x='eventType', y='betaAUCpostEvent', color='purple', linewidth=1.5, alpha=0.8)
+
+
+g.legend().remove()
+
+#share AUC axes
+ax[2].get_shared_y_axes().join(ax[1], ax[2])
+
+
+# g.legend()
+
+saveFigCustom(f, modelStr+'allSubj-'+'kernelsAUC_median', savePath)
+
+#%% Side by side mean vs median kernels
+
+#---- Mean vs Median line kernels
+dfPlot= kernelsAll.copy()
+# dfPlot.timeShift= dfPlot.timeShift.astype()
+
+g= sns.FacetGrid(data=kernelsAll, col='eventType', row=None, hue='eventType', hue_order= eventOrder)
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', style='subject', markers=True, dashes=False, alpha=0.5)
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeShift', y='beta', style='subject', markers=True, dashes=False, alpha=0.5)
+
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeShift', y='beta')
+
+# g.map_dataframe(sns.scatterplot, x='timeShift', y='beta', color='black', style='subject', alpha=0.5, linewidth=0.5)
+
+g.map_dataframe(sns.lineplot, estimator='mean', ci=None, x='timeShift', y='beta', color='purple', alpha=0.7, linewidth=1.5)
+
+g.map_dataframe(sns.lineplot, estimator='median', ci=None, x='timeShift', y='beta', color='red', alpha=0.7, linewidth= 1.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+# median looks more appropriate
+
+g= sns.FacetGrid(data=kernelsAll, col=None, row=None, hue='eventType', hue_order= eventOrder)
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', style='subject', markers=True, dashes=False, alpha=0.5)
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeShift', y='beta', style='subject', markers=True, dashes=False, alpha=0.5)
+
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeShift', y='beta')
+
+# g.map_dataframe(sns.scatterplot, x='timeShift', y='beta', color='black', style='subject', alpha=0.5, linewidth=0.5)
+
+# g.map_dataframe(sns.lineplot, estimator='mean', ci=None, x='timeShift', y='beta', color='purple', alpha=0.7, linewidth=1.5)
+
+g.map_dataframe(sns.lineplot, estimator='median', ci=None,  x='timeShift', y='beta',alpha=0.7, linewidth= 1.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+#- binned
+
+# g= sns.FacetGrid(data=kernelsAll, col='eventType', row=None, hue='eventType', hue_order= eventOrder)
+
+# # g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', style='subject', markers=True, dashes=False, alpha=0.5)
+
+# # g.map_dataframe(fixed_boxplot,dodge=False, x='timeShift', y='beta')
+
+# # g.map_dataframe(sns.scatterplot, x='timeShift', y='beta', color='black', style='subject', alpha=0.5, linewidth=0.5)
+
+# g.map_dataframe(sns.lineplot, estimator='mean', ci=None, x='timeBin', y='aucBinned', color='purple', alpha=0.7, linewidth=1.5)
+
+# g.map_dataframe(sns.lineplot, estimator='median', ci=None, x='timeBin', y='aucBinned', color='red', alpha=0.7, linewidth= 1.5)
+
+# g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+#%% dp newer kernel AUC plot - focused on Post-event 
+
+f, ax = plt.subplots(1, 3)
+
+
+#kernels
+g= sns.lineplot(ax=ax[0], data=kernelsAll, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha= 0.3) #, style='subject', alpha=0.3)
+
+
+g= sns.lineplot(ax=ax[0], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+
+g.legend().remove()
+
+#AUC Binned: Post-event
+# g= sns.barplot(ax= ax[1], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.boxplot(ax= ax[1], data= kernelsAll, x='timeBin', y='aucBinned', hue='eventType', hue_order=eventOrder)
+
+g= sns.scatterplot(ax= ax[1], data= kernelsAll, x='timeBin', y='aucBinned', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+
+g= sns.lineplot(ax= ax[1], data=kernelsAll, units='subject', estimator=None, x='timeBin', y='aucBinned', color='gray', alpha=0.3)
+
+g.legend().remove()
+
+
+#AUC Entire post-event time
+# g= sns.barplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.boxplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+
+
+g= sns.scatterplot(ax= ax[2], data= kernelsAll, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+
+g= sns.lineplot(ax= ax[2], data=kernelsAll, units='subject', estimator=None, x='eventType', y='betaAUCpostEvent', color='gray', alpha=0.3)
+
+g.legend().remove()
+
+#share AUC axes
+# ax[2].get_shared_y_axes().join(ax[1], ax[2])
+
+
+#% ---- MEDIAN
+
+f, ax = plt.subplots(1, 3)
+
+
+#kernels
+g= sns.lineplot(ax=ax[0], data=kernelsAll, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha= 0.3) #, style='subject', alpha=0.3)
+
+
+g= sns.lineplot(ax=ax[0], data=kernelsAll, estimator='median', x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+
+g.legend().remove()
+
+#AUC Binned: Post-event
+# g= sns.barplot(ax= ax[1], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpreEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.boxplot(ax= ax[1], data= kernelsAll, x='timeBin', y='aucBinned', hue='eventType', hue_order=eventOrder)
+
+g= sns.scatterplot(ax= ax[1], data= kernelsAll, x='timeBin', y='aucBinned', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+
+g= sns.lineplot(ax= ax[1], data=kernelsAll, units='subject', estimator=None, x='timeBin', y='aucBinned', color='gray', alpha=0.3)
+
+g.legend().remove()
+
+
+#AUC Entire post-event time
+# g= sns.barplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+
+g= sns.boxplot(ax= ax[2], data= kernelsAll, dodge=False, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder)
+
+
+g= sns.scatterplot(ax= ax[2], data= kernelsAll, x='eventType', y='betaAUCpostEvent', hue='eventType', hue_order=eventOrder, style='subject', alpha=0.3)
+
+g= sns.lineplot(ax= ax[2], data=kernelsAll, units='subject', estimator=None, x='eventType', y='betaAUCpostEvent', color='gray', alpha=0.3)
+
+g.legend().remove()
+
+#share AUC axes
+# ax[2].get_shared_y_axes().join(ax[1], ax[2])
+
+
+#%----------- Median only kernel traces over t
+dfPlot= kernelsAll.copy()
+
+g= sns.FacetGrid(data=dfPlot, col='eventType', row=None, hue='eventType', hue_order= eventOrder)
+
+# note if using median bootstrap/CI is appropriate, not SEM
+# seaborn default is 95% CI
+g.map_dataframe(sns.lineplot, estimator='median', x='timeShift', y='beta')
+
+# g.map_dataframe(sns.lineplot, estimator='median', errorbar='se', x='timeShift', y='beta')
+
+#- Median Kernels with binned AUC Box plots
+dfPlot= kernelsAll.copy()
+
+#subset to 1 observation per eventType per timeBin for AUC
+ind= kernelsAll.groupby(['subject','eventType','timeBin']).cumcount()==0
+
+# STRING dtype allows lineplots/relplots to line up correctly with boxplots/catplots
+dfPlot.timeBin= dfPlot.timeBin.astype('string')
+
+dfPlot= dfPlot[ind]
+
+g= sns.FacetGrid(data=dfPlot, col='eventType', row=None, hue='eventType', hue_order= eventOrder)
+
+g.map_dataframe(fixed_boxplot, dodge=False, x='timeBin', y='aucBinned')
+
+g.map_dataframe(sns.lineplot, estimator='median', ci=None, x='timeBin', y='aucBinned', color='black', linewidth=1.5)
+
+
+#- boxplot of aggregate AUC post event
+dfPlot= kernelsAll.copy()
+
+#subset to 1 observation per eventType
+ind= kernelsAll.timeShift== 0.025
+
+dfPlot= dfPlot[ind]
+
+g= sns.FacetGrid(data=dfPlot, col=None, row=None, hue='eventType', hue_order= eventOrder)
+
+g.map_dataframe(fixed_boxplot, dodge=False, x='eventType', y='betaAUCpostEvent', order=eventOrder)
+
+g.map_dataframe(sns.scatterplot, x='eventType', y='betaAUCpostEvent', style='subject')
+g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='eventType', y='betaAUCpostEvent')
+
+
+#-------
+
+
+#% ----- FacetGrid
+
+#subset to 1 observation per eventType per timeBin for AUC
+ind= kernelsAll.groupby(['subject','eventType','timeBin']).cumcount()==0
+
+dfPlot= kernelsAll[ind].copy()
+
+# Categorical box plot with points connected
+paletteEvent= 'tab10'
+
+# STRING dtype allows lineplots/relplots to line up correctly with boxplots/catplots
+dfPlot.timeBin= dfPlot.timeBin.astype('string')
+
+# g= sns.FacetGrid(data=dfPlot, row='eventType', col=None, hue='eventType', hue_order=eventOrder)
+
+
+# -1 facetGrid with Hue for boxplot/categorical faceting... custom fxn to prevent unexpected keyword "label" error
+def fixed_boxplot(*args, label=None, **kwargs):
+    sns.boxplot(*args, **kwargs, labels=[label])
+
+# g= sns.FacetGrid(data=dfPlot, row='eventType', col=None, hue='eventType')#, hue_order= eventOrder)
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', alpha=0.7)
+
+# g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject', alpha= 0.7, linewidth=0.25)
+
+# g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+
+g= sns.FacetGrid(data=dfPlot, col='eventType', row=None, hue='eventType', hue_order= eventOrder)
+g.map_dataframe(fixed_boxplot,dodge=False, x='timeBin', y='aucBinned')
+
+g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', alpha=0.5)
+
+# g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', alpha=0.5, hue= 'eventType', hue_order=eventOrder, palette='dark')
+
+g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject', linewidth=.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+g.map_dataframe(sns.lineplot, estimator='mean', ci=None, x='timeBin', y='aucBinned', color='purple', alpha=0.9, linewidth=1.5)
+g.map_dataframe(sns.lineplot, estimator='median', ci=None, x='timeBin', y='aucBinned', color='red', alpha=0.9, linewidth=1.5)
+
+
+saveFigCustom(f, modelStr+'-allSubj-'+'AUC-binned', savePath)
+
+# - plot of all Bins
+
+
+
+g= sns.FacetGrid(data=dfPlot, col=None, row='eventType', hue='eventType', hue_order= eventOrder)
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', alpha=0.5)
+
+# g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', alpha=0.5, hue= 'eventType', hue_order=eventOrder, palette='dark')
+
+# g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject', linewidth=.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+g.map_dataframe(sns.lineplot, estimator='mean', ci=None, x='timeBin', y='aucBinned', color='purple', alpha=0.9, linewidth=1.5)
+g.map_dataframe(sns.lineplot, estimator='median', ci=None, x='timeBin', y='aucBinned', color='red', alpha=0.9, linewidth=1.5)
+
+
+g= sns.FacetGrid(data=dfPlot, row=None, col='eventType', hue='eventType', hue_order= eventOrder)
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', alpha=0.5)
+
+# g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', alpha=0.5, hue= 'eventType', hue_order=eventOrder, palette='dark')
+
+# g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject', linewidth=.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+g.map_dataframe(sns.lineplot, estimator='mean', ci=None, x='timeBin', y='aucBinned', color='purple', alpha=0.9, linewidth=1.5)
+g.map_dataframe(sns.lineplot, estimator='median', ci=None, x='timeBin', y='aucBinned', color='red', alpha=0.9, linewidth=1.5)
+
+
+
+g= sns.FacetGrid(data=dfPlot, row=None, col='eventType', hue='eventType', hue_order= eventOrder)
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', alpha=0.5)
+
+# g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', alpha=0.5, hue= 'eventType', hue_order=eventOrder, palette='dark')
+
+# g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject', linewidth=.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+g.map_dataframe(sns.lineplot, estimator='mean', ci=None, x='timeShift', y='beta', color='purple', alpha=0.9, linewidth=1.5)
+g.map_dataframe(sns.lineplot, estimator='median', ci=None, x='timeShift', y='beta', color='red', alpha=0.9, linewidth=1.5)
+
+g= sns.FacetGrid(data=dfPlot, col=None, row='eventType', hue='eventType', hue_order= eventOrder)
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', alpha=0.5)
+
+# g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', alpha=0.5, hue= 'eventType', hue_order=eventOrder, palette='dark')
+
+# g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject', linewidth=.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+g.map_dataframe(sns.lineplot, estimator='mean', ci=None, x='timeShift', y='beta', color='purple', alpha=0.9, linewidth=1.5)
+g.map_dataframe(sns.lineplot, estimator='median', ci=None, x='timeShift', y='beta', color='red', alpha=0.9, linewidth=1.5)
+
+
+
+g= sns.FacetGrid(data=dfPlot, col=None, row=None, hue='eventType', hue_order= eventOrder)
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', alpha=0.5)
+
+# # g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', alpha=0.5, hue= 'eventType', hue_order=eventOrder, palette='dark')
+
+# g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject', linewidth=.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+g.map_dataframe(sns.lineplot, estimator='mean', x='timeBin', y='aucBinned', alpha=0.9, linewidth=1.5)
+
+
+# saveFigCustom(f, modelStr+'-allSubj-'+'AUC-binned_mean', savePath)
+
+g= sns.FacetGrid(data=dfPlot, col=None, row=None, hue='eventType', hue_order= eventOrder)
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', alpha=0.5)
+
+# # g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', alpha=0.5, hue= 'eventType', hue_order=eventOrder, palette='dark')
+
+# g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject', linewidth=.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+# g.map_dataframe(sns.lineplot, estimator='median', x='timeBin', y='aucBinned', alpha=0.9, linewidth=1.5)
+
+g= sns.FacetGrid(data=dfPlot, col=None, row='eventType', hue='eventType', hue_order= eventOrder)
+g.map_dataframe(fixed_boxplot,dodge=False, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', alpha=0.5)
+
+# # g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', alpha=0.5, hue= 'eventType', hue_order=eventOrder, palette='dark')
+
+# g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject', linewidth=.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+g.map_dataframe(sns.lineplot, estimator='median', x='timeBin', y='aucBinned', alpha=0.9, linewidth=1.5, color='red')
+
+
+
+# saveFigCustom(f, modelStr+'-allSubj-'+'AUC-binned_median', savePath)
+
+
+# g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.pointplot, units='subject', estimator=None, x='timeBin', y='aucBinned')
+
+# g.map_dataframe(sns.pointplot, dodge=False, x='timeBin', y='aucBinned', hue='eventType', hue_order=eventOrder, palette='dark')
+# g.map_dataframe(sns.pointplot, dodge=False, x='timeBin', y='aucBinned', units='subject',  hue='eventType', hue_order= eventOrder)
+# g.map_dataframe(sns.pointplot, units='subject', dodge=False, x='timeBin', y='aucBinned', hue='eventType', hue_order= eventOrder)
+
+# g.map_dataframe(sns.pointplot, units='subject', x='timeBin', y='aucBinned', hue='eventType', hue_order= eventOrder)
+
+# g.map_dataframe(sns.stripplot, dodge=False, x='timeBin', y='aucBinned', alpha= 0.5, linewidth=0.25)
+
+# # -2 FacetGrid
+
+# sns.set_palette(paletteEvent)
+
+# g= sns.FacetGrid(data=dfPlot, row='eventType', col=None)
+
+# g.map_dataframe(sns.boxplot, dodge=False, x='timeBin', y='aucBinned', hue='eventType', hue_order= eventOrder, palette=paletteEvent) #for some reason catplots want manually defined palette or doesn't look correct
+
+# g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject',  hue='eventType', hue_order= eventOrder)
+
+# # g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', hue='eventType', hue_order= eventOrder)
+
+# g.map_dataframe(sns.pointplot, x='timeBin', y='aucBinned', hue='eventType', hue_order= eventOrder)
+
+
+# # # g.map_dataframe(plt.fill_between, 'timeShift', 'aucBinned', alpha=0.2)
+
+# # g.map(plt.axvline,x=0, linestyle='--', color='black', linewidth=2)
+
+# # # -3 catplot
+
+# # sns.set_palette(paletteEvent)
+
+# # g= sns.catplot(data=dfPlot, row='eventType', col=None, kind='box', dodge=False, x='timeBin', y='aucBinned', hue='eventType', hue_order=eventOrder)
+
+# # # g.map_dataframe(sns.boxplot, dodge=False, x='timeBin', y='aucBinned', hue='eventType', hue_order= eventOrder, palette=paletteEvent) #for some reason catplots want manually defined palette or doesn't look correct
+
+# # g.map_dataframe(sns.scatterplot, x='timeBin', y='aucBinned', style='subject',  hue='eventType', hue_order= eventOrder)
+
+# # g.map_dataframe(sns.lineplot, x='timeBin', y='aucBinned', hue='eventType', hue_order= eventOrder)
+
+# # # g.map_dataframe(sns.pointplot, x='timeBin', y='aucBinned', hue='eventType', hue_order= eventOrder)
+
+# #---- Mean vs Median line kernels
+dfPlot= kernelsAll.copy()
+# dfPlot.timeShift= dfPlot.timeShift.astype()
+
+g= sns.FacetGrid(data=kernelsAll, col='eventType', row=None, hue='eventType', hue_order= eventOrder)
+
+g.map_dataframe(sns.lineplot, units='subject', estimator=None, x='timeBin', y='aucBinned', color='black', style='subject', markers=True, dashes=False, alpha=0.5)
+# g.map_dataframe(fixed_boxplot,dodge=False, x='timeShift', y='beta')
+
+# g.map_dataframe(sns.scatterplot, x='timeShift', y='beta', color='black', style='subject', alpha=0.5, linewidth=0.5)
+
+g.map_dataframe(sns.lineplot, estimator='mean', ci=None, x='timeShift', y='beta', color='purple', alpha=0.7, linewidth=1.5)
+
+g.map_dataframe(sns.lineplot, estimator='median', ci=None, x='timeShift', y='beta', color='orange', alpha=0.7, linewidth= 1.5)
+
+g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
+
+
+
+# f, ax = plt.subplots(1, 3)
+
+
+# #kernels
+
+# #- MEAN 
+# g= sns.lineplot(ax=ax[0], data=kernelsAll, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha= 0.3) #, style='subject', alpha=0.3)
+
+
+# g= sns.lineplot(ax=ax[0], data=kernelsAll, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+
+# g.legend().remove()
+
+
+# #- MEDIAN
+# g= sns.lineplot(ax=ax[1], data=kernelsAll, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha= 0.3) #, style='subject', alpha=0.3)
+
+
+# g= sns.lineplot(ax=ax[1], data=kernelsAll, estimator='median', x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
+
+# g.legend().remove()
 
 
 #%% 
@@ -1199,534 +1724,534 @@ saveFigCustom(f, modelStr+'-allSubj-'+'model-prediction', savePath)
 
 #%% TODO: Retrieve other peri-event data 
 
-# to make plots of peri-event signals that were inputs to the model (alongside kernels for comparison)
+# # to make plots of peri-event signals that were inputs to the model (alongside kernels for comparison)
 
-# Matching up fileIDs & trialIDs, load the peri-event FP data (from another df) OR compute here from dfTidyAnalyzed
-
-
-# get dates for each subject (for matlab comparison) 
-# get fileIDs included in model
-# test= kernelsAll.groupby(['subject'])['date'].unique()
-
-# dp comment out 2023-02-14, restrict observations next section
-# fileIDsModel= kernelsAll.groupby(['fileID'])['fileID'].unique()
+# # Matching up fileIDs & trialIDs, load the peri-event FP data (from another df) OR compute here from dfTidyAnalyzed
 
 
-# #%% Load previously saved dfTidyAnalyzed (and other vars) from pickle
-dataPath2= r'./_output/'
+# # get dates for each subject (for matlab comparison) 
+# # get fileIDs included in model
+# # test= kernelsAll.groupby(['subject'])['date'].unique()
 
-dfTidy= pd.read_pickle(dataPath2+'dfTidyAnalyzed.pkl')
-
-#load any other variables saved during the import process ('dfTidymeta' shelf)
-my_shelf = shelve.open(dataPath2+'dfTidymeta')
-for key in my_shelf:
-    globals()[key]=my_shelf[key]
-my_shelf.close()
-
-# dp comment out 2023-02-14, restrict observations next section
-# Subset only fileIDs included in model
-# ind= dfTidy.fileID.isin(fileIDsModel)
-
-# dfTidy= dfTidy.loc[ind,:]
+# # dp comment out 2023-02-14, restrict observations next section
+# # fileIDsModel= kernelsAll.groupby(['fileID'])['fileID'].unique()
 
 
-#%% RUN PERI EVENT PLOT CODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# below copied from fpPeriEventTidy.py
+# # #%% Load previously saved dfTidyAnalyzed (and other vars) from pickle
+# dataPath2= r'./_output/'
+
+# dfTidy= pd.read_pickle(dataPath2+'dfTidyAnalyzed.pkl')
+
+# #load any other variables saved during the import process ('dfTidymeta' shelf)
+# my_shelf = shelve.open(dataPath2+'dfTidymeta')
+# for key in my_shelf:
+#     globals()[key]=my_shelf[key]
+# my_shelf.close()
+
+# # dp comment out 2023-02-14, restrict observations next section
+# # Subset only fileIDs included in model
+# # ind= dfTidy.fileID.isin(fileIDsModel)
+
+# # dfTidy= dfTidy.loc[ind,:]
+
+
+# #%% RUN PERI EVENT PLOT CODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# # below copied from fpPeriEventTidy.py
  
-#%% dp 2023-02-13 should copy event timings and types from model input exactly, since exclusion / refinement happens
+# #%% dp 2023-02-13 should copy event timings and types from model input exactly, since exclusion / refinement happens
 
-#build list of fileID, trialIDs included in model input
-included=[]
+# #build list of fileID, trialIDs included in model input
+# included=[]
 
-for subj in dfEncoding.subject.unique():
-#-get data for this subj from df
-    ind= np.where(dfEncoding.subject==subj)
+# for subj in dfEncoding.subject.unique():
+# #-get data for this subj from df
+#     ind= np.where(dfEncoding.subject==subj)
     
-    dfTemp= dfEncoding.loc[ind].reset_index().copy() #reset index so can just retrieve values with [0]
+#     dfTemp= dfEncoding.loc[ind].reset_index().copy() #reset index so can just retrieve values with [0]
       
     
-    group= dfTemp['modelInput'][0][0].copy()
+#     group= dfTemp['modelInput'][0][0].copy()
 
-    eventVars= dfTemp['eventVars']
+#     eventVars= dfTemp['eventVars']
     
-    eventVars= eventVars[0][0]
+#     eventVars= eventVars[0][0]
       
-    # dp 2023-02-09 eventVars imported with extra categoricals, use np.unique to remove unused categories bc categorical list format weird at this point 
-    eventVars= np.unique(eventVars)
+#     # dp 2023-02-09 eventVars imported with extra categoricals, use np.unique to remove unused categories bc categorical list format weird at this point 
+#     eventVars= np.unique(eventVars)
     
     
-    # Set Index on fileID, trialID combos included in modelInputs, overwrite eventTypes and eventTimings
-    group= group.set_index(['fileID','trialID'])
-    # included= [included, group.index]
+#     # Set Index on fileID, trialID combos included in modelInputs, overwrite eventTypes and eventTimings
+#     group= group.set_index(['fileID','trialID'])
+#     # included= [included, group.index]
     
-    included= np.append(included, group.index)
+#     included= np.append(included, group.index)
     
     
-# includedInd= pd.MultiIndex(included)
-# test= pd.MultiIndex.from_arrays(included, names=('fileID', 'trialID'))
+# # includedInd= pd.MultiIndex(included)
+# # test= pd.MultiIndex.from_arrays(included, names=('fileID', 'trialID'))
 
     
-# included = pd.unique(included)
+# # included = pd.unique(included)
     
-# convert to multiindex for easy matching up with df
-ind = pd.MultiIndex.from_tuples(included, names=["fileID", "trialID"])
+# # convert to multiindex for easy matching up with df
+# ind = pd.MultiIndex.from_tuples(included, names=["fileID", "trialID"])
 
-# reduce to unique fileID, trialID combos
+# # reduce to unique fileID, trialID combos
 
-ind= ind.drop_duplicates(keep='first')
+# ind= ind.drop_duplicates(keep='first')
 
-#subset only included trials
-# Instead of subsetting, make eventTypes nan in these trials (so can do z scoring appropriately)
-# this should allow bleedthru between trials & correct baselines?
+# #subset only included trials
+# # Instead of subsetting, make eventTypes nan in these trials (so can do z scoring appropriately)
+# # this should allow bleedthru between trials & correct baselines?
 
-dfTidy.set_index(['fileID','trialID'], inplace=True)
+# dfTidy.set_index(['fileID','trialID'], inplace=True)
 
-# dfTidy= dfTidy.loc[included]
+# # dfTidy= dfTidy.loc[included]
 
-# dfTidy.loc[included, 'eventType']= None
-dfTidy.loc[ind, 'eventType']= None
-
-
-dfTidy.reset_index(inplace=True)
+# # dfTidy.loc[included, 'eventType']= None
+# dfTidy.loc[ind, 'eventType']= None
 
 
-#-- Exclude fileIDs we don't need (lots of memory saved)
-# get fileIDs from included multiindex and subset to only these
-dfTidy.set_index(['fileID'], inplace=True)
+# dfTidy.reset_index(inplace=True)
 
-ind= ind.get_level_values(0)
 
-dfTidy= dfTidy.loc[ind]
+# #-- Exclude fileIDs we don't need (lots of memory saved)
+# # get fileIDs from included multiindex and subset to only these
+# dfTidy.set_index(['fileID'], inplace=True)
 
-dfTidy.reset_index(inplace=True)
+# ind= ind.get_level_values(0)
+
+# dfTidy= dfTidy.loc[ind]
+
+# dfTidy.reset_index(inplace=True)
     
-#%% 2023-02-14 saving memory by eliminating data
+# #%% 2023-02-14 saving memory by eliminating data
 
-# test= dfTidy.memory_usage()
-# test2= dfTidy.dtypes
+# # test= dfTidy.memory_usage()
+# # test2= dfTidy.dtypes
 
-colToInclude=['fileID','trialID','eventType','reblue','subject']
+# colToInclude=['fileID','trialID','eventType','reblue','subject']
 
-dfTidy= dfTidy.loc[:,dfTidy.columns.isin(colToInclude)]
-
-
-dfTidy.subject= dfTidy.subject.astype('category')
-dfTidy.fileID= dfTidy.fileID.astype('category')
-dfTidy.trialID= dfTidy.fileID.astype('category')
+# dfTidy= dfTidy.loc[:,dfTidy.columns.isin(colToInclude)]
 
 
-#%% 2023-02-13 Edit events matching encoding prep to include in peri-event analyses-- copy from encoding model prep
+# dfTidy.subject= dfTidy.subject.astype('category')
+# dfTidy.fileID= dfTidy.fileID.astype('category')
+# dfTidy.trialID= dfTidy.fileID.astype('category')
 
-# # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
 
-# eventsToInclude= kernels.eventType.unique()
+# #%% 2023-02-13 Edit events matching encoding prep to include in peri-event analyses-- copy from encoding model prep
 
-# eventVars=eventsToInclude
+# # # eventsToInclude= list((dfTidy.eventType.unique()[dfTidy.eventType.unique().notnull()]).astype(str))
+
+# # eventsToInclude= kernels.eventType.unique()
+
+# # eventVars=eventsToInclude
+
+# # # eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
+
+# # # eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
+
+# # # #define which eventTypes to include!
+# # #for correlation should keep all
+# # eventVars= dfTidy.eventType.unique()
 
 # # eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
 
 # # eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
 
-# # #define which eventTypes to include!
-# #for correlation should keep all
-# eventVars= dfTidy.eventType.unique()
+# eventsToInclude= ['DStime','PEcue','lickUS']
 
-# eventsToInclude= ['DStime','NStime','PEtime','lickPreUS','lickUS']
-
-# eventsToInclude= ['DStime','NStime','PEcue','lickPreUS','lickUS']
-
-eventsToInclude= ['DStime','PEcue','lickUS']
-
-# # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
-# # OVERWRITING all lick events with undefined type
+# # # DP 2023-02-07 COMBINE ALL LICK EVENTS FOR SIMPLE MODEL
+# # # OVERWRITING all lick events with undefined type
 
 
-# # a - overwrite all equally
-# dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
+# # # a - overwrite all equally
+# # dfTidy.loc[dfTidy.eventType.str.contains('lick'), 'eventType']= 'lickTime'
 
-# # b - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
-# dfTidy.eventType= dfTidy.eventType.astype('str')
+# # # b - Only overwrite 'Valid' lickTimes, explicitly 'PreUS' or 'US' licks
+# # dfTidy.eventType= dfTidy.eventType.astype('str')
 
-# dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
+# # dfTidy.loc[dfTidy.eventType=='lickTime','eventType']= 'lickUnclassified'
 
-# dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
+# # dfTidy.loc[dfTidy.eventType.isin(['lickPreUS','lickUS']), 'eventType']= 'lickTime'
 
 
-# eventsToInclude= ['DStime','PEcue','lickTime']
+# # eventsToInclude= ['DStime','PEcue','lickTime']
 
-# dfTidy.eventType= dfTidy.eventType.astype('category')
-# eventVars= dfTidy.eventType.unique()
+# # dfTidy.eventType= dfTidy.eventType.astype('category')
+# # eventVars= dfTidy.eventType.unique()
 
 
 
-#define trial vars to use as baseline (cues)
-#todo: save and recall trialVars for this
-baselineEvents= ['DStime']#, 'NStime']
+# #define trial vars to use as baseline (cues)
+# #todo: save and recall trialVars for this
+# baselineEvents= ['DStime']#, 'NStime']
 
 
-#%% Define whether to run on dF/F or raw signal!
+# #%% Define whether to run on dF/F or raw signal!
 
-# modeSignalNorm= 'raw'
+# # modeSignalNorm= 'raw'
 
-# modeSignalNorm= 'dff' 
+# # modeSignalNorm= 'dff' 
 
-modeSignalNorm= 'airPLS' #simply for filenames
+# modeSignalNorm= 'airPLS' #simply for filenames
 
-## Define whether to z-score peri-event dF/F or keep as dF/F
+# ## Define whether to z-score peri-event dF/F or keep as dF/F
 
-modePeriEventNorm= 'z'
-
-
-#%% Define peri-event z scoring parameters
-fs= 40 #sampling frequency= 40hz
-
-# preEventTime= 5 *fs # seconds x fs
-preEventTime= 2 *fs # seconds x fs
-
-# postEventTime= 15 *fs
-postEventTime= 10 *fs
+# modePeriEventNorm= 'z'
 
 
-baselineTime= 10*fs
+# #%% Define peri-event z scoring parameters
+# fs= 40 #sampling frequency= 40hz
+
+# # preEventTime= 5 *fs # seconds x fs
+# preEventTime= 2 *fs # seconds x fs
+
+# # postEventTime= 15 *fs
+# postEventTime= 10 *fs
 
 
-#%% Define custom Z score function
-# FOR TIDY DATA, SINGLE eventType COLUMN
+# baselineTime= 10*fs
 
-#assume input eventCol is binary coded event timestamp, with corresponding cutTime value
-def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColBaseline, baselineTime):
+
+# #%% Define custom Z score function
+# # FOR TIDY DATA, SINGLE eventType COLUMN
+
+# #assume input eventCol is binary coded event timestamp, with corresponding cutTime value
+# def zscoreCustom(df, signalCol, eventCol, preEventTime, postEventTime, eventColBaseline, baselineTime):
     
-    #want to groupby trial but can't strictly since want pre-cue data as baseline
-    #rearrange logical strucutre here a bit, go through and find all of the baseline events
-    #then find the get the first event in this trial. TODO: For now assuming 1 baseline event= 1 trial (e.g. 60 cues, 1 per trialID) 
-    preIndBaseline= df.index[df.eventType==eventColBaseline]-preEventTime
-    #end baseline at timestamp prior to baseline event onset
-    postIndBaseline= df.index[df.eventType==eventColBaseline]-1
+#     #want to groupby trial but can't strictly since want pre-cue data as baseline
+#     #rearrange logical strucutre here a bit, go through and find all of the baseline events
+#     #then find the get the first event in this trial. TODO: For now assuming 1 baseline event= 1 trial (e.g. 60 cues, 1 per trialID) 
+#     preIndBaseline= df.index[df.eventType==eventColBaseline]-preEventTime
+#     #end baseline at timestamp prior to baseline event onset
+#     postIndBaseline= df.index[df.eventType==eventColBaseline]-1
 
 
-    ##initialize resulting series, which will be a column that aligns with original df index
-    zResult= np.empty(df.shape[0])
-    zResult= pd.Series(zResult, dtype='float64')
-    zResult.loc[:]= None
-    zResult.index= df.index
+#     ##initialize resulting series, which will be a column that aligns with original df index
+#     zResult= np.empty(df.shape[0])
+#     zResult= pd.Series(zResult, dtype='float64')
+#     zResult.loc[:]= None
+#     zResult.index= df.index
     
-    timeLock= np.empty(df.shape[0])
-    timeLock= pd.Series(timeLock, dtype='float64')
-    timeLock.loc[:]= None
-    timeLock.index= df.index
+#     timeLock= np.empty(df.shape[0])
+#     timeLock= pd.Series(timeLock, dtype='float64')
+#     timeLock.loc[:]= None
+#     timeLock.index= df.index
     
-    #save label cols for easy faceting
-    zEventBaseline= np.empty(df.shape[0])
-    zEventBaseline= pd.Series(zEventBaseline, dtype='string')
-    zEventBaseline.loc[:]= None
-    zEventBaseline.index= df.index
+#     #save label cols for easy faceting
+#     zEventBaseline= np.empty(df.shape[0])
+#     zEventBaseline= pd.Series(zEventBaseline, dtype='string')
+#     zEventBaseline.loc[:]= None
+#     zEventBaseline.index= df.index
     
-    zEvent= np.empty(df.shape[0])
-    zEvent= pd.Series(zEvent, dtype='string')
-    zEvent.loc[:]= None
-    zEvent.index= df.index
+#     zEvent= np.empty(df.shape[0])
+#     zEvent= pd.Series(zEvent, dtype='string')
+#     zEvent.loc[:]= None
+#     zEvent.index= df.index
 
-    #new trialID based on timeLock (since it will bleed through trials)
-    trialIDtimeLock= np.empty(df.shape[0])
-    trialIDtimeLock= pd.Series(zEventBaseline, dtype='float64')
-    trialIDtimeLock.loc[:]= None
-    trialIDtimeLock.index= df.index
+#     #new trialID based on timeLock (since it will bleed through trials)
+#     trialIDtimeLock= np.empty(df.shape[0])
+#     trialIDtimeLock= pd.Series(zEventBaseline, dtype='float64')
+#     trialIDtimeLock.loc[:]= None
+#     trialIDtimeLock.index= df.index
     
-    #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
-    #RESTRICTING to 1st event in trial
-    for event in range(preIndBaseline.size):
-        #assumes 1 unique trialID per baseline event!!!
-        trial= df.loc[postIndBaseline[event]+1,'trialID']
+#     #looping through each baseline event eventCol==1 here... but would like to avoid (probs more efficient ways to do this)
+#     #RESTRICTING to 1st event in trial
+#     for event in range(preIndBaseline.size):
+#         #assumes 1 unique trialID per baseline event!!!
+#         trial= df.loc[postIndBaseline[event]+1,'trialID']
         
-        dfTemp= df.loc[df.trialID==trial].copy()
+#         dfTemp= df.loc[df.trialID==trial].copy()
         
-        #get events in this trial
-        dfTemp= dfTemp.loc[dfTemp.eventType==eventCol]
+#         #get events in this trial
+#         dfTemp= dfTemp.loc[dfTemp.eventType==eventCol]
         
-        #get index of only first event in this trial
-        try: #embed in try: in case there are no events
+#         #get index of only first event in this trial
+#         try: #embed in try: in case there are no events
         
-        #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
-            preInd= dfTemp.index[0]- preEventTime
-            postInd=dfTemp.index[0] +postEventTime
+#         #TODO: INDEXING HERE RELIES ON fs TIME BINNING! Should really base on raw timestamp range to prevent incorrect binning... could potentially set_index() on cutTime?
+#             preInd= dfTemp.index[0]- preEventTime
+#             postInd=dfTemp.index[0] +postEventTime
             
-            raw= df.loc[preInd:postInd, signalCol]
-            baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol]
+#             raw= df.loc[preInd:postInd, signalCol]
+#             baseline= df.loc[preIndBaseline[event]:postIndBaseline[event], signalCol]
             
-            z= (raw-baseline.mean())/(baseline.std())
+#             z= (raw-baseline.mean())/(baseline.std())
                 
-            zResult.loc[preInd:postInd]= z
+#             zResult.loc[preInd:postInd]= z
             
-            timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
+#             timeLock.loc[preInd:postInd]= np.linspace(-preEventTime/fs,postEventTime/fs, z.size)
     
 
-        #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
-            zEventBaseline.loc[preInd:postInd]= eventColBaseline
+#         #TODO: these would work if wanted to translate to single col, but overwriting between event timelock types within file
+#             zEventBaseline.loc[preInd:postInd]= eventColBaseline
             
-            zEvent.loc[preInd:postInd]= eventCol
+#             zEvent.loc[preInd:postInd]= eventCol
             
-            trialIDtimeLock.loc[preInd:postInd]= event
+#             trialIDtimeLock.loc[preInd:postInd]= event
     
-        except:
-            continue
+#         except:
+#             continue
         
-        #round timeLock so that we have exact shared X values for stats and viz!
-        timeLock= np.round(timeLock, decimals=3)
+#         #round timeLock so that we have exact shared X values for stats and viz!
+#         timeLock= np.round(timeLock, decimals=3)
     
         
-    return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock
+#     return zResult, timeLock, zEventBaseline, zEvent, trialIDtimeLock
         
 
-#%% Peri-event z-scoring ; programatic loop through eventsToInclude
-#Iterate through files using groupby() and conduct peri event Z scoring
-#iterating through fileID to gurantee no contamination between sessions
+# #%% Peri-event z-scoring ; programatic loop through eventsToInclude
+# #Iterate through files using groupby() and conduct peri event Z scoring
+# #iterating through fileID to gurantee no contamination between sessions
  
-groups= dfTidy.groupby('fileID')
+# groups= dfTidy.groupby('fileID')
 
-#currently fxn will go through and z score surrounding ALL events. Need to restrict to FIRST event per trial? 
+# #currently fxn will go through and z score surrounding ALL events. Need to restrict to FIRST event per trial? 
 
-for name, group in groups:
+# for name, group in groups:
 
-    for thisBaselineEventType in baselineEvents:
+#     for thisBaselineEventType in baselineEvents:
                 
-        for thisEventType in eventsToInclude:
+#         for thisEventType in eventsToInclude:
                           
-                #conditional to skip different cue types
-                if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
-                    continue
+#                 #conditional to skip different cue types
+#                 if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
+#                     continue
                     
-                if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
-                    continue
+#                 if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
+#                     continue
                     
             
-                # df= group
-                signalCol='reblue'
-                eventCol= thisEventType
-                preEventTime= preEventTime
-                postEventTime= postEventTime
-                eventColBaseline= thisBaselineEventType
-                baselineTime= baselineTime
+#                 # df= group
+#                 signalCol='reblue'
+#                 eventCol= thisEventType
+#                 preEventTime= preEventTime
+#                 postEventTime= postEventTime
+#                 eventColBaseline= thisBaselineEventType
+#                 baselineTime= baselineTime
             
-                #TODO: name here is temp bandaid to match rest of code, simply getting rid of last 4 chars '-time' after DS/NS
+#                 #TODO: name here is temp bandaid to match rest of code, simply getting rid of last 4 chars '-time' after DS/NS
                 
-                colName= ['blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType]
-                colName2= ['timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType]
+#                 colName= ['blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType]
+#                 colName2= ['timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType]
     
                 
-                z, timeLock, zEventBaseline, zEvent, trialIDtimeLock =  zscoreCustom(group, 'reblue', thisEventType, preEventTime, postEventTime, thisBaselineEventType, baselineTime)
-                dfTidy.loc[group.index,colName]= z
-                dfTidy.loc[group.index, colName2]= timeLock
+#                 z, timeLock, zEventBaseline, zEvent, trialIDtimeLock =  zscoreCustom(group, 'reblue', thisEventType, preEventTime, postEventTime, thisBaselineEventType, baselineTime)
+#                 dfTidy.loc[group.index,colName]= z
+#                 dfTidy.loc[group.index, colName2]= timeLock
                 
                 
-                #TODO: lots of redundant columns really but preventing bleedthrough between trialID as well as eventTypes
-                #would be best fixed by some long format solution? maybe a groupby (['fileID', 'zEventBaseline','zEvent']).cumcount()? still dont think it solves bleedthrough btwn eventtypes
-                colName= thisBaselineEventType[0:-4]+'-'+thisEventType
+#                 #TODO: lots of redundant columns really but preventing bleedthrough between trialID as well as eventTypes
+#                 #would be best fixed by some long format solution? maybe a groupby (['fileID', 'zEventBaseline','zEvent']).cumcount()? still dont think it solves bleedthrough btwn eventtypes
+#                 colName= thisBaselineEventType[0:-4]+'-'+thisEventType
 
-                # dfTidy.loc[group.index, ['zEventBaseline'+colName]]= zEventBaseline
-                # dfTidy.loc[group.index, ['zEvent'+colName]]= zEvent
-                dfTidy.loc[group.index, ['trialIDtimeLock-z-peri'+colName]]= trialIDtimeLock
-
-
-
-#%% PERI EVENT PLOTS ~~~~~~~~~~~~~~~~
-
-# ---- Plot Kernels alongside Peri-Event z scored traces 
-
-#freeing up some memory
-# del group, groups, timeLock, trialIDtimeLock, dfPlot, dfPlot2, dfPlot3, zEvent, zEventBaseline
+#                 # dfTidy.loc[group.index, ['zEventBaseline'+colName]]= zEventBaseline
+#                 # dfTidy.loc[group.index, ['zEvent'+colName]]= zEvent
+#                 dfTidy.loc[group.index, ['trialIDtimeLock-z-peri'+colName]]= trialIDtimeLock
 
 
-#subset data
-# dfPlot= dfTidy.copy()
 
-for thisBaselineEventType in baselineEvents:
+# #%% PERI EVENT PLOTS ~~~~~~~~~~~~~~~~
+
+# # ---- Plot Kernels alongside Peri-Event z scored traces 
+
+# #freeing up some memory
+# # del group, groups, timeLock, trialIDtimeLock, dfPlot, dfPlot2, dfPlot3, zEvent, zEventBaseline
+
+
+# #subset data
+# # dfPlot= dfTidy.copy()
+
+# for thisBaselineEventType in baselineEvents:
     
-    f, ax = plt.subplots(2,len(eventsToInclude), sharey=False, sharex=True)
+#     f, ax = plt.subplots(2,len(eventsToInclude), sharey=False, sharex=True)
     
-    for thisEventType in eventsToInclude:
+#     for thisEventType in eventsToInclude:
             
-         #conditional to skip different cue types
-        if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
-            continue
+#          #conditional to skip different cue types
+#         if (('DS' in thisBaselineEventType) & ('NS' in thisEventType)):
+#             continue
             
-        if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
-            continue
+#         if (('NS' in thisBaselineEventType) & ('DS' in thisEventType)):
+#             continue
         
-        x= 'timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+#         x= 'timeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
 
-        y= 'blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+#         y= 'blue-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
         
-        z= 'trialIDtimeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
+#         z= 'trialIDtimeLock-z-peri'+thisBaselineEventType[0:-4]+'-'+thisEventType
         
-        # axes= np.where(eventsToInclude==thisEventType)
-        # axes= np.where(thisEventType== eventsToInclude)
+#         # axes= np.where(eventsToInclude==thisEventType)
+#         # axes= np.where(thisEventType== eventsToInclude)
         
-        # axes= axes[0][0] #returning nested array for some reason
+#         # axes= axes[0][0] #returning nested array for some reason
     
-        #2023-02-14 above np.where method stopped working reliably so using this
-        axes= eventsToInclude.index(thisEventType)
-
-    
-        # here there is error potential bleedthrough between trials. idk how seaborn is grouping the data for this
-        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
-
-        # woof this is looking wquite different
-        # g= sns.lineplot(ax= ax[0,axes],  data=dfPlot, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
-        g= sns.lineplot(ax= ax[0,axes],  data=dfTidy, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
-
-
-        #style- no
-        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, style=z, hue='subject', legend='full')
-
-        #perhaps sorting before plotting will help- no
-        # dfPlot3= dfPlot3.sort_values([z,x])
-        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
-
-        # #maybe set index will help- no, very very slow
-        # dfPlot3= dfPlot3.set_index([z])
-        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
-
-        #drop na then set index?
-        # issue here I think bc non unique trialIDs? 
-        # dfPlot2= dfPlot.loc[dfPlot[z].notnull()]
-        # dfPlot2= dfPlot.set_index([z])
-        
-        dfPlot2= dfTidy.loc[dfTidy[z].notnull()]
-        dfPlot2= dfTidy.set_index([z])
-        
-        
-        # g= sns.lineplot(ax= ax[0,axes],  data=dfPlot2, x=x,y=y, hue='subject', legend='full')
-
-        #define units- no, requires plotting all
-        
-        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, units=z, estimator=None, hue='subject', legend='full')
-
-        
-        # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, units='trainDayThisStage', estimator=None, x=x,y=y, hue='subject')
-
-        
-        ax[0,axes].axvline(x=0, linestyle='--', color='black', linewidth=2)
-        
-        ax[0,axes].set(xlabel= 'time from event (s)')
-        ax[0,axes].set(ylabel= 'GCaMP Z-score (based on pre-cue baseline')
-        ax[0,axes].set(title= thisEventType)
-
-        
-        # plt.xlabel('time from event (s)')
-        # plt.ylabel('GCaMP Z-score (based on pre-cue baseline')
-        # plt.title(thisEventType)
-        
-        # f.suptitle('allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials')
-        f.suptitle('allSubj-'+'-stage-'+'-periEventAll-'+thisBaselineEventType+'trials')
-
-
-        #-- subplot kernels
-        dfPlot3= kernelsAll.loc[kernelsAll.eventType==thisEventType]
-        
-        # g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha=0.3)
-        g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'subject', hue_order=eventOrder, alpha=0.3, palette='Set2')
-
-        g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2, color='black')#, palette='dark') #mean
+#         #2023-02-14 above np.where method stopped working reliably so using this
+#         axes= eventsToInclude.index(thisEventType)
 
     
-        g.set(title=('allSubj-kernels-'))#+modeCue+'-trials-'+modeSignal))
-        g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
+#         # here there is error potential bleedthrough between trials. idk how seaborn is grouping the data for this
+#         # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+#         # woof this is looking wquite different
+#         # g= sns.lineplot(ax= ax[0,axes],  data=dfPlot, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
+#         g= sns.lineplot(ax= ax[0,axes],  data=dfTidy, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
 
 
-# #%% Manual of above bc memory errors?
-# f, ax = plt.subplots(2,len(eventsToInclude), sharey=True, sharex=True)
+#         #style- no
+#         # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, style=z, hue='subject', legend='full')
+
+#         #perhaps sorting before plotting will help- no
+#         # dfPlot3= dfPlot3.sort_values([z,x])
+#         # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+#         # #maybe set index will help- no, very very slow
+#         # dfPlot3= dfPlot3.set_index([z])
+#         # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, hue='subject', legend='full')
+
+#         #drop na then set index?
+#         # issue here I think bc non unique trialIDs? 
+#         # dfPlot2= dfPlot.loc[dfPlot[z].notnull()]
+#         # dfPlot2= dfPlot.set_index([z])
+        
+#         dfPlot2= dfTidy.loc[dfTidy[z].notnull()]
+#         dfPlot2= dfTidy.set_index([z])
+        
+        
+#         # g= sns.lineplot(ax= ax[0,axes],  data=dfPlot2, x=x,y=y, hue='subject', legend='full')
+
+#         #define units- no, requires plotting all
+        
+#         # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, x=x,y=y, units=z, estimator=None, hue='subject', legend='full')
+
+        
+#         # g= sns.lineplot(ax= ax[axes],  data=dfPlot3, units='trainDayThisStage', estimator=None, x=x,y=y, hue='subject')
+
+        
+#         ax[0,axes].axvline(x=0, linestyle='--', color='black', linewidth=2)
+        
+#         ax[0,axes].set(xlabel= 'time from event (s)')
+#         ax[0,axes].set(ylabel= 'GCaMP Z-score (based on pre-cue baseline')
+#         ax[0,axes].set(title= thisEventType)
+
+        
+#         # plt.xlabel('time from event (s)')
+#         # plt.ylabel('GCaMP Z-score (based on pre-cue baseline')
+#         # plt.title(thisEventType)
+        
+#         # f.suptitle('allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials')
+#         f.suptitle('allSubj-'+'-stage-'+'-periEventAll-'+thisBaselineEventType+'trials')
 
 
-# z= 'trialIDtimeLock-z-periDS-DStime'
-# x= 'timeLock-z-periDS-DStime'
-# y='blue-z-periDS-DStime' 
+#         #-- subplot kernels
+#         dfPlot3= kernelsAll.loc[kernelsAll.eventType==thisEventType]
+        
+#         # g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, alpha=0.3)
+#         g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, units='subject', estimator=None, x='timeShift',y='beta',hue= 'subject', hue_order=eventOrder, alpha=0.3, palette='Set2')
 
-# indPlot= dfTidy[z].notnull()
+#         g= sns.lineplot(ax=ax[1,axes], data=dfPlot3, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2, color='black')#, palette='dark') #mean
 
-# # indPlot= np.where(dfTidy[z].notnull())
+    
+#         g.set(title=('allSubj-kernels-'))#+modeCue+'-trials-'+modeSignal))
+#         g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
 
+
+# # #%% Manual of above bc memory errors?
+# # f, ax = plt.subplots(2,len(eventsToInclude), sharey=True, sharex=True)
+
+
+# # z= 'trialIDtimeLock-z-periDS-DStime'
+# # x= 'timeLock-z-periDS-DStime'
+# # y='blue-z-periDS-DStime' 
+
+# # indPlot= dfTidy[z].notnull()
+
+# # # indPlot= np.where(dfTidy[z].notnull())
+
+# # # g= sns.lineplot(ax= ax[0,0],  data=dfTidy, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
 # # g= sns.lineplot(ax= ax[0,0],  data=dfTidy, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
-# g= sns.lineplot(ax= ax[0,0],  data=dfTidy, sort=False, x=x,y=y, hue='subject', legend='full', palette='Set2')
 
 
 
-        #%% 
-        # saveFigCustom(f, 'allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials', savePath)
+#         #%% 
+#         # saveFigCustom(f, 'allSubj-'+'-stage-'+str(thisStage)+'-periEventAll-'+thisBaselineEventType+'trials', savePath)
 
 
 
-# %% #double checking very specific files in stage 7 dff z 1 session?
-
-
-
-
-
-#%%  old
-
-#swarmplot here seems very slow
-# g= sns.swarmplot(ax=ax[2,],data= dfPredictedAll, y='r2', hue='subject')
-
-
-# #single subj
-# f, ax = plt.subplots(2, 1)
-
-# g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder)
-# g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
-# g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
-# # place a text box in bottom left in axes coords with more model info
-# # these are matplotlib.patch.Patch properties
-# props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-# textstr= 'alpha with lowest MSE='+str(model.alpha_)+'(0=no penalty, OLS)'
-# g.text(0.05, .1, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
-# textstr= 'intercept='+str(model.intercept_)
-# g.text(0.05, 0.2, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
-# textstr= 'R2='+str(model.score(group.loc[:,X],group.loc[:,y], sample_weight=None))
-# g.text(0.05, 0.3, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
-
-
-# g= sns.lineplot(ax=ax[1,],data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=predicted, color='black')
-# g= sns.lineplot(ax=ax[1,], data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=y, color='blue')
-# g.legend(['predicted??','actual'])
-# g.set(title=('subj-'+str(subj)+'-periCueModelPrediction-'+modeCue+'-trials-'+modeSignal))
-# g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
-
-# saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal, savePath)
-
-
-
-## Old -
-# # sns.FacetGrid(eventCol,1)
-# # sns.relplot(data= kernels.iloc[:,eventCol], kind='line')
-
-# g=sns.relplot(data=kernels, x='timeShift', y='beta', hue= 'eventType', hue_order=eventOrder, style= 'subject', kind='line')
-# g.set(title=('allSubj-kernels')#+modeCue+'-trials-'+modeSignal))
-# g.set_ylabels('beta coef.')
-# g.set_xlabels('timeShift from event onset (s)')
-
-# # place a text box in upper left in axes coords with more model info
-# # these are matplotlib.patch.Patch properties
-# # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-# # textstr= 'alpha with lowest MSE='+str(model.alpha_)
-# # g.ax.text(0.05, 0.95, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
-# # textstr= 'intercept='+str(model.intercept_)
-# # g.ax.text(0.05, 0.90, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+# # %% #double checking very specific files in stage 7 dff z 1 session?
 
 
 
 
-# ## single subj: 
-# # g=sns.relplot(data=kernels, x='timeShift', y='beta', hue= 'eventType', hue_order=eventOrder, kind='line')
+
+# #%%  old
+
+# #swarmplot here seems very slow
+# # g= sns.swarmplot(ax=ax[2,],data= dfPredictedAll, y='r2', hue='subject')
+
+
+# # #single subj
+# # f, ax = plt.subplots(2, 1)
+
+# # g= sns.lineplot(ax=ax[0,], data=kernels, x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder)
 # # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
+# # g.set(xlabel='timeShift from event onset (s)', ylabel='beta coef.')
+# # # place a text box in bottom left in axes coords with more model info
+# # # these are matplotlib.patch.Patch properties
+# # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+# # textstr= 'alpha with lowest MSE='+str(model.alpha_)+'(0=no penalty, OLS)'
+# # g.text(0.05, .1, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+# # textstr= 'intercept='+str(model.intercept_)
+# # g.text(0.05, 0.2, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+# # textstr= 'R2='+str(model.score(group.loc[:,X],group.loc[:,y], sample_weight=None))
+# # g.text(0.05, 0.3, textstr, transform=g.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+
+
+# # g= sns.lineplot(ax=ax[1,],data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=predicted, color='black')
+# # g= sns.lineplot(ax=ax[1,], data=dfTemp.loc[group.index,:], x='timeLock-z-periDS-DStime', y=y, color='blue')
+# # g.legend(['predicted??','actual'])
+# # g.set(title=('subj-'+str(subj)+'-periCueModelPrediction-'+modeCue+'-trials-'+modeSignal))
+# # g.set(xlabel='time from cue onset', ylabel='Z-score FP signal')
+
+# # saveFigCustom(f, 'subj-'+str(subj)+'-regressionOutput-'+modeCue+'-trials-'+modeSignal, savePath)
+
+
+
+# ## Old -
+# # # sns.FacetGrid(eventCol,1)
+# # # sns.relplot(data= kernels.iloc[:,eventCol], kind='line')
+
+# # g=sns.relplot(data=kernels, x='timeShift', y='beta', hue= 'eventType', hue_order=eventOrder, style= 'subject', kind='line')
+# # g.set(title=('allSubj-kernels')#+modeCue+'-trials-'+modeSignal))
 # # g.set_ylabels('beta coef.')
 # # g.set_xlabels('timeShift from event onset (s)')
 
 # # # place a text box in upper left in axes coords with more model info
 # # # these are matplotlib.patch.Patch properties
-# # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-# # textstr= 'alpha with lowest MSE='+str(model.alpha_)
-# # g.ax.text(0.05, 0.95, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
-# # textstr= 'intercept='+str(model.intercept_)
-# # g.ax.text(0.05, 0.90, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+# # # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+# # # textstr= 'alpha with lowest MSE='+str(model.alpha_)
+# # # g.ax.text(0.05, 0.95, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+# # # textstr= 'intercept='+str(model.intercept_)
+# # # g.ax.text(0.05, 0.90, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+
+
+
+
+# # ## single subj: 
+# # # g=sns.relplot(data=kernels, x='timeShift', y='beta', hue= 'eventType', hue_order=eventOrder, kind='line')
+# # # g.set(title=('subj-'+str(subj)+'-kernels-'+modeCue+'-trials-'+modeSignal))
+# # # g.set_ylabels('beta coef.')
+# # # g.set_xlabels('timeShift from event onset (s)')
+
+# # # # place a text box in upper left in axes coords with more model info
+# # # # these are matplotlib.patch.Patch properties
+# # # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+# # # textstr= 'alpha with lowest MSE='+str(model.alpha_)
+# # # g.ax.text(0.05, 0.95, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+# # # textstr= 'intercept='+str(model.intercept_)
+# # # g.ax.text(0.05, 0.90, textstr, transform=g.ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
 
 
 

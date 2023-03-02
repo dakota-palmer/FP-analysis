@@ -244,6 +244,72 @@ df.to_pickle(savePath+'fig4cd.pkl')
 
 
 
+#%% ---------------------------FIG 6 ICSS ---------------
+
+
+
+#%% ----- FIG 6 Stats -------
+
+# OPTO ICSS
+
+#%%--Load the data
+datapath= r"C:\Users\Dakota\Documents\GitHub\DS-Training\Matlab\vp-vta-fp_stats_fig6Table.parquet"
+
+dfFig6= pd.read_parquet(datapath)
+
+
+df= dfFig6.copy()
+
+
+#%%-- Isolate only data you want
+#to save time/memory, pare down dataset to vars we are interested in
+
+#multiply y vars in this table
+
+# y= ['ResponseProb', 'RelLatency']
+
+varsToInclude= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase', 'logNP', 'countNP']
+
+# varsToInclude.append(y)
+
+df= df[varsToInclude]
+
+#%%--Prepare data for stats
+
+# #--remove missing/invalid observations
+
+# #-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
+# #so subset to stages >=5
+# ind= []
+# ind= df.stage>=5
+
+# df= df.loc[ind,:]
+
+#-- Fix dtypes - explicitly assign categorical type to categorical vars
+# note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
+
+catVars= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase']
+
+df[catVars]= df[catVars].astype('category')
+
+#%%-- Export to R.
+
+# save to pickle
+#- pandas version needs to match R environment version to load the pickle!
+# # activate R environment for pickling (to make env management/consistency easier)
+# conda activate r-env 
+
+df= df.copy()
+
+savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+print('saving fig6 df to file')
+
+#Save as pickel
+df.to_pickle(savePath+'fig6.pkl')
+
+
+
 
 #%% ------ OLD statsmodels code examples: ------
 # #%% abandoned statsmodels because LME posthoc tests not working 

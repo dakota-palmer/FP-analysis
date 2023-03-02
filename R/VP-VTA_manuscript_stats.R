@@ -431,7 +431,7 @@ setwd(pathWorking)
 
 
 
-## ----- FIGURE 4 C --------------------------------------------------------####
+## ----- FIGURE 4 CD --------------------------------------------------------####
 
 #%%-- Load data from .pkl ####
 
@@ -440,95 +440,222 @@ pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\
 df <- pd$read_pickle(pathData)
 
 
+
 ###### summarize data
 summary(df)
 
 #verify dtypes imported properly
 sapply(df, class) 
 
-#%% Figure 4CD Stats A -- Compare PE Ratio by Cue+Laser
+#%% Figure 4CD Stats # ------ B: No Laser Sessions
 
 #%%-- Subset data ## 
 #Remove missing/invalid observations 
 # df_Sub_A= df
 
 #- Can only include laserTrial for StimLength >0
-df_Sub_A= df[df$StimLength != 0,]
+df_Sub_B= df[df$StimLength == 0,]
+
+
+df_Sub_B_VTA= df_Sub_B[df_Sub_B$Projection=='VTA',]
+
+# df_Sub_VTA_DS= df_Sub_VTA[df_Sub_VTA$CueID=='DS',]
+
+df_Sub_B_mdThal= df_Sub_B[df_Sub_B$Projection=='mdThal',]
+
 
 
 #%%-- Run LME ##
 
-model= lmerTest::lmer('ResponseProb ~ Projection * CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
+#- Pooled
+model= lmerTest::lmer('ResponseProb ~ Projection * CueID  + (1|Subject)', data=df_Sub_B)
 
+modelLatency= lmerTest::lmer('RelLatency ~ Projection * CueID  + (1|Subject)', data=df_Sub_B)
+ 
+# emmip(model,  Projection ~ CueID )
+# emmip(modelLatency,  Projection ~ CueID )
 
-model_anova<- anova(model)
+model_pooled= model
+modelLatency_pooled=modelLatency
+model_anova_pooled<- anova(model)
+modelLatency_anova_pooled<- anova(modelLatency)
 
-#2023-02-21 all grouped together, projection * cueID interaction
+#- VTA
+model= lmerTest::lmer('ResponseProb ~  CueID  + (1|Subject)', data=df_Sub_B_VTA)
 
+modelLatency= lmerTest::lmer('RelLatency ~  CueID  + (1|Subject)', data=df_Sub_B_VTA)
 
-#%%-- Run Follow-up post-hoc tests ####
+model_VTA<- model
+modelLatency_VTA<- modelLatency
+model_anova_VTA<- anova(model)
+modelLatency_anova_VTA<- anova(modelLatency)
 
-#- Signifcant interaction term, want to follow-up and estimate main effects
+#- mdThal
+model= lmerTest::lmer('ResponseProb ~  CueID  + (1|Subject)', data=df_Sub_B_mdThal)
 
-# -- Interaction plot
-#- Viz interaction plot & save
-figName= "vp-vta_fig4CD_stats_A_interactionPlot.pdf"
-setwd(pathOutput)
-pdf(file=figName)
+modelLatency= lmerTest::lmer('RelLatency ~  CueID  + (1|Subject)', data=df_Sub_B_mdThal)
 
-emmip(model, LaserTrial ~ StimLength | CueID | Projection )
+model_mdThal<- model
+modelLatency_mdThal<- modelLatency
+model_anova_mdThal<- anova(model)
+modelLatency_anova_mdThal<- anova(modelLatency)
 
-dev.off()
-setwd(pathWorking)
-
-#- Pairwise T- tests
-EMM <- emmeans(model, ~ LaserTrial | StimLength | CueID | Projection)   # where treat has 2 levels
-tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-
-
-# Pairwise results- no significant contrasts
-
-
-#- Pairwise T- tests
-EMM <- emmeans(model, ~ trialOutcome)   # where treat has 2 levels
-tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-
+# #- print visually compare quickly
+# model_anova_pooled
+# model_anova_VTA
+# model_anova_mdThal
+# 
+# summary(model_pooled)
+# summary(model_VTA)
+# summary(model_mdThal)
 
 #%%-- Save output to variables between tests  ####
 # trying to keep code mostly generalizable and just save custom names at end
 # all the results into descriptive variables between tests
-fig4C_stats_A_0_description= "Figure 4C: DS opto all"
-fig4C_stats_A_1_model= model
-fig4C_stats_A_2_model_anova= model_anova
-fig4C_stats_A_3_model_post_hoc_pairwise= tPairwise 
+fig4C_stats_B_VTA_0_description= "Figure 4C: DS Task opto, No Laser Sessions, PE prob, VTA"
+fig4C_stats_B_VTA_1_model= model_VTA
+fig4C_stats_B_VTA_2_model_anova= model_anova_VTA
+
+fig4C_stats_B_mdThal_0_description= "Figure 4C: DS Task opto, No Laser Sessions, PE prob, mdThal"
+fig4C_stats_B_mdThal_1_model= model_mdThal
+fig4C_stats_B_mdThal_2_model_anova= model_anova_mdThal
+
+fig4D_stats_B_VTA_0_description= "Figure 4D: DS Task opto, No Laser Sessions, PE Latency, VTA"
+fig4D_stats_B_VTA_1_model= modelLatency_VTA
+fig4D_stats_B_VTA_2_model_anova= modelLatency_anova_VTA
+
+fig4D_stats_B_mdThal_0_description= "Figure 4C: DS Task opto, No Laser Sessions, PE Latency, mdThal"
+fig4D_stats_B_mdThal_1_model= modelLatency_mdThal
+fig4D_stats_B_mdThal_2_model_anova= modelLatency_anova_mdThal
 
 
-#%%-- Save output to File ####
-# Fig2D_A
-setwd(pathOutput)
 
+#--- ^&&& clean
 
-sink("vp-vta_fig4C_stats_A_PEvsNoPE_DS.txt")
-'------------------------------------------------------------------------------'
-'0)---- Description --: '
-print(fig2D_stats_A_0_description)
-'------------------------------------------------------------------------------'
-print('1)---- LME:')
-print(summary(fig2D_stats_A_1_model))
-'------------------------------------------------------------------------------'
-print('2)---- ANOVA of LME:')
-print(fig2D_stats_A_2_model_anova)
-'------------------------------------------------------------------------------'
-print('3)---- Posthoc pairwise:')
-print(fig4C_stats_A_3_model_post_hoc_pairwise)
-'---- END ---------------------------------------------------------------------'
-sink()  # returns output to the console
+# 
+# 
+# #%%-- Load data from .pkl ####
+# 
+# pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig4cd.pkl"
+# 
+# df <- pd$read_pickle(pathData)
+# 
+# 
+# ###### summarize data
+# summary(df)
+# 
+# #verify dtypes imported properly
+# sapply(df, class) 
+# 
+# #%% Figure 4CD Stats A -- Compare PE Ratio by Cue+Laser, Laser Sessions
+# 
+# #%%-- Subset data ## 
+# #Remove missing/invalid observations 
+# # df_Sub_A= df
+# 
+# #- Can only include laserTrial for StimLength >0
+# df_Sub_A= df[df$StimLength != 0,]
+# 
+# 
+# #%%-- Run LME ##
+# 
+# model= lmerTest::lmer('ResponseProb ~ Projection * CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
+# 
+# modelLatency= lmerTest::lmer('RelLatency ~ Projection * CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
+# 
+# 
+# model_anova<- anova(model)
+# 
+# summary(model)
+# model_anova
+# 
+# model_pooled=
+# 
+# #2023-02-21 all grouped together, projection * cueID interaction
+# 
+# 
+# #%%-- Run Follow-up post-hoc tests ####
+# 
+# #- Signifcant interaction term, want to follow-up and estimate main effects
+# 
+# # -- Interaction plot
+# #- Viz interaction plot & save
+# figName= "vp-vta_fig4C_stats_A_Probability_pooled_interactionPlot.pdf"
+# setwd(pathOutput)
+# pdf(file=figName)
+# 
+# emmip(model, LaserTrial ~ StimLength | CueID | Projection )
+# 
+# dev.off()
+# setwd(pathWorking)
+# 
+# #pooled latency interaction plot
+# figName= "vp-vta_fig4C_stats_A_Latency_pooled_interactionPlot.pdf"
+# setwd(pathOutput)
+# pdf(file=figName)
+# 
+# emmip(modelLatency, LaserTrial ~ StimLength | CueID | Projection )
+# 
+# dev.off()
+# setwd(pathWorking)
+# 
+# 
+# #- Pairwise T- tests
+# EMM <- emmeans(model, ~ LaserTrial | StimLength | CueID | Projection)   # where treat has 2 levels
+# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+# 
+# 
+# # Pairwise results- no significant contrasts
+# 
+# 
+# #- Pairwise T- tests
+# EMM <- emmeans(model, ~ trialOutcome)   # where treat has 2 levels
+# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+# 
+# 
+# #%%-- Save output to variables between tests  ####
+# # trying to keep code mostly generalizable and just save custom names at end
+# # all the results into descriptive variables between tests
+# fig4C_stats_A_0_description= "Figure 4C: DS Task opto, Laser Sessions, Pooled Projections"
+# fig4C_stats_A_1_model= model
+# fig4C_stats_A_2_model_anova= model_anova
+# fig4C_stats_A_3_model_post_hoc_pairwise= tPairwise 
+# 
+# 
+# 
+# 
+# #%% Figure 4CD Stats XX -- Subset by Projection
+# 
+# 
+# 
+# 
+# 
+# #%%-- Save output to File ####
+# # Fig2D_A
+# setwd(pathOutput)
+# 
+# 
+# sink("vp-vta_fig4C_stats_A_DStask_Opto_pooled.txt")
+# '------------------------------------------------------------------------------'
+# '0)---- Description --: '
+# print(fig4C_stats_A_0_description)
+# '------------------------------------------------------------------------------'
+# print('1)---- LME:')
+# print(summary(fig4C_stats_A_1_model))
+# '------------------------------------------------------------------------------'
+# print('2)---- ANOVA of LME:')
+# print(fig4C_stats_A_2_model_anova)
+# '------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:')
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
+# '---- END ---------------------------------------------------------------------'
+# sink()  # returns output to the console
+# 
+# setwd(pathWorking)
 
-setwd(pathWorking)
-
-## ----- FIGURE 4D ---------------------------------------------------------####
+## ----- FIGURE 4CD -- A-  DS Task Laser Sessions
 
 #%%-- Load data from .pkl ####
 
@@ -543,7 +670,7 @@ summary(df)
 #verify dtypes imported properly
 sapply(df, class)
 
-#%% Figure 4D Stats A -- Compare within-projection. DS PE Ratio by Cue * Laser--####
+#%% Figure 4D Stats A -- Laser Sessions
 
 #%%-- Subset data ##
 #Remove missing/invalid observations
@@ -565,7 +692,17 @@ df_Sub_A_mdThal= df_Sub_A[df_Sub_A$Projection=='mdThal',]
 
 #%%-- Run LME ##
 
+#-- Pooled
+model= lmerTest::lmer('ResponseProb ~ Projection * CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
+modelLatency= lmerTest::lmer('RelLatency ~ Projection * CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
 
+
+model_pooled= model
+model_anova_pooled<- anova(model)
+modelLatency_pooled= modelLatency
+modelLatency_anova_pooled= modelLatency_anova
+
+#-- VTA
   #VTA projection
     #-Probability
 model_prob_VTA= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
@@ -574,6 +711,7 @@ model_prob_anova_VTA<- anova(model_prob_VTA)
 model_latency_VTA= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
 model_latency_anova_VTA<- anova(model_latency_VTA)
 
+#-- mdThal
  #mdThal projection
     #-Probability
 model_prob_mdThal= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
@@ -581,6 +719,29 @@ model_prob_anova_mdThal<- anova(model_prob_mdThal)
     #-Latency
 model_latency_mdThal= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
 model_latency_anova_mdThal<- anova(model_latency_mdThal)
+
+
+
+# -- Interaction plot
+#- Viz interaction plot & save
+figName= "vp-vta_fig4C_stats_A_Probability_pooled_interactionPlot.pdf"
+setwd(pathOutput)
+pdf(file=figName)
+
+emmip(model_pooled, LaserTrial ~ StimLength | CueID | Projection )
+
+dev.off()
+setwd(pathWorking)
+
+#pooled latency interaction plot
+figName= "vp-vta_fig4D_stats_A_Latency_pooled_interactionPlot.pdf"
+setwd(pathOutput)
+pdf(file=figName)
+
+emmip(modelLatency_pooled, LaserTrial ~ StimLength | CueID | Projection )
+
+dev.off()
+setwd(pathWorking)
 
 
 #2023-02-21
@@ -594,21 +755,45 @@ model_latency_anova_mdThal<- anova(model_latency_mdThal)
 
 #%%-- Run Follow-up post-hoc tests ####
 
-#-- Pairwise comparisons (t test) between TrialOutcome
-#- Viz interaction plot & save
-figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
-setwd(pathOutput)
-pdf(file=figName)
+# #-- Pairwise comparisons (t test) between TrialOutcome
+# #- Viz interaction plot & save
+# - interaction plots should be same as above
 
-emmip(model_prob_VTA, LaserTrial ~ StimLength | CueID )
-
-dev.off()
-setwd(pathWorking)
+# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
+# setwd(pathOutput)
+# pdf(file=figName)
+# 
+# emmip(model_prob_VTA, LaserTrial ~ StimLength | CueID )
+# 
+# dev.off()
+# setwd(pathWorking)
 
 #- Pairwise T- tests
 EMM <- emmeans(model_prob_VTA, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwise_prob_VTA= tPairwise
+
+
+EMM <- emmeans(model_latency_VTA, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwise_latency_VTA= tPairwise
+
+
+EMM <- emmeans(model_prob_mdThal, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwise_prob_mdThal= tPairwise
+
+EMM <- emmeans(model_latency_mdThal, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwise_latency_mdThal= tPairwise
 
 # 2023-02-21 posthoc comparison results: No significant contrasts. 
 
@@ -689,6 +874,106 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 # B
 
 
+
+
+## -------FIGUre 6 ----------------------------------------------###
+
+
+## ----- FIGURE 6 --------------------------------------------------------####
+
+#%%-- Load data from .pkl ####
+
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig6.pkl"
+
+df <- pd$read_pickle(pathData)
+
+
+###### summarize data
+summary(df)
+
+#verify dtypes imported properly
+sapply(df, class) 
+
+
+#%%-- Subset data ## 
+#Remove missing/invalid observations 
+# df_Sub_A= df
+# 
+# #- Can only include laserTrial for StimLength >0
+# df_Sub_A= df[df$StimLength != 0,]
+
+
+#%%-- Run LME ##
+
+model= lmerTest::lmer('countNP ~ Projection * typeNP * Session *  trainPhase + (1|Subject)', data=df)
+
+
+model_anova<- anova(model)
+
+#2023-02-21 all grouped together, projection * cueID interaction
+
+
+#%%-- Run Follow-up post-hoc tests ####
+
+#- Signifcant interaction term, want to follow-up and estimate main effects
+
+# -- Interaction plot
+#- Viz interaction plot & save
+figName= "vp-vta_fig46_stats_A_interactionPlot.pdf"
+setwd(pathOutput)
+pdf(file=figName)
+
+emmip(model, typeNP ~ Session | trainPhase | Projection)
+
+dev.off()
+setwd(pathWorking)
+
+#- Pairwise T- tests
+EMM <- emmeans(model, ~ LaserTrial | StimLength | CueID | Projection)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+
+# Pairwise results- no significant contrasts
+
+
+#- Pairwise T- tests
+EMM <- emmeans(model, ~ trialOutcome)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+
+#%%-- Save output to variables between tests  ####
+# trying to keep code mostly generalizable and just save custom names at end
+# all the results into descriptive variables between tests
+fig4C_stats_A_0_description= "Figure 4C: DS opto all"
+fig4C_stats_A_1_model= model
+fig4C_stats_A_2_model_anova= model_anova
+fig4C_stats_A_3_model_post_hoc_pairwise= tPairwise 
+
+
+#%%-- Save output to File ####
+# Fig2D_A
+setwd(pathOutput)
+
+
+sink("vp-vta_fig4C_stats_A_PEvsNoPE_DS.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig2D_stats_A_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig2D_stats_A_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig2D_stats_A_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc pairwise:')
+print(fig4C_stats_A_3_model_post_hoc_pairwise)
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+setwd(pathWorking)
 
 
 
