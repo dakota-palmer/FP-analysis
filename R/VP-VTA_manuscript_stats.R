@@ -433,7 +433,9 @@ setwd(pathWorking)
 
 ## ----- FIGURE 4 CD --------------------------------------------------------####
 
-#%%-- Load data from .pkl ####
+#%- Fig 4CD Stats B-- No Laser Sessions ####
+
+#1%%-- Load data from .pkl ####
 
 pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig4cd.pkl"
 
@@ -446,8 +448,6 @@ summary(df)
 
 #verify dtypes imported properly
 sapply(df, class) 
-
-#%% Figure 4CD Stats # ------ B: No Laser Sessions
 
 #%%-- Subset data ## 
 #Remove missing/invalid observations 
@@ -465,7 +465,7 @@ df_Sub_B_mdThal= df_Sub_B[df_Sub_B$Projection=='mdThal',]
 
 
 
-#%%-- Run LME ##
+#2%%-- Run LME ####
 
 #- Pooled
 model= lmerTest::lmer('ResponseProb ~ Projection * CueID  + (1|Subject)', data=df_Sub_B)
@@ -509,7 +509,7 @@ modelLatency_anova_mdThal<- anova(modelLatency)
 # summary(model_VTA)
 # summary(model_mdThal)
 
-#%%-- Save output to variables between tests  ####
+#4%%-- Save output to variables between tests  ####
 # trying to keep code mostly generalizable and just save custom names at end
 # all the results into descriptive variables between tests
 fig4C_stats_B_Pooled_0_description= "Figure 4C: DS Task opto, No Laser Sessions, PE prob, pooled projections"
@@ -537,7 +537,7 @@ fig4D_stats_B_mdThal_1_model= modelLatency_mdThal
 fig4D_stats_B_mdThal_2_model_anova= modelLatency_anova_mdThal
 
 
-#%%-- Save output to File ####
+#5%%-- Save output to File ####
 setwd(pathOutput)
 
 #------Pooled
@@ -654,135 +654,11 @@ sink()  # returns output to the console
 #- return to working directory after saving
 setwd(pathWorking)
 
+#%- Fig 4CD Stats A-  DS Task Laser Sessions ####
 
-#--- ^&&& clean
+##
 
-# 
-# 
-# #%%-- Load data from .pkl ####
-# 
-# pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig4cd.pkl"
-# 
-# df <- pd$read_pickle(pathData)
-# 
-# 
-# ###### summarize data
-# summary(df)
-# 
-# #verify dtypes imported properly
-# sapply(df, class) 
-# 
-# #%% Figure 4CD Stats A -- Compare PE Ratio by Cue+Laser, Laser Sessions
-# 
-# #%%-- Subset data ## 
-# #Remove missing/invalid observations 
-# # df_Sub_A= df
-# 
-# #- Can only include laserTrial for StimLength >0
-# df_Sub_A= df[df$StimLength != 0,]
-# 
-# 
-# #%%-- Run LME ##
-# 
-# model= lmerTest::lmer('ResponseProb ~ Projection * CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
-# 
-# modelLatency= lmerTest::lmer('RelLatency ~ Projection * CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
-# 
-# 
-# model_anova<- anova(model)
-# 
-# summary(model)
-# model_anova
-# 
-# model_pooled=
-# 
-# #2023-02-21 all grouped together, projection * cueID interaction
-# 
-# 
-# #%%-- Run Follow-up post-hoc tests ####
-# 
-# #- Signifcant interaction term, want to follow-up and estimate main effects
-# 
-# # -- Interaction plot
-# #- Viz interaction plot & save
-# figName= "vp-vta_fig4C_stats_A_Probability_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model, LaserTrial ~ StimLength | CueID | Projection )
-# 
-# dev.off()
-# setwd(pathWorking)
-# 
-# #pooled latency interaction plot
-# figName= "vp-vta_fig4C_stats_A_Latency_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(modelLatency, LaserTrial ~ StimLength | CueID | Projection )
-# 
-# dev.off()
-# setwd(pathWorking)
-# 
-# 
-# #- Pairwise T- tests
-# EMM <- emmeans(model, ~ LaserTrial | StimLength | CueID | Projection)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# 
-# # Pairwise results- no significant contrasts
-# 
-# 
-# #- Pairwise T- tests
-# EMM <- emmeans(model, ~ trialOutcome)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# 
-# #%%-- Save output to variables between tests  ####
-# # trying to keep code mostly generalizable and just save custom names at end
-# # all the results into descriptive variables between tests
-# fig4C_stats_A_0_description= "Figure 4C: DS Task opto, Laser Sessions, Pooled Projections"
-# fig4C_stats_A_1_model= model
-# fig4C_stats_A_2_model_anova= model_anova
-# fig4C_stats_A_3_model_post_hoc_pairwise= tPairwise 
-# 
-# 
-# 
-# 
-# #%% Figure 4CD Stats XX -- Subset by Projection
-# 
-# 
-# 
-# 
-# 
-# #%%-- Save output to File ####
-# # Fig2D_A
-# setwd(pathOutput)
-# 
-# 
-# sink("vp-vta_fig4C_stats_A_DStask_Opto_pooled.txt")
-# '------------------------------------------------------------------------------'
-# '0)---- Description --: '
-# print(fig4C_stats_A_0_description)
-# '------------------------------------------------------------------------------'
-# print('1)---- LME:')
-# print(summary(fig4C_stats_A_1_model))
-# '------------------------------------------------------------------------------'
-# print('2)---- ANOVA of LME:')
-# print(fig4C_stats_A_2_model_anova)
-# '------------------------------------------------------------------------------'
-# print('3)---- Posthoc pairwise:')
-# print(fig4C_stats_A_3_model_post_hoc_pairwise)
-# '---- END ---------------------------------------------------------------------'
-# sink()  # returns output to the console
-# 
-# setwd(pathWorking)
-
-## ----- FIGURE 4CD -- A-  DS Task Laser Sessions
-
-#%%-- Load data from .pkl ####
+#1%%-- Load data from .pkl ####
 
 pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig4cd.pkl"
 
@@ -815,7 +691,7 @@ df_Sub_A_mdThal= df_Sub_A[df_Sub_A$Projection=='mdThal',]
 # droplevels(df_Sub_A$trainPhase)
 
 
-#%%-- Run LME ##
+#2%%-- Run LME ####
 
 #-- Pooled
 model= lmerTest::lmer('ResponseProb ~ Projection * CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A)
@@ -878,7 +754,7 @@ setwd(pathWorking)
   #VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
 
 
-#%%-- Run Follow-up post-hoc tests ####
+#3%%-- Run Follow-up post-hoc tests ####
 
 # #-- Pairwise comparisons (t test) between TrialOutcome
 # #- Viz interaction plot & save
@@ -968,7 +844,7 @@ tPairwise_latency_mdThal= tPairwise
 
 
 
-#%%-- Save output to variables between tests  ####
+#4%%-- Save output to variables between tests  ####
 # trying to keep code mostly generalizable and just save custom names at end
 # all the results into descriptive variables between tests
 
@@ -1028,62 +904,13 @@ fig4D_stats_A_mdThal_3_model_post_hoc_pairwise= tPairwise_latency_mdThal
 
 
 
-#%% -- Figure 4CD Save output
+#5%% -- Figure 4CD Save output ####
 
 # fig1D_stats_A_0_description= "Figure 1D: Late Training DS vs NS PE Ratio"
 # fig1D_stats_A_1_model= model
 # fig1D_stats_A_2_model_anova= model_anova
 # fig1D_stats_A_3_model_post_hoc_pairwise= tPairwise
 
-
-
-#%% Figure 1D Stats B -- Learning DS PE Ratio--####
-
-#%%-- Subset data ##
-#Remove missing/invalid observations
-#include only DS PE Ratios, across both phases
-df_Sub_B= df[df$trialType=='DStime',]
-
-#since we've dropped levels(categories) from the factor(categorical) variable trainDayThisPhase, drop accordingly for stats to work out
-# droplevels(df_Sub_A$trainDayThisPhase)
-# droplevels(df_Sub_A$trainPhase)
-
-
-#%%-- Run LME ##
-#-- This isn't good because trainDayThisPhase==0 in both early and late. ----$$$$
-model= lmerTest::lmer('trialTypePEProb10s  ~ trainDayThisPhase + (1|subject)', data=df_Sub_B)
-
-
-model_anova<- anova(model)
-
-
-#%%-- Run Follow-up post-hoc tests ####
-
-# #-- Pairwise comparisons (t test) between TrialOutcome
-# #- Viz interaction plot & save
-# figName= "vp-vta_fig1D_stats_B_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-#
-# emmip(model, trialType ~ trainDayThisPhase)
-#
-# dev.off()
-# setwd(pathWorking)
-
-#- Pairwise T- tests
-EMM <- emmeans(model, ~  trainDayThisPhase)   # where treat has 2 levels
-tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-
-
-#%%-- Save output to variables between tests  ####
-# trying to keep code mostly generalizable and just save custom names at end
-# all the results into descriptive variables between tests
-
-
-
-#%%-- Save output to File ####
-setwd(pathOutput)
 
 #------Pooled
 
@@ -1199,108 +1026,6 @@ sink()  # returns output to the console
 #- return to working directory after saving
 setwd(pathWorking)
 
-
-
-
-
-## -------FIGUre 6 ----------------------------------------------###
-
-
-## ----- FIGURE 6 --------------------------------------------------------####
-
-#%%-- Load data from .pkl ####
-
-pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig6.pkl"
-
-df <- pd$read_pickle(pathData)
-
-
-###### summarize data
-summary(df)
-
-#verify dtypes imported properly
-sapply(df, class) 
-
-
-#%%-- Subset data ## 
-#Remove missing/invalid observations 
-# df_Sub_A= df
-# 
-# #- Can only include laserTrial for StimLength >0
-# df_Sub_A= df[df$StimLength != 0,]
-
-
-#%%-- Run LME ##
-
-model= lmerTest::lmer('countNP ~ Projection * typeNP * Session *  trainPhase + (1|Subject)', data=df)
-
-
-model_anova<- anova(model)
-
-#2023-02-21 all grouped together, projection * cueID interaction
-
-
-#%%-- Run Follow-up post-hoc tests ####
-
-#- Signifcant interaction term, want to follow-up and estimate main effects
-
-# -- Interaction plot
-#- Viz interaction plot & save
-figName= "vp-vta_fig46_stats_A_interactionPlot.pdf"
-setwd(pathOutput)
-pdf(file=figName)
-
-emmip(model, typeNP ~ Session | trainPhase | Projection)
-
-dev.off()
-setwd(pathWorking)
-
-#- Pairwise T- tests
-EMM <- emmeans(model, ~ LaserTrial | StimLength | CueID | Projection)   # where treat has 2 levels
-tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-
-
-# Pairwise results- no significant contrasts
-
-
-#- Pairwise T- tests
-EMM <- emmeans(model, ~ trialOutcome)   # where treat has 2 levels
-tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-
-
-#%%-- Save output to variables between tests  ####
-# trying to keep code mostly generalizable and just save custom names at end
-# all the results into descriptive variables between tests
-fig4C_stats_A_0_description= "Figure 4C: DS opto all"
-fig4C_stats_A_1_model= model
-fig4C_stats_A_2_model_anova= model_anova
-fig4C_stats_A_3_model_post_hoc_pairwise= tPairwise 
-
-
-#%%-- Save output to File ####
-# Fig2D_A
-setwd(pathOutput)
-
-
-sink("vp-vta_fig4C_stats_A_PEvsNoPE_DS.txt")
-'------------------------------------------------------------------------------'
-'0)---- Description --: '
-print(fig2D_stats_A_0_description)
-'------------------------------------------------------------------------------'
-print('1)---- LME:')
-print(summary(fig2D_stats_A_1_model))
-'------------------------------------------------------------------------------'
-print('2)---- ANOVA of LME:')
-print(fig2D_stats_A_2_model_anova)
-'------------------------------------------------------------------------------'
-print('3)---- Posthoc pairwise:')
-print(fig4C_stats_A_3_model_post_hoc_pairwise)
-'---- END ---------------------------------------------------------------------'
-sink()  # returns output to the console
-
-setwd(pathWorking)
 
 
 

@@ -268,7 +268,7 @@ df= dfFig6.copy()
 
 # y= ['ResponseProb', 'RelLatency']
 
-varsToInclude= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase', 'logNP', 'countNP']
+varsToInclude= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase', 'logNP', 'countNP', 'npactiveProportion']
 
 # varsToInclude.append(y)
 
@@ -307,6 +307,20 @@ print('saving fig6 df to file')
 
 #Save as pickel
 df.to_pickle(savePath+'fig6.pkl')
+
+
+# # Save an df with session-level observations (active proportion)
+# df2= df[df.groupby(['Subject','Session']).cumcount()==0]
+
+
+# print('saving fig6sessionLevel df to file')
+
+# #Save as pickel
+# df.to_pickle(savePath+'fig6sessionLevel.pkl')
+
+
+
+
 
 
 
