@@ -274,6 +274,7 @@ varsToInclude= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase'
 
 df= df[varsToInclude]
 
+
 #%%--Prepare data for stats
 
 # #--remove missing/invalid observations
