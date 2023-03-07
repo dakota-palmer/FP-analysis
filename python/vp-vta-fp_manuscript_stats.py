@@ -281,6 +281,37 @@ df= df[varsToInclude]
 
 # df= df.loc[ind,:]
 
+#- Stack licksPerReward and licksPerRewardInactive by typeLP
+# test= df.melt(id_vars= 'typeLP', value_vars=['LicksPerReward','LicksPerRewardInactive'], value_name='rewardLicks')
+
+#melt() and merge by setting index subject,session,typeLP
+
+# df.reset_index(inplace=True)
+
+test= df.melt(id_vars= ['Subject','Session'], value_vars=['LicksPerReward','LicksPerRewardInactive'], var_name= 'typeLP', value_name='licksPerRewardTypeLP')
+
+# make typeLP labels identical
+test.loc[(test.typeLP=='LicksPerReward'), 'typeLP']= 'ActiveLeverPress'
+test.loc[(test.typeLP=='LicksPerRewardInactive'), 'typeLP']= 'InactiveLeverPress'
+
+
+
+#already was melted/stacked by typeLP in matlab so redundant rows here added
+test= test[test.groupby(['Subject','Session','typeLP']).cumcount()==0]
+
+
+test.set_index(['Subject','Session','typeLP'], inplace=True)
+
+
+# test2= df.copy()
+# test2['licksPerRewardTypeLP']= test['licksPerRewardTypeLP']
+
+df['licksPerRewardTypeLP']= test['licksPerRewardTypeLP']
+
+df.reset_index(inplace=True)
+
+
+
 #-- Fix dtypes - explicitly assign categorical type to categorical vars
 # note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
 
@@ -288,6 +319,9 @@ catVars= ['Subject', 'Projection', 'Session', 'Sex', 'trainPhase', 'trainPhaseLa
 
 
 df[catVars]= df[catVars].astype('category')
+
+
+
 
 #%%-- Export to R.
 
@@ -355,6 +389,8 @@ df= df[varsToInclude]
 catVars= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase']
 
 df[catVars]= df[catVars].astype('category')
+
+
 
 #%%-- Export to R.
 
