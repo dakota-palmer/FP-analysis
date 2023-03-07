@@ -171,7 +171,7 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_proportion_Pooled= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
-t_Proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
+t_proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
 
 
 #-- VTA
@@ -190,7 +190,7 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_proportion_VTA= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
-t_Proportion_VTA= test(EMM, null=0.5, adjust='sidak')
+t_proportion_VTA= test(EMM, null=0.5, adjust='sidak')
 
 
 #-- mdThal
@@ -227,7 +227,7 @@ fig5_stats_Phase1_FreeChoice_A_Pooled_3_model_post_hoc_pairwise= tPairwise_Poole
 fig5_stats_Phase1_FreeChoice_B_Pooled_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active NP Proportion, pooled projections"
 fig5_stats_Phase1_FreeChoice_B_Pooled_1_model= modelProportion_pooled
 fig5_stats_Phase1_FreeChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
-fig5_stats_Phase1_FreeChoice_B_Pooled_3_model_post_hoc_t= t_Proportion_Pooled
+fig5_stats_Phase1_FreeChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
 #-VTA
 fig5_stats_Phase1_FreeChoice_A_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, VTA projections"
@@ -238,7 +238,7 @@ fig5_stats_Phase1_FreeChoice_A_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
 fig5_stats_Phase1_FreeChoice_B_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active NP Proportion, VTA projections"
 fig5_stats_Phase1_FreeChoice_B_VTA_1_model= modelProportion_VTA
 fig5_stats_Phase1_FreeChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
-fig5_stats_Phase1_FreeChoice_B_VTA_3_model_post_hoc_t= t_Proportion_VTA
+fig5_stats_Phase1_FreeChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
 
 #-mdThal
 fig5_stats_Phase1_FreeChoice_A_mdThal_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, mdThal projections"
@@ -430,7 +430,7 @@ modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-licks/reward
 # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_B_VTA)
-modelLicks_VTA= lmerTest::lmer('LicksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_B_VTA)
+modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_B_VTA)
 
 modelLicks_anova_VTA<- anova(modelProportion_VTA)
 
@@ -492,7 +492,7 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_proportion_Pooled= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
-t_Proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
+t_proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
 
 
 #-- VTA
@@ -511,7 +511,7 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_proportion_VTA= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
-t_Proportion_VTA= test(EMM, null=0.5, adjust='sidak')
+t_proportion_VTA= test(EMM, null=0.5, adjust='sidak')
 
 
 #-- mdThal
@@ -548,7 +548,7 @@ fig5_stats_Phase_2_Reversal_A_Pooled_3_model_post_hoc_pairwise= tPairwise_Pooled
 fig5_stats_Phase_2_Reversal_B_Pooled_0_description= "Figure 5: Lever Choice, _Phase 2- Reversal, Active NP Proportion, pooled projections"
 fig5_stats_Phase_2_Reversal_B_Pooled_1_model= modelProportion_pooled
 fig5_stats_Phase_2_Reversal_B_Pooled_2_model_anova= modelProportion_anova_pooled
-fig5_stats_Phase_2_Reversal_B_Pooled_3_model_post_hoc_t= t_Proportion_Pooled
+fig5_stats_Phase_2_Reversal_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
 #-VTA
 fig5_stats_Phase_2_Reversal_A_VTA_0_description= "Figure 5: Lever Choice, _Phase 2- Reversal, Active vs Inactive NP Count, VTA projections"
@@ -559,7 +559,7 @@ fig5_stats_Phase_2_Reversal_A_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
 fig5_stats_Phase_2_Reversal_B_VTA_0_description= "Figure 5: Lever Choice, _Phase 2- Reversal, Active NP Proportion, VTA projections"
 fig5_stats_Phase_2_Reversal_B_VTA_1_model= modelProportion_VTA
 fig5_stats_Phase_2_Reversal_B_VTA_2_model_anova= modelProportion_anova_VTA
-fig5_stats_Phase_2_Reversal_B_VTA_3_model_post_hoc_t= t_Proportion_VTA
+fig5_stats_Phase_2_Reversal_B_VTA_3_model_post_hoc_t= t_proportion_VTA
 
 #-mdThal
 fig5_stats_Phase_2_Reversal_A_mdThal_0_description= "Figure 5: Lever Choice, _Phase 2- Reversal, Active vs Inactive NP Count, mdThal projections"
@@ -839,7 +839,7 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_proportion_Pooled= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
-t_Proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
+t_proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
 
 
 #-- VTA
@@ -858,7 +858,7 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_proportion_VTA= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
-t_Proportion_VTA= test(EMM, null=0.5, adjust='sidak')
+t_proportion_VTA= test(EMM, null=0.5, adjust='sidak')
 
 
 #-- mdThal
@@ -895,7 +895,7 @@ fig5_stats_Phase_3_ForcedChoice_A_Pooled_3_model_post_hoc_pairwise= tPairwise_Po
 fig5_stats_Phase_3_ForcedChoice_B_Pooled_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Active NP Proportion, pooled projections"
 fig5_stats_Phase_3_ForcedChoice_B_Pooled_1_model= modelProportion_pooled
 fig5_stats_Phase_3_ForcedChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
-fig5_stats_Phase_3_ForcedChoice_B_Pooled_3_model_post_hoc_t= t_Proportion_Pooled
+fig5_stats_Phase_3_ForcedChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
 #-VTA
 fig5_stats_Phase_3_ForcedChoice_A_VTA_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Active vs Inactive NP Count, VTA projections"
@@ -906,7 +906,7 @@ fig5_stats_Phase_3_ForcedChoice_A_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
 fig5_stats_Phase_3_ForcedChoice_B_VTA_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Active NP Proportion, VTA projections"
 fig5_stats_Phase_3_ForcedChoice_B_VTA_1_model= modelProportion_VTA
 fig5_stats_Phase_3_ForcedChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
-fig5_stats_Phase_3_ForcedChoice_B_VTA_3_model_post_hoc_t= t_Proportion_VTA
+fig5_stats_Phase_3_ForcedChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
 
 #-mdThal
 fig5_stats_Phase_3_ForcedChoice_A_mdThal_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Active vs Inactive NP Count, mdThal projections"
@@ -1123,7 +1123,6 @@ modelProportion= lm('probActiveLP ~ Projection', data=df_Sub_D)
 modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_D)
 
 
-
 model_pooled= model
 model_anova_pooled<- anova(model)
 modelProportion_pooled= modelProportion
@@ -1137,9 +1136,13 @@ modelLicks_anova_pooled= anova(modelLicks)
 #-Count
 model_VTA= lmerTest::lmer('countLP ~ typeLP  + (1|Subject)', data=df_Sub_D_VTA)
 model_anova_VTA<- anova(model_VTA)
+
 #-Proportion
-modelProportion_VTA= lmerTest::lmer('probActiveLP ~ (1|Subject)', data=df_Sub_D_VTA)
-modelProportion_anova_VTA<- anova(modelProportion_VTA)
+# modelProportion_VTA= lmerTest::lmer('probActiveLP ~ (1|Subject)', data=df_Sub_D_VTA)
+# really just need 1 sample t test here
+modelProportion_VTA= lm('probActiveLP ~  Subject', data=df_Sub_D_VTA)
+
+# modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-licks/reward
 # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_D_VTA)
@@ -1152,7 +1155,9 @@ modelLicks_anova_VTA<- anova(modelProportion_VTA)
 model_mdThal= lmerTest::lmer('countLP ~ typeLP + (1|Subject)', data=df_Sub_D_mdThal)
 model_anova_mdThal<- anova(model_mdThal)
 #-Proportion
-modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ + (1|Subject)', data=df_Sub_D_mdThal)
+# modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ + (1|Subject)', data=df_Sub_D_mdThal)
+modelProportion_mdThal= lm('probActiveLP ~ Subject', data=df_Sub_D_mdThal)
+
 modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 #-licks/reward
 # modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_D_mdThal)
@@ -1189,7 +1194,7 @@ modelLicks_anova_mdThal<- anova(modelProportion_mdThal)
 #- Pairwise T- tests
 
 #-- Pooled
-EMM <- emmeans(model_pooled, ~ typeLP | Session | Projection)   # where treat has 2 levels
+EMM <- emmeans(model_pooled, ~ typeLP | Projection)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
@@ -1197,33 +1202,41 @@ tPairwise_Pooled= tPairwise
 
 #pooled followup tests reveal significant differences in npCount by npType in VTA session 3,4,5
 
-EMM <- emmeans(modelProportion_pooled, ~ Session | Projection)   # where treat has 2 levels
-tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-
-tPairwise_proportion_Pooled= tPairwise
+# EMM <- emmeans(modelProportion_pooled, ~ Session | Projection)   # where treat has 2 levels
+# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+# 
+# tPairwise_proportion_Pooled= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
-t_Proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
+EMM <- emmeans(modelProportion_pooled, ~  Projection) 
+t_proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
 
 
 #-- VTA
 #-npCount
-EMM <- emmeans(model_VTA, ~ typeLP | Session)   # where treat has 2 levels
+EMM <- emmeans(model_VTA, ~ typeLP)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_VTA= tPairwise
 
 #-npActiveProportion
-EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
-tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+# EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
+# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
-tPairwise_proportion_VTA= tPairwise
+# tPairwise_proportion_VTA= tPairwise
 
-# for active proportion, check if each level significantly different from 0.5 (chance)
-t_Proportion_VTA= test(EMM, null=0.5, adjust='sidak')
+# # for active proportion, check if each level significantly different from 0.5 (chance)
+# EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
+# t_proportion_VTA= test(EMM, null=0.5, adjust='sidak')
+
+
+# simple 1 sample t test
+# t_proportion_VTA= t.test(df_Sub_D_VTA$probActiveLP, null=0.5, adjust='sidak')
+
+t_proportion_VTA= t.test(df_Sub_D_VTA$probActiveLP, mu=0.5)
 
 
 #-- mdThal
@@ -1236,14 +1249,16 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_mdThal= tPairwise
 
 #-npActiveProportion
-EMM <- emmeans(modelProportion_mdThal, ~ Session)   # where treat has 2 levels
-tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+# EMM <- emmeans(modelProportion_mdThal, ~ Session)   # where treat has 2 levels
+# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+# 
+# tPairwise_proportion_mdThal= tPairwise
+# 
+# # for active proportion, check if each level significantly different from 0.5 (chance)
+# t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 
-tPairwise_proportion_mdThal= tPairwise
-
-# for active proportion, check if each level significantly different from 0.5 (chance)
-t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
+t_proportion_mdThal= t.test(df_Sub_D_mdThal$probActiveLP, mu=0.5)
 
 
 
@@ -1260,7 +1275,7 @@ fig5_stats_Phase_4_TestFreeChoice_A_Pooled_3_model_post_hoc_pairwise= tPairwise_
 fig5_stats_Phase_4_TestFreeChoice_B_Pooled_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active NP Proportion, pooled projections"
 fig5_stats_Phase_4_TestFreeChoice_B_Pooled_1_model= modelProportion_pooled
 fig5_stats_Phase_4_TestFreeChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
-fig5_stats_Phase_4_TestFreeChoice_B_Pooled_3_model_post_hoc_t= t_Proportion_Pooled
+fig5_stats_Phase_4_TestFreeChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
 #-VTA
 fig5_stats_Phase_4_TestFreeChoice_A_VTA_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active vs Inactive NP Count, VTA projections"
@@ -1271,7 +1286,7 @@ fig5_stats_Phase_4_TestFreeChoice_A_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
 fig5_stats_Phase_4_TestFreeChoice_B_VTA_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active NP Proportion, VTA projections"
 fig5_stats_Phase_4_TestFreeChoice_B_VTA_1_model= modelProportion_VTA
 fig5_stats_Phase_4_TestFreeChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
-fig5_stats_Phase_4_TestFreeChoice_B_VTA_3_model_post_hoc_t= t_Proportion_VTA
+fig5_stats_Phase_4_TestFreeChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
 
 #-mdThal
 fig5_stats_Phase_4_TestFreeChoice_A_mdThal_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active vs Inactive NP Count, mdThal projections"
@@ -1306,6 +1321,7 @@ print(fig5_stats_Phase_4_TestFreeChoice_A_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 # print(fig5C_stats_C_3_model_post_hoc_pairwise)
+print(summary(fig5_stats_Phase_4_TestFreeChoice_A_Pooled_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -1322,7 +1338,7 @@ print('2)---- ANOVA of LME:')
 print(fig5_stats_Phase_4_TestFreeChoice_B_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-# print(summary(fig5C_stats_C_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+print(summary(fig5_stats_Phase_4_TestFreeChoice_B_Pooled_3_model_post_hoc_t, by = NULL, adjust = "sidak"))
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -1351,14 +1367,17 @@ sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_B_VTA.txt")
 '0)---- Description --: '
 print(fig5_stats_Phase_4_TestFreeChoice_B_VTA_0_description)
 '------------------------------------------------------------------------------'
-print('1)---- LME:')
-print(summary(fig5_stats_Phase_4_TestFreeChoice_B_VTA_1_model))
-'------------------------------------------------------------------------------'
-print('2)---- ANOVA of LME:')
-print(fig5_stats_Phase_4_TestFreeChoice_B_VTA_2_model_anova)
-'------------------------------------------------------------------------------'
-print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+# print('1)---- LME:')
+# print(summary(fig5_stats_Phase_4_TestFreeChoice_B_VTA_1_model))
+# '------------------------------------------------------------------------------'
+# print('2)---- ANOVA of LME:')
+# print(fig5_stats_Phase_4_TestFreeChoice_B_VTA_2_model_anova)
+# '------------------------------------------------------------------------------'
+# print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig5_stats_Phase_4_TestFreeChoice_B_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+print('3)---- One Sample t test:') # Make sure for posthocs the summary is printed with pval correction
 print(fig5_stats_Phase_4_TestFreeChoice_B_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -1385,15 +1404,17 @@ sink()  # returns output to the console
 sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_B_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_0_description)
-'------------------------------------------------------------------------------'
-print('1)---- LME:')
-print(summary(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_1_model))
-'------------------------------------------------------------------------------'
-print('2)---- ANOVA of LME:')
-print(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_2_model_anova)
-'------------------------------------------------------------------------------'
-print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_0_description)
+# '------------------------------------------------------------------------------'
+# print('1)---- LME:')
+# print(summary(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_1_model))
+# '------------------------------------------------------------------------------'
+# print('2)---- ANOVA of LME:')
+# print(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_2_model_anova)
+# '------------------------------------------------------------------------------'
+# print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+print('3)---- One Sample T Test:') # Make sure for posthocs the summary is printed with pval correction
 print(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
@@ -1404,6 +1425,10 @@ setwd(pathWorking)
 
 
 
+
+# __________________________________________________ ####
+
+#%% END ####
 
 
 
