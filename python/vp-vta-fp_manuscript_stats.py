@@ -302,6 +302,8 @@ test= test[test.groupby(['Subject','Session','typeLP']).cumcount()==0]
 
 test.set_index(['Subject','Session','typeLP'], inplace=True)
 
+df.set_index(['Subject','Session','typeLP'], inplace=True)
+
 
 # test2= df.copy()
 # test2['licksPerRewardTypeLP']= test['licksPerRewardTypeLP']

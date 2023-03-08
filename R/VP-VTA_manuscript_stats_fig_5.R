@@ -24,7 +24,7 @@ pathOutput= paste(pathWorking,'/_output', sep="")
 #get rid of space introduced by paste()
 gsub(" ", "", pathOutput)
 
-
+# __________________________________________________ ####
 
 #%- fig 5 Stats-- Phase 1- Free Choice ####
 
@@ -55,9 +55,9 @@ df[df$typeLP=='ActiveLeverPress','LicksPerReward']= NaN
 
 
 # #- Subset by session type 
-df_Sub_B= df[df$trainPhaseLabel == '1-FreeChoice',]
+df_Sub_A= df[df$trainPhaseLabel == '1-FreeChoice',]
 
-# df_Sub_B= df[df$trainPhaseLabel == '2-FreeChoice-Reversal',]
+# df_Sub_A= df[df$trainPhaseLabel == '2-FreeChoice-Reversal',]
 # df_Sub_C= df[df$trainPhaseLabel == '3-ForcedChoice',]
 # df_Sub_D= df[df$trainPhaseLabel == '4-FreeChoice-Test',]
 
@@ -65,27 +65,27 @@ df_Sub_B= df[df$trainPhaseLabel == '1-FreeChoice',]
 
 
 
-df_Sub_B_VTA= df_Sub_B[df_Sub_B$Projection=='VTA',]
+df_Sub_A_VTA= df_Sub_A[df_Sub_A$Projection=='VTA',]
 
-df_Sub_B_mdThal= df_Sub_B[df_Sub_B$Projection=='mdThal',]
+df_Sub_A_mdThal= df_Sub_A[df_Sub_A$Projection=='mdThal',]
 
 
 #since we've dropped levels(categories) from the factor(categorical) variable trainDayThisPhase, drop accordingly for stats to work out
-# droplevels(df_Sub_B$trainDayThisPhase)
-# droplevels(df_Sub_B$trainPhase)
+# droplevels(df_Sub_A$trainDayThisPhase)
+# droplevels(df_Sub_A$trainPhase)
 
 
 #2%%-- Run LME ####
 
 #-- Pooled
-# model= lmerTest::lmer('countNP ~ Projection * typeNP * Session *  trainPhase + (1|Subject)', data=df_Sub_B)
-model= lmerTest::lmer('countLP ~ Projection * typeLP * Session + (1|Subject)', data=df_Sub_B)
+# model= lmerTest::lmer('countNP ~ Projection * typeNP * Session *  trainPhase + (1|Subject)', data=df_Sub_A)
+model= lmerTest::lmer('countLP ~ Projection * typeLP * Session + (1|Subject)', data=df_Sub_A)
 
-modelProportion= lmerTest::lmer('probActiveLP ~ Projection * Session + (1|Subject)', data=df_Sub_B)
+modelProportion= lmerTest::lmer('probActiveLP ~ Projection * Session + (1|Subject)', data=df_Sub_A)
 
-# modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_B)
-# modelLicks=  lmerTest::lmer('rewardLicks ~ Projection * Session + (1|Subject)', data=df_Sub_B)
-modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_B)
+# modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_A)
+# modelLicks=  lmerTest::lmer('rewardLicks ~ Projection * Session + (1|Subject)', data=df_Sub_A)
+modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_A)
 
 
 
@@ -100,31 +100,31 @@ modelLicks_anova_pooled= anova(modelLicks)
 #-- VTA
 #VTA projection
 #-Count
-model_VTA= lmerTest::lmer('countLP ~ typeLP * Session + (1|Subject)', data=df_Sub_B_VTA)
+model_VTA= lmerTest::lmer('countLP ~ typeLP * Session + (1|Subject)', data=df_Sub_A_VTA)
 model_anova_VTA<- anova(model_VTA)
 #-Proportion
-modelProportion_VTA= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data=df_Sub_B_VTA)
+modelProportion_VTA= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data=df_Sub_A_VTA)
 modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-licks/reward
-# modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_B_VTA)
+# modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_A_VTA)
 # modelLicks_anova_VTA<- anova(modelProportion_VTA)
-modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_B_VTA)
+modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_A_VTA)
 modelLicks_anova_VTA<- anova(modelLicks_VTA)
 
 
 #-- mdThal
 #mdThal projection
 #-Probability
-model_mdThal= lmerTest::lmer('countLP ~ typeLP * Session + (1|Subject)', data=df_Sub_B_mdThal)
+model_mdThal= lmerTest::lmer('countLP ~ typeLP * Session + (1|Subject)', data=df_Sub_A_mdThal)
 model_anova_mdThal<- anova(model_mdThal)
 #-Proportion
-modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data=df_Sub_B_mdThal)
+modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data=df_Sub_A_mdThal)
 modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 #-licks/reward
-# modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_B_mdThal)
+# modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_A_mdThal)
 # modelLicks_anova_mdThal<- anova(modelProportion_mdThal)
-modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP * Session + (1|Subject)', data=df_Sub_B_mdThal)
+modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP * Session + (1|Subject)', data=df_Sub_A_mdThal)
 modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
 
@@ -211,6 +211,11 @@ tPairwise_proportion_mdThal= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
 t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
+
+
+#%% 2.5 -- Final Day specific tests? ####
+# Alternatively, you could just do pairwise comparisons at the start and end of each phase (so sessions 1 and 6 here), since we aren't really concerned about the specific day a difference emerged, and whether one emerged by the end of training that wasn't there on day 1.
+# just ignore the pariwise bc no sig interactions unless a priori
 
 
 
@@ -308,7 +313,7 @@ print('2)---- ANOVA of LME:')
 print(fig5_stats_Phase1_FreeChoice_A_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-print(summary(fig5_stats_Phase1_FreeChoice_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+print(fig5_stats_Phase1_FreeChoice_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -629,7 +634,7 @@ print('2)---- ANOVA of LME:')
 print(fig5_stats_Phase_2_Reversal_A_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-print(summary(fig5_stats_Phase_2_Reversal_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+print(fig5_stats_Phase_2_Reversal_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -976,7 +981,7 @@ print('2)---- ANOVA of LME:')
 print(fig5_stats_Phase_3_ForcedChoice_A_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-print(summary(fig5_stats_Phase_3_ForcedChoice_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+print(fig5_stats_Phase_3_ForcedChoice_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
