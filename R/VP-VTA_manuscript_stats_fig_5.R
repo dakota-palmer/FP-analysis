@@ -110,7 +110,7 @@ modelProportion_anova_VTA<- anova(modelProportion_VTA)
 # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_B_VTA)
 # modelLicks_anova_VTA<- anova(modelProportion_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_B_VTA)
-modelLicks_anova_VTA<- anova(modelProportion_VTA)
+modelLicks_anova_VTA<- anova(modelLicks_VTA)
 
 
 #-- mdThal
@@ -125,7 +125,7 @@ modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 # modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_B_mdThal)
 # modelLicks_anova_mdThal<- anova(modelProportion_mdThal)
 modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP * Session + (1|Subject)', data=df_Sub_B_mdThal)
-modelLicks_anova_mdThal<- anova(modelProportion_mdThal)
+modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
 
 # -- Interaction plot
@@ -432,7 +432,7 @@ modelProportion_anova_VTA<- anova(modelProportion_VTA)
 # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_B_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_B_VTA)
 
-modelLicks_anova_VTA<- anova(modelProportion_VTA)
+modelLicks_anova_VTA<- anova(modelLicks_VTA)
 
 #-- mdThal
 #mdThal projection
@@ -446,7 +446,7 @@ modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 # modelLicks_mdThal= lmerTest::lmer
 modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_B_mdThal)
 
-modelLicks_anova_mdThal<- anova(modelProportion_mdThal)
+modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
 
 # # -- Interaction plot
@@ -779,7 +779,7 @@ modelProportion_anova_VTA<- anova(modelProportion_VTA)
 # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_C_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_C_VTA)
 
-modelLicks_anova_VTA<- anova(modelProportion_VTA)
+modelLicks_anova_VTA<- anova(modelLicks_VTA)
 
 #-- mdThal
 #mdThal projection
@@ -793,7 +793,7 @@ modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 # modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_C_mdThal)
 modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_C_mdThal)
 
-modelLicks_anova_mdThal<- anova(modelProportion_mdThal)
+modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
 
 # # -- Interaction plot
@@ -1147,7 +1147,7 @@ modelProportion_VTA= lm('probActiveLP ~  Subject', data=df_Sub_D_VTA)
 #-licks/reward
 # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_D_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_D_VTA)
-modelLicks_anova_VTA<- anova(modelProportion_VTA)
+modelLicks_anova_VTA<- anova(modelLicks_VTA)
 
 #-- mdThal
 #mdThal projection
@@ -1163,7 +1163,7 @@ modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 # modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_D_mdThal)
 modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_D_mdThal)
 
-modelLicks_anova_mdThal<- anova(modelProportion_mdThal)
+modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
 
 # # -- Interaction plot
@@ -1321,7 +1321,7 @@ print(fig5_stats_Phase_4_TestFreeChoice_A_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 # print(fig5C_stats_C_3_model_post_hoc_pairwise)
-print(summary(fig5_stats_Phase_4_TestFreeChoice_A_Pooled_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+print(fig5_stats_Phase_4_TestFreeChoice_A_Pooled_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -1338,7 +1338,7 @@ print('2)---- ANOVA of LME:')
 print(fig5_stats_Phase_4_TestFreeChoice_B_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-print(summary(fig5_stats_Phase_4_TestFreeChoice_B_Pooled_3_model_post_hoc_t, by = NULL, adjust = "sidak"))
+print(fig5_stats_Phase_4_TestFreeChoice_B_Pooled_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -1357,7 +1357,7 @@ print('2)---- ANOVA of LME:')
 print(fig5_stats_Phase_4_TestFreeChoice_A_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-print(summary(fig5_stats_Phase_4_TestFreeChoice_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+print(fig5_stats_Phase_4_TestFreeChoice_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
