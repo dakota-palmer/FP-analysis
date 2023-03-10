@@ -128,6 +128,9 @@ modeExclude= ''
 
 if modeExclude== 'exclude-LowR2-Subj':
     subjectsToExclude= [13,14]
+
+if modeExclude== 'exclude-LowR2-Subj-stricter':
+    subjectsToExclude= [12,13,14]
     
 #%% Exclude subjectsToExclude
 
@@ -1648,6 +1651,65 @@ g.map(plt.axhline,y=0, linestyle='--', color='black', linewidth=2)
 # g= sns.lineplot(ax=ax[1], data=kernelsAll, estimator='median', x='timeShift',y='beta',hue= 'eventType', hue_order=eventOrder, linewidth=2)#, palette='dark') #mean
 
 # g.legend().remove()
+
+
+#%% ---- EXPORT TO R FOR STATS ------
+
+# save to pickle
+#- pandas version needs to match R environment version to load the pickle!
+# # activate R environment for pickling (to make env management/consistency easier)
+# conda activate r-env 
+
+
+#%%-- Isolate only data you want
+#to save time/memory, pare down dataset to vars we are interested in
+
+df= kernelsAll.copy()
+
+#%-- Eliminate redundant observations: Subset to one pre/post AUC value per eventType per subject
+df.loc[df.timeShift!=-0.025, 'betaAUCpreEvent']= None
+df.loc[df.timeShift!=0.025, 'betaAUCpostEvent']= None
+
+
+# y= ['ResponseProb', 'RelLatency']
+
+varsToInclude= ['beta','predictor','eventType','timeShift','betaAUCpreEvent','betaAUCpostEvent', 'subject', 'fileID', 'date']
+# varsToInclude.append(y)
+
+df= df[varsToInclude]
+
+
+#%%--Prepare data for stats
+
+# #--remove missing/invalid observations
+
+# #-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
+# #so subset to stages >=5
+# ind= []
+# ind= df.stage>=5
+
+# df= df.loc[ind,:]
+
+#-- Fix dtypes - explicitly assign categorical type to categorical vars
+# note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
+
+catVars= ['subject', 'eventType','predictor','timeShift','fileID','date']
+
+df[catVars]= df[catVars].astype('category')
+
+
+
+
+savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+print('saving fig3_encodingModel df to file')
+
+#Save as pickel
+kernelsAll.to_pickle(savePath+'fig3_encodingModel.pkl')
+
+
+#%% EXPORT TO MATLAB FOR FIGURE?
+
 
 
 #%% 

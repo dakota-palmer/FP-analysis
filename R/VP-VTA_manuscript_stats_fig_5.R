@@ -1430,10 +1430,14 @@ setwd(pathWorking)
 
 
 
-
 # __________________________________________________ ####
 
 #%% END ####
+
+
+#%% Licks per reward plot - is mdThal group bimodal like proportion?
+#pooled licks/reward plot
+
 
 
 
