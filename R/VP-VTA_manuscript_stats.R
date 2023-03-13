@@ -704,20 +704,20 @@ modelLatency_pooled= modelLatency
 modelLatency_anova_pooled= anova(modelLatency)
 
 #-- VTA
-  #VTA projection
-    #-Probability
+#VTA projection
+#-Probability
 model_VTA= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
 model_anova_VTA<- anova(model_VTA)
-    #-Latency
+#-Latency
 modelLatency_VTA= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_VTA)
 modelLatency_anova_VTA<- anova(modelLatency_VTA)
 
 #-- mdThal
- #mdThal projection
-    #-Probability
+#mdThal projection
+#-Probability
 model_mdThal= lmerTest::lmer('ResponseProb ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
 model_anova_mdThal<- anova(model_mdThal)
-    #-Latency
+#-Latency
 modelLatency_mdThal= lmerTest::lmer('RelLatency ~ CueID * LaserTrial * StimLength + (1|Subject)', data=df_Sub_A_mdThal)
 modelLatency_anova_mdThal<- anova(modelLatency_mdThal)
 
@@ -747,11 +747,11 @@ setwd(pathWorking)
 
 #2023-02-21
 #4C) PE Prob results 
-  # mdThal: Only significant effect = CueID
-  # VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
+# mdThal: Only significant effect = CueID
+# VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
 #4D) PE Latency results
-  #mdThal: Only significant effect= CueID
-  #VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
+#mdThal: Only significant effect= CueID
+#VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
 
 
 #3%%-- Run Follow-up post-hoc tests ####

@@ -498,7 +498,63 @@ print('saving fig1d df to file')
 df.to_pickle(savePath+'fig1d.pkl')
 
 
-#%% TODO: Stat comparison of PE Latency as well? 
+#%% Prepare PE Latency for stat comparison as well
+
+test= dfTidy.columns
+
+#set palette
+sns.set_palette(cmapCustomBlueGray)
+
+#subset data
+stagesToPlot= [1,2,3,4,5,6,7]#dfTidy.stage.unique()
+
+trialTypesToPlot= ['DStime', 'NStime']
+eventsToPlot= ['PEcue']
+
+dfPlot= subsetData(dfTidy, stagesToPlot, trialTypesToPlot, eventsToPlot).copy()
+
+#subset one observation per trial
+#subset to 1 obs per trial for counting
+dfPlot= subsetLevelObs(dfPlot, groupHierarchyTrialID)#.copy()
+
+g= sns.FacetGrid(data=dfPlot, col='trainPhase', sharex=False)
+
+g.map_dataframe(sns.lineplot,data= dfPlot, units='subject', estimator=None, x= 'trainDayThisPhase', y='eventLatency', hue='trialType', hue_order=trialOrder, alpha=alphaSubj)
+# g.map_dataframe(sns.lineplot,data= dfPlot, x= 'trainDayThisPhase', y='trialTypePEProb10s', hue='trialType', hue_order=trialOrder) #old seaborn, forces ci (no errorbar parameter)
+g.map_dataframe(sns.lineplot,data= dfPlot, x= 'trainDayThisPhase', y='eventLatency', errorbar=errorBars, hue='trialType', hue_order=trialOrder)
+
+
+# g.map(plt.axhline,y=criteriaDS, color=".2", linewidth=linewidthRef, dashes=(3,1), zorder=0)
+
+g.add_legend()
+
+#- Save the figure
+figName= 'Figure1_Supplement_Latency'
+
+plt.savefig(savePath+figName+'.pdf')
+
+
+#% Save as pickel for export to R
+
+## - isolate only data you want
+
+varsToInclude= ['eventLatency','subject','fileID', 'trialID', 'stage', 'trainDayThisPhase', 'trainPhase', 'trialType', 'trainDay' ]
+
+varsToInclude.append(y)
+
+dfPlot= dfPlot[varsToInclude]
+
+
+# #--remove missing/invalid observations
+
+#-- Fix dtypes - explicitly assign categorical type to categorical vars
+# note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
+
+catVars= ['subject','fileID', 'trialID', 'stage', 'trainPhase', 'trainDayThisPhase', 'trialType']
+
+dfPlot[catVars]= dfPlot[catVars].astype('category')
+
+dfPlot.to_pickle(savePath+'fig1d_supplement_latency.pkl')
 
 
 # %%-- old unnested of above

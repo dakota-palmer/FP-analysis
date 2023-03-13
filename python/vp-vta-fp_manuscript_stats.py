@@ -181,6 +181,77 @@ print('saving fig2d df to file')
 df.to_pickle(savePath+'fig2d.pkl')
 
 
+#%% ---------------------------FIG 3 LATENCY CORRELATION ---------------
+
+
+
+#%%--Load the data
+datapath= r"C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\vp-vta-fp_stats_fig3_latencyCorr_Table.parquet"
+
+dfFig3_latencyCorr= pd.read_parquet(datapath)
+
+
+df= dfFig3_latencyCorr.copy()
+
+
+#%%-- Isolate only data you want
+#to save time/memory, pare down dataset to vars we are interested in
+
+
+varsToInclude= df.columns
+
+# varsToInclude.append(y)
+
+df= df[varsToInclude]
+
+
+#%%--Prepare data for stats
+
+# #--remove missing/invalid observations
+
+# #-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
+# #so subset to stages >=5
+# ind= []
+# ind= df.stage>=5
+
+# df= df.loc[ind,:]
+
+#-- Fix dtypes - explicitly assign categorical type to categorical vars
+# note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
+
+catVars= ['subject', 'stage', 'timeLock', 'latencyOrder']
+
+df[catVars]= df[catVars].astype('category')
+
+
+
+#%%-- Export to R.
+
+# save to pickle
+#- pandas version needs to match R environment version to load the pickle!
+# # activate R environment for pickling (to make env management/consistency easier)
+# conda activate r-env 
+
+df= df.copy()
+
+savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+print('saving df Fig3_latencyCorr to file')
+
+#Save as pickel
+df.to_pickle(savePath+'Fig3_latencyCorr.pkl')
+
+
+# # Save an df with session-level observations (active proportion)
+# df2= df[df.groupby(['Subject','Session']).cumcount()==0]
+
+
+# print('saving fig6sessionLevel df to file')
+
+# #Save as pickel
+# df.to_pickle(savePath+'fig6sessionLevel.pkl')
+
+
 
 #%% ----- FIG 4 C/D Stats -------
 

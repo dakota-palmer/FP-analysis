@@ -181,7 +181,8 @@ width= 1.8; %good for 2 bars w dodge >=1
 data= periEventTable;
 
 % subset data- by stage
-stagesToPlot= [1:11];
+% stagesToPlot= [1:11];
+stagesToPlot= [7];
 
 ind=[];
 ind= ismember(data.stage, stagesToPlot);
@@ -213,10 +214,10 @@ data= data(ind,:);
 
 
 % subset data- by PE outcome; only include trials with valid PE post-cue
-% ind=[];
-% ind= data.DStrialOutcome==1;
-% 
-% data= data(ind,:);
+ind=[];
+ind= data.DStrialOutcome==1;
+
+data= data(ind,:);
 
 % % subset data- only include trials with licks (valid, non-nan lick peri
 % % signal)
@@ -811,12 +812,14 @@ end
 
 %% LATENCY CORRELATION --------------------------
 
-
-%% TODO: subset sessions for analysis
+% TODO: subset sessions for analysis
 
 data= periEventTable;
 
 latencyCorrInputTable= data;
+
+% Limit to data relevant to Fig 3? 
+% Stage 7, criteria?
 
 %% Exclude FP signals following PE
 
@@ -972,6 +975,8 @@ data= latencyCorrInputTable;
 allStages= unique(data.stage);
 
 allTimestamps= unique(data.timeLock);
+
+subjects= unique(data.subject);
 
 for thisStage= 1:numel(allStages)
 
@@ -1131,7 +1136,7 @@ alphaThreshold= 0.05;
 
 
 % --Line plot of coefficients over time Subplot ordered vs shuffled
-stagesToPlot= [5];
+% stagesToPlot= [5];
 
 ind=[];
 ind= (latencyCorrOutputTable.stage==stagesToPlot);
@@ -1170,7 +1175,7 @@ i().set_color_options('lightness_range', lightnessRangeGrand);
 i().set_line_options('base_size', linewidthGrand); 
 
 
-title= strcat(subjMode,'-allSubjects-latencyCorrelation-Figure3-shuffleVsOrder-DS');
+title= strcat('fig3latcorr');
 
 
 i.set_title(title);
@@ -1253,6 +1258,17 @@ data= latencyCorrOutputTable(ind,:);
 
 data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyOrder', 'NewDataVariableName', 'periCueRho');
 
+
+%% --EXPORT AS PARQUET FOR STATS ---
+parquetwrite(strcat('vp-vta-fp_stats_fig3_latencyCorr_Table'), data);
+
+
+
+
+
+%% lme
+
+
 %convert latencyOrder to dummy variable (retain only one column here as 2
 %is redundant)
 latencyOrderDummy= dummyvar(data.latencyOrder);
@@ -1261,11 +1277,12 @@ data.latencyOrder= latencyOrderDummy(:,1);
 
 %Stack data to have latencyOrder variable
 
+
 % lme1= fitlme(data, 'periCueRho~ (timeLock:latencyOrder)+ (1|subject)');
 lme1= fitlme(data, 'periCueRho~ timeLock*latencyOrder + (1|subject)');
 
 % can call anova() on lme output to estimate main effects tho.
-anova(lme1)?
+anova(lme1)
 
 %TBD in R, multiple comparisons seem impossible in matlab
 % if significant time:latencyOrder interaction, follow-up with individual comparison at each timepoint:

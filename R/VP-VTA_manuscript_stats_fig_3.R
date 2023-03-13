@@ -116,8 +116,6 @@ print(fig3_stats_encodingModel_A_postEventKernel_3_model_post_hoc_t, by = NULL, 
 sink()  # returns output to the console
 
 
-
-
 # __________________________________________________ ####
 
 
@@ -165,4 +163,264 @@ sink()  # returns output to the console
 # 
 # # for active proportion, check if each level significantly different from 0.5 (chance)
 # t= test(EMM, null=0, adjust='sidak')
+
+
+
+
+# __________________________________________________ ####
+
+
+
+# %- fig 3 Stats-- Latency Correlation ####
+
+#- hitting some warnings with emmeans due to df size so commenting out unless necessary
+
+#1%%-- Load data from .pkl ####
+
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig3_latencyCorr.pkl"
+
+df <- pd$read_pickle(pathData)
+
+
+###### summarize data
+summary(df)
+
+#verify dtypes imported properly
+sapply(df, class)
+
+
+#- Subset to one kernel auc value per eventType per subject
+# df= df(df$timeLock==0)
+
+
+#2%%-- Run model ####
+
+model= lmerTest::lmer('periCueRho ~ latencyOrder * timeLock + (1|subject)', data=df)
+model_anova<- anova(model)
+
+
+# -- Interaction plot
+
+# 3%%-- Posthoc tests ####
+pAlpha= 0.050
+
+
+# --  Pairwise t tests between levels
+#%%
+
+EMM <- emmeans(model, ~  latencyOrder | timeLock)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+# convert to df with summary to extract data / subset by significant p.value
+tPairwiseDF= summary(tPairwise, by = NULL, adjust = "sidak")
+
+indSig= which(tPairwiseDF[,'p.value']<=pAlpha)
+
+tPairwiseSig= tPairwiseDF[indSig,]
+
+
+#  t test- check if each level significantly different from null hypothesis (chance)
+t= test(EMM, null=0, adjust='sidak')
+
+summary(t, by = NULL, adjust = "sidak")   # all are in one group now
+
+# lots of values here (comparison at every time bin) make a viz or subset of only those below "significance" p value threshold
+indSig= which(t$p.value<=pAlpha)
+
+tSig= t[indSig,]
+
+
+# lots of values here. make a viz or subset of only those below "significance" p value threshold
+pAlpha= 0.050
+
+indSig= which(t$p.value<=pAlpha)
+
+tSig= t[indSig,]
+
+library(ggplot2)
+
+# # ggplot(data=df, x= 'timeLock', y='periCueRho', color='latencyOrder')
+# #   geom_line()
+#   # geom_point()
+# 
+# p= ggplot(data= df, aes(x= timeLock, y=periCueRho, color=latencyOrder, group=subject)) 
+# p= p+ geom_line()
+# show(p)
+# 
+# # p= p+ stat_summary(fun=mean, group=latencyOrder, geom='line')
+# # p= p+ geom_line(group=subject)
+# 
+# # p= p+ stat_summary(fun=mean, geom='line')
+# 
+# # p= p+ stat_summary(fun=mean)
+# 
+# # geom_errorbar(aes(ymin=len-se, ymax=len+se),
+# #               width=.2,                    # Width of the error bars
+# #               position=position_dodge(.9))
+# 
+# p= ggplot(data= df, aes(x= timeLock, y=periCueRho, color=latencyOrder)) 
+# 
+# p= p+ stat_summary(fun=mean,  geom='line')
+# 
+# 
+# p= p+ geom_line(aes(x= timeLock, y=periCueRho, group=latencyOrder)) 
+# 
+# show(p)
+# 
+# 
+# # try
+# # rm(p)
+# p=''
+# 
+# 
+# p= ggplot(data=df, aes(x=timeLock, y=periCueRho))+
+#    # stat_summary(fun=mean, geom="line")+
+#    # stat_summary(fun=mean, geom="line", aes(group = 1))
+#   # stat_summary(fun=mean, geom="line", aes(group = latencyOrder, color= latencyOrder))+
+#   
+#   # stat_summary(fun=mean, geom="line", aes(group = subject, color= latencyOrder, alpha=0.5))+
+#   
+#   #individual subjects
+#   # having issues with this specifically
+#     # geom_line(aes(group=subject, color=latencyOrder,alpha= 0.8, size=0.5))
+#   # geom_line(aes(group=subject, color= latencyOrder))
+# # 
+# # geom_point(aes(group=subject, color= subject, shape=subject, alpha= 0.5))+
+# # 
+# # geom_line(aes(group=subject, color= subject, alpha= 0.9))+
+# 
+#   #individual subj + color 
+# 
+# # geom_point(aes(group=subject, color= latencyOrder, shape=subject, alpha= 0.5))+
+#   
+# # geom_line(aes(group=subject, color= latencyOrder), alpha= 0.7)+
+#   
+# #alpha on line seems to add fill, just make size different for subj?
+# geom_line(aes(group=subject, color= latencyOrder), size= 0.5)+
+# 
+#     
+#     
+# # stat_summary(fun=mean, geom="line", aes(group = subject, color= subject))+
+# 
+# 
+#   
+#   #   # SEM
+#   # stat_summary(fun = mean_se, geom = "ribbon",
+#   #            alpha = 0.3, aes(group= latencyOrder, color= latencyOrder))+
+# 
+# 
+# 
+#    # stat_summary(fun=mean, colour="red", geom="line", aes(group = subject))
+#    
+#    
+# show(p)
+# 
+# 
+# summary(t)$p.value < pAlpha
+#   
+# summary(t[t$p.value<pAlpha,])
+# 
+# timeLockSig= t[t$p.value < pAlpha, 'timeLock']
+# 
+# # plot "significant" time epochs
+# p=''
+# 
+# p= ggplot(data=t, aes(x=timeLock, y=p.value, color=latencyOrder))+
+#   geom_point()+
+#   geom_hline(yintercept=pAlpha, color='black', size=2, alpha=0.5)+
+#   geom_vline(xintercept= t$timeLock[t$timeLock==5.0], color='grey', size=2, alpha=0.5)
+# 
+# show(p)
+
+
+p=''
+
+p= ggplot()+
+  
+  scale_colour_brewer(palette="Dark2")+
+
+  geom_point(data= t, aes(x=timeLock, y=p.value, color=latencyOrder, shape=latencyOrder, size=1))+
+  
+  # scale_color_hue(l=40, c=35)+
+
+  
+  
+  # geom_line(inherit.aes=FALSE, data=df, aes(x=timeLock, y=periCueRho, color=latencyOrder)+
+  #   scale_colour_brewer(palette="Set2"))+
+  
+  # geom_line(data=df, aes(x=timeLock, y=periCueRho, color=latencyOrder)+
+  # #             scale_colour_brewer(palette="Set2"))+
+  # # 
+  # geom_line(data=df, aes(x=timeLock, y=periCueRho, color=latencyOrder)+
+  #             scale_colour_brewer(palette="Set2")
+  #           )
+  # # 
+  # geom_line(data=df, aes(x=timeLock, y=periCueRho, color=latencyOrder, alpha=0.2)+
+  #   scale_colour_manual(l=30))
+  geom_line(data=df, inherit.aes=FALSE, aes(x=timeLock, y=periCueRho, color=latencyOrder, alpha=0.2))+
+
+  geom_hline(yintercept=pAlpha, color='red', size=2, alpha=0.6)+
+  geom_vline(xintercept= t$timeLock[t$timeLock==5.0], color='grey', size=2, alpha=0.6)+
+  
+  # manual latency
+  geom_vline(xintercept= t$timeLock[t$timeLock==2.75], color='purple', size=2, alpha=0.6)+
+
+show(p)
+
+# 
+# # #- manual subplot real with highlighted significant timebins
+# p=''
+# 
+# 
+# df_Sub= df[df$latencyOrder=='rhoBlue',]
+# 
+# t_Sub= t[t$latencyOrder=='rhoBlue',]
+# 
+# p= ggplot()+
+#   
+#   geom_hline(yintercept=pAlpha, color='black', size=2, alpha=0.5)+
+#   geom_vline(xintercept= t_Sub$timeLock[t_Sub$timeLock==5.0], color='grey', size=2, alpha=0.5)+
+#   
+#   geom_vline(xintercept= mean(df$poxDSrelMean), color='red', size=2, alpha=0.5)+
+#   
+#   
+#   geom_line(data=df_Sub, aes(x=timeLock, y=periCueRho, color=latencyOrder))+
+# 
+#   geom_point(data= t_Sub, aes(x=timeLock, y=p.value, colour='black'))+
+# 
+# show(p)
+# 
+# 
+# # df_Sub= df[df$latencyOrder=='rhoBlue',]
+# # 
+# # 
+# # p=''
+# # 
+# # # tSig= t[t$p.value<pAlpha,]
+# # tSig= t[t$p.value<pAlpha,'timeLock']
+# # 
+# # 
+# # p= ggplot()+
+# #   # geom_point(data= t, aes(x=timeLock, y=p.value, color=latencyOrder))+
+# #   # geom_hline(yintercept=pAlpha, color='black', size=2, alpha=0.5)+
+# #   # geom_vline(xintercept= t$timeLock[t$timeLock==5.0], color='grey', size=2, alpha=0.5)+
+# #   
+# #   # geom_ribbon(data=t[t$p.value<pAlpha,], aes(x=t$timeLock[t$p.value<pAlpha], ymin=0, ymax=1), fill='purple', alpha=0.9)+
+# #   
+# #   # geom_ribbon(data=t[t$p.value<pAlpha,], aes(x=t$timeLock[t$p.value<pAlpha], ymin=0, ymax=1), fill='purple', alpha=0.9)+
+# #   
+# #   # geom_ribbon(aes(x=t$timeLock[t$p.value<pAlpha], ymin=0, ymax=1), fill='purple', alpha=0.9)#+
+# #   
+# #   geom_ribbon(data= tSig, aes(timeLock, ymin=0.0, ymax=1.0))
+# # 
+# # 
+# #   
+# #   # geom_ribbon(data=t, aes(x=t$timeLock[t$p.value<pAlpha], ymin=0, ymax=1), color='grey', alpha=0.5)+
+# #   
+# #   
+# #   # geom_line(data=df_Sub, aes(x=timeLock, y=periCueRho, color=latencyOrder))
+# # 
+# # 
+## show(p)
 
