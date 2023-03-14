@@ -149,6 +149,153 @@ padPanel= 0.0025; %padding between other uiPanels
 
 %     p1
 
+ 
+%%
+% Initialize a figure with Drawable Area padding appropriately
+% 3 ROWS, 2 COLUMNS
+
+% Initialize a figure with Drawable Area padding appropriately
+% f = figure('Position',[100 100 1200 800])
+
+% make figure of desired final size
+% f = figure('Position',figSize)
+
+% figSize= [25, 2, 17, 17.5];
+
+% f = figure('Position',figSize, 'Units', 'centimeters');
+
+f= figure();
+% %cm not working on instantiation, try setting after
+% % set(f, 'Units', 'centimeters', 'Position', figSize);
+% 
+% %set outerposition as well
+% % set(f, 'Units', 'centimeters', 'Position', figSize);
+% % set(f, 'Units', 'centimeters', 'OuterPosition', figSize);
+
+%- set size appropriately in cm
+set(f, 'Units', 'centimeters', 'Position', figSize);
+% outerpos makes it tighter, just in case UIpanels go over
+set(f, 'Units', 'centimeters', 'OuterPosition', figSize);
+
+% % % works well for pdf, not SVG (SVG is larger for some reason)
+% % % but pdf still has big white space borders
+% % % https://stackoverflow.com/questions/5150802/how-to-save-a-plot-into-a-pdf-file-without-a-large-margin-around
+set(f, 'PaperPosition', [0, 0, figWidth, figHeight], 'PaperUnits', 'centimeters', 'Units', 'centimeters'); %Set the paper to have width 5 and height 5.
+
+set(f, 'PaperUnits', 'centimeters', 'PaperSize', [figWidth, figHeight]); %Set the paper to have width 5 and height 5.
+
+
+
+% padFigure= 0.05;
+% figWidth= 1200;
+% figHeight= 800;
+% f = figure('Position',[1-padFigure, 1-padFigure, figWidth, figHeight])
+
+
+% - Debugging/placement - With Visualization Borders / colors to help 
+    % 'Position' Units are pixels (distance from left, distance from bottom, width, height)
+    %but can use 'Units' 'Normalized'
+    % e.g. so [.9,.1, .3, .4] is 90% from bottom, 10% from left with width of 30% and height of 40% 
+
+    % Make width/height dependent on Position     
+    panelPos= [.01, .8, .95, .3];
+    lPos= panelPos(1);
+    bPos= panelPos(2);
+    w= panelPos(3);
+    h= panelPos(4);
+    
+    %make half-width
+    w= w / 2; %- padWidth;
+
+    
+    %amount of padding for uipanels
+    padPanel= 0.0025;
+    
+%todo- Adjust width,height based on the whole figure size? assumes equal
+%size though so not useful really
+
+%   Full-Width panel: adjust width and height dependent on position    
+    w2= 1- panelPos(1);
+    h2= 1-panelPos(2);
+    
+%     p1 = uipanel('Position',[lPos bPos w2 h2],'Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedin')
+
+%-Adjust lPos,bPos position based on width and height... so padding is good
+   %e.g. Full-Width panel:
+    lPos= 1-padPanel-w; %- lPos;
+    bPos= 1-h; %h- bPos;
+    
+%todo - Manually Refine position... alter values
+% padWidth= 0.0025; %padding from width of Figure
+
+%note that having issues with padding on left side of figure... greater than right side padWidth > 0.005? 
+% seems to be feature of figures
+padWidth= 0.005; %padding from left side of figure
+
+padHeight= 0.001; %todo- padding from bottom of figure
+
+padPanel= 0.0025; %padding between other uiPanels
+
+    % Panel A- Top row, full width
+    w= 1-padWidth;
+    
+        %make half-width
+    w= w / 2; %- padWidth;
+    
+        %dynamically adjust bPos based on padHeight and height desired
+    h= 0.33; %CHANGE HEIGHT
+
+    bPos= 1- h - padHeight;  
+    
+        %iterations here
+%     p1 = uipanel('Position',[padWidth, .7, .95, .3],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+%     p1 = uipanel('Position',[padWidth, .7, w, .30],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+%     p1 = uipanel('Position',[padWidth, bPos, w, .32],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+    p1 = uipanel('Position',[padWidth, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+
+    
+    %Position subsequent panels based on prior panels' Position
+    
+    % Panel B-  2nd row, 2nd half 
+    lPos= (w + p1.Position(1) - padPanel + padWidth);
+    
+    p2 = uipanel('Position',[lPos+padWidth, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+
+    
+    % Panel C- 2nd row, 1st half width
+        %... height of row 1 + 2 + padding
+    % redeclare height now for this panel
+%     h= .49;
+    bPos= (p2.Position(2)) - (h) - padPanel;
+
+
+        %... width of A/B
+    w= p2.Position(3)
+        
+%     p3= uipanel('Position',[padWidth, bPos, w, .32],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+    p3= uipanel('Position',[padWidth, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+        
+
+    % Panel D- 3rd row, 2nd half width
+    lPos= (w + p3.Position(1) - padPanel + padWidth);
+
+    p4= uipanel('Position',[lPos, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+
+        
+    % Panel E- 3rd row, 1st half width
+        %... height of row 1 + 2 + padding
+    % redeclare height now for this panel
+%     h= .49;
+    bPos= (p4.Position(2)) - (h) - padPanel;
+    p5= uipanel('Position',[padWidth, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+
+    
+        % Panel F-  3rd row, 2nd half 
+    lPos= (w + p5.Position(1) - padPanel + padWidth);
+    
+    p6 = uipanel('Position',[lPos+padWidth, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+
+    
 %%
     
 % p1 = uipanel('Position',[.01 .8 .95 (.2)],'Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedin')
@@ -180,6 +327,7 @@ width= 1.8; %good for 2 bars w dodge >=1
 % subset data
 data= periEventTable;
 
+
 % subset data- by stage
 % stagesToPlot= [1:11];
 stagesToPlot= [7];
@@ -188,6 +336,80 @@ ind=[];
 ind= ismember(data.stage, stagesToPlot);
 
 data= data(ind,:);
+
+
+% -- Subset data- restrict to last 3 sessions of stage 7 (same as encoding model input?)
+nSesToInclude= 3; 
+
+% reverse cumcount of sessions within stage, mark for exclusion
+groupIDs= [];
+
+% data.StartDate= cell2mat(data.StartDate);
+groupIDs= findgroups(data.subject, data.stage);
+
+groupIDsUnique= [];
+groupIDsUnique= unique(groupIDs);
+
+data(:, 'includedSes')= table(nan);
+
+
+for thisGroupID= 1:numel(groupIDsUnique)
+    %for each groupID, find index matching groupID
+    ind= [];
+    ind= find(groupIDs==groupIDsUnique(thisGroupID));
+        
+    %for each groupID, get the table data matching this group
+    thisGroup=[];
+    thisGroup= data(ind,:);
+
+    % get max trainDayThisStage for this Subject
+    maxTrainDayThisStage= [];
+    thisGroup(:,'maxTrainDayThisStage')= table(max(thisGroup.trainDayThisStage));
+
+    %check if difference between trainDayThisStage and max is within
+    %nSesToInclude
+    thisGroup(:,'deltaTrainDayThisStage')= table(thisGroup.maxTrainDayThisStage - thisGroup.trainDayThisStage);
+
+    % this way delta==0 is final day, up to delta < nSesToInclude
+    ind2=[];
+    ind2= thisGroup.deltaTrainDayThisStage < nSesToInclude;
+    thisGroup(:,'includedSes')= table(nan);
+
+    thisGroup(ind2,'includedSes')= table(1);
+
+    
+        
+    %assign back into table
+    data(ind, 'includedSes')= table(thisGroup.includedSes);
+%     
+%     %now cumulative count of observations in this group
+%     %make default value=1 for each, and then cumsum() to get cumulative count
+%     thisGroup(:,'cumcount')= table(1);
+%     thisGroup(:,'cumcount')= table(cumsum(thisGroup.cumcount));
+%     
+%     thisGroup(:,'cumcountMax')= table(max(thisGroup.cumcount));
+    
+    %assign back into table
+%     data(ind, 'testCount')= table(thisGroup.cumcount);
+  
+    %subtract trainDayThisStage - cumcount max and if 
+    
+%     % Check if >1 observation here in group
+%     % if so, flag for review
+%     if height(thisGroup)>1
+%        disp('duplicate ses found!')
+%         dupes(ind, :)= thisGroup;
+% 
+%     end
+    
+end 
+
+
+ind= [];
+ind= data.includedSes==1;
+
+data= data(ind,:);
+
 
 %subset data- simply require DS trial
 ind=[];
@@ -218,6 +440,7 @@ ind=[];
 ind= data.DStrialOutcome==1;
 
 data= data(ind,:);
+
 
 % % subset data- only include trials with licks (valid, non-nan lick peri
 % % signal)
@@ -836,6 +1059,15 @@ ind= data.timeLock > data.poxDSrel;
 
 latencyCorrInputTable(ind, y) = table(nan);
 
+
+%-- dp 2023-03-13 currently excluding data per trial based on real latency
+%value
+% BUT afterward shuffling 
+% so when running stats, have signal timepoints cut off with NA
+% corresponding to new shuffled PE latency
+
+
+
 %% Add Shuffled Data to set (shuffled latencies per trial)
   %-- DS trials
   
@@ -1056,6 +1288,196 @@ for thisStage= 1:numel(allStages)
 end %end stage loop
 
 
+
+%% ------ Load Encoding model output Kernels and Predicted from Python
+
+%-- Load .csv from python 
+dfKernelsAll= readtable("C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_output\fig3_df_kernelsAll.csv");
+
+dfPredictedMean= readtable("C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_output\fig3_df_predictedMean.csv");
+
+%% -- Make Encoding model Figures
+
+% use cmap distinct from the DS vs NS (can refine in illustrator)
+figure;
+
+clear g;
+
+cmapGrand= cmapPEGrand;
+cmapSubj= cmapPESubj;
+
+%-- Fig3- kernels time course trace
+data= dfKernelsAll;
+
+% - Individual Subj lines
+group= data.subject;
+
+g(1,1)= gramm('x', data.timeShift, 'y', data.beta, 'color', data.eventType, 'group', group);
+
+g(1,1).facet_grid([],data.eventType);
+
+
+g(1,1).geom_line();
+
+% i2.set_title(titleFig); 
+g(1,1).set_color_options('map',cmapSubj);
+g(1,1).set_line_options('base_size',linewidthSubj);
+g(1,1).set_names('x','Time shift from event (s)','y','Correlation Coefficient (beta)','color','Event Type', 'column', '');
+
+g(1,1).set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+%remove legend
+g(1,1).no_legend();
+
+% % % % set parent uiPanel in overall figure
+% g(1,1).set_parent(p2);
+
+
+%- First Draw call
+g(1,1).draw();
+
+% -- Between subjects mean+SEM 
+group=[]
+g(1,1).update('x', data.timeShift, 'y', data.beta, 'color', data.eventType, 'group', group);
+
+g(1,1).stat_summary('type',errorBar,'geom','area');
+
+g(1,1).set_color_options('map',cmapGrand);
+g(1,1).set_line_options('base_size',linewidthGrand);
+
+%remove legend
+g(1,1).no_legend();
+
+%- save final draw til end
+g(1,1).draw();
+
+
+%---- Encoding model AUC plot ------
+%- Subset data to 1 observation per trial
+ind=[];
+ind= ~(data.timeShift== .025);
+data(ind,'betaAUCpostEvent')= table(nan);
+
+% data= data(~isnan(data.betaAUCpostEvent),:);
+
+% -- Between subjects mean+SEM bar
+group=[]
+g(2,1)= gramm('x', data.eventType, 'y', data.betaAUCpostEvent, 'color', data.eventType, 'group', group);
+
+g(2,1).stat_summary('type',errorBar,'geom',{'bar'}, 'dodge', dodge, 'width', width);
+
+g(2,1).set_color_options('map',cmapGrand);
+g(2,1).set_line_options('base_size',linewidthGrand);
+
+%remove legend
+g(2,1).no_legend();
+
+g(1,1).set_color_options('map',cmapSubj);
+
+g(1,1).set_names('x','Event Type','y','AUC of Post-Event Correlation Coefficient','color','Event Type', 'column', '');
+g(1,1).set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+% % % % set parent uiPanel in overall figure
+% g(1,1).set_parent(p3);
+
+
+%first draw call
+g(2,1).draw();
+
+% -- Individual subjects point
+group= data.subject;
+g(2,1).update('x', data.eventType, 'y', data.betaAUCpostEvent, 'color', data.eventType, 'group', group);
+
+g(2,1).geom_point();
+g(2,1).set_color_options('map',cmapSubj);
+g(2,1).set_line_options('base_size',linewidthSubj);
+
+g(2,1).draw();
+
+% -- Individual subjects lines
+group= data.subject;
+g(2,1).update('x', data.eventType, 'y', data.betaAUCpostEvent, 'color', [], 'group', group);
+
+g(2,1).stat_summary('type',errorBar,'geom','line');
+g(2,1).set_color_options('chroma',chromaLineSubj);
+g(2,1).set_line_options('base_size',linewidthSubj);
+
+g(2,1).draw();
+
+% -- Grand Errorbars
+group=[]
+g(2,1).update('x', data.eventType, 'y', data.betaAUCpostEvent, 'color', data.eventType, 'group', group);
+
+g(2,1).stat_summary('type',errorBar,'geom',{'black_errorbar'}, 'dodge', dodge, 'width', width);
+
+g(2,1).set_color_options('map',cmapGrand);
+g(2,1).set_line_options('base_size',linewidthGrand);
+
+%- hline at 0 auc
+g(2,1).geom_hline('yintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
+
+%save final draw til end
+g(2,1).draw();
+
+%---- Fig 3- predicted vs actual time course trace ----
+
+%- subset data
+data2=[];
+
+data2= dfPredictedMean;
+
+%- Stack to have signalType as variable (actual vs predicted)
+data2= stack(data2, {'y', 'yPredicted'}, 'IndexVariableName', 'typeSignal', 'NewDataVariableName', 'signal');
+
+
+%-- fig aesthetics
+cmapGrand= cmapBlueGrayGrand;
+cmapSubj= cmapBlueGraySubj;
+
+%-- Individual lines predicted vs actual trace
+group=[];
+% - Individual Subj lines
+group= data2.subject;
+
+g(3,1)= gramm('x', data2.timeLock, 'y', data2.signal, 'color', data2.typeSignal, 'group', group);
+
+g(3,1).geom_line();
+
+% i2.set_title(titleFig); 
+g(3,1).set_color_options('map',cmapSubj);
+g(3,1).set_line_options('base_size',linewidthSubj);
+g(3,1).set_names('x','Time from DS onset (s)','y','GCaMP (Z-Score)','color','Event Type', 'column', '');
+
+g(3,1).set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+%remove legend
+g(3,1).no_legend();
+
+% % % set parent uiPanel in overall figure
+% g(3,1).set_parent(p4);
+% 
+
+%- First Draw call
+g(3,1).draw();
+
+% -- Between subjects mean+SEM 
+group=[]
+g(3,1).update('x', data2.timeLock, 'y', data2.signal, 'color', data2.typeSignal, 'group', group);
+
+g(3,1).stat_summary('type',errorBar,'geom','area');
+
+g(3,1).set_color_options('map',cmapGrand);
+g(3,1).set_line_options('base_size',linewidthGrand);
+
+%remove legend
+g(3,1).no_legend();
+
+%- save final draw til end
+g(3,1).draw();
+
+
+
+
 %% ------ Visualize Output of latency correlation ---------
 
 %alpha threshold (to plot only significant data)
@@ -1088,12 +1510,12 @@ alphaThreshold= 0.05;
 % 
 % i.axe_property('YLim',[-1,1]);
 % title= strcat(subjMode,'-allSubjects-latencyCorrelation-blue-actual-DS');
-% i.set_title(title);
+% i.set_title(titleFig);
 % i.set_names('x','time from DS (s)','y','rho (465nm)','color','subject', 'column', 'stage');
 % 
 % i.draw();
 % 
-% saveFig(gcf, figPath, title, figFormats)
+% saveFig(gcf, figPath, titleFig figFormats)
 % 
 % %% -----Shuffled data plot
 % 
@@ -1121,12 +1543,12 @@ alphaThreshold= 0.05;
 % 
 % i.axe_property('YLim',[-1,1]);
 % title= strcat(subjMode,'-allSubjects-latencyCorrelation-blue-Shuffled-DS');
-% i.set_title(title);
+% i.set_title(titleFig);
 % i.set_names('x','time from DS (s)','y','rho (465nm)','color','subject', 'column', 'stage');
 % 
 % i.draw();
 % 
-% saveFig(gcf, figPath, title, figFormats)
+% saveFig(gcf, figPath, titleFig figFormats)
 
 
 %% -------------------Manuscript Figure 3: Correlation of FP signal with Latency--------------------------
@@ -1150,6 +1572,9 @@ data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyO
 figure();
 clear i;
 
+cmapGrand= cmapBlueGrayGrand;
+cmapSubj= cmapBlueGraySubj;
+
 
 %Don't use Lightness facet since importing to illustrator will make
 %grouping a problem ... instead use group
@@ -1161,7 +1586,9 @@ i= gramm('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, '
 
 i.stat_summary('type','sem','geom','area');
 
-i().set_color_options('lightness_range', lightnessRangeSubj) 
+% i().set_color_options('lightness_range', lightnessRangeSubj) 
+i().set_color_options('map', cmapSubj) 
+
 i().set_line_options('base_size', linewidthSubj)
 i.draw();
 
@@ -1171,79 +1598,92 @@ i.update('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, '
 i.stat_summary('type','sem','geom','area');
 
 
-i().set_color_options('lightness_range', lightnessRangeGrand); 
+% i().set_color_options('lightness_range', lightnessRangeGrand); 
+i().set_color_options('map', cmapGrand) 
+
 i().set_line_options('base_size', linewidthGrand); 
 
 
 title= strcat('fig3latcorr');
 
 
-i.set_title(title);
+i.set_title(titleFig);
 i.set_names('x','time from DS (s)','y','rho (465nm)','color','latencyOrder');
 
-i().geom_vline('xintercept', 0, 'style', 'k--'); %horizontal line @ 0 (cue onset)
+i().geom_vline('xintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); %horizontal line @ 0 (cue onset)
 
 
 %add vertical line overlay for mean PE latency
 latMean= [];
 latMean= nanmean(data.poxDSrelMean);
-i().geom_vline('xintercept', latMean, 'style', 'b-.'); %horizontal line @ mean PE
+i().geom_vline('xintercept', latMean, 'style', 'm-.', 'linewidth',linewidthReference); %horizontal line @ mean PE
 
 i.axe_property('YLim',[-0.5,0.5]);
 i.axe_property('xLim',[-2,5]); %capping at +5s
 
 i.draw();
-saveFig(gcf, figPath, title, figFormats);
+% saveFig(gcf, figPath, titleFig, figFormats);
 
 
 %% -- plot only coefficients with Pval < threshold
-% 
-% ind=[];
-% ind= (latencyCorrOutputTable.stage==stagesToPlot);
-% 
-% data= latencyCorrOutputTable(ind,:);
-% 
-% 
-% %stack table to make signalType (ordered vs shuffled) variable for faceting
-% data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyOrder', 'NewDataVariableName', 'periCueRho');
-% 
-% 
-% %replace non-significant rhos with nan
-% data(data.pvalBlue>=alphaThreshold, 'periCueRho')= table(nan);
-% data(data.pvalBlueShuffled>=alphaThreshold, 'periCueRho')= table(nan);
-% 
-% 
-% figure();
-% clear i;
-% 
-%     %-individual subj lines
+
+ind=[];
+ind= (latencyCorrOutputTable.stage==stagesToPlot);
+
+data= latencyCorrOutputTable(ind,:);
+
+
+%stack table to make signalType (ordered vs shuffled) variable for faceting
+data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyOrder', 'NewDataVariableName', 'periCueRho');
+
+
+%replace non-significant rhos with nan
+data(data.pvalBlue>=alphaThreshold, 'periCueRho')= table(nan);
+data(data.pvalBlueShuffled>=alphaThreshold, 'periCueRho')= table(nan);
+
+
+figure();
+clear i;
+
+    %-individual subj lines
 % i= gramm('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', data.subject);
-% 
-% i.stat_summary('type','sem','geom','area');
-% 
+i= gramm('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder);
+
+
+i.stat_summary('type','sem','geom','area');
+
 % i().set_color_options('lightness_range', lightnessRangeSubj) 
 % i().set_line_options('base_size', linewidthSubj)
-% i.draw();
-% 
-%     %-between subj mean+sem
-% i.update('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', []);
-% 
-% i.stat_summary('type','sem','geom','area');
-% 
-% 
+
+i().set_color_options('map', cmapSubj) 
+i().set_line_options('base_size', linewidthSubj); 
+
+
+i.draw();
+
+    %-between subj mean+sem
+i.update('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', []);
+
+i.stat_summary('type','sem','geom','area');
+
+
+i().set_color_options('map', cmapGrand) 
+i().set_line_options('base_size', linewidthGrand); 
+
 % i().set_color_options('lightness_range', lightnessRangeGrand); 
 % i().set_line_options('base_size', linewidthGrand); 
-% 
-% 
-% i.axe_property('YLim',[-1,1]);
+
+
+i.axe_property('YLim',[-1,1]);
 % title= strcat(subjMode,'-allSubjects-latencyCorrelation-Figure3-shuffleVsOrderSignif-DS');
-% 
-% 
-% i.set_title(title);
-% i.set_names('x','time from DS (s)','y','rho (465nm)','color','latencyOrder');
-% 
-% i.draw();
-% saveFig(gcf, figPath, title, figFormats);
+title= strcat('-allSubjects-latencyCorrelation-Figure3-shuffleVsOrderSignif-DS');
+
+
+i.set_title(titleFig);
+i.set_names('x','time from DS (s)','y','rho (465nm)','color','latencyOrder');
+
+i.draw();
+% saveFig(gcf, figPath, titleFig figFormats);
 
 %% -- Statistical comparison LME to see if rho differs between shuffled/ordered
 

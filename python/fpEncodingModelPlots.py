@@ -1708,9 +1708,17 @@ print('saving fig3_encodingModel df to file')
 kernelsAll.to_pickle(savePath+'fig3_encodingModel.pkl')
 
 
-#%% EXPORT TO MATLAB FOR FIGURE?
+#%% EXPORT TO MATLAB FOR FIGURE
 
+# export as CSV
+kernelsAll.to_csv(savePath+'fig3_df_kernelsAll.csv')
 
+# currently dfPredictedAll has 1 observation per timestamp per trial
+# reduce to mean across all trials per subj
+
+dfPlot= dfPredictedAll.groupby(['subject','timeLock'], as_index=False).mean().copy()
+
+dfPlot.to_csv(savePath+'fig3_df_predictedMean.csv')
 
 #%% 
 
