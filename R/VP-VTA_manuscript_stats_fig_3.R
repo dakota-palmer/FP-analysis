@@ -8,7 +8,7 @@ pd <- import("pandas")
 #%%-- Import dependencies ####
 # library(lme4)
 library(reticulate)
-library(lmerTest)
+v library(lmerTest)
 library(emmeans)
 
 #%% -- Set Paths ####
@@ -83,11 +83,11 @@ t= test(EMM, null=0, adjust='sidak')
 # all the results into descriptive variables between tests
 
 
-fig3_stats_latencyCorrelation_A_0_description= "Figure 3: Encoding model, Post-Event Kernel AUCs"
-fig3_stats_latencyCorrelation_A_1_model= model
-fig3_stats_latencyCorrelation_A_2_model_anova= model_anova
-fig3_stats_latencyCorrelation_A_3_model_post_hoc_pairwise= tPairwiseSig
-fig3_stats_latencyCorrelation_A_3_model_post_hoc_t= tSig
+fig3_stats_EncodingModel_A_0_description= "Figure 3: Encoding model, Post-Event Kernel AUCs"
+fig3_stats_EncodingModel_A_1_model= model
+fig3_stats_EncodingModel_A_2_model_anova= model_anova
+fig3_stats_EncodingModel_A_3_model_post_hoc_pairwise= tPairwise#tPairwiseSig
+fig3_stats_EncodingModel_A_3_model_post_hoc_t= t#tSig
 
 
 #5%%-- Save output ####
@@ -97,19 +97,19 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig3_stats_latencyCorrelation_A.txt")
+sink("vp-vta_fig3_stats_EncodingModel_A_AUC.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig3_stats_latencyCorrelation_0_description)
+print(fig3_stats_EncodingModel_A_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig3_stats_latencyCorrelation_A_1_model))
+print(summary(fig3_stats_EncodingModel_A_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig3_stats_latencyCorrelation_A_2_model_anova)
+print(fig3_stats_EncodingModel_A_2_model_anova)
 '------------------------------------------------------------------------------'
-print('3)---- Posthoc T, Only Significant time bins :') # Make sure for posthocs the summary is printed with pval correction
-print(fig3_stats_latencyCorrelation_A_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+print('3)---- Posthoc T :') # Make sure for posthocs the summary is printed with pval correction
+print(fig3_stats_EncodingModel_A_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 
 
 '---- END ---------------------------------------------------------------------'
@@ -121,49 +121,151 @@ sink()  # returns output to the console
 
 
 ## %- fig 3 Stats-- Encoding Model Kernel Time series ####
-# 
-# #- hitting some warnings with emmeans due to df size so commenting out unless necessary
-# 
-# #1%%-- Load data from .pkl ####
-# 
-# pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig3_encodingModel.pkl"
-# 
-# df <- pd$read_pickle(pathData)
-# 
-# 
-# ###### summarize data
-# summary(df)
-# 
-# #verify dtypes imported properly
-# sapply(df, class)
-# 
-# 
-# #- Subset to one kernel auc value per eventType per subject
-# # df= df(df$timeLock==0)
-# 
-# 
-# #2%%-- Run model ####
-# 
-# model= lmerTest::lmer('beta ~ eventType * timeShift + (1|subject)', data=df)
-# model_anova<- anova(model)
-# 
-# 
-# # -- Interaction plot
-# 
-# # 3%%-- Posthoc tests ####
-# 
-# # -- T Test compare AUCs vs null of 0 
-# #%% -- Stat comparison of AUC Kernels vs. null of 0 and comparison between two
-# 
-# EMM <- emmeans(model, ~  eventType | timeShift)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise= tPairwise
-# 
-# # for active proportion, check if each level significantly different from 0.5 (chance)
-# t= test(EMM, null=0, adjust='sidak')
 
+#- hitting some warnings with emmeans due to df size so commenting out unless necessary
+
+#1%%-- Load data from .pkl ####
+
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig3_encodingModel.pkl"
+
+df <- pd$read_pickle(pathData)
+
+
+###### summarize data
+summary(df)
+
+#verify dtypes imported properly
+sapply(df, class)
+
+
+#- Subset to one kernel auc value per eventType per subject
+# df= df(df$timeLock==0)
+
+
+#2%%-- Run model ####
+
+model= lmerTest::lmer('beta ~ eventType * timeShift + (1|subject)', data=df)
+model_anova<- anova(model)
+
+
+# -- Interaction plot
+
+# 3%%-- Posthoc tests ####
+
+# -- T Test compare AUCs vs null of 0
+#%% -- Stat comparison of AUC Kernels vs. null of 0 and comparison between two
+
+EMM <- emmeans(model, ~  eventType | timeShift)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwise= tPairwise
+
+# convert to df with summary to extract data / subset by significant p.value
+tPairwiseDF= summary(tPairwise, by = NULL, adjust = "sidak")
+
+indSig= which(tPairwiseDF[,'p.value']<=pAlpha)
+
+tPairwiseSig= tPairwiseDF[indSig,]
+
+# for active proportion, check if each level significantly different from 0 (chance)
+t= test(EMM, null=0, adjust='sidak')
+
+# lots of values here (comparison at every time bin) make a viz or subset of only those below "significance" p value threshold
+indSig= which(t$p.value<=pAlpha)
+
+tSig= t[indSig,]
+
+
+#4%%-- Save output to variables between tests  ####
+# trying to keep code mostly generalizable and just save custom names at end
+# all the results into descriptive variables between tests
+
+
+fig3_stats_EncodingModel_B_0_description= "Figure 3: Encoding model, Time Series Stats"
+fig3_stats_EncodingModel_B_1_model= model
+fig3_stats_EncodingModel_B_2_model_anova= model_anova
+fig3_stats_EncodingModel_B_3_model_post_hoc_pairwise= tPairwiseSig
+fig3_stats_EncodingModel_B_3_model_post_hoc_t= tSig
+
+
+#5%%-- Save output ####
+
+#- move to output directory prior to saving
+setwd(pathOutput)
+
+#------Pooled
+
+sink("vp-vta_fig3_stats_EncodingModel_B_TimeSeries.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig3_stats_EncodingModel_B_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig3_stats_EncodingModel_B_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig3_stats_EncodingModel_B_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc T, Only Significant time bins :') # Make sure for posthocs the summary is printed with pval correction
+print(fig3_stats_EncodingModel_B_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+
+
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+
+
+#6%%-- viz ####
+# Viz stats output of "significant" comparions by time bin
+
+
+p=''
+
+p= ggplot()+
+  
+  scale_colour_brewer(palette="Dark2")+
+  
+  geom_point(data= t, aes(x=timeShift, y=p.value, color=eventType, shape=eventType, size=1))+
+
+  # geom_line(data=df, inherit.aes=FALSE, aes(x=timeShift, y=beta, color=eventType, alpha=0.2))+
+  
+  geom_hline(yintercept=pAlpha, color='red', size=2, alpha=0.6)+
+  geom_vline(xintercept= t$timeShift[t$timeShift==5.0], color='grey', size=2, alpha=0.6)+
+  
+  # manual latency
+  # geom_vline(xintercept= t$timeShift[t$timeShift==2.75], color='purple', size=2, alpha=0.6)+
+  geom_vline(xintercept= t$timeShift[t$timeShift==2.05], color='purple', size=2, alpha=0.6)+
+  # geom_vline(xintercept=2.05, color='purple', size=2, alpha=0.6)+
+  
+  
+  show(p)
+
+
+#- Viz kernels at "significant" time bins
+
+
+p=''
+
+p= ggplot()+
+  
+  scale_colour_brewer(palette="Dark2")+
+  
+  geom_point(data= tSig, aes(x=timeShift, y=p.value, color=eventType, shape=eventType, size=1))+
+  
+  # geom_line(data=df, inherit.aes=FALSE, aes(x=timeShift, y=beta, color=eventType, alpha=0.2))+
+  
+  geom_hline(yintercept=pAlpha, color='red', size=2, alpha=0.6)+
+  geom_vline(xintercept= t$timeShift[t$timeShift==5.0], color='grey', size=2, alpha=0.6)+
+  
+  # manual latency
+  # geom_vline(xintercept= t$timeShift[t$timeShift==2.75], color='purple', size=2, alpha=0.6)+
+  geom_vline(xintercept= t$timeShift[t$timeShift==2.05], color='purple', size=2, alpha=0.6)+
+  # geom_vline(xintercept=2.05, color='purple', size=2, alpha=0.6)+
+  
+  
+  show(p)
 
 
 
@@ -252,6 +354,48 @@ tSig= t[indSig,]
 
 library(ggplot2)
 
+
+
+#4%%-- Save output to variables between tests  ####
+# trying to keep code mostly generalizable and just save custom names at end
+# all the results into descriptive variables between tests
+
+
+fig3_stats_latencyCorrelation_A_0_description= "Figure 3: Encoding model, Post-Event Kernel AUCs"
+fig3_stats_latencyCorrelation_A_1_model= model
+fig3_stats_latencyCorrelation_A_2_model_anova= model_anova
+fig3_stats_latencyCorrelation_A_3_model_post_hoc_pairwise= tPairwiseSig
+fig3_stats_latencyCorrelation_A_3_model_post_hoc_t= tSig
+
+
+#5%%-- Save output ####
+
+#- move to output directory prior to saving
+setwd(pathOutput)
+
+#------Pooled
+
+sink("vp-vta_fig3_stats_latencyCorrelation_A.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig3_stats_latencyCorrelation_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig3_stats_latencyCorrelation_A_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig3_stats_latencyCorrelation_A_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc T, Only Significant time bins :') # Make sure for posthocs the summary is printed with pval correction
+print(fig3_stats_latencyCorrelation_A_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+
+
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+
+#6%%-- viz ####
 # Viz stats output of "significant" comparions by time bin
 
 

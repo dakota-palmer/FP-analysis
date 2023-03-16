@@ -129,11 +129,16 @@ fig2B_stats_B_1_t= t
 #-- subset DS trials for 'learning' across sessions
 df_Sub_C= df[df$trialType =="aucDSblue",]
 
+df_Sub_D= df[df$trialType =="aucNSblue",]
+df_Sub_D= df_Sub_D[df_Sub_D$stage!=1,]
+
 #-- LME
 model= lmerTest::lmer('periCueBlueAuc ~ sesSpecialLabel + (1|subject)', data=df_Sub_C)
 
 summary(model)
 
+model_pooled= lmerTest::lmer('periCueBlueAuc ~ trialType * sesSpecialLabel + (1|subject)', data=df)
+model_anova_pooled= anova(model_pooled)
 
 #-- ANOVA of LME 
 model_anova<- anova(model)
@@ -153,6 +158,25 @@ setwd(pathWorking)
 EMM <- emmeans(model, ~ sesSpecialLabel)   # where treat has 2 levels
 
 tPairwise= pairs(EMM, adjust= "sidak")
+
+#- pooled version
+emmip(model_pooled, trialType ~ sesSpecialLabel)
+
+
+# EMM <- emmeans(model_pooled, ~ trialType | sesSpecialLabel)   # where treat has 2 levels
+EMM <- emmeans(model_pooled, ~ sesSpecialLabel|trialType)   # where treat has 2 levels
+
+
+# tPairwise_pooled= pairs(EMM, by=NULL, adjust= "sidak")
+tPairwise_pooled= pairs(EMM, adjust= "sidak")
+
+print(tPairwise_pooled, adjust="sidak")
+
+
+# t_pooled= test(EMM, by=NULL, adjust="sidak")
+t_pooled= test(EMM, adjust="sidak")
+
+print(t_pooled, adjust= "sidak")
 
 #%%-- Save output to variables between tests  ####
 fig2B_stats_C_0_description= "DS AUC vs 0 on first training day (no NS)"

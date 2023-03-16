@@ -24,6 +24,7 @@ pathOutput= paste(pathWorking,'/_output', sep="")
 #get rid of space introduced by paste()
 gsub(" ", "", pathOutput)
 
+# __________________________________________________ ####
 
 # 
 # ## -------FIGUre 6 ----------------------------------------------###
@@ -127,6 +128,7 @@ gsub(" ", "", pathOutput)
 # 
 
 
+# __________________________________________________ ####
 
 
 #%- Fig 6 Stats A/B-- OG Side, Acquisition Phase ####
@@ -492,6 +494,7 @@ setwd(pathWorking)
 
 
 
+# __________________________________________________ ####
 
 
 #%- Fig 6 Stats C/D-- Reversal ####

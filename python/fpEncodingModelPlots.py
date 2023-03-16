@@ -1705,7 +1705,7 @@ savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python'
 print('saving fig3_encodingModel df to file')
 
 #Save as pickel
-kernelsAll.to_pickle(savePath+'fig3_encodingModel.pkl')
+df.to_pickle(savePath+'fig3_encodingModel.pkl')
 
 
 #%% EXPORT TO MATLAB FOR FIGURE
