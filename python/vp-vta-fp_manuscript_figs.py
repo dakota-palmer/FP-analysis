@@ -92,6 +92,11 @@ criteriaDS= 0.6
 criteriaNS= 0.4
 
 #%% Exclude data if necessary
+
+modeExcludeSubj= 'allSubjects'
+
+# modeExcludeSubj= 'excludeSubjects'
+
 dfTemp= dfTidy.copy()
 
 #exclude subjects from training plots
@@ -100,7 +105,8 @@ dfTemp= dfTidy.copy()
 # EXCLUDING 17 for not discriminating ; 10/16 for no signal ; 20 for GFP
 subjectsToExclude= [10, 16, 17, 20]
 
-dfTemp= dfTemp.loc[dfTemp.subject.isin(subjectsToExclude)==False]
+if modeExcludeSubj=='excludeSubjects':
+    dfTemp= dfTemp.loc[dfTemp.subject.isin(subjectsToExclude)==False]
 
 
 dfTidy= dfTemp.copy()
@@ -441,7 +447,7 @@ fig1D[0].set(ylabel='Probability of port entry within 10s')
 
 
 #- Save the figure
-figName= 'Figure1D_Mockup'
+figName= 'Figure1D_Mockup'+'_'+modeExcludeSubj
 
 plt.savefig(savePath+figName+'.pdf')
 
@@ -529,7 +535,7 @@ g.map_dataframe(sns.lineplot,data= dfPlot, x= 'trainDayThisPhase', y='eventLaten
 g.add_legend()
 
 #- Save the figure
-figName= 'Figure1_Supplement_Latency'
+figName= 'Figure1_Supplement_Latency' + '_' + modeExcludeSubj
 
 plt.savefig(savePath+figName+'.pdf')
 
@@ -1729,7 +1735,7 @@ fig1D[0].set(ylabel='Probability of port entry within 10s')
 
 
 #- Save the figure
-figName= 'Figure1D_Mockup_MPC_PEprob'
+figName= 'Figure1D_Mockup_MPC_PEprob' + '_' + modeExcludeSubj
 
 plt.savefig(savePath+figName+'.pdf')
 

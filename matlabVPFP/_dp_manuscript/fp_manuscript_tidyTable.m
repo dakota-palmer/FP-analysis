@@ -320,6 +320,9 @@ for subj= 1:numel(subjects)
                criteriaDayThisStage= criteriaDayThisStage+1; 
             end
                         
+            % TODO: criteria ses labelling is wrong here. have multiple
+            % sessions
+            
             if thisStage==5 && trainDayThisStage==1 
                 sesSpecialLabel(:)= {'stage-5-day-1'};
             elseif thisStage==5 && criteriaDayThisStage==1

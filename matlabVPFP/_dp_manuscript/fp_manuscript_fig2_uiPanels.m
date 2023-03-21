@@ -262,8 +262,8 @@ i.set_names('column', '', 'x', 'Time from cue (s)','y','GCaMP (Z-score)','color'
 i.no_legend(); %avoid duplicate legend from other plots (e.g. subject & grand colors)
 i.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
 
-titleFig= 'A';   
-i.set_title(titleFig); %overarching fig title must be set before first draw call
+% titleFig= 'A';   
+% i.set_title(titleFig); %overarching fig title must be set before first draw call
 
 
 % set parent in uipanel of overall figure
@@ -519,15 +519,15 @@ i1.set_names('column', '', 'x','Trial Type','y','GCaMP (Z-score)','color','Trial
 
 i1.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
 
-titleFig= 'B';   
-i1.set_title(titleFig); %overarching fig title must be set before first draw call
+% titleFig= 'B';   
+% i1.set_title(titleFig); %overarching fig title must be set before first draw call
 
 
 %remove legend
 i1.no_legend();
 
 % set parent in uipanel of overall figure
-% i1.set_parent(p2);
+i1.set_parent(p2);
 
 %- first draw call-
 i1.draw()
@@ -609,6 +609,61 @@ dataTableFig2B= data2;
 % fpTable.date= [fpTable.date{:}]';
 
 parquetwrite(strcat('vp-vta-fp_stats_fig2bTable'), dataTableFig2B);
+
+%-- Report mean number of days taken to reach training criteria
+ind= [];
+ind = strcmp(dataTableFig2B.sesSpecialLabel, 'stage-5-day-1-criteria');
+
+df= [];
+df= dataTableFig2B(ind,:);
+
+%- subset to single observation per session
+
+%-- subset to one observation per trial
+%use findgroups to groupby trialIDcum and subset to 1 observation per trial
+groupIDs= [];
+groupIDs= findgroups(df.fileID);
+
+groupIDsUnique= [];
+groupIDsUnique= unique(groupIDs);
+
+df2=table; 
+for thisGroupID= 1:numel(groupIDsUnique)
+    %for each groupID, find index matching groupID
+    ind= [];
+    ind= find(groupIDs==groupIDsUnique(thisGroupID));
+    
+    %for each groupID, get the table data matching this group
+    thisGroup=[];
+    thisGroup= df(ind,:);
+
+    %now cumulative count of observations in this group
+    %make default value=1 for each, and then cumsum() to get cumulative count
+    thisGroup(:,'cumcount')= table(1);
+    thisGroup(:,'cumcount')= table(cumsum(thisGroup.cumcount));
+    
+%     %save only single observation per trial (get first value)
+%     %get observation where timeLock==0
+%     ind= [];
+%     ind= thisGroup.timeLock==0;
+    ind= [];
+    ind= thisGroup.cumcount==1;
+
+    df2(thisGroupID,:)= thisGroup(ind,:);
+    
+end 
+
+test=groupsummary(df2, ["subject", "trainDay"]);
+
+test=groupsummary(dataTableFig2B, ["subject","sesSpecialLabel"]);
+
+
+
+% test=groupsummary(dataTableFig2B, ["subject","sesSpecialLabel","trainDay"]);
+% test=groupsummary(dataTableFig2B, ["sesSpecialLabel"], ["trainDay"], 'mean');
+
+
+%%
 
 % 
 % 
@@ -887,8 +942,8 @@ i2.geom_vline('xintercept',0, 'style', 'k--'); %overlay t=0
 
 i2.set_color_options('map',cmapSubj); %subselecting the 2 specific color levels i want from map
 
-titleFig= 'C';   
-i2.set_title(titleFig); 
+% titleFig= 'C';   
+% i2.set_title(titleFig); 
 
 i2.set_line_options('base_size',linewidthSubj);
 i2.set_names('x','Time from cue (s)','y','GCaMP (Z-score)','color','Cue type (ind subj mean)');
@@ -1022,10 +1077,10 @@ i3.set_line_options('base_size',linewidthGrand)
 
 i3.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
 
-% i3.axe_property('YLim',[-1,10]);
-% title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2b-periCue-byPEoutcome-zAUC');   
-titleFig= 'D';   
-i3.set_title(titleFig);
+% % i3.axe_property('YLim',[-1,10]);
+% % title= strcat(subjMode,'-allSubjects-stage-',num2str(stagesToPlot),'-Figure2b-periCue-byPEoutcome-zAUC');   
+% titleFig= 'D';   
+% i3.set_title(titleFig);
 i3.set_names('x','Cue type','y','GCaMP (Z-score)','color','Cue type (grand mean)');
 
 %horz line @ zero

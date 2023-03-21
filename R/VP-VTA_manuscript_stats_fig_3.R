@@ -26,7 +26,7 @@ gsub(" ", "", pathOutput)
 
 # __________________________________________________ ####
 
-#%- fig 3 Stats-- Encoding Model Kernel AUCs ####
+#%- fig 3 Stats-- Encoding Model Kernel Timeseries ####
 
 
 #1%%-- Load data from .pkl ####
@@ -169,6 +169,7 @@ indSig= which(tPairwiseDF[,'p.value']<=pAlpha)
 tPairwiseSig= tPairwiseDF[indSig,]
 
 # for active proportion, check if each level significantly different from 0 (chance)
+
 t= test(EMM, null=0, adjust='sidak')
 
 # lots of values here (comparison at every time bin) make a viz or subset of only those below "significance" p value threshold
@@ -265,8 +266,92 @@ p= ggplot()+
   # geom_vline(xintercept=2.05, color='purple', size=2, alpha=0.6)+
   
   
-  show(p)
+  # show(p)
 
+#- use plotly for interactive plots
+library(plotly)
+ggplotly(p)
+
+#- viz kernels at significant tbins for kernels
+
+#manual subsetting instead of looping/programmatic subsetting here
+
+# separte dfs for separate plotting
+
+tSig_DS= tSig[tSig$eventType=='DStime',]
+
+tSig_PE= tSig[tSig$eventType=='PEcue',]
+
+indSig_DS= which((df$timeShift %in% tSig_DS$timeShift) & (df$eventType=='DStime'))
+
+indSig_PE= which((df$timeShift %in% tSig_PE$timeShift) & (df$eventType=='PEcue'))
+
+dfSig_DS= df[indSig_DS,]
+dfSig_PE= df[indSig_PE,]
+
+
+indSig_all= c(indSig_DS, indSig_PE)
+
+dfSig= df[indSig_all,]
+
+# 
+# p= ggplot()+
+#   
+#   scale_colour_brewer(palette="Dark2")+
+#   # 
+#   # geom_point(data= dfSig_DS, aes(x=timeShift, y=beta, color=eventType, shape=subject, size=1))+
+#   # 
+#   # geom_point(data= dfSig_PE, aes(x=timeShift, y=beta, color=eventType, shape=subject, size=1))+
+#   
+#   geom_point(data= dfSig, aes(x=timeShift, y=beta, color=eventType, shape=subject, size=1))+
+#   
+#   # geom_line(data= dfSig, aes(x=timeShift, y=beta, color=eventType, size=1))+
+#   
+#   # geom_line(data=df, inherit.aes=FALSE, aes(x=timeShift, y=beta, color=eventType, alpha=0.2))+
+#   # 
+#   geom_hline(yintercept=pAlpha, color='black', size=1, alpha=0.6)
+#   
+#   
+#   # geom_hline(yintercept=pAlpha, color='red', size=2, alpha=0.6)+
+#   # geom_vline(xintercept= t$timeShift[t$timeShift==5.0], color='grey', size=2, alpha=0.6)+
+#   # 
+#   # # manual latency
+#   # # geom_vline(xintercept= t$timeShift[t$timeShift==2.75], color='purple', size=2, alpha=0.6)+
+#   # geom_vline(xintercept= t$timeShift[t$timeShift==2.05], color='purple', size=2, alpha=0.6)
+#   # # geom_vline(xintercept=2.05, color='purple', size=2, alpha=0.6)+
+#   
+# ggplotly(p)
+
+
+#convert to numeric x axis
+dfSig$timeShift= as.numeric(as.character(dfSig$timeShift))
+
+p= ggplot(data= dfSig)+
+
+  scale_colour_brewer(palette="Dark2")+
+    
+  facet_grid(eventType~.)+
+  
+  geom_point(data= dfSig, aes(x=timeShift, y=beta, color=eventType, shape=subject))+
+  
+  stat_summary(fun=mean, geom='line', aes(x=timeShift,y=beta, group=eventType), colour='black', size=2, alpha=0.8)+
+  
+    
+  # geom_line(data= dfSig, aes(x=timeShift, y=beta, color=eventType, size=1))+
+  
+  # 
+  geom_hline(yintercept=pAlpha, color='black', size=1, alpha=0.6)
+
+
+# geom_hline(yintercept=pAlpha, color='red', size=2, alpha=0.6)+
+# geom_vline(xintercept= t$timeShift[t$timeShift==5.0], color='grey', size=2, alpha=0.6)+
+# 
+# # manual latency
+# # geom_vline(xintercept= t$timeShift[t$timeShift==2.75], color='purple', size=2, alpha=0.6)+
+# geom_vline(xintercept= t$timeShift[t$timeShift==2.05], color='purple', size=2, alpha=0.6)
+# # geom_vline(xintercept=2.05, color='purple', size=2, alpha=0.6)+
+
+ggplotly(p)
 
 
 # __________________________________________________ ####

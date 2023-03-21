@@ -42,8 +42,35 @@ summary(df)
 sapply(df, class) 
 
 
+#%% Figure 1D Stats A -- Compare DS vs NS PE Ratio--####
+
+##1%%-- Load data from .pkl ####
+
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig1d.pkl"
+
+df <- pd$read_pickle(pathData)
+
+
+###### summarize data
+summary(df)
+
+#verify dtypes imported properly
+sapply(df, class) 
+
+
 #%%-- Subset data ## 
 #Remove missing/invalid observations 
+# #-- Currently trainDayThisPhase is 0 both on last day of Early and last day of Late. Make distinct (bc coded as distinct factor)
+# df[(df$trainDayThisPhase== 0) & (df$trainPhase=='early'), 'trainDayThisPhase']= as.factor(c(99))
+
+# to change the Factor column, unfactorize first, change, and then refactorize
+df$trainDayThisPhase= as.character(df$trainDayThisPhase)
+
+df[(df$trainDayThisPhase== 0) & (df$trainPhase=='early'), 'trainDayThisPhase']= (c(999))
+
+df$trainDayThisPhase= as.factor(df$trainDayThisPhase)
+
+
 #only include the late trainPhase (when NS is present)
 
 df_Sub_A= df[df$trainPhase=='late',]
@@ -97,16 +124,16 @@ setwd(pathOutput)
 sink("vp-vta_fig1D_stats_A_LateTraining_DSvsNS_PE_Ratio.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig1D_stats_B_0_description)
+print(fig1D_stats_A_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig1D_stats_B_1_model))
+print(summary(fig1D_stats_A_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig1D_stats_B_2_model_anova)
+print(fig1D_stats_A_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:')
-print(fig1D_stats_B_3_model_post_hoc_pairwise)
+print(fig1D_stats_A_3_model_post_hoc_pairwise, by=NULL, adjust='sidak')
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -186,7 +213,7 @@ print('2)---- ANOVA of LME:')
 print(fig1D_stats_B_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:')
-print(fig1D_stats_B_3_model_post_hoc_pairwise)
+print(fig1D_stats_B_3_model_post_hoc_pairwise, by=NULL, adjust='sidak')
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -268,20 +295,46 @@ setwd(pathOutput)
 sink("vp-vta_fig1_Supplement_stats_A_LateTraining_DSvsNS_PE_Latency.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig1D_stats_B_0_description)
+print(fig1D_stats_A_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig1D_stats_B_1_model))
+print(summary(fig1D_stats_A_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig1D_stats_B_2_model_anova)
+print(fig1D_stats_A_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:')
-print(fig1D_stats_B_3_model_post_hoc_pairwise)
+print(fig1D_stats_A_3_model_post_hoc_pairwise, by=NULL, adjust='sidak')
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 setwd(pathWorking)
+
+
+
+# __________________________________________________ ####
+
+#%% -- Figure 1_ Supplement Stats Stats A.2 - # Number of Training Days to End ####
+
+#1%%-- Load/subset data from .pkl ####
+
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig1d.pkl"
+
+df <- pd$read_pickle(pathData)
+
+
+#- Subset Final Session (Training End)
+df_Sub_A_finalSes= df[(df$trainDayThisPhase==0) & (df$trainPhase=='late'),]
+
+
+#- SUbset to one observation per file
+df_Sub_A_finalSes= df_Sub_A_finalSes[df_Sub_A_finalSes$trialType=='DStime',]
+
+
+# Descriptive stats of train day
+fig1D_stats_A_4_daysToTrainEnd= summary(df_Sub_A_finalSes$trainDay)
+
+
 
 
 
