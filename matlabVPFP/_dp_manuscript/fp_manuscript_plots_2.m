@@ -14,7 +14,9 @@ figPath= strcat(pwd,'\_figures\_mockups\');
 
 %PNG good for quickly viewing many
 % figFormats= {'.png'} %list of formats to save figures as (for saveFig.m)
-figFormats= {'.svg','.fig'} %list of formats to save figures as (for saveFig.m)
+% figFormats= {'.svg','.fig'} %list of formats to save figures as (for saveFig.m)
+%pdf for final drafts
+figFormats= {'.pdf','.svg','.fig'} %list of formats to save figures as (for saveFig.m)
 
 
 %-- Master plot linestyles and colors

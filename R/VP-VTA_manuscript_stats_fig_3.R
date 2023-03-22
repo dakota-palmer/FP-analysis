@@ -8,7 +8,7 @@ pd <- import("pandas")
 #%%-- Import dependencies ####
 # library(lme4)
 library(reticulate)
-v library(lmerTest)
+library(lmerTest)
 library(emmeans)
 
 #%% -- Set Paths ####
@@ -26,7 +26,7 @@ gsub(" ", "", pathOutput)
 
 # __________________________________________________ ####
 
-#%- fig 3 Stats-- Encoding Model Kernel Timeseries ####
+#%- fig 3 Stats-- Encoding Model Kernel AUC ####
 
 
 #1%%-- Load data from .pkl ####
@@ -89,11 +89,17 @@ fig3_stats_EncodingModel_A_2_model_anova= model_anova
 fig3_stats_EncodingModel_A_3_model_post_hoc_pairwise= tPairwise#tPairwiseSig
 fig3_stats_EncodingModel_A_3_model_post_hoc_t= t#tSig
 
+#Report stat test for comparing the two kernels within-subject
+
+model_B= lmerTest::lmer('betaAUCpostEvent ~ eventType + (1|subject)', data=df)
+model_anova_B<- anova(model)
 
 #5%%-- Save output ####
 
 #- move to output directory prior to saving
 setwd(pathOutput)
+
+
 
 #------Pooled
 
@@ -161,16 +167,21 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise= tPairwise
 
-# convert to df with summary to extract data / subset by significant p.value
+# # convert to df with summary to extract data / subset by significant p.value
 tPairwiseDF= summary(tPairwise, by = NULL, adjust = "sidak")
+# 
 
 indSig= which(tPairwiseDF[,'p.value']<=pAlpha)
 
 tPairwiseSig= tPairwiseDF[indSig,]
 
 # for active proportion, check if each level significantly different from 0 (chance)
+# only corrects for 2 tests
+# t= test(EMM, null=0, adjust='sidak')
 
-t= test(EMM, null=0, adjust='sidak')
+# want to do posthoc correction for each timebin, so 
+t= test(EMM, null=0, by='eventType', adjust='sidak')
+
 
 # lots of values here (comparison at every time bin) make a viz or subset of only those below "significance" p value threshold
 indSig= which(t$p.value<=pAlpha)
@@ -421,7 +432,7 @@ EMM <- emmeans(model, ~  timeLock | latencyOrder)   # where treat has 2 levels
 
 t= test(EMM, null=0, adjust='sidak')
 
-summary(t, by = NULL, adjust = "sidak")   # all are in one group now
+print(t,by = NULL, adjust = "sidak")   # all are in one group now
 
 # lots of values here (comparison at every time bin) make a viz or subset of only those below "significance" p value threshold
 indSig= which(t$p.value<=pAlpha)
@@ -479,6 +490,7 @@ print(fig3_stats_latencyCorrelation_A_3_model_post_hoc_t, by = NULL, adjust = "s
 sink()  # returns output to the console
 
 
+setwd(workingDir)
 
 #6%%-- viz ####
 # Viz stats output of "significant" comparions by time bin

@@ -10,12 +10,29 @@ errorBar= 'sem';
 %% set defaults
 
 % for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
-figSize1= [100, 100, 430, 600];
+% figSize1= [100, 100, 430, 600];
+% 
+% figSize2= [100, 100, 650, 600];
+% 
+% %make appropriate size
+% figSize= figSize2
+% 
 
-figSize2= [100, 100, 650, 600];
+% Size in CM
+% works with PDF, doens't seem to work with svg... could consider trying
+% pixel values with svg
+% make units in cm
+figWidth= 17.25;
+figHeight= 17;
+    %position must allow fit on screen
+figPosV= 25; 
+figPosH= 2;
 
 %make appropriate size
-figSize= figSize2
+% figSize= figSize2
+
+figSize= [figPosV, figPosH, figWidth, figHeight];
+
 
 % text_options_DefaultStyle
 
@@ -51,7 +68,31 @@ close all
 % f = figure('Position',[100 100 1200 800])
 
 % make figure of desired final size
-f = figure('Position',figSize)
+% f = figure('Position',figSize)
+
+
+f= figure();
+% %cm not working on instantiation, try setting after
+% % set(f, 'Units', 'centimeters', 'Position', figSize);
+% 
+% %set outerposition as well
+% % set(f, 'Units', 'centimeters', 'Position', figSize);
+% % set(f, 'Units', 'centimeters', 'OuterPosition', figSize);
+
+%- set size appropriately in cm
+set(f, 'Units', 'centimeters', 'Position', figSize);
+% outerpos makes it tighter, just in case UIpanels go over
+set(f, 'Units', 'centimeters', 'OuterPosition', figSize);
+
+% % % works well for pdf, not SVG (SVG is larger for some reason)
+% % % but pdf still has big white space borders
+% % % https://stackoverflow.com/questions/5150802/how-to-save-a-plot-into-a-pdf-file-without-a-large-margin-around
+set(f, 'PaperPosition', [0, 0, figWidth, figHeight], 'PaperUnits', 'centimeters', 'Units', 'centimeters'); %Set the paper to have width 5 and height 5.
+
+set(f, 'PaperUnits', 'centimeters', 'PaperSize', [figWidth, figHeight]); %Set the paper to have width 5 and height 5.
+
+
+
 
 
 
@@ -105,8 +146,11 @@ padPanel= 0.0025; %padding between other uiPanels
     w= 1-padWidth;
     
         %dynamically adjust bPos based on padHeight and height desired
+%     h= 0.32; %CHANGE HEIGHT
+    % making the first 2 a bit taller than third bc several subplots
     h= 0.36; %CHANGE HEIGHT
 
+    
     bPos= 1- h - padHeight;  
     
         %iterations here
@@ -131,10 +175,25 @@ padPanel= 0.0025; %padding between other uiPanels
 %     bPos= (p2.Position(2)) - (p2.Position(4)) - padPanel;
 
     % redeclare height now for this panel
-    h= .25;
+        % make a bit shorter than first 2
+    h= 0.27; %CHANGE HEIGHT
+
+%     h= .25;
+%     h= h;
+
     bPos= (p2.Position(2)) - (h) - padPanel;
 
+      
+%     % do full panel with subplots instead of subpanels. for perfect
+%     % alignment?
+%     w= p2.Position(3);
+%     p3= uipanel('Position',[padWidth, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
+%     
+   
+% %     - old 4 subpanels -
 
+
+    
         %... width of full row /2
     w= p2.Position(3) / 2 %- padWidth;
         
@@ -146,13 +205,16 @@ padPanel= 0.0025; %padding between other uiPanels
         %adjust lPos position to accomodate Panel C width + padding
 %     lPos= (p3.Position(3) - p3.Position(1) - padPanel + padWidth);
 
-    lPos= (w + p3.Position(1) - padPanel + padWidth);
+%     lPos= (w + p3.Position(1) - padPanel + padWidth);
+%     lPos= (w + p3.Position(1) - padPanel);
+    lPos= (w + p3.Position(1));
+
 
 %     p4= uipanel('Position',[lPos, bPos, w, .32],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
     p4= uipanel('Position',[lPos, bPos, w, h],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
 
     
-        %width 1/2 of Panels A/B
+%         width 1/2 of Panels A/B
     
 %     p2 = uipanel('Position',[padWidth, p1.Position(2)-padPanel, .95, .3],'Units','Normalized','Parent',f,'BackgroundColor',[1 1 1],'BorderType','etchedout')
 
@@ -1071,7 +1133,7 @@ i3= gramm('x',data2.trialOutcome,'y',data2.periCueBlueAuc, 'color', data2.trialO
 i3.set_color_options('map',cmapGrand); %subselecting the 2 specific color levels i want from map
 
 %mean bar for trialType
-i3.stat_summary('type',errorBar,'geom',{'bar', 'black_errorbar'});
+i3.stat_summary('type',errorBar,'geom',{'bar', 'black_errorbar'}, 'dodge', dodge, 'width', width);
 
 i3.set_line_options('base_size',linewidthGrand)
 
@@ -1086,6 +1148,11 @@ i3.set_names('x','Cue type','y','GCaMP (Z-score)','color','Cue type (grand mean)
 %horz line @ zero
 i3.geom_hline('yintercept', 0, 'style', 'k--'); 
 
+
+xlims= [1-.6,(numel(trialTypes))+.6];
+
+i3.axe_property('XLim',xlims);
+i3.axe_property('YLim',ylimAUC);
 
 %remove legend
 i3.no_legend();
@@ -1170,7 +1237,9 @@ p4.BorderType= 'none'
 
 
 %-Save the figure
-titleFig='vp-vta_Figure2_uiPanels_colorA';
+% titleFig='vp-vta_Figure2_uiPanels_colorA';
+titleFig='vp-vta_Figure2_uiPanels';
+
 saveFig(gcf, figPath, titleFig, figFormats, figSize);
 
 

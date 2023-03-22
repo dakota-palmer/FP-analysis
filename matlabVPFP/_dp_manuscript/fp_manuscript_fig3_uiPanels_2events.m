@@ -43,12 +43,23 @@ clear fig3
 xlimTraces= [-2,10];
 ylimTraces= [-2,5];
 
+% yTickTraces= [0:2:10] 
+xTickTraces= [-2:2:10]; % ticks every 2s
+% xTickTraces= [-2:1:10]; % ticks every 1s
+
+xTickHeat= [-4:2:10]; %expanded to capture longer PE latencies
+xLimHeat= [-4,10];
+
+yLimCorrelation= [-0.5, 0.5];
+xLimCorrelation= [-2,5];
+xTickCorrelation= [-2:2:5];
+
 %%
 % Initialize a figure with Drawable Area padding appropriately
 % 3 ROWS, 2 COLUMNS
 
 % Initialize a figure with Drawable Area padding appropriately
-% f = figure('Position',[100 100 1200 800])
+% f = figure('Position',[100 1f00 1200 800])
 
 % make figure of desired final size
 % f = figure('Position',figSize)
@@ -590,7 +601,9 @@ for subj= 1:numel(subjects);
 %     ax1= subplot(1,3,1, 'Parent', p1);
 %     ax1= subplot(1,2,1, 'Parent', p1);
 %     ax1= subplot(1,1,1, 'Parent', p1); %in own panel
-    ax1= subplot(1,2,1, 'Parent', p1); %subplotted with other heatplot
+%     ax1= subplot(1,2,1, 'Parent', p1); %subplotted with other heatplot
+    ax1= subplot(1,2,1, 'Parent', p2); %subplotted with other heatplot
+
 
     
     %get data; not in table format
@@ -625,6 +638,10 @@ for subj= 1:numel(subjects);
     ylabel('Time from DS onset (s)');
     xlabel('Trial (Sorted by PE Latency');
     
+    %set axes limits
+    yticks(xTickHeat);
+    ylim(xLimHeat);
+    
     %- scatter overlays
     %overlay cue
     s= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'k');
@@ -651,8 +668,10 @@ for subj= 1:numel(subjects);
     ax2= [];
 %     ax2= subplot(1,3,2, 'Parent', p2);
 %     ax2= subplot(1,1,1, 'Parent', p2); %in own panel
-    ax2= subplot(1,2,2,'Parent', p1); % subplotted with A
+%     ax2= subplot(1,2,2,'Parent', p1); % subplotted with A
+    ax2= subplot(1,2,2,'Parent', p2); % subplotted with A
     
+
      %get data; not in table format
     x=[], y=[], c=[];
     x= (data3.timeLock);
@@ -682,6 +701,10 @@ for subj= 1:numel(subjects);
 %     title('Port entry');
     ylabel('Time from Port Entry (s)');
     xlabel('Trial (Sorted by PE Latency');
+    
+    %set axes limits
+    yticks(xTickHeat);
+    ylim(xLimHeat);
     
     %- scatter overlays
     %overlay cue (- poxDSrel)
@@ -937,8 +960,11 @@ end
 % maybe [ trace DS , trace PE, AUC comparison]
 clear gPeriEvent
 
-cmapGrand= cmapPEGrand;
-cmapSubj= cmapPESubj;
+%flip the color order so that PE is consistent with fig2 (purple)
+% cmapGrand= cmapPEGrand;
+% cmapSubj= cmapPESubj;
+cmapGrand= flip(cmapPEGrand);
+cmapSubj= flip(cmapPESubj);
 
 
 %- SUBSET data
@@ -1081,10 +1107,15 @@ gPeriEvent(1,1).no_legend();
 %-set limits
 gPeriEvent(1,1).axe_property('YLim',ylimTraces);
 gPeriEvent(1,1).axe_property('XLim',xlimTraces);
+gPeriEvent(1,1).axe_property('XTick',xTickTraces);
+
+% gPeriEvent(1,1).axe_property('XLim',xLimHeat);
+% gPeriEvent(1,1).axe_property('XTick',xTickHeat);
 
 
 % % % % set parent uiPanel in overall figure
-gPeriEvent(1,1).set_parent(p2);
+% gPeriEvent(1,1).set_parent(p2);
+gPeriEvent(1,1).set_parent(p1);
 
 
 %- First Draw call
@@ -1126,8 +1157,9 @@ dfPredictedMean= readtable("C:\Users\Dakota\Documents\GitHub\FP-analysis\python\
 
 clear g;
 
-cmapGrand= cmapPEGrand;
-cmapSubj= cmapPESubj;
+% flipped cmaps to match fig2
+cmapGrand= flip(cmapPEGrand);
+cmapSubj= flip(cmapPESubj);
 
 %-- Fig3- kernels time course trace
 data= dfKernelsAll;
@@ -1155,6 +1187,7 @@ g(1,1).no_legend();
 %-set limits
 g(1,1).axe_property('YLim',ylimTraces);
 g(1,1).axe_property('XLim',xlimTraces);
+g(1,1).axe_property('XTick',xTickTraces);
 
 
 % % % % set parent uiPanel in overall figure
@@ -1299,6 +1332,12 @@ g(3,1).set_text_options(text_options_DefaultStyle{:}); %apply default text sizes
 %remove legend
 g(3,1).no_legend();
 
+%-set limits
+g(3,1).axe_property('YLim',ylimTraces);
+g(3,1).axe_property('XLim',xlimTraces);
+g(3,1).axe_property('XTick',xTickTraces);
+
+
 % % % set parent uiPanel in overall figure
 g(3,1).set_parent(p5);
 % 
@@ -1391,10 +1430,15 @@ titleFig= strcat('fig3latcorr');
 
 
 gLat().set_title(titleFig);
-gLat().set_names('x','time from DS (s)','y','Correlation Coefficient','color','latencyOrder');
+gLat().set_names('x','Time from DS onset (s)','y','Correlation Coefficient','color','latencyOrder');
 gLat().no_legend();
 
 gLat().geom_vline('xintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); %horizontal line @ 0 (cue onset)
+
+%-set limits
+gLat().axe_property('YLim',yLimCorrelation);
+gLat().axe_property('XLim',xLimCorrelation);
+gLat().axe_property('XTick',xTickCorrelation);
 
 
 %add vertical line overlay for mean PE latency
@@ -1423,7 +1467,18 @@ p6.BorderType= 'none';
 
 %-Save the figure
 titleFig='vp-vta_Figure3_uiPanels';
-% saveFig(f, figPath, titleFig, figFormats, figSize);
+saveFig(f, figPath, titleFig, figFormats, figSize);
+%   % too large for page warning
+% % saveFig(f, figPath, titleFig, figFormats);
+
+% try ally's code for saving heatplot
+% saveas(f, strcat(figPath,titleFig,'.pdf')); %save the current figure in fig format
+
+
+
+titleFig= 'vta_Figure3_uiPanels_Legend';
+% saveFig(fig3Legend, figPath, titleFig, figFormats, figSize);
+saveFig(fig3Legend, figPath, titleFig, figFormats);
 
 
 
