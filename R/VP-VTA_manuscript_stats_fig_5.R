@@ -165,6 +165,17 @@ emmip(model_grand,  typeLP ~  Session | Projection )
 dev.off()
 setwd(pathWorking)
 
+# Lick Grand interaction plot (all phases)
+modelLicks_grand= lmerTest::lmer('licksPerRewardTypeLP ~ Projection* typeLP* Session + (1|Subject)', data=df)
+
+
+figName= "vp-vta_fig5_stats_A_Grand_interactionPlotLicksPerReward_all_Phases.pdf"
+setwd(pathOutput)
+pdf(file=figName)
+
+emmip(modelLicks_grand,  typeLP ~  Session | Projection )
+
+dev.off()
 
 
 #- Pairwise T- tests
@@ -812,6 +823,9 @@ modelProportion= lmerTest::lmer('probActiveLP ~ Projection * Session + (1|Subjec
 # modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_C)
 modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_C)
 
+# Whole session licks active vs inactive
+
+
 model_pooled= model
 model_anova_pooled<- anova(model)
 modelProportion_pooled= modelProportion
@@ -878,12 +892,14 @@ modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 #- Pairwise T- tests
 
 #-- Pooled
+#- np count
 EMM <- emmeans(model_pooled, ~ typeLP | Session | Projection)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_Pooled= tPairwise
 
+#-proportion
 #pooled followup tests reveal significant differences in npCount by npType in VTA session 3,4,5
 
 EMM <- emmeans(modelProportion_pooled, ~ Session | Projection)   # where treat has 2 levels
@@ -895,6 +911,13 @@ tPairwise_proportion_Pooled= tPairwise
 # for active proportion, check if each level significantly different from 0.5 (chance)
 t_proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
 
+
+#- licks
+EMM <- emmeans(modelLicks_pooled, ~ typeLP | Session | Projection)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwiseLicks_pooled= tPairwise
 
 #- compare between projections
 EMM <- emmeans(model_pooled, ~  Projection | Session | typeLP)   # where treat has 2 levels
@@ -926,6 +949,13 @@ tPairwise_proportion_VTA= tPairwise
 # for active proportion, check if each level significantly different from 0.5 (chance)
 t_proportion_VTA= test(EMM, null=0.5, adjust='sidak')
 
+#- licks
+EMM <- emmeans(modelLicks_VTA, ~ typeLP | Session)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwiseLicks_VTA= tPairwise
+
 
 #-- mdThal
 
@@ -946,7 +976,13 @@ tPairwise_proportion_mdThal= tPairwise
 # for active proportion, check if each level significantly different from 0.5 (chance)
 t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 
+#-licks
+#- licks
+EMM <- emmeans(modelLicks_mdThal, ~ typeLP | Session)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
+tPairwiseLicks_mdThal= tPairwise
 
 #4%%-- Save output to variables between tests  ####
 # trying to keep code mostly generalizable and just save custom names at end
@@ -963,6 +999,12 @@ fig5_stats_Phase_3_ForcedChoice_B_Pooled_1_model= modelProportion_pooled
 fig5_stats_Phase_3_ForcedChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
 fig5_stats_Phase_3_ForcedChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
+fig5_stats_Phase_3_ForcedChoice_C_Licks_Pooled_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Licks per Reward, pooled projections"
+fig5_stats_Phase_3_ForcedChoice_C_Licks_Pooled_1_model= modelLicks_pooled
+fig5_stats_Phase_3_ForcedChoice_C_Licks_Pooled_2_model_anova= modelLicks_anova_pooled
+fig5_stats_Phase_3_ForcedChoice_C_Licks_Pooled_3_model_post_hoc_pairwise= tPairwiseLicks_pooled
+
+
 #-VTA
 fig5_stats_Phase_3_ForcedChoice_A_VTA_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Active vs Inactive NP Count, VTA projections"
 fig5_stats_Phase_3_ForcedChoice_A_VTA_1_model= model_VTA
@@ -974,6 +1016,11 @@ fig5_stats_Phase_3_ForcedChoice_B_VTA_1_model= modelProportion_VTA
 fig5_stats_Phase_3_ForcedChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
 fig5_stats_Phase_3_ForcedChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
 
+fig5_stats_Phase_3_ForcedChoice_C_Licks_VTA_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Licks per Reward, pooled projections"
+fig5_stats_Phase_3_ForcedChoice_C_Licks_VTA_1_model= modelLicks_VTA
+fig5_stats_Phase_3_ForcedChoice_C_Licks_VTA_2_model_anova= modelLicks_anova_VTA
+fig5_stats_Phase_3_ForcedChoice_C_Licks_VTA_3_model_post_hoc_pairwise= tPairwiseLicks_VTA
+
 #-mdThal
 fig5_stats_Phase_3_ForcedChoice_A_mdThal_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Active vs Inactive NP Count, mdThal projections"
 fig5_stats_Phase_3_ForcedChoice_A_mdThal_1_model= model_mdThal
@@ -984,6 +1031,12 @@ fig5_stats_Phase_3_ForcedChoice_B_mdThal_0_description= "Figure 5: Lever Choice,
 fig5_stats_Phase_3_ForcedChoice_B_mdThal_1_model= modelProportion_mdThal
 fig5_stats_Phase_3_ForcedChoice_B_mdThal_2_model_anova= modelProportion_anova_mdThal
 fig5_stats_Phase_3_ForcedChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
+
+
+fig5_stats_Phase_3_ForcedChoice_C_Licks_mdThal_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Licks per Reward, pooled projections"
+fig5_stats_Phase_3_ForcedChoice_C_Licks_mdThal_1_model= modelLicks_mdThal
+fig5_stats_Phase_3_ForcedChoice_C_Licks_mdThal_2_model_anova= modelLicks_anova_mdThal
+fig5_stats_Phase_3_ForcedChoice_C_Licks_mdThal_3_model_post_hoc_pairwise= tPairwiseLicks_mdThal
 
 
 #%% 2.5 -- Final Day specific tests? ####
@@ -1864,6 +1917,17 @@ tPairwise_Pooled= tPairwise
 # for active proportion, check if each level significantly different from 0.5 (chance)
 EMM <- emmeans(modelProportion_pooled, ~  Projection) 
 t_proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
+
+#- compare between projections
+EMM <- emmeans(model_pooled, ~  Projection | typeLP)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwise_projection_Pooled= tPairwise
+
+EMM <- emmeans(modelProportion_pooled, ~  Projection) 
+tPairwise_proportion_projection_Pooled= pairs(EMM,  adjust='sidak')
+
 
 
 #-- VTA
