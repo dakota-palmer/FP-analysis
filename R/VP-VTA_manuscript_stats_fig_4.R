@@ -142,7 +142,7 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig4C_stats_B_NoLaserSessions_Pooled.txt")
+sink("vp-vta_fig4_stats_Phase_1_noLaserSessions_A_peProb_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4C_stats_B_Pooled_0_description)
@@ -159,7 +159,7 @@ print(fig4C_stats_B_Pooled_2_model_anova)
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig4D_stats_B_NoLaserSessions_Pooled.txt")
+sink("vp-vta_fig4_stats_Phase_1_noLaserSessions_B_peLatency_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4D_stats_B_Pooled_0_description)
@@ -178,7 +178,7 @@ sink()  # returns output to the console
 
 #------ VTA
 
-sink("vp-vta_fig4C_stats_B_NoLaserSessions_VTA.txt")
+sink("vp-vta_fig4_stats_Phase_1_noLaserSessions_A_peProb_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4C_stats_B_VTA_0_description)
@@ -197,7 +197,7 @@ print(summary(fig4C_stats_B_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig4D_stats_B_NoLaserSessions_VTA.txt")
+sink("vp-vta_fig4_stats_Phase_1_noLaserSessions_B_peLatency_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4D_stats_B_VTA_0_description)
@@ -217,7 +217,7 @@ sink()  # returns output to the console
 
 #------ mdThal
 
-sink("vp-vta_fig4C_stats_B_NoLaserSessions_mdThal.txt")
+sink("vp-vta_fig4_stats_Phase_1_noLaserSessions_A_peProb_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4C_stats_B_mdThal_0_description)
@@ -234,7 +234,7 @@ print(fig4C_stats_B_mdThal_2_model_anova)
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig4D_stats_B_NoLaserSessions_mdThal.txt")
+sink("vp-vta_fig4_stats_Phase_1_noLaserSessions_B_peLatency_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4D_stats_B_mdThal_0_description)
@@ -522,7 +522,7 @@ fig4D_stats_A_mdThal_3_model_post_hoc_pairwise= tPairwise_latency_mdThal
 
 #------Pooled
 
-sink("vp-vta_fig4C_stats_A_LaserSessions_Pooled.txt")
+sink("vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4C_stats_A_Pooled_0_description)
@@ -539,7 +539,7 @@ print(fig4C_stats_A_Pooled_2_model_anova)
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig4D_stats_A_LaserSessions_Pooled.txt")
+sink("vp-vta_fig4_stats_Phase_2_laserSessions_B_peLatency_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4D_stats_A_Pooled_0_description)
@@ -558,7 +558,7 @@ sink()  # returns output to the console
 
 #------ VTA
 
-sink("vp-vta_fig4C_stats_A_LaserSessions_VTA.txt")
+sink("vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4C_stats_A_VTA_0_description)
@@ -577,7 +577,7 @@ print(summary(fig4C_stats_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig4D_stats_A_LaserSessions_VTA.txt")
+sink("vp-vta_fig4_stats_Phase_2_laserSessions_B_peLatency_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4D_stats_A_VTA_0_description)
@@ -597,7 +597,7 @@ sink()  # returns output to the console
 
 #------ mdThal
 
-sink("vp-vta_fig4C_stats_A_LaserSessions_mdThal.txt")
+sink("vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4C_stats_A_mdThal_0_description)
@@ -614,7 +614,7 @@ print(fig4C_stats_A_mdThal_2_model_anova)
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig4D_stats_A_LaserSessions_mdThal.txt")
+sink("vp-vta_fig4_stats_Phase_2_laserSessions_B_peLatency_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig4D_stats_A_mdThal_0_description)
@@ -931,7 +931,7 @@ fig4D_stats_A_mdThal_3_model_post_hoc_pairwise= tPairwise_latency_mdThal
 
 #------Pooled
 
-fName= "vp-vta_fig4C_stats_A_LaserSessions_Pooled_stimLength-"
+fName= "vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_Pooled_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -956,7 +956,7 @@ sink()  # returns output to the console
 
 
 
-fName="vp-vta_fig4D_stats_A_LaserSessions_Pooled_stimLength-"
+fName="vp-vta_fig4_stats_Phase_2_laserSessions_B_peLatency_Pooled_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -982,7 +982,7 @@ sink()  # returns output to the console
 #------ VTA
 
 
-fName="vp-vta_fig4C_stats_A_LaserSessions_VTA_stimLength-"
+fName="vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_VTA_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -1009,7 +1009,7 @@ sink()  # returns output to the console
 
 
 
-fName= "vp-vta_fig4D_stats_A_LaserSessions_VTA_stimLength-"
+fName= "vp-vta_fig4_stats_Phase_2_laserSessions_B_peLatency_VTA_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -1037,7 +1037,7 @@ sink()  # returns output to the console
 #------ mdThal
 
 
-fName="vp-vta_fig4C_stats_A_LaserSessions_mdThal_stimLength-"
+fName="vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_mdThal_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -1062,7 +1062,7 @@ print(fig4C_stats_A_mdThal_2_model_anova)
 sink()  # returns output to the console
 
 
-fName="vp-vta_fig4D_stats_A_LaserSessions_mdThal_stimLength-"
+fName="vp-vta_fig4_stats_Phase_2_laserSessions_B_peLatency_mdThal_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -1384,7 +1384,7 @@ fig4D_stats_A_mdThal_3_model_post_hoc_pairwise= tPairwise_latency_mdThal
 
 #------Pooled
 
-fName= "vp-vta_fig4C_stats_A_LaserSessions_Pooled_stimLength-"
+fName= "vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_Pooled_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -1416,7 +1416,7 @@ sink()  # returns output to the console
 
 
 
-fName="vp-vta_fig4D_stats_A_LaserSessions_Pooled_stimLength-"
+fName="vp-vta_fig4_stats_Phase_2_laserSessions_B_peLatency_Pooled_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -1442,7 +1442,7 @@ sink()  # returns output to the console
 #------ VTA
 
 
-fName="vp-vta_fig4C_stats_A_LaserSessions_VTA_stimLength-"
+fName="vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_VTA_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -1469,7 +1469,7 @@ sink()  # returns output to the console
 
 
 
-fName= "vp-vta_fig4D_stats_A_LaserSessions_VTA_stimLength-"
+fName= "vp-vta_fig4_stats_Phase_2_laserSessions_B_peLatency_VTA_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -1497,7 +1497,7 @@ sink()  # returns output to the console
 #------ mdThal
 
 
-fName="vp-vta_fig4C_stats_A_LaserSessions_mdThal_stimLength-"
+fName="vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_mdThal_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
@@ -1522,7 +1522,7 @@ print(fig4C_stats_A_mdThal_2_model_anova)
 sink()  # returns output to the console
 
 
-fName="vp-vta_fig4D_stats_A_LaserSessions_mdThal_stimLength-"
+fName="vp-vta_fig4_stats_Phase_2_laserSessions_B_peLatency_mdThal_stimLength-"
 
 fName= paste(c(fName, stimLength), collapse = "")
 
