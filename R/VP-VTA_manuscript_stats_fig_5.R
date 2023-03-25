@@ -888,6 +888,19 @@ modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 # dev.off()
 # setwd(pathWorking)
 
+# - viz lick data interaction plot. outliers?
+# lick_VTA_viz= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session *Subject', data=df_Sub_C_VTA)
+
+# # quick and dirty plot instead of ggplot
+# lick_VTA_viz= lm('licksPerRewardTypeLP ~ typeLP* Session *Subject', data=df_Sub_C_VTA)
+# 
+# emmip(lick_VTA_viz, ~Subject ~ typeLP | Session)   # where treat has 2 levels
+# 
+# lick_viz= lm('licksPerRewardTypeLP ~ typeLP* Session *Subject *Projection', data=df_Sub_C)
+# 
+# emmip(lick_viz, ~Subject ~ typeLP | Session | Projection)
+
+
 
 #- Pairwise T- tests
 
@@ -1238,7 +1251,7 @@ df[df$typeLP=='ActiveLeverPress','LicksPerReward']= NaN
 # df_Sub_A= df[df$trainPhaseLabel == '1-FreeChoice',]
 # # df_Sub_B= df[df$trainPhaseLabel == '2-FreeChoice-Reversal',]
 # df_Sub_D= df[df$trainPhaseLabel == '3-ForcedChoice',]
-df_Sub_D= df[df$trainPhaseLabel == '5-Extinction-Test',]
+df_Sub_D= df[df$trainPhaseLabel == '4-FreeChoice-Test',]
 
 
 df_Sub_D_VTA= df_Sub_D[df_Sub_D$Projection=='VTA',]
@@ -1292,7 +1305,12 @@ modelProportion_VTA= lm('probActiveLP ~  Subject', data=df_Sub_D_VTA)
 #-licks/reward
 # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_D_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_D_VTA)
+
+# modelLicks_VTA= lm('licksPerRewardTypeLP ~  typeLP * Subject', data=df_Sub_D_VTA)
+
+
 modelLicks_anova_VTA<- anova(modelLicks_VTA)
+
 
 #-- mdThal
 #mdThal projection
@@ -1393,6 +1411,15 @@ tPairwise_VTA= tPairwise
 # t_proportion_VTA= t.test(df_Sub_D_VTA$probActiveLP, null=0.5, adjust='sidak')
 
 t_proportion_VTA= t.test(df_Sub_D_VTA$probActiveLP, mu=0.5)
+
+# - licks t
+EMM <- emmeans(modelLicks_VTA, ~ typeLP)   # where treat has 2 levels
+tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+tPairwise_VTA= tPairwise
+
+
 
 
 #-- mdThal
@@ -1813,6 +1840,21 @@ df_Sub_E_VTA$Subject= droplevels(df_Sub_E_VTA$Subject)
 df_Sub_E_mdThal$Subject= droplevels(df_Sub_E_mdThal$Subject)
 
 
+#-- Report mean+/- SEM active lever presses 
+
+#define standard error of mean function
+std.error <- function(x) sd(x)/sqrt(length(x))
+
+test_VTA= df_Sub_E_VTA[(df_Sub_E_VTA$typeLP== 'ActiveLeverPress'),'countLP']
+
+mean(test_VTA)
+std.error(test_VTA)
+
+test_mdThal=df_Sub_E_mdThal[(df_Sub_E_mdThal$typeLP== 'ActiveLeverPress'),'countLP']
+
+mean(test_mdThal)
+std.error(test_mdThal)
+
 
 #2%%-- Run LME ####
 
@@ -1851,8 +1893,12 @@ modelProportion_VTA= lm('probActiveLP ~  Subject', data=df_Sub_E_VTA)
 # modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-licks/reward
+# no licks/reward computed if insufficient lever pressing (extinction wont have this from matlab)
 # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_E_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_E_VTA)
+
+# modelLicks_VTA= lm('probActiveLP ~  Subject', data=df_Sub_E_VTA)
+
 modelLicks_anova_VTA<- anova(modelLicks_VTA)
 
 #-- mdThal

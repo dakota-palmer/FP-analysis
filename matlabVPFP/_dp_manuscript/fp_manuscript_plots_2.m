@@ -990,7 +990,11 @@ fp_manuscript_fig2_uiPanels();
 % % fig22.draw();
 
 %% ----- FIGURE 3--- 
-fp_manuscript_fig3_uiPanels();
+
+% fp_manuscript_fig3_uiPanels();
+
+fp_manuscript_fig3_uiPanels_2events();
+
 
 %% FIG3 HEATPLOTS ---
 

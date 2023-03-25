@@ -588,165 +588,39 @@ for subj= 1:numel(subjects);
 %     titleFig= 'test';
 %     
     %% Subplot peri heatplot of 3 events
-%     figure();
-
-    % create plots within the UIPanel
-%     set(0, 'CurrentFigure', p1) %doesnt work
-    
-%- for each subplot, make axes and set parent to uiPanel
-    
-    %1 ---- peri cue
-%     subplot(1,3,1);
-    ax1= [];
-%     ax1= subplot(1,3,1, 'Parent', p1);
-%     ax1= subplot(1,2,1, 'Parent', p1);
-%     ax1= subplot(1,1,1, 'Parent', p1); %in own panel
-%     ax1= subplot(1,2,1, 'Parent', p1); %subplotted with other heatplot
-    ax1= subplot(1,2,1, 'Parent', p2); %subplotted with other heatplot
-
-
-    
-    %get data; not in table format
-    x=[], y=[], c=[];
-    x= (data3.timeLock);
-    y= (data3.DStrialIDcumcount);
-    c= (data3.DSblue);
-    
-        
-    %reshape to have specific # of columns (num trials)
-    trials= [];
-    trials= numel(unique(y));
-    
-    c= reshape(c, [], trials);
-    
-    %make heatplot
-    imagesc(y,x,c);
-    set(gca,'YDir','normal') %increasing latency from top to bottom
-    view([90, 90]) %// instead of normal view, which is view([0 90])
-
-    
-    caxis manual;
-    caxis([bottom, top]);
-%     cbar= colorbar; %colorbar legend
-    
-    colormap parula;
-    
-    hold on; %hold on AFTER heatmap (before can change orientation for some reason)
-
-% %     title('Peri-DS (sorted by PE latency)');
-%     title('DS');
-    ylabel('Time from DS onset (s)');
-    xlabel('Trial (Sorted by PE Latency');
-    
-    %set axes limits
-    yticks(xTickHeat);
-    ylim(xLimHeat);
-    
-    %- scatter overlays
-    %overlay cue
-    s= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'k');
-    s.MarkerFaceAlpha= overlayAlpha;
-    s.AlphaData= overlayAlpha;
-    s.SizeData= overlayPointSize;
-    
-    %overlay first PE
-    s= scatter(data3.DStrialIDcumcount ,data3.poxDSrel, 'filled', 'm');
-    s.MarkerFaceAlpha= overlayAlpha;
-    s.AlphaData= overlayAlpha;
-    s.SizeData= overlayPointSize;
-    
-    %overlay first lick
-    s= scatter(data3.DStrialIDcumcount ,data3.loxDSrel, 'filled', 'g');
-    s.MarkerFaceAlpha= overlayAlpha;
-    s.AlphaData= overlayAlpha;
-    s.SizeData= overlayPointSize;
-    
-
-    %--- 2 peri DS PE ---
-    
-%     subplot(1,3,2);
-    ax2= [];
-%     ax2= subplot(1,3,2, 'Parent', p2);
-%     ax2= subplot(1,1,1, 'Parent', p2); %in own panel
-%     ax2= subplot(1,2,2,'Parent', p1); % subplotted with A
-    ax2= subplot(1,2,2,'Parent', p2); % subplotted with A
-    
-
-     %get data; not in table format
-    x=[], y=[], c=[];
-    x= (data3.timeLock);
-    y= (data3.DStrialIDcumcount);
-    c= (data3.DSbluePox);
-    
-    trials= [];
-    trials= numel(unique(y));
-    
-    c= reshape(c, [], trials);
-    
-    %make heatplot
-    imagesc(y,x,c);    
-    set(gca,'YDir','normal') %increasing latency from top to bottom
-    view([90, 90]) %// instead of normal view, which is view([0 90])
-
-    
-    caxis manual;
-    caxis([bottom, top]);
-%     cbar= colorbar; %colorbar legend
-    
-    colormap parula;
-    
-    hold on; %hold on AFTER heatmap (before can change orientation for some reason)
-
-%     title('Peri-PE (sorted by PE latency)');
-%     title('Port entry');
-    ylabel('Time from Port Entry (s)');
-    xlabel('Trial (Sorted by PE Latency');
-    
-    %set axes limits
-    yticks(xTickHeat);
-    ylim(xLimHeat);
-    
-    %- scatter overlays
-    %overlay cue (- poxDSrel)
-    s1= scatter(data3.DStrialIDcumcount,-data3.poxDSrel, 'filled', 'k');
-    s1.MarkerFaceAlpha= overlayAlpha;
-    s1.AlphaData= overlayAlpha;
-    s1.SizeData= overlayPointSize;
-    
-    %overlay first PE (0)
-    s2= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'm');
-    s2.MarkerFaceAlpha= overlayAlpha;
-    s2.AlphaData= overlayAlpha;
-    s2.SizeData= overlayPointSize;
-    
-    %overlay first lick (relative to PE= lox-pox)
-    s3= scatter(data3.DStrialIDcumcount ,data3.loxDSrel-data3.poxDSrel, 'filled', 'g');
-    s3.MarkerFaceAlpha= overlayAlpha;
-    s3.AlphaData= overlayAlpha;
-    s3.SizeData= overlayPointSize;
+% %     figure();
+% 
+%     % create plots within the UIPanel
+% %     set(0, 'CurrentFigure', p1) %doesnt work
 %     
-%      %--- 3 peri DS Lick ---
-%      
-%      %**have this data sorted by Lick Latency from PE**
+% %- for each subplot, make axes and set parent to uiPanel
 %     
-% %     subplot(1,3,3);
-%     ax3= [];
-% %     ax3= subplot(1,3,3, 'Parent', p1);
-% %     
-%      %get data; not in table format
+%     %1 ---- peri cue
+% %     subplot(1,3,1);
+%     ax1= [];
+% %     ax1= subplot(1,3,1, 'Parent', p1);
+% %     ax1= subplot(1,2,1, 'Parent', p1);
+% %     ax1= subplot(1,1,1, 'Parent', p1); %in own panel
+% %     ax1= subplot(1,2,1, 'Parent', p1); %subplotted with other heatplot
+%     ax1= subplot(1,2,1, 'Parent', p2); %subplotted with other heatplot
+% 
+% 
+%     
+%     %get data; not in table format
 %     x=[], y=[], c=[];
-%     x= (data5.timeLock);
-%     y= (data5.DStrialIDcumcount);
-%     c= (data5.DSblueLox);
+%     x= (data3.timeLock);
+%     y= (data3.DStrialIDcumcount);
+%     c= (data3.DSblue);
 %     
+%         
+%     %reshape to have specific # of columns (num trials)
 %     trials= [];
 %     trials= numel(unique(y));
 %     
 %     c= reshape(c, [], trials);
 %     
 %     %make heatplot
-%     heat=[];
-%     heat= imagesc(y,x,c);    
+%     imagesc(y,x,c);
 %     set(gca,'YDir','normal') %increasing latency from top to bottom
 %     view([90, 90]) %// instead of normal view, which is view([0 90])
 % 
@@ -759,61 +633,189 @@ for subj= 1:numel(subjects);
 %     
 %     hold on; %hold on AFTER heatmap (before can change orientation for some reason)
 % 
-% %     title('Peri-Lick (sorted by lick latency)');
-%     title('Lick');
-% 
+% % %     title('Peri-DS (sorted by PE latency)');
+% %     title('DS');
+%     ylabel('Time from DS onset (s)');
+%     xlabel('Trial (Sorted by PE Latency');
+%     
+%     %set axes limits
+%     yticks(xTickHeat);
+%     ylim(xLimHeat);
 %     
 %     %- scatter overlays
-%     %overlay cue (- loxDSrel)
-%     s= [], s1= []; s2= []; s3=[];
-%     s1= scatter(data5.DStrialIDcumcount,-data5.loxDSrel, 'filled', 'k');
-% %     s.MarkerFaceAlpha= overlayAlpha;
-% %     s.AlphaData= overlayAlpha;
+%     %overlay cue
+%     s= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'k');
+%     s.MarkerFaceAlpha= overlayAlpha;
+%     s.AlphaData= overlayAlpha;
+%     s.SizeData= overlayPointSize;
+%     
+%     %overlay first PE
+%     s= scatter(data3.DStrialIDcumcount ,data3.poxDSrel, 'filled', 'm');
+%     s.MarkerFaceAlpha= overlayAlpha;
+%     s.AlphaData= overlayAlpha;
+%     s.SizeData= overlayPointSize;
+%     
+%     %overlay first lick
+%     s= scatter(data3.DStrialIDcumcount ,data3.loxDSrel, 'filled', 'g');
+%     s.MarkerFaceAlpha= overlayAlpha;
+%     s.AlphaData= overlayAlpha;
+%     s.SizeData= overlayPointSize;
+%     
+% 
+%     %--- 2 peri DS PE ---
+%     
+% %     subplot(1,3,2);
+%     ax2= [];
+% %     ax2= subplot(1,3,2, 'Parent', p2);
+% %     ax2= subplot(1,1,1, 'Parent', p2); %in own panel
+% %     ax2= subplot(1,2,2,'Parent', p1); % subplotted with A
+%     ax2= subplot(1,2,2,'Parent', p2); % subplotted with A
+%     
+% 
+%      %get data; not in table format
+%     x=[], y=[], c=[];
+%     x= (data3.timeLock);
+%     y= (data3.DStrialIDcumcount);
+%     c= (data3.DSbluePox);
+%     
+%     trials= [];
+%     trials= numel(unique(y));
+%     
+%     c= reshape(c, [], trials);
+%     
+%     %make heatplot
+%     imagesc(y,x,c);    
+%     set(gca,'YDir','normal') %increasing latency from top to bottom
+%     view([90, 90]) %// instead of normal view, which is view([0 90])
+% 
+%     
+%     caxis manual;
+%     caxis([bottom, top]);
+% %     cbar= colorbar; %colorbar legend
+%     
+%     colormap parula;
+%     
+%     hold on; %hold on AFTER heatmap (before can change orientation for some reason)
+% 
+% %     title('Peri-PE (sorted by PE latency)');
+% %     title('Port entry');
+%     ylabel('Time from Port Entry (s)');
+%     xlabel('Trial (Sorted by PE Latency');
+%     
+%     %set axes limits
+%     yticks(xTickHeat);
+%     ylim(xLimHeat);
+%     
+%     %- scatter overlays
+%     %overlay cue (- poxDSrel)
+%     s1= scatter(data3.DStrialIDcumcount,-data3.poxDSrel, 'filled', 'k');
+%     s1.MarkerFaceAlpha= overlayAlpha;
+%     s1.AlphaData= overlayAlpha;
 %     s1.SizeData= overlayPointSize;
 %     
-%     %overlay first PE (relative to lick= -lox +pox?)
-% %     s= scatter(data4.DStrialIDcumcount ,-data4.loxDSrel+data3.poxDSrel, 'filled', 'm');
-% %     s= scatter(data5.DStrialIDcumcount ,-data5.loxDSrel+data5.poxDSrel, 'filled', 'm');
-%     s2= scatter(data5.DStrialIDcumcount ,-data5.loxDSpoxRel, 'filled', 'm');
-% %     s.MarkerFaceAlpha= overlayAlpha;
-% %     s.AlphaData= overlayAlpha;
+%     %overlay first PE (0)
+%     s2= scatter(data3.DStrialIDcumcount, zeros(size(data3.DStrialIDcumcount)), 'filled', 'm');
+%     s2.MarkerFaceAlpha= overlayAlpha;
+%     s2.AlphaData= overlayAlpha;
 %     s2.SizeData= overlayPointSize;
 %     
-%     %overlay first lick (0)
-%     s3= scatter(data5.DStrialIDcumcount, zeros(size(data5.DStrialIDcumcount)), 'filled', 'g');
-% %     s.MarkerFaceAlpha= overlayAlpha;
-% %     s.AlphaData= overlayAlpha;    
+%     %overlay first lick (relative to PE= lox-pox)
+%     s3= scatter(data3.DStrialIDcumcount ,data3.loxDSrel-data3.poxDSrel, 'filled', 'g');
+%     s3.MarkerFaceAlpha= overlayAlpha;
+%     s3.AlphaData= overlayAlpha;
 %     s3.SizeData= overlayPointSize;
-% 
 % %     
-% % %     titleFig= strcat('Fig 3a) heatplot',' subj-', subjects{subj});   
-% % %     sgtitle(titleFig);
-% %    sgtitle('A');
+% %      %--- 3 peri DS Lick ---
+% %      
+% %      %**have this data sorted by Lick Latency from PE**
+% %     
+% % %     subplot(1,3,3);
+% %     ax3= [];
+% % %     ax3= subplot(1,3,3, 'Parent', p1);
+% % %     
+% %      %get data; not in table format
+% %     x=[], y=[], c=[];
+% %     x= (data5.timeLock);
+% %     y= (data5.DStrialIDcumcount);
+% %     c= (data5.DSblueLox);
+% %     
+% %     trials= [];
+% %     trials= numel(unique(y));
+% %     
+% %     c= reshape(c, [], trials);
+% %     
+% %     %make heatplot
+% %     heat=[];
+% %     heat= imagesc(y,x,c);    
+% %     set(gca,'YDir','normal') %increasing latency from top to bottom
+% %     view([90, 90]) %// instead of normal view, which is view([0 90])
+% % 
+% %     
+% %     caxis manual;
+% %     caxis([bottom, top]);
+% % %     cbar= colorbar; %colorbar legend
+% %     
+% %     colormap parula;
+% %     
+% %     hold on; %hold on AFTER heatmap (before can change orientation for some reason)
+% % 
+% % %     title('Peri-Lick (sorted by lick latency)');
+% %     title('Lick');
+% % 
+% %     
+% %     %- scatter overlays
+% %     %overlay cue (- loxDSrel)
+% %     s= [], s1= []; s2= []; s3=[];
+% %     s1= scatter(data5.DStrialIDcumcount,-data5.loxDSrel, 'filled', 'k');
+% % %     s.MarkerFaceAlpha= overlayAlpha;
+% % %     s.AlphaData= overlayAlpha;
+% %     s1.SizeData= overlayPointSize;
+% %     
+% %     %overlay first PE (relative to lick= -lox +pox?)
+% % %     s= scatter(data4.DStrialIDcumcount ,-data4.loxDSrel+data3.poxDSrel, 'filled', 'm');
+% % %     s= scatter(data5.DStrialIDcumcount ,-data5.loxDSrel+data5.poxDSrel, 'filled', 'm');
+% %     s2= scatter(data5.DStrialIDcumcount ,-data5.loxDSpoxRel, 'filled', 'm');
+% % %     s.MarkerFaceAlpha= overlayAlpha;
+% % %     s.AlphaData= overlayAlpha;
+% %     s2.SizeData= overlayPointSize;
+% %     
+% %     %overlay first lick (0)
+% %     s3= scatter(data5.DStrialIDcumcount, zeros(size(data5.DStrialIDcumcount)), 'filled', 'g');
+% % %     s.MarkerFaceAlpha= overlayAlpha;
+% % %     s.AlphaData= overlayAlpha;    
+% %     s3.SizeData= overlayPointSize;
+% % 
+% % %     
+% % % %     titleFig= strcat('Fig 3a) heatplot',' subj-', subjects{subj});   
+% % % %     sgtitle(titleFig);
+% % %    sgtitle('A');
+% % 
+% %     
+% %   %-- make legend / colorbar in separate subplot.
+% %   % maybe https://stackoverflow.com/questions/41454174/how-to-have-a-common-legend-for-subplots
+% %     %TODO: matlab transparency/alpha of scatter not working,     %works in legend but not plot
+% % 
+% % %    hL= subplot(2,3,3.5, 'Parent', p1);
+% % 
+
 % 
+%   %Save Legend and Colorbar into separate figure
+%     %make a new figure + subplot
+%    fig3Legend= figure;
+%    sgtitle('Fig 3 Legends')
+%    hL= subplot(4,2,1:2);
+%   
+%    % make legend within this new figure, add legend based on scatters
+%    poshL= get(hL, 'position') %get position of new legend subplot's handle
+%    lgd= legend(hL, [s1,s2,s3], 'DS','PE','Lick');
 %     
-%   %-- make legend / colorbar in separate subplot.
-%   % maybe https://stackoverflow.com/questions/41454174/how-to-have-a-common-legend-for-subplots
-%     %TODO: matlab transparency/alpha of scatter not working,     %works in legend but not plot
-% 
-% %    hL= subplot(2,3,3.5, 'Parent', p1);
-% 
-  %Save Legend and Colorbar into separate figure
-    %make a new figure + subplot
-   fig3Legend= figure;
-   sgtitle('Fig 3 Legends')
-   hL= subplot(4,2,1:2);
-  
-   % make legend within this new figure, add legend based on scatters
-   poshL= get(hL, 'position') %get position of new legend subplot's handle
-   lgd= legend(hL, [s1,s2,s3], 'DS','PE','Lick');
-    
-   %add cmap based on shared caxis
-   caxis manual;
-   caxis([bottom, top]);
-   cbar= colorbar(hL); 
-   
-   title('Legend A')
-       
+%    %add cmap based on shared caxis
+%    caxis manual;
+%    caxis([bottom, top]);
+%    cbar= colorbar(hL); 
+%    
+%    title('Legend A')
+%        
     
     %TODO:
     %saveFig fxn doesnt seem to vectorize heatmaps...
@@ -1224,13 +1226,15 @@ data(ind,'betaAUCpostEvent')= table(nan);
 
 % data= data(~isnan(data.betaAUCpostEvent),:);
 
-% -- Between subjects mean+SEM bar
+% -- Between subjects  Boxplot
 group=[]
 g(2,1)= gramm('x', data.eventType, 'y', data.betaAUCpostEvent, 'color', data.eventType, 'group', group);
 
-% g(2,1).stat_summary('type',errorBar,'geom',{'bar'}, 'dodge', dodge, 'width', width);
+% bar version
+g(2,1).stat_summary('type',errorBar,'geom',{'bar'}, 'dodge', dodge, 'width', width);
 
-g(2,1).stat_boxplot('dodge', dodge, 'width', width);
+%  % boxplot version
+% g(2,1).stat_boxplot('dodge', dodge, 'width', width);
 
 
 g(2,1).set_color_options('map',cmapGrand);
@@ -1277,12 +1281,13 @@ g(2,1).no_legend();
 g(2,1).draw();
 
 % -- Grand Errorbars
+% bar version
 group=[]
 % g(2,1).update('x', data.eventType, 'y', data.betaAUCpostEvent, 'color', data.eventType, 'group', group);
 g(2,1).update('x', data.eventType, 'y', data.betaAUCpostEvent, 'color', [], 'group', group);
 
 
-% g(2,1).stat_summary('type',errorBar,'geom',{'black_errorbar'}, 'dodge', dodge, 'width', width);
+g(2,1).stat_summary('type',errorBar,'geom',{'black_errorbar'}, 'dodge', dodge, 'width', width);
 % % g(2,1).stat_summary('type',errorBar,'geom',{'line'});
 % 
 % 
@@ -1365,7 +1370,10 @@ g(3,1).draw();
 %% -------------------Manuscript Figure 3: Correlation of FP signal with Latency--------------------------
 
 %--- Load the latency correlation output data
-load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_mockups\vp-vta-fp_latencyCorr_Table-15-Mar-2023.mat");
+data= [];
+data= load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_mockups\vp-vta-fp_latencyCorr_Table-15-Mar-2023.mat");
+
+latencyCorrOutputTable= data.data;
 
 % Shuffled vs. Ordered data stat comparison… 2 way anova or lmm for shuffled vs real signal 
 % (is there interaction with time; if not then no need for single timestamp comparisons) 
@@ -1379,8 +1387,8 @@ ind= (latencyCorrOutputTable.stage==stagesToPlot);
 
 data= latencyCorrOutputTable(ind,:);
 
-%stack table to make signalType (ordered vs shuffled) variable for faceting
-data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyOrder', 'NewDataVariableName', 'periCueRho');
+% %stack table to make signalType (ordered vs shuffled) variable for faceting
+% data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyOrder', 'NewDataVariableName', 'periCueRho');
 
 
 % figure();
@@ -1475,11 +1483,11 @@ saveFig(f, figPath, titleFig, figFormats, figSize);
 % saveas(f, strcat(figPath,titleFig,'.pdf')); %save the current figure in fig format
 
 
-
-titleFig= 'vta_Figure3_uiPanels_Legend';
-% saveFig(fig3Legend, figPath, titleFig, figFormats, figSize);
-saveFig(fig3Legend, figPath, titleFig, figFormats);
-
+% 
+% titleFig= 'vta_Figure3_uiPanels_Legend';
+% % saveFig(fig3Legend, figPath, titleFig, figFormats, figSize);
+% saveFig(fig3Legend, figPath, titleFig, figFormats);
+% 
 
 
 %% Having issues with heatmaps exporting to illustrator, so just save 

@@ -524,6 +524,8 @@ df_Sub_A_finalSes_VTA= df_Sub_A_finalSes[df_Sub_A_finalSes$Projection=='VTA',]
 df_Sub_A_finalSes_mdThal= df_Sub_A_finalSes[df_Sub_A_finalSes$Projection=='mdThal',]
 
 
+
+
 #since we've dropped levels(categories) from the factor(categorical) variable trainDayThisPhase, drop accordingly for stats to work out
 # droplevels(df_Sub_A_finalSes$trainDayThisPhase)
 # droplevels(df_Sub_A_finalSes$trainPhase)
@@ -791,13 +793,13 @@ sink("vp-vta_fig6_stats_Acquisition_finalSes_B_VTA.txt")
 '0)---- Description --: '
 print(fig6_stats_Acquisition_finalSes_B_VTA_0_description)
 '------------------------------------------------------------------------------'
-print('1)---- LME:')
-print(summary(fig6_stats_Acquisition_finalSes_B_VTA_1_model))
-'------------------------------------------------------------------------------'
-print('2)---- ANOVA of LME:')
-print(fig6_stats_Acquisition_finalSes_B_VTA_2_model_anova)
-'------------------------------------------------------------------------------'
-print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+# print('1)---- LME:')
+# print(summary(fig6_stats_Acquisition_finalSes_B_VTA_1_model))
+# '------------------------------------------------------------------------------'
+# print('2)---- ANOVA of LME:')
+# print(fig6_stats_Acquisition_finalSes_B_VTA_2_model_anova)
+# '------------------------------------------------------------------------------'
+print('3)---- t test:') # Make sure for posthocs the summary is printed with pval correction
 print(fig6_stats_Acquisition_finalSes_B_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
@@ -827,13 +829,13 @@ sink("vp-vta_fig6_stats_Acquisition_finalSes_B_mdThal.txt")
 '0)---- Description --: '
 print(fig6_stats_Acquisition_finalSes_B_mdThal_0_description)
 '------------------------------------------------------------------------------'
-print('1)---- LME:')
-print(summary(fig6_stats_Acquisition_finalSes_B_mdThal_1_model))
-'------------------------------------------------------------------------------'
-print('2)---- ANOVA of LME:')
-print(fig6_stats_Acquisition_finalSes_B_mdThal_2_model_anova)
-'------------------------------------------------------------------------------'
-print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+# print('1)---- LME:')
+# print(summary(fig6_stats_Acquisition_finalSes_B_mdThal_1_model))
+# '------------------------------------------------------------------------------'
+# print('2)---- ANOVA of LME:')
+# print(fig6_stats_Acquisition_finalSes_B_mdThal_2_model_anova)
+# '------------------------------------------------------------------------------'
+print('3)---- t test:') # Make sure for posthocs the summary is printed with pval correction
 print(fig6_stats_Acquisition_finalSes_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
@@ -1242,12 +1244,27 @@ df[df$typeNP=='InactiveNP','npActiveProportion']= NaN
 df_Sub_B= df[df$trainPhase == 'ICSS-Reversed-active-side',]
 
 # -- Subset to final session ONLY
-df_Sub_B_finalSes= df_Sub_B[df_Sub_B$Session==5,]
+df_Sub_B_finalSes= df_Sub_B[df_Sub_B$Session==8,]
 
 
 df_Sub_B_finalSes_VTA= df_Sub_B_finalSes[df_Sub_B_finalSes$Projection=='VTA',]
 
 df_Sub_B_finalSes_mdThal= df_Sub_B_finalSes[df_Sub_B_finalSes$Projection=='mdThal',]
+
+#-- Report mean+/- SEM active lever presses 
+
+#define standard error of mean function
+std.error <- function(x) sd(x)/sqrt(length(x))
+
+test_VTA= df_Sub_B_finalSes_VTA[(df_Sub_B_finalSes_VTA$typeNP== 'ActiveNP'),'countNP']
+
+mean(test_VTA)
+std.error(test_VTA)
+
+test_mdThal=df_Sub_B_finalSes_mdThal[(df_Sub_B_finalSes_mdThal$typeNP== 'ActiveNP'),'countNP']
+
+mean(test_mdThal)
+std.error(test_mdThal)
 
 
 #since we've dropped levels(categories) from the factor(categorical) variable trainDayThisPhase, drop accordingly for stats to work out
@@ -1487,7 +1504,7 @@ print(summary(fig6_stats_Reversal_finalSes_B_Pooled_1_model))
 print('2)---- ANOVA of LME:')
 print(fig6_stats_Reversal_finalSes_B_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
-print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+print('3)---- Posthoc t test:') # Make sure for posthocs the summary is printed with pval correction
 print(fig6_stats_Reversal_finalSes_B_Pooled_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
@@ -1517,13 +1534,13 @@ sink("vp-vta_fig6_stats_Reversal_finalSes_B_VTA.txt")
 '0)---- Description --: '
 print(fig6_stats_Reversal_finalSes_B_VTA_0_description)
 '------------------------------------------------------------------------------'
-print('1)---- LME:')
-print(summary(fig6_stats_Reversal_finalSes_B_VTA_1_model))
-'------------------------------------------------------------------------------'
-print('2)---- ANOVA of LME:')
-print(fig6_stats_Reversal_finalSes_B_VTA_2_model_anova)
-'------------------------------------------------------------------------------'
-print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+# print('1)---- LME:')
+# print(summary(fig6_stats_Reversal_finalSes_B_VTA_1_model))
+# '------------------------------------------------------------------------------'
+# print('2)---- ANOVA of LME:')
+# print(fig6_stats_Reversal_finalSes_B_VTA_2_model_anova)
+# '------------------------------------------------------------------------------'
+print('3)----  t test:') # Make sure for posthocs the summary is printed with pval correction
 print(fig6_stats_Reversal_finalSes_B_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
@@ -1553,13 +1570,13 @@ sink("vp-vta_fig6_stats_Reversal_finalSes_B_mdThal.txt")
 '0)---- Description --: '
 print(fig6_stats_Reversal_finalSes_B_mdThal_0_description)
 '------------------------------------------------------------------------------'
-print('1)---- LME:')
-print(summary(fig6_stats_Reversal_finalSes_B_mdThal_1_model))
-'------------------------------------------------------------------------------'
-print('2)---- ANOVA of LME:')
-print(fig6_stats_Reversal_finalSes_B_mdThal_2_model_anova)
-'------------------------------------------------------------------------------'
-print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+# print('1)---- LME:')
+# print(summary(fig6_stats_Reversal_finalSes_B_mdThal_1_model))
+# '------------------------------------------------------------------------------'
+# print('2)---- ANOVA of LME:')
+# print(fig6_stats_Reversal_finalSes_B_mdThal_2_model_anova)
+# '------------------------------------------------------------------------------'
+print('3)---- t test:') # Make sure for posthocs the summary is printed with pval correction
 print(fig6_stats_Reversal_finalSes_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
