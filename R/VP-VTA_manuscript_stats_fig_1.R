@@ -29,8 +29,9 @@ gsub(" ", "", pathOutput)
 ## ----- FIGURE 1D Stats A- PE Prob---------------------------------------------------------####
 
 
-#0%%-- Clear data between tests ####
-rm(model, model_anova,tPairwise, t)
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 
 #1%%-- Load data from .pkl ####

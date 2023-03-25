@@ -28,6 +28,15 @@ gsub(" ", "", pathOutput)
 
 #%- fig 3 Stats-- Encoding Model Kernel AUC ####
 
+#0%%-- Clear data between tests ####
+# rm(model, model_anova,tPairwise, t)
+# rm(model_DS)
+# rm(model_pooled, model_anova_pooled, tPairwise_pooled, t_pooled)
+# rm(model_VTA, model_anova_VTA, tPairwise_VTA, t_VTA)
+# rm(model_mdThal, model_anova_mdThal, tPairwise_mdThal, t_mdThal)
+
+rm()
+
 
 #1%%-- Load data from .pkl ####
 
@@ -128,7 +137,15 @@ sink()  # returns output to the console
 
 ## %- fig 3 Stats-- Encoding Model Kernel Time series ####
 
-#- hitting some warnings with emmeans due to df size so commenting out unless necessary
+
+#0%%-- Clear data between tests ####
+rm(model, model_anova,tPairwise, t)
+rm(model_DS)
+rm(model_pooled, model_anova_pooled, tPairwise_pooled, t_pooled)
+rm(tSig, tPairwiseSig, indSig) 
+rm(model_VTA, model_anova_VTA, tPairwise_VTA, t_VTA)
+rm(model_mdThal, model_anova_mdThal, tPairwise_mdThal, t_mdThal)
+
 
 #1%%-- Load data from .pkl ####
 

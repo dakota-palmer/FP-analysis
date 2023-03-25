@@ -32,6 +32,9 @@ gsub(" ", "", pathOutput)
 
 #%% Figure 2B Stats A -- Compare DS vs NS AUC on special sessions with NS (stage >5)--####
 
+#0%%-- Clear data between tests ####
+rm(model, model_anova,tPairwise, t)
+
 #1%%-- Load data from .pkl ####
 
 pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig2b.pkl"
@@ -134,6 +137,9 @@ setwd(pathWorking)
 
 #%%4.5 Figure 2B Stats B-- Compare DS vs Null/0 AUC on first session (no NS) --####
 
+#0%%-- Clear data between tests ####
+rm(model, model_anova,tPairwise, t)
+
 #-- subset data ####
 # subset stage 1
 df_Sub_B= df[df$stage==1,]
@@ -168,6 +174,11 @@ sink()  # returns output to the console
 # __________________________________________________ ####
 
 #%% Figure 2B Stats 2 -- 'Learning' across sesssions; Compare DS AUC across all special sessions --####
+
+#0%%-- Clear data between tests ####
+rm(model, model_anova,tPairwise, t)
+rm(model_pooled, model_anova_pooled, tPairwise_pooled, t_pooled)
+rm(model_DS)
 
 
 #1%%-- Load data from .pkl ####
@@ -316,7 +327,13 @@ setwd(pathWorking)
 
 ## ---- FIGURE 2D --------------------------------------------------------####
 
-#`%%-- Load data from .pkl ####
+#0%%-- Clear data between tests ####
+rm(model, model_anova,tPairwise, t)
+rm(model_pooled, model_anova_pooled, tPairwise_pooled, t_pooled)
+rm(model_DS)
+
+
+#1%%-- Load data from .pkl ####
 
 pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig2d.pkl"
 
