@@ -97,7 +97,7 @@ model_pooled= model
 model_anova_pooled<- anova(model)
 modelProportion_pooled= modelProportion
 modelProportion_anova_pooled= anova(modelProportion)
-modelLicks_pooled= model
+modelLicks_pooled= modelLicks
 modelLicks_anova_pooled= anova(modelLicks)
 
 
@@ -257,6 +257,13 @@ fig5_stats_Phase_1_FreeChoice_B_Pooled_1_model= modelProportion_pooled
 fig5_stats_Phase_1_FreeChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
 fig5_stats_Phase_1_FreeChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
+
+fig5_stats_Phase_1_FreeChoice_C_licks_Pooled_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, licks/reward, pooled projections"
+fig5_stats_Phase_1_FreeChoice_C_licks_Pooled_1_model= modelLicks_pooled
+fig5_stats_Phase_1_FreeChoice_C_licks_Pooled_2_model_anova= modelLicks_anova_pooled
+# fig5_stats_Phase_1_FreeChoice_C_licks_Pooled_3_model_post_hoc_tPairwise= tPairwise_licks_projection
+
+
 #-VTA
 fig5_stats_Phase_1_FreeChoice_A_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, VTA projections"
 fig5_stats_Phase_1_FreeChoice_A_VTA_1_model= model_VTA
@@ -267,6 +274,10 @@ fig5_stats_Phase_1_FreeChoice_B_VTA_0_description= "Figure 5: Lever Choice, Phas
 fig5_stats_Phase_1_FreeChoice_B_VTA_1_model= modelProportion_VTA
 fig5_stats_Phase_1_FreeChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
 fig5_stats_Phase_1_FreeChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
+
+fig5_stats_Phase_1_FreeChoice_C_licks_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, licks/reward, VTA projections"
+fig5_stats_Phase_1_FreeChoice_C_licks_VTA_1_model= modelLicks_VTA
+fig5_stats_Phase_1_FreeChoice_C_licks_VTA_2_model_anova= modelLicks_anova_VTA
 
 #-mdThal
 fig5_stats_Phase_1_FreeChoice_A_mdThal_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, mdThal projections"
@@ -279,7 +290,9 @@ fig5_stats_Phase_1_FreeChoice_B_mdThal_1_model= modelProportion_mdThal
 fig5_stats_Phase_1_FreeChoice_B_mdThal_2_model_anova= modelProportion_anova_mdThal
 fig5_stats_Phase_1_FreeChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
 
-
+fig5_stats_Phase_1_FreeChoice_C_licks_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, licks/reward, mdThal"
+fig5_stats_Phase_1_FreeChoice_C_licks_mdThal_1_model= modelLicks_mdThal
+fig5_stats_Phase_1_FreeChoice_C_licks_mdThal_2_model_anova= modelLicks_anova_mdThal
 
 #%% 2.5 -- Final Day specific tests? ####
 # Alternatively, you could just do pairwise comparisons at the start and end of each phase (so sessions 1 and 6 here), since we aren't really concerned about the specific day a difference emerged, and whether one emerged by the end of training that wasn't there on day 1.
@@ -362,6 +375,22 @@ print(fig5_stats_Phase_1_FreeChoice_B_Pooled_2_model_anova)
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
+sink("vp-vta_fig5_stats_Phase_1_FreeChoice_C_licks_Pooled.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_1_FreeChoice_C_licks_Pooled_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_1_FreeChoice_C_licks_Pooled_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_1_FreeChoice_C_licks_Pooled_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
 
 #------ VTA
 
@@ -399,6 +428,23 @@ print(fig5_stats_Phase_1_FreeChoice_B_VTA_3_model_post_hoc_t, by = NULL, adjust 
 sink()  # returns output to the console
 
 
+sink("vp-vta_fig5_stats_Phase_1_FreeChoice_C_licks_VTA.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_1_FreeChoice_C_licks_VTA_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_1_FreeChoice_C_licks_VTA_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_1_FreeChoice_C_licks_VTA_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+
 #------ mdThal
 
 sink("vp-vta_fig5_stats_Phase_1_FreeChoice_A_lpCount_mdThal.txt")
@@ -433,6 +479,20 @@ print(fig5_stats_Phase_1_FreeChoice_B_mdThal_3_model_post_hoc_t, by = NULL, adju
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
+sink("vp-vta_fig5_stats_Phase_1_FreeChoice_C_licks_mdThal.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_1_FreeChoice_C_licks_mdThal_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_1_FreeChoice_C_licks_mdThal_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_1_FreeChoice_C_licks_mdThal_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
 
 
 
@@ -506,7 +566,7 @@ model_pooled= model
 model_anova_pooled<- anova(model)
 modelProportion_pooled= modelProportion
 modelProportion_anova_pooled= anova(modelProportion)
-modelLicks_pooled= model
+modelLicks_pooled= modelLicks
 modelLicks_anova_pooled= anova(modelLicks)
 
 
@@ -641,6 +701,12 @@ fig5_stats_Phase_2_Reversal_B_Pooled_1_model= modelProportion_pooled
 fig5_stats_Phase_2_Reversal_B_Pooled_2_model_anova= modelProportion_anova_pooled
 fig5_stats_Phase_2_Reversal_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
+fig5_stats_Phase_2_Reversal_C_licks_Pooled_0_description= "Figure 5: Lever Choice, _Phase 2- Reversal, licks/reward, pooled projections"
+fig5_stats_Phase_2_Reversal_C_licks_Pooled_1_model= modelLicks_pooled
+fig5_stats_Phase_2_Reversal_C_licks_Pooled_2_model_anova= modelLicks_anova_pooled
+# fig5_stats_Phase_2_Reversal_C_licks_Pooled_3_model_post_hoc_t= t_licksproportion_Pooled
+
+
 #-VTA
 fig5_stats_Phase_2_Reversal_A_VTA_0_description= "Figure 5: Lever Choice, _Phase 2- Reversal, Active vs Inactive NP Count, VTA projections"
 fig5_stats_Phase_2_Reversal_A_VTA_1_model= model_VTA
@@ -652,6 +718,10 @@ fig5_stats_Phase_2_Reversal_B_VTA_1_model= modelProportion_VTA
 fig5_stats_Phase_2_Reversal_B_VTA_2_model_anova= modelProportion_anova_VTA
 fig5_stats_Phase_2_Reversal_B_VTA_3_model_post_hoc_t= t_proportion_VTA
 
+fig5_stats_Phase_2_Reversal_C_licks_VTA_0_description= "Figure 5: Lever Choice, _Phase 2- Reversal, licks/reward, VTA projections"
+fig5_stats_Phase_2_Reversal_C_licks_VTA_1_model= modelLicks_VTA
+fig5_stats_Phase_2_Reversal_C_licks_VTA_2_model_anova= modelLicks_anova_VTA
+
 #-mdThal
 fig5_stats_Phase_2_Reversal_A_mdThal_0_description= "Figure 5: Lever Choice, _Phase 2- Reversal, Active vs Inactive NP Count, mdThal projections"
 fig5_stats_Phase_2_Reversal_A_mdThal_1_model= model_mdThal
@@ -662,6 +732,10 @@ fig5_stats_Phase_2_Reversal_B_mdThal_0_description= "Figure 5: Lever Choice, _Ph
 fig5_stats_Phase_2_Reversal_B_mdThal_1_model= modelProportion_mdThal
 fig5_stats_Phase_2_Reversal_B_mdThal_2_model_anova= modelProportion_anova_mdThal
 fig5_stats_Phase_2_Reversal_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
+
+fig5_stats_Phase_2_Reversal_C_licks_mdThal_0_description= "Figure 5: Lever Choice, _Phase 2- Reversal, licks/reward, mdThal projections"
+fig5_stats_Phase_2_Reversal_C_licks_mdThal_1_model= modelLicks_mdThal
+fig5_stats_Phase_2_Reversal_C_licks_mdThal_2_model_anova= modelLicks_anova_mdThal
 
 
 
@@ -706,6 +780,27 @@ print(fig5_stats_Phase_2_Reversal_B_Pooled_2_model_anova)
 sink()  # returns output to the console
 
 
+sink("vp-vta_fig5_stats_Phase_2_Reversal_C_licks_Pooled.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_2_Reversal_C_licks_Pooled_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_2_Reversal_C_licks_Pooled_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_2_Reversal_C_licks_Pooled_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(summary(fig5C_stats_C_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+#- licks for now assuming clearing vars between tests!
+
+
+
 #------ VTA
 
 sink("vp-vta_fig5_stats_Phase_2_Reversal_A_lpCount_VTA.txt")
@@ -742,6 +837,22 @@ print(fig5_stats_Phase_2_Reversal_B_VTA_3_model_post_hoc_t, by = NULL, adjust = 
 sink()  # returns output to the console
 
 
+sink("vp-vta_fig5_stats_Phase_2_Reversal_C_licks_VTA.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_2_Reversal_C_licks_VTA_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_2_Reversal_C_licks_VTA_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_2_Reversal_C_licks_VTA_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
 #------ mdThal
 
 sink("vp-vta_fig5_stats_Phase_2_Reversal_A_lpCount_mdThal.txt")
@@ -774,6 +885,22 @@ print(fig5_stats_Phase_2_Reversal_B_mdThal_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
 print(fig5_stats_Phase_2_Reversal_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+sink("vp-vta_fig5_stats_Phase_2_Reversal_C_licks_mdThal.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_2_Reversal_C_licks_mdThal_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_2_Reversal_C_licks_mdThal_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_2_Reversal_C_licks_mdThal_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -861,7 +988,7 @@ model_pooled= model
 model_anova_pooled<- anova(model)
 modelProportion_pooled= modelProportion
 modelProportion_anova_pooled= anova(modelProportion)
-modelLicks_pooled= model
+modelLicks_pooled= modelLicks
 modelLicks_anova_pooled= anova(modelLicks)
 
 
@@ -1043,10 +1170,10 @@ fig5_stats_Phase_3_ForcedChoice_B_Pooled_1_model= modelProportion_pooled
 fig5_stats_Phase_3_ForcedChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
 fig5_stats_Phase_3_ForcedChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
-fig5_stats_Phase_3_ForcedChoice_C_Licks_Pooled_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Licks per Reward, pooled projections"
-fig5_stats_Phase_3_ForcedChoice_C_Licks_Pooled_1_model= modelLicks_pooled
-fig5_stats_Phase_3_ForcedChoice_C_Licks_Pooled_2_model_anova= modelLicks_anova_pooled
-fig5_stats_Phase_3_ForcedChoice_C_Licks_Pooled_3_model_post_hoc_pairwise= tPairwiseLicks_pooled
+fig5_stats_Phase_3_ForcedChoice_C_licks_Pooled_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, licks/reward, pooled projections"
+fig5_stats_Phase_3_ForcedChoice_C_licks_Pooled_1_model= modelLicks_pooled
+fig5_stats_Phase_3_ForcedChoice_C_licks_Pooled_2_model_anova= modelLicks_anova_pooled
+fig5_stats_Phase_3_ForcedChoice_C_licks_Pooled_3_model_post_hoc_pairwise= tPairwiseLicks_pooled
 
 
 #-VTA
@@ -1060,10 +1187,10 @@ fig5_stats_Phase_3_ForcedChoice_B_VTA_1_model= modelProportion_VTA
 fig5_stats_Phase_3_ForcedChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
 fig5_stats_Phase_3_ForcedChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
 
-fig5_stats_Phase_3_ForcedChoice_C_Licks_VTA_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Licks per Reward, pooled projections"
-fig5_stats_Phase_3_ForcedChoice_C_Licks_VTA_1_model= modelLicks_VTA
-fig5_stats_Phase_3_ForcedChoice_C_Licks_VTA_2_model_anova= modelLicks_anova_VTA
-fig5_stats_Phase_3_ForcedChoice_C_Licks_VTA_3_model_post_hoc_pairwise= tPairwiseLicks_VTA
+fig5_stats_Phase_3_ForcedChoice_C_licks_VTA_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice,licks/reward, VTA projections"
+fig5_stats_Phase_3_ForcedChoice_C_licks_VTA_1_model= modelLicks_VTA
+fig5_stats_Phase_3_ForcedChoice_C_licks_VTA_2_model_anova= modelLicks_anova_VTA
+fig5_stats_Phase_3_ForcedChoice_C_licks_VTA_3_model_post_hoc_pairwise= tPairwiseLicks_VTA
 
 #-mdThal
 fig5_stats_Phase_3_ForcedChoice_A_mdThal_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Active vs Inactive NP Count, mdThal projections"
@@ -1077,10 +1204,10 @@ fig5_stats_Phase_3_ForcedChoice_B_mdThal_2_model_anova= modelProportion_anova_md
 fig5_stats_Phase_3_ForcedChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
 
 
-fig5_stats_Phase_3_ForcedChoice_C_Licks_mdThal_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice, Licks per Reward, pooled projections"
-fig5_stats_Phase_3_ForcedChoice_C_Licks_mdThal_1_model= modelLicks_mdThal
-fig5_stats_Phase_3_ForcedChoice_C_Licks_mdThal_2_model_anova= modelLicks_anova_mdThal
-fig5_stats_Phase_3_ForcedChoice_C_Licks_mdThal_3_model_post_hoc_pairwise= tPairwiseLicks_mdThal
+fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_0_description= "Figure 5: Lever Choice, _Phase 3-ForcedChoice,  licks/reward, mdThal projections"
+fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_1_model= modelLicks_mdThal
+fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_2_model_anova= modelLicks_anova_mdThal
+fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_3_model_post_hoc_pairwise= tPairwiseLicks_mdThal
 
 
 #%% 2.5 -- Final Day specific tests? ####
@@ -1169,6 +1296,24 @@ print(fig5_stats_Phase_3_ForcedChoice_B_Pooled_2_model_anova)
 sink()  # returns output to the console
 
 
+
+
+sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_C_licks_Pooled.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_3_ForcedChoice_C_licks_Pooled_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_3_ForcedChoice_C_licks_Pooled_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_3_ForcedChoice_C_licks_Pooled_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(summary(fig5C_stats_C_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
 #------ VTA
 
 sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_A_lpCount_VTA.txt")
@@ -1201,6 +1346,22 @@ print(fig5_stats_Phase_3_ForcedChoice_B_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
 print(fig5_stats_Phase_3_ForcedChoice_B_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_C_licks_VTA.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_3_ForcedChoice_C_licks_VTA_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_3_ForcedChoice_C_licks_VTA_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_3_ForcedChoice_C_licks_VTA_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -1240,6 +1401,22 @@ print(fig5_stats_Phase_3_ForcedChoice_B_mdThal_3_model_post_hoc_t, by = NULL, ad
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
+
+
+sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
 
 #- return to working directory after saving
 setwd(pathWorking)
@@ -1313,14 +1490,16 @@ model_anova_pooled<- anova(model)
 modelProportion= lm('probActiveLP ~ Projection', data=df_Sub_D)
 
 # modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_D)
-modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_D)
+# modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_D)
+modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * + (1|Subject)', data=df_Sub_D)
 
 
 model_pooled= model
 model_anova_pooled<- anova(model)
 modelProportion_pooled= modelProportion
 modelProportion_anova_pooled= anova(modelProportion)
-modelLicks_pooled= model
+
+modelLicks_pooled= modelLicks
 modelLicks_anova_pooled= anova(modelLicks)
 
 
@@ -1495,6 +1674,12 @@ fig5_stats_Phase_4_TestFreeChoice_B_Pooled_1_model= modelProportion_pooled
 fig5_stats_Phase_4_TestFreeChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
 fig5_stats_Phase_4_TestFreeChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
+fig5_stats_Phase_4_TestFreeChoice_C_licks_Pooled_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, licks/reward, pooled projections"
+fig5_stats_Phase_4_TestFreeChoice_C_licks_Pooled_1_model= modelLicks_pooled
+fig5_stats_Phase_4_TestFreeChoice_C_licks_Pooled_2_model_anova= modelLicks_anova_pooled
+fig5_stats_Phase_4_TestFreeChoice_C_licks_Pooled_3_model_post_hoc_t= tPairwise_licks_Pooled
+
+
 #-VTA
 fig5_stats_Phase_4_TestFreeChoice_A_VTA_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active vs Inactive NP Count, VTA projections"
 fig5_stats_Phase_4_TestFreeChoice_A_VTA_1_model= model_VTA
@@ -1505,6 +1690,12 @@ fig5_stats_Phase_4_TestFreeChoice_B_VTA_0_description= "Figure 5: Lever Choice, 
 fig5_stats_Phase_4_TestFreeChoice_B_VTA_1_model= modelProportion_VTA
 fig5_stats_Phase_4_TestFreeChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
 fig5_stats_Phase_4_TestFreeChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
+
+fig5_stats_Phase_4_TestFreeChoice_C_licks_VTA_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, licks/reward, VTA projections"
+fig5_stats_Phase_4_TestFreeChoice_C_licks_VTA_1_model= modelLicks_VTA
+fig5_stats_Phase_4_TestFreeChoice_C_licks_VTA_2_model_anova= modelLicks_anova_VTA
+fig5_stats_Phase_4_TestFreeChoice_C_licks_VTA_3_model_post_hoc_t= tPairwise_licks_VTA
+
 
 #-mdThal
 fig5_stats_Phase_4_TestFreeChoice_A_mdThal_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active vs Inactive NP Count, mdThal projections"
@@ -1517,6 +1708,10 @@ fig5_stats_Phase_4_TestFreeChoice_B_mdThal_1_model= modelProportion_mdThal
 fig5_stats_Phase_4_TestFreeChoice_B_mdThal_2_model_anova= modelProportion_anova_mdThal
 fig5_stats_Phase_4_TestFreeChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
 
+fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, licks/reward, mdThal projections"
+fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_1_model= modelLicks_mdThal
+fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_2_model_anova= modelLicks_anova_mdThal
+fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_3_model_post_hoc_t= tPairwise_licks_mdTHal
 
 # 
 # #%% 2.5 -- Final Day specific tests? ###
@@ -1736,6 +1931,24 @@ print(fig5_stats_Phase_4_TestFreeChoice_B_Pooled_3_model_post_hoc_t, by = NULL, 
 sink()  # returns output to the console
 
 
+
+sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_C_licks_Pooled.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_4_TestFreeChoice_C_licks_Pooled_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_4_TestFreeChoice_C_licks_Pooled_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_4_TestFreeChoice_C_licks_Pooled_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+# print(fig5_stats_Phase_4_TestFreeChoice_C_licks_Pooled_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
 #------ VTA
 
 sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_A_lpCount_VTA.txt")
@@ -1771,6 +1984,22 @@ print(fig5_stats_Phase_4_TestFreeChoice_B_VTA_0_description)
 print('3)---- One Sample t test:') # Make sure for posthocs the summary is printed with pval correction
 print(fig5_stats_Phase_4_TestFreeChoice_B_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_C_licks_VTA.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_4_TestFreeChoice_C_licks_VTA_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_4_TestFreeChoice_C_licks_VTA_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_4_TestFreeChoice_C_licks_VTA_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -1811,6 +2040,23 @@ print('3)---- One Sample T Test:') # Make sure for posthocs the summary is print
 print(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
+
+
+sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_2_model_anova)
+'------------------------------------------------------------------------------'
+# print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
 
 
 #- return to working directory after saving
@@ -1915,7 +2161,7 @@ model_pooled= model
 model_anova_pooled<- anova(model)
 modelProportion_pooled= modelProportion
 modelProportion_anova_pooled= anova(modelProportion)
-modelLicks_pooled= model
+modelLicks_pooled= modelLicks
 modelLicks_anova_pooled= anova(modelLicks)
 
 
