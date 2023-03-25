@@ -1906,8 +1906,9 @@ model_anova_pooled<- anova(model)
 
 modelProportion= lm('probActiveLP ~ Projection', data=df_Sub_E)
 
-# modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_E)
-modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_E)
+# No licks per reward calculated in matlab for "Extinction" phase
+# # modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_E)
+# modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_E)
 
 
 model_pooled= model
@@ -1929,16 +1930,17 @@ model_anova_VTA<- anova(model_VTA)
 # really just need 1 sample t test here
 modelProportion_VTA= lm('probActiveLP ~  Subject', data=df_Sub_E_VTA)
 
+# # 1 observation per subj so no need for model/anova, just run t test
 # modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-licks/reward
-# no licks/reward computed if insufficient lever pressing (extinction wont have this from matlab)
-# modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_E_VTA)
-modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_E_VTA)
-
-# modelLicks_VTA= lm('probActiveLP ~  Subject', data=df_Sub_E_VTA)
-
-modelLicks_anova_VTA<- anova(modelLicks_VTA)
+# # no licks/reward computed if insufficient lever pressing (extinction wont have this from matlab)
+# # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_E_VTA)
+# modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_E_VTA)
+# 
+# # modelLicks_VTA= lm('probActiveLP ~  Subject', data=df_Sub_E_VTA)
+# 
+# modelLicks_anova_VTA<- anova(modelLicks_VTA)
 
 #-- mdThal
 #mdThal projection
@@ -1949,12 +1951,14 @@ model_anova_mdThal<- anova(model_mdThal)
 # modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ + (1|Subject)', data=df_Sub_E_mdThal)
 modelProportion_mdThal= lm('probActiveLP ~ Subject', data=df_Sub_E_mdThal)
 
-modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
-#-licks/reward
-# modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_E_mdThal)
-modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_E_mdThal)
+# # 1 observation per subj so no need for model/anova, just run t test
+# modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 
-modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
+# #-licks/reward
+# # modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_E_mdThal)
+# modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_E_mdThal)
+# 
+# modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
 
 # # -- Interaction plot

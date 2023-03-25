@@ -675,8 +675,8 @@ sapply(df, class)
 
 #--- SUBSET SPECIFIC STIMLENGTH
 
-stimLength= 1
-# stimLength= 10
+# stimLength= 1
+stimLength= 10
 paste(c("stimLength", stimLength), collapse = " ")
 
 

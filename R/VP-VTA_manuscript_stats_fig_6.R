@@ -565,7 +565,9 @@ model_anova_VTA<- anova(model_VTA)
 #-Proportion
 # modelProportion_VTA= lmerTest::lmer('npActiveProportion ~ Session + (1|Subject)', data=df_Sub_A_finalSes_VTA)
 modelProportion_VTA= lm('npActiveProportion ~ Subject', data=df_Sub_A_finalSes_VTA)
-modelProportion_anova_VTA<- anova(modelProportion_VTA)
+
+# # Only 1 observation per subject so need for model/anova, just t test 
+# modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-- mdThal
 #mdThal projection
@@ -576,7 +578,8 @@ model_anova_mdThal<- anova(model_mdThal)
 # modelProportion_mdThal= lmerTest::lmer('npActiveProportion ~ Session + (1|Subject)', data=df_Sub_A_finalSes_mdThal)
 modelProportion_mdThal= lm('npActiveProportion ~ Subject', data=df_Sub_A_finalSes_mdThal)
 
-modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
+# # Only 1 observation per subject so need for model/anova, just t test 
+# modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 
 
 
@@ -1311,7 +1314,9 @@ model_anova_VTA<- anova(model_VTA)
 #-Proportion
 # modelProportion_VTA= lmerTest::lmer('npActiveProportion ~ Session + (1|Subject)', data=df_Sub_B_finalSes_VTA)
 modelProportion_VTA= lm('npActiveProportion ~ Subject', data=df_Sub_B_finalSes_VTA)
-modelProportion_anova_VTA<- anova(modelProportion_VTA)
+
+# #only 1 observation per subject so no need for model/anova, just do t test
+# modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-- mdThal
 #mdThal projection
@@ -1321,8 +1326,9 @@ model_anova_mdThal<- anova(model_mdThal)
 #-Proportion
 # modelProportion_mdThal= lmerTest::lmer('npActiveProportion ~ Session + (1|Subject)', data=df_Sub_B_finalSes_mdThal)
 modelProportion_mdThal= lm('npActiveProportion ~ Subject', data=df_Sub_B_finalSes_mdThal)
-
-modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
+# 
+# #only 1 observation per subject so no need for model/anova, just do t test
+# modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 
 
 
