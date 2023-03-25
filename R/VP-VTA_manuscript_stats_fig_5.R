@@ -417,6 +417,24 @@ print(fig5_stats_Phase1_FreeChoice_A_mdThal_3_model_post_hoc_pairwise, by = NULL
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
+sink("vp-vta_fig5_stats_Phase1_FreeChoice_B_mdThal.txt")
+'------------------------------------------------------------------------------'
+'0)---- Description --: '
+print(fig5_stats_Phase1_FreeChoice_B_mdThal_0_description)
+'------------------------------------------------------------------------------'
+print('1)---- LME:')
+print(summary(fig5_stats_Phase1_FreeChoice_B_mdThal_1_model))
+'------------------------------------------------------------------------------'
+print('2)---- ANOVA of LME:')
+print(fig5_stats_Phase1_FreeChoice_B_mdThal_2_model_anova)
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
+print(fig5_stats_Phase1_FreeChoice_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+'---- END ---------------------------------------------------------------------'
+sink()  # returns output to the console
+
+
+
 
 
 # __________________________________________________ ####

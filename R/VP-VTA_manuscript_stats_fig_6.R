@@ -320,7 +320,7 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_proportion_mdThal= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
-t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
+t_Proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 
 
 
@@ -362,7 +362,7 @@ fig6_stats_Acquisition_A_mdThal_3_model_post_hoc_pairwise= tPairwise_mdThal
 fig6_stats_Acquisition_B_mdThal_0_description= "Figure 6: ICSS, OG Active Side, Active NP Proportion, mdThal projections"
 fig6_stats_Acquisition_B_mdThal_1_model= modelProportion_mdThal
 fig6_stats_Acquisition_B_mdThal_2_model_anova= modelProportion_anova_mdThal
-fig6_stats_Acquisition_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
+fig6_stats_Acquisition_B_mdThal_3_model_post_hoc_t= t_Proportion_mdThal
 
 
 
@@ -687,7 +687,7 @@ tPairwise_mdThal= tPairwise
 # tPairwise_proportion_mdThal= tPairwise
 # 
 # # for active proportion, check if each level significantly different from 0.5 (chance)
-# t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
+# t_Proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 
 # #-npActiveProportion
 # just need 1 sample t test
@@ -733,7 +733,7 @@ fig6_stats_Acquisition_finalSes_A_mdThal_3_model_post_hoc_pairwise= tPairwise_md
 fig6_stats_Acquisition_finalSes_B_mdThal_0_description= "Figure 6: ICSS, OG Active Side, Active NP Proportion, mdThal projections"
 fig6_stats_Acquisition_finalSes_B_mdThal_1_model= modelProportion_mdThal
 fig6_stats_Acquisition_finalSes_B_mdThal_2_model_anova= modelProportion_anova_mdThal
-fig6_stats_Acquisition_finalSes_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
+fig6_stats_Acquisition_finalSes_B_mdThal_3_model_post_hoc_t= t_Proportion_mdThal
 
 
 
@@ -1061,7 +1061,7 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_proportion_mdThal= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
-t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
+t_Proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 
 
 
@@ -1103,7 +1103,7 @@ fig6_stats_Reversal_C_mdThal_3_model_post_hoc_pairwise= tPairwise_mdThal
 fig6_stats_Reversal_D_mdThal_0_description= "Figure 6: ICSS, Reversal Active Side, Active NP Proportion, mdThal projections"
 fig6_stats_Reversal_D_mdThal_1_model= modelProportion_mdThal
 fig6_stats_Reversal_D_mdThal_2_model_anova= modelProportion_anova_mdThal
-fig6_stats_Reversal_D_mdThal_3_model_post_hoc_t= t_proportion_mdThal
+fig6_stats_Reversal_D_mdThal_3_model_post_hoc_t= t_Proportion_mdThal
 
 
 
@@ -1433,7 +1433,7 @@ tPairwise_mdThal= tPairwise
 # tPairwise_proportion_mdThal= tPairwise
 # 
 # # for active proportion, check if each level significantly different from 0.5 (chance)
-# t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
+# t_Proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 
 # #-npActiveProportion
 # just need 1 sample t test
@@ -1479,7 +1479,7 @@ fig6_stats_Reversal_finalSes_A_mdThal_3_model_post_hoc_pairwise= tPairwise_mdTha
 fig6_stats_Reversal_finalSes_B_mdThal_0_description= "Figure 6: ICSS, Reversal Final Session, Active NP Proportion, mdThal projections"
 fig6_stats_Reversal_finalSes_B_mdThal_1_model= modelProportion_mdThal
 fig6_stats_Reversal_finalSes_B_mdThal_2_model_anova= modelProportion_anova_mdThal
-fig6_stats_Reversal_finalSes_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
+fig6_stats_Reversal_finalSes_B_mdThal_3_model_post_hoc_t= t_Proportion_mdThal
 
 
 

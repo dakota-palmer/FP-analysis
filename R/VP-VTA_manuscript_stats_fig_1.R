@@ -1,3 +1,11 @@
+#-- SET R OPTIONS ####
+# Scientific notation and sig figs
+# options(scipen=1, digits=5)
+# digits = ?? 
+# options(scipen=1, digits=7)
+# 
+# # test run with scipen off to compare results (accidentally ran with scipen off from r workshop before clearing between tests
+# options(scipen=999)
 
 ###### enter python env ####
 Sys.setenv(RETICULATE_PYTHON = "C:/Users/Dakota/anaconda3/envs/spyder-env-seaborn-update")
