@@ -247,37 +247,37 @@ t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 # all the results into descriptive variables between tests
 
 #-pooled
-fig5_stats_Phase1_FreeChoice_A_Pooled_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, pooled projections"
-fig5_stats_Phase1_FreeChoice_A_Pooled_1_model= model_pooled
-fig5_stats_Phase1_FreeChoice_A_Pooled_2_model_anova= model_anova_pooled
-fig5_stats_Phase1_FreeChoice_A_Pooled_3_model_post_hoc_pairwise= tPairwise_Pooled
+fig5_stats_Phase_1_FreeChoice_A_Pooled_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, pooled projections"
+fig5_stats_Phase_1_FreeChoice_A_Pooled_1_model= model_pooled
+fig5_stats_Phase_1_FreeChoice_A_Pooled_2_model_anova= model_anova_pooled
+fig5_stats_Phase_1_FreeChoice_A_Pooled_3_model_post_hoc_pairwise= tPairwise_Pooled
 
-fig5_stats_Phase1_FreeChoice_B_Pooled_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active NP Proportion, pooled projections"
-fig5_stats_Phase1_FreeChoice_B_Pooled_1_model= modelProportion_pooled
-fig5_stats_Phase1_FreeChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
-fig5_stats_Phase1_FreeChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
+fig5_stats_Phase_1_FreeChoice_B_Pooled_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active NP Proportion, pooled projections"
+fig5_stats_Phase_1_FreeChoice_B_Pooled_1_model= modelProportion_pooled
+fig5_stats_Phase_1_FreeChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
+fig5_stats_Phase_1_FreeChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
 
 #-VTA
-fig5_stats_Phase1_FreeChoice_A_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, VTA projections"
-fig5_stats_Phase1_FreeChoice_A_VTA_1_model= model_VTA
-fig5_stats_Phase1_FreeChoice_A_VTA_2_model_anova= model_anova_VTA
-fig5_stats_Phase1_FreeChoice_A_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
+fig5_stats_Phase_1_FreeChoice_A_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, VTA projections"
+fig5_stats_Phase_1_FreeChoice_A_VTA_1_model= model_VTA
+fig5_stats_Phase_1_FreeChoice_A_VTA_2_model_anova= model_anova_VTA
+fig5_stats_Phase_1_FreeChoice_A_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
 
-fig5_stats_Phase1_FreeChoice_B_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active NP Proportion, VTA projections"
-fig5_stats_Phase1_FreeChoice_B_VTA_1_model= modelProportion_VTA
-fig5_stats_Phase1_FreeChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
-fig5_stats_Phase1_FreeChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
+fig5_stats_Phase_1_FreeChoice_B_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active NP Proportion, VTA projections"
+fig5_stats_Phase_1_FreeChoice_B_VTA_1_model= modelProportion_VTA
+fig5_stats_Phase_1_FreeChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
+fig5_stats_Phase_1_FreeChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
 
 #-mdThal
-fig5_stats_Phase1_FreeChoice_A_mdThal_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, mdThal projections"
-fig5_stats_Phase1_FreeChoice_A_mdThal_1_model= model_mdThal
-fig5_stats_Phase1_FreeChoice_A_mdThal_2_model_anova= model_anova_mdThal
-fig5_stats_Phase1_FreeChoice_A_mdThal_3_model_post_hoc_pairwise= tPairwise_mdThal
+fig5_stats_Phase_1_FreeChoice_A_mdThal_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active vs Inactive NP Count, mdThal projections"
+fig5_stats_Phase_1_FreeChoice_A_mdThal_1_model= model_mdThal
+fig5_stats_Phase_1_FreeChoice_A_mdThal_2_model_anova= model_anova_mdThal
+fig5_stats_Phase_1_FreeChoice_A_mdThal_3_model_post_hoc_pairwise= tPairwise_mdThal
 
-fig5_stats_Phase1_FreeChoice_B_mdThal_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active NP Proportion, mdThal projections"
-fig5_stats_Phase1_FreeChoice_B_mdThal_1_model= modelProportion_mdThal
-fig5_stats_Phase1_FreeChoice_B_mdThal_2_model_anova= modelProportion_anova_mdThal
-fig5_stats_Phase1_FreeChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
+fig5_stats_Phase_1_FreeChoice_B_mdThal_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, Active NP Proportion, mdThal projections"
+fig5_stats_Phase_1_FreeChoice_B_mdThal_1_model= modelProportion_mdThal
+fig5_stats_Phase_1_FreeChoice_B_mdThal_2_model_anova= modelProportion_anova_mdThal
+fig5_stats_Phase_1_FreeChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
 
 
 
@@ -329,16 +329,16 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig5_stats_Phase1_FreeChoice_A_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_1_FreeChoice_A_lpCount_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig5_stats_Phase1_FreeChoice_A_Pooled_0_description)
+print(fig5_stats_Phase_1_FreeChoice_A_Pooled_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig5_stats_Phase1_FreeChoice_A_Pooled_1_model))
+print(summary(fig5_stats_Phase_1_FreeChoice_A_Pooled_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig5_stats_Phase1_FreeChoice_A_Pooled_2_model_anova)
+print(fig5_stats_Phase_1_FreeChoice_A_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 # print(fig5C_stats_C_3_model_post_hoc_pairwise)
@@ -346,16 +346,16 @@ print(fig5_stats_Phase1_FreeChoice_A_Pooled_2_model_anova)
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase1_FreeChoice_B_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_1_FreeChoice_B_proportion_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig5_stats_Phase1_FreeChoice_B_Pooled_0_description)
+print(fig5_stats_Phase_1_FreeChoice_B_Pooled_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig5_stats_Phase1_FreeChoice_B_Pooled_1_model))
+print(summary(fig5_stats_Phase_1_FreeChoice_B_Pooled_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig5_stats_Phase1_FreeChoice_B_Pooled_2_model_anova)
+print(fig5_stats_Phase_1_FreeChoice_B_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
 # print(summary(fig5C_stats_C_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
@@ -365,71 +365,71 @@ sink()  # returns output to the console
 
 #------ VTA
 
-sink("vp-vta_fig5_stats_Phase1_FreeChoice_A_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_1_FreeChoice_A_lpCount_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig5_stats_Phase1_FreeChoice_A_VTA_0_description)
+print(fig5_stats_Phase_1_FreeChoice_A_VTA_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig5_stats_Phase1_FreeChoice_A_VTA_1_model))
+print(summary(fig5_stats_Phase_1_FreeChoice_A_VTA_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig5_stats_Phase1_FreeChoice_A_VTA_2_model_anova)
+print(fig5_stats_Phase_1_FreeChoice_A_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-print(fig5_stats_Phase1_FreeChoice_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
+print(fig5_stats_Phase_1_FreeChoice_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase1_FreeChoice_B_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_1_FreeChoice_B_proportion_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig5_stats_Phase1_FreeChoice_B_VTA_0_description)
+print(fig5_stats_Phase_1_FreeChoice_B_VTA_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig5_stats_Phase1_FreeChoice_B_VTA_1_model))
+print(summary(fig5_stats_Phase_1_FreeChoice_B_VTA_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig5_stats_Phase1_FreeChoice_B_VTA_2_model_anova)
+print(fig5_stats_Phase_1_FreeChoice_B_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
-print(fig5_stats_Phase1_FreeChoice_B_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+print(fig5_stats_Phase_1_FreeChoice_B_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 
 #------ mdThal
 
-sink("vp-vta_fig5_stats_Phase1_FreeChoice_A_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_1_FreeChoice_A_lpCount_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig5_stats_Phase1_FreeChoice_A_mdThal_0_description)
+print(fig5_stats_Phase_1_FreeChoice_A_mdThal_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig5_stats_Phase1_FreeChoice_A_mdThal_1_model))
+print(summary(fig5_stats_Phase_1_FreeChoice_A_mdThal_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig5_stats_Phase1_FreeChoice_A_mdThal_2_model_anova)
+print(fig5_stats_Phase_1_FreeChoice_A_mdThal_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-print(fig5_stats_Phase1_FreeChoice_A_mdThal_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
+print(fig5_stats_Phase_1_FreeChoice_A_mdThal_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
-sink("vp-vta_fig5_stats_Phase1_FreeChoice_B_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_1_FreeChoice_B_proportion_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig5_stats_Phase1_FreeChoice_B_mdThal_0_description)
+print(fig5_stats_Phase_1_FreeChoice_B_mdThal_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig5_stats_Phase1_FreeChoice_B_mdThal_1_model))
+print(summary(fig5_stats_Phase_1_FreeChoice_B_mdThal_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig5_stats_Phase1_FreeChoice_B_mdThal_2_model_anova)
+print(fig5_stats_Phase_1_FreeChoice_B_mdThal_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
-print(fig5_stats_Phase1_FreeChoice_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+print(fig5_stats_Phase_1_FreeChoice_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -672,7 +672,7 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig5_stats_Phase_2_Reversal_A_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_2_Reversal_A_lpCount_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_2_Reversal_A_Pooled_0_description)
@@ -689,7 +689,7 @@ print(fig5_stats_Phase_2_Reversal_A_Pooled_2_model_anova)
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_2_Reversal_B_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_2_Reversal_B_proportion_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_2_Reversal_B_Pooled_0_description)
@@ -708,7 +708,7 @@ sink()  # returns output to the console
 
 #------ VTA
 
-sink("vp-vta_fig5_stats_Phase_2_Reversal_A_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_2_Reversal_A_lpCount_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_2_Reversal_A_VTA_0_description)
@@ -725,7 +725,7 @@ print(fig5_stats_Phase_2_Reversal_A_VTA_3_model_post_hoc_pairwise, by = NULL, ad
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_2_Reversal_B_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_2_Reversal_B_proportion_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_2_Reversal_B_VTA_0_description)
@@ -744,7 +744,7 @@ sink()  # returns output to the console
 
 #------ mdThal
 
-sink("vp-vta_fig5_stats_Phase_2_Reversal_A_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_2_Reversal_A_lpCount_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_2_Reversal_A_mdThal_0_description)
@@ -761,7 +761,7 @@ print(fig5_stats_Phase_2_Reversal_A_mdThal_3_model_post_hoc_pairwise, by = NULL,
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_2_Reversal_B_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_2_Reversal_B_proportion_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_2_Reversal_B_mdThal_0_description)
@@ -1135,7 +1135,7 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_A_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_A_lpCount_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_3_ForcedChoice_A_Pooled_0_description)
@@ -1152,7 +1152,7 @@ print(fig5_stats_Phase_3_ForcedChoice_A_Pooled_2_model_anova)
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_B_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_B_proportion_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_3_ForcedChoice_B_Pooled_0_description)
@@ -1171,7 +1171,7 @@ sink()  # returns output to the console
 
 #------ VTA
 
-sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_A_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_A_lpCount_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_3_ForcedChoice_A_VTA_0_description)
@@ -1188,7 +1188,7 @@ print(fig5_stats_Phase_3_ForcedChoice_A_VTA_3_model_post_hoc_pairwise, by = NULL
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_B_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_B_proportion_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_3_ForcedChoice_B_VTA_0_description)
@@ -1207,7 +1207,7 @@ sink()  # returns output to the console
 
 #------ mdThal
 
-sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_A_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_A_lpCount_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_3_ForcedChoice_A_mdThal_0_description)
@@ -1224,7 +1224,7 @@ print(fig5_stats_Phase_3_ForcedChoice_A_mdThal_3_model_post_hoc_pairwise, by = N
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_B_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_3_ForcedChoice_B_proportion_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_3_ForcedChoice_B_mdThal_0_description)
@@ -1701,7 +1701,7 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_A_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_A_lpCount_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_4_TestFreeChoice_A_Pooled_0_description)
@@ -1719,7 +1719,7 @@ print(fig5_stats_Phase_4_TestFreeChoice_A_Pooled_3_model_post_hoc_pairwise, by =
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_B_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_B_proportion_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_4_TestFreeChoice_B_Pooled_0_description)
@@ -1738,7 +1738,7 @@ sink()  # returns output to the console
 
 #------ VTA
 
-sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_A_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_A_lpCount_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_4_TestFreeChoice_A_VTA_0_description)
@@ -1755,7 +1755,7 @@ print(fig5_stats_Phase_4_TestFreeChoice_A_VTA_3_model_post_hoc_pairwise, by = NU
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_B_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_B_proportion_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_4_TestFreeChoice_B_VTA_0_description)
@@ -1777,7 +1777,7 @@ sink()  # returns output to the console
 
 #------ mdThal
 
-sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_A_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_A_lpCount_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_4_TestFreeChoice_A_mdThal_0_description)
@@ -1794,7 +1794,7 @@ print(fig5_stats_Phase_4_TestFreeChoice_A_mdThal_3_model_post_hoc_pairwise, by =
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_B_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_4_TestFreeChoice_B_proportion_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 # print(fig5_stats_Phase_4_TestFreeChoice_B_mdThal_0_description)
@@ -2289,7 +2289,7 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig5_stats_Phase_5_Exctinction_A_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_5_Exctinction_A_lpCount_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_5_Exctinction_A_Pooled_0_description)
@@ -2307,7 +2307,7 @@ print(fig5_stats_Phase_5_Exctinction_A_Pooled_3_model_post_hoc_pairwise, by = NU
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_5_Exctinction_B_Pooled.txt")
+sink("vp-vta_fig5_stats_Phase_5_Exctinction_B_proportion_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_5_Exctinction_B_Pooled_0_description)
@@ -2326,7 +2326,7 @@ sink()  # returns output to the console
 
 #------ VTA
 
-sink("vp-vta_fig5_stats_Phase_5_Exctinction_A_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_5_Exctinction_A_lpCount_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_5_Exctinction_A_VTA_0_description)
@@ -2343,7 +2343,7 @@ print(fig5_stats_Phase_5_Exctinction_A_VTA_3_model_post_hoc_pairwise, by = NULL,
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_5_Exctinction_B_VTA.txt")
+sink("vp-vta_fig5_stats_Phase_5_Exctinction_B_proportion_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_5_Exctinction_B_VTA_0_description)
@@ -2365,7 +2365,7 @@ sink()  # returns output to the console
 
 #------ mdThal
 
-sink("vp-vta_fig5_stats_Phase_5_Exctinction_A_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_5_Exctinction_A_lpCount_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig5_stats_Phase_5_Exctinction_A_mdThal_0_description)
@@ -2382,7 +2382,7 @@ print(fig5_stats_Phase_5_Exctinction_A_mdThal_3_model_post_hoc_pairwise, by = NU
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig5_stats_Phase_5_Exctinction_B_mdThal.txt")
+sink("vp-vta_fig5_stats_Phase_5_Exctinction_B_proportion_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 # print(fig5_stats_Phase_5_Exctinction_B_mdThal_0_description)
