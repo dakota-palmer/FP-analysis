@@ -70,7 +70,7 @@ gsub(" ", "", pathOutput)
 # 
 # # -- Interaction plot
 # #- Viz interaction plot & save
-# figName= "vp-vta_fig46_stats_C_interactionPlot.pdf"
+# figName= "vp-vta_fig46_stats_A_interactionPlot.pdf"
 # setwd(pathOutput)
 # pdf(file=figName)
 # 
@@ -97,10 +97,10 @@ gsub(" ", "", pathOutput)
 # #%%-- Save output to variables between tests  ####
 # # trying to keep code mostly generalizable and just save custom names at end
 # # all the results into descriptive variables between tests
-# fig4C_stats_C_0_description= "Figure 4C: DS opto all"
-# fig4C_stats_C_1_model= model
-# fig4C_stats_C_2_model_anova= model_anova
-# fig4C_stats_C_3_model_post_hoc_pairwise= tPairwise 
+# fig4C_stats_A_0_description= "Figure 4C: DS opto all"
+# fig4C_stats_A_1_model= model
+# fig4C_stats_A_2_model_anova= model_anova
+# fig4C_stats_A_3_model_post_hoc_pairwise= tPairwise 
 # 
 # 
 # #%%-- Save output to File ####
@@ -108,19 +108,19 @@ gsub(" ", "", pathOutput)
 # setwd(pathOutput)
 # 
 # 
-# sink("vp-vta_fig4C_stats_C_PEvsNoPE_DS.txt")
+# sink("vp-vta_fig4C_stats_A_PEvsNoPE_DS.txt")
 # '------------------------------------------------------------------------------'
 # '0)---- Description --: '
-# print(fig2D_stats_C_0_description)
+# print(fig2D_stats_A_0_description)
 # '------------------------------------------------------------------------------'
 # print('1)---- LME:')
-# print(summary(fig2D_stats_C_1_model))
+# print(summary(fig2D_stats_A_1_model))
 # '------------------------------------------------------------------------------'
 # print('2)---- ANOVA of LME:')
-# print(fig2D_stats_C_2_model_anova)
+# print(fig2D_stats_A_2_model_anova)
 # '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:')
-# print(fig4C_stats_C_3_model_post_hoc_pairwise)
+# print(fig4C_stats_A_3_model_post_hoc_pairwise)
 # '---- END ---------------------------------------------------------------------'
 # sink()  # returns output to the console
 # 
@@ -373,7 +373,7 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig6_stats_Acquisition_A_Pooled.txt")
+sink("vp-vta_fig6_stats_Acquisition_A_npCount_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_A_Pooled_0_description)
@@ -385,12 +385,12 @@ print('2)---- ANOVA of LME:')
 print(fig6_stats_Acquisition_A_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-# print(fig6C_stats_C_3_model_post_hoc_pairwise)
+# print(fig6C_stats_A_3_model_post_hoc_pairwise)
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Acquisition_B_Pooled.txt")
+sink("vp-vta_fig6_stats_Acquisition_B_proportion_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_B_Pooled_0_description)
@@ -402,14 +402,14 @@ print('2)---- ANOVA of LME:')
 print(fig6_stats_Acquisition_B_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-# print(summary(fig6C_stats_C_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+# print(summary(fig6C_stats_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 
 #------ VTA
 
-sink("vp-vta_fig6_stats_Acquisition_A_VTA.txt")
+sink("vp-vta_fig6_stats_Acquisition_A_npCount_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_A_VTA_0_description)
@@ -426,7 +426,7 @@ print(summary(fig6_stats_Acquisition_A_VTA_3_model_post_hoc_pairwise, by = NULL,
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Acquisition_B_VTA.txt")
+sink("vp-vta_fig6_stats_Acquisition_B_proportion_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_B_VTA_0_description)
@@ -445,7 +445,7 @@ sink()  # returns output to the console
 
 #------ mdThal
 
-sink("vp-vta_fig6_stats_Acquisition_A_mdThal.txt")
+sink("vp-vta_fig6_stats_Acquisition_A_npCount_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_A_mdThal_0_description)
@@ -462,7 +462,7 @@ print(fig6_stats_Acquisition_A_mdThal_3_model_post_hoc_pairwise, by = NULL, adju
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Acquisition_B_mdThal.txt")
+sink("vp-vta_fig6_stats_Acquisition_B_proportion_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_B_mdThal_0_description)
@@ -747,7 +747,7 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig6_stats_Acquisition_finalSes_A_Pooled.txt")
+sink("vp-vta_fig6_stats_Acquisition_finalSes_A_npCount_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_finalSes_A_Pooled_0_description)
@@ -764,7 +764,7 @@ print(fig6_stats_Acquisition_finalSes_A_Pooled_3_model_post_hoc_pairwise, by = N
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Acquisition_finalSes_B_Pooled.txt")
+sink("vp-vta_fig6_stats_Acquisition_finalSes_B_proportion_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_finalSes_B_Pooled_0_description)
@@ -783,7 +783,7 @@ sink()  # returns output to the console
 
 #------ VTA
 
-sink("vp-vta_fig6_stats_Acquisition_finalSes_A_VTA.txt")
+sink("vp-vta_fig6_stats_Acquisition_finalSes_A_npCount_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_finalSes_A_VTA_0_description)
@@ -800,7 +800,7 @@ print(summary(fig6_stats_Acquisition_finalSes_A_VTA_3_model_post_hoc_pairwise, b
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Acquisition_finalSes_B_VTA.txt")
+sink("vp-vta_fig6_stats_Acquisition_finalSes_B_proportion_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_finalSes_B_VTA_0_description)
@@ -819,7 +819,7 @@ sink()  # returns output to the console
 
 #------ mdThal
 
-sink("vp-vta_fig6_stats_Acquisition_finalSes_A_mdThal.txt")
+sink("vp-vta_fig6_stats_Acquisition_finalSes_A_npCount_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_finalSes_A_mdThal_0_description)
@@ -836,7 +836,7 @@ print(fig6_stats_Acquisition_finalSes_A_mdThal_3_model_post_hoc_pairwise, by = N
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Acquisition_finalSes_B_mdThal.txt")
+sink("vp-vta_fig6_stats_Acquisition_finalSes_B_proportion_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Acquisition_finalSes_B_mdThal_0_description)
@@ -945,7 +945,7 @@ modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 
 # -- Interaction plot
 #- Viz interaction plot & save
-figName= "vp-vta_fig6_stats_C_npCount_Session_pooled_interactionPlot.pdf"
+figName= "vp-vta_fig6_stats_A_npCount_Session_pooled_interactionPlot.pdf"
 setwd(pathOutput)
 pdf(file=figName)
 
@@ -958,7 +958,7 @@ dev.off()
 setwd(pathWorking)
 
 #pooled proportion interaction plot
-figName= "vp-vta_fig6_stats_C_proportion_pooled_interactionPlot.pdf"
+figName= "vp-vta_fig6_stats_A_proportion_pooled_interactionPlot.pdf"
 setwd(pathOutput)
 pdf(file=figName)
 
@@ -985,7 +985,7 @@ setwd(pathWorking)
 # #- Viz interaction plot & save
 # - interaction plots should be same as above
 
-# figName= "vp-vta_fig4CD_stats_D_interactionPlot.pdf"
+# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
 # setwd(pathOutput)
 # pdf(file=figName)
 # 
@@ -1076,37 +1076,37 @@ t_Proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 # all the results into descriptive variables between tests
 
 #-pooled
-fig6_stats_Reversal_C_Pooled_0_description= "Figure 6: ICSS, Reversal Active Side, Active vs Inactive NP Count, pooled projections"
-fig6_stats_Reversal_C_Pooled_1_model= model_pooled
-fig6_stats_Reversal_C_Pooled_2_model_anova= model_anova_pooled
-fig6_stats_Reversal_C_Pooled_3_model_post_hoc_pairwise= tPairwise_Pooled
+fig6_stats_Reversal_A_Pooled_0_description= "Figure 6: ICSS, Reversal Active Side, Active vs Inactive NP Count, pooled projections"
+fig6_stats_Reversal_A_Pooled_1_model= model_pooled
+fig6_stats_Reversal_A_Pooled_2_model_anova= model_anova_pooled
+fig6_stats_Reversal_A_Pooled_3_model_post_hoc_pairwise= tPairwise_Pooled
 
-fig6_stats_Reversal_D_Pooled_0_description= "Figure 6: ICSS, Reversal Active Side, Active NP Proportion, pooled projections"
-fig6_stats_Reversal_D_Pooled_1_model= modelProportion_pooled
-fig6_stats_Reversal_D_Pooled_2_model_anova= modelProportion_anova_pooled
-fig6_stats_Reversal_D_Pooled_3_model_post_hoc_t= t_Proportion_Pooled
+fig6_stats_Reversal_B_Pooled_0_description= "Figure 6: ICSS, Reversal Active Side, Active NP Proportion, pooled projections"
+fig6_stats_Reversal_B_Pooled_1_model= modelProportion_pooled
+fig6_stats_Reversal_B_Pooled_2_model_anova= modelProportion_anova_pooled
+fig6_stats_Reversal_B_Pooled_3_model_post_hoc_t= t_Proportion_Pooled
 
 #-VTA
-fig6_stats_Reversal_C_VTA_0_description= "Figure 6: ICSS, Reversal Active Side, Active vs Inactive NP Count, VTA projections"
-fig6_stats_Reversal_C_VTA_1_model= model_VTA
-fig6_stats_Reversal_C_VTA_2_model_anova= model_anova_VTA
-fig6_stats_Reversal_C_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
+fig6_stats_Reversal_A_VTA_0_description= "Figure 6: ICSS, Reversal Active Side, Active vs Inactive NP Count, VTA projections"
+fig6_stats_Reversal_A_VTA_1_model= model_VTA
+fig6_stats_Reversal_A_VTA_2_model_anova= model_anova_VTA
+fig6_stats_Reversal_A_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
 
-fig6_stats_Reversal_D_VTA_0_description= "Figure 6: ICSS, Reversal Active Side, Active NP Proportion, VTA projections"
-fig6_stats_Reversal_D_VTA_1_model= modelProportion_VTA
-fig6_stats_Reversal_D_VTA_2_model_anova= modelProportion_anova_VTA
-fig6_stats_Reversal_D_VTA_3_model_post_hoc_t= t_Proportion_VTA
+fig6_stats_Reversal_B_VTA_0_description= "Figure 6: ICSS, Reversal Active Side, Active NP Proportion, VTA projections"
+fig6_stats_Reversal_B_VTA_1_model= modelProportion_VTA
+fig6_stats_Reversal_B_VTA_2_model_anova= modelProportion_anova_VTA
+fig6_stats_Reversal_B_VTA_3_model_post_hoc_t= t_Proportion_VTA
 
 #-mdThal
-fig6_stats_Reversal_C_mdThal_0_description= "Figure 6: ICSS, Reversal Active Side, Active vs Inactive NP Count, mdThal projections"
-fig6_stats_Reversal_C_mdThal_1_model= model_mdThal
-fig6_stats_Reversal_C_mdThal_2_model_anova= model_anova_mdThal
-fig6_stats_Reversal_C_mdThal_3_model_post_hoc_pairwise= tPairwise_mdThal
+fig6_stats_Reversal_A_mdThal_0_description= "Figure 6: ICSS, Reversal Active Side, Active vs Inactive NP Count, mdThal projections"
+fig6_stats_Reversal_A_mdThal_1_model= model_mdThal
+fig6_stats_Reversal_A_mdThal_2_model_anova= model_anova_mdThal
+fig6_stats_Reversal_A_mdThal_3_model_post_hoc_pairwise= tPairwise_mdThal
 
-fig6_stats_Reversal_D_mdThal_0_description= "Figure 6: ICSS, Reversal Active Side, Active NP Proportion, mdThal projections"
-fig6_stats_Reversal_D_mdThal_1_model= modelProportion_mdThal
-fig6_stats_Reversal_D_mdThal_2_model_anova= modelProportion_anova_mdThal
-fig6_stats_Reversal_D_mdThal_3_model_post_hoc_t= t_Proportion_mdThal
+fig6_stats_Reversal_B_mdThal_0_description= "Figure 6: ICSS, Reversal Active Side, Active NP Proportion, mdThal projections"
+fig6_stats_Reversal_B_mdThal_1_model= modelProportion_mdThal
+fig6_stats_Reversal_B_mdThal_2_model_anova= modelProportion_anova_mdThal
+fig6_stats_Reversal_B_mdThal_3_model_post_hoc_t= t_Proportion_mdThal
 
 
 
@@ -1117,108 +1117,108 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig6_stats_Reversal_C_Pooled.txt")
+sink("vp-vta_fig6_stats_Reversal_A_npCount_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig6_stats_Reversal_C_Pooled_0_description)
+print(fig6_stats_Reversal_A_Pooled_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig6_stats_Reversal_C_Pooled_1_model))
+print(summary(fig6_stats_Reversal_A_Pooled_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig6_stats_Reversal_C_Pooled_2_model_anova)
+print(fig6_stats_Reversal_A_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-# print(fig6C_stats_C_3_model_post_hoc_pairwise)
+# print(fig6C_stats_A_3_model_post_hoc_pairwise)
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Reversal_D_Pooled.txt")
+sink("vp-vta_fig6_stats_Reversal_B_Proportion_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig6_stats_Reversal_D_Pooled_0_description)
+print(fig6_stats_Reversal_B_Pooled_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig6_stats_Reversal_D_Pooled_1_model))
+print(summary(fig6_stats_Reversal_B_Pooled_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig6_stats_Reversal_D_Pooled_2_model_anova)
+print(fig6_stats_Reversal_B_Pooled_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-# print(summary(fig6C_stats_C_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+# print(summary(fig6C_stats_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 
 #------ VTA
 
-sink("vp-vta_fig6_stats_Reversal_C_VTA.txt")
+sink("vp-vta_fig6_stats_Reversal_A_npCount_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig6_stats_Reversal_C_VTA_0_description)
+print(fig6_stats_Reversal_A_VTA_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig6_stats_Reversal_C_VTA_1_model))
+print(summary(fig6_stats_Reversal_A_VTA_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig6_stats_Reversal_C_VTA_2_model_anova)
+print(fig6_stats_Reversal_A_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-print(summary(fig6_stats_Reversal_C_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
+print(summary(fig6_stats_Reversal_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Reversal_D_VTA.txt")
+sink("vp-vta_fig6_stats_Reversal_B_proportion_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig6_stats_Reversal_D_VTA_0_description)
+print(fig6_stats_Reversal_B_VTA_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig6_stats_Reversal_D_VTA_1_model))
+print(summary(fig6_stats_Reversal_B_VTA_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig6_stats_Reversal_D_VTA_2_model_anova)
+print(fig6_stats_Reversal_B_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
-print(fig6_stats_Reversal_D_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+print(fig6_stats_Reversal_B_VTA_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 
 #------ mdThal
 
-sink("vp-vta_fig6_stats_Reversal_C_mdThal.txt")
+sink("vp-vta_fig6_stats_Reversal_A_npCount_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig6_stats_Reversal_C_mdThal_0_description)
+print(fig6_stats_Reversal_A_mdThal_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig6_stats_Reversal_C_mdThal_1_model))
+print(summary(fig6_stats_Reversal_A_mdThal_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig6_stats_Reversal_C_mdThal_2_model_anova)
+print(fig6_stats_Reversal_A_mdThal_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-print(fig6_stats_Reversal_C_mdThal_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
+print(fig6_stats_Reversal_A_mdThal_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Reversal_D_mdThal.txt")
+sink("vp-vta_fig6_stats_Reversal_B_proportion_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
-print(fig6_stats_Reversal_D_mdThal_0_description)
+print(fig6_stats_Reversal_B_mdThal_0_description)
 '------------------------------------------------------------------------------'
 print('1)---- LME:')
-print(summary(fig6_stats_Reversal_D_mdThal_1_model))
+print(summary(fig6_stats_Reversal_B_mdThal_1_model))
 '------------------------------------------------------------------------------'
 print('2)---- ANOVA of LME:')
-print(fig6_stats_Reversal_D_mdThal_2_model_anova)
+print(fig6_stats_Reversal_B_mdThal_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc t tests:') # Make sure for posthocs the summary is printed with pval correction
-print(fig6_stats_Reversal_D_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
+print(fig6_stats_Reversal_B_mdThal_3_model_post_hoc_t, by = NULL, adjust = "sidak")
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -1496,7 +1496,7 @@ setwd(pathOutput)
 
 #------Pooled
 
-sink("vp-vta_fig6_stats_Reversal_finalSes_A_Pooled.txt")
+sink("vp-vta_fig6_stats_Reversal_finalSes_A_npCount_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Reversal_finalSes_A_Pooled_0_description)
@@ -1513,7 +1513,7 @@ print(fig6_stats_Reversal_finalSes_A_Pooled_3_model_post_hoc_pairwise, by = NULL
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Reversal_finalSes_B_Pooled.txt")
+sink("vp-vta_fig6_stats_Reversal_finalSes_B_proportion_Pooled.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Reversal_finalSes_B_Pooled_0_description)
@@ -1532,7 +1532,7 @@ sink()  # returns output to the console
 
 #------ VTA
 
-sink("vp-vta_fig6_stats_Reversal_finalSes_A_VTA.txt")
+sink("vp-vta_fig6_stats_Reversal_finalSes_A_npCount_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Reversal_finalSes_A_VTA_0_description)
@@ -1549,7 +1549,7 @@ print(summary(fig6_stats_Reversal_finalSes_A_VTA_3_model_post_hoc_pairwise, by =
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Reversal_finalSes_B_VTA.txt")
+sink("vp-vta_fig6_stats_Reversal_finalSes_B_proportion_VTA.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Reversal_finalSes_B_VTA_0_description)
@@ -1568,7 +1568,7 @@ sink()  # returns output to the console
 
 #------ mdThal
 
-sink("vp-vta_fig6_stats_Reversal_finalSes_A_mdThal.txt")
+sink("vp-vta_fig6_stats_Reversal_finalSes_A_npCount_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Reversal_finalSes_A_mdThal_0_description)
@@ -1585,7 +1585,7 @@ print(fig6_stats_Reversal_finalSes_A_mdThal_3_model_post_hoc_pairwise, by = NULL
 sink()  # returns output to the console
 
 
-sink("vp-vta_fig6_stats_Reversal_finalSes_B_mdThal.txt")
+sink("vp-vta_fig6_stats_Reversal_finalSes_B_proportion_mdThal.txt")
 '------------------------------------------------------------------------------'
 '0)---- Description --: '
 print(fig6_stats_Reversal_finalSes_B_mdThal_0_description)
