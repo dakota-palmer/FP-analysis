@@ -28,6 +28,10 @@ gsub(" ", "", pathOutput)
 
 #%- fig 5 Stats-- Phase 1- Free Choice ####
 
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 #1%%-- Load data from .pkl ####
 
@@ -420,6 +424,10 @@ sink()  # returns output to the console
 
 #%- fig 5 Stats-- _Phase 2-Reversal ####
 
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 #1%%-- Load data from .pkl ####
 
@@ -765,6 +773,11 @@ setwd(pathWorking)
 
 
 #%- fig 5 Stats-- _Phase 3-ForcedChoice ####
+
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 
 #1%%-- Load data from .pkl ####
@@ -1221,6 +1234,10 @@ setwd(pathWorking)
 
 #%- fig 5 Stats-- _Phase 4- TestFreeChoice ####
 
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 #1%%-- Load data from .pkl ####
 
@@ -1484,7 +1501,7 @@ fig5_stats_Phase_4_TestFreeChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdTh
 
 
 # 
-# #%% 2.5 -- Final Day specific tests? ####
+# #%% 2.5 -- Final Day specific tests? ###
 # # -- RUN T TESTS ON FINAL DAY ONLY --
 # 
 # #simply copy/pasting the model code here and redefining the dataframe for minimal code changes !!
@@ -1619,7 +1636,7 @@ fig5_stats_Phase_4_TestFreeChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdTh
 # 
 # 
 # 
-# #4.5 overwrite / save output for final session %%-- Save output to variables between tests  ####
+# #4.5 overwrite / save output for final session %%-- Save output to variables between tests  ###
 # # # trying to keep code mostly generalizable and just save custom names at end
 # # # all the results into descriptive variables between tests
 # # 
@@ -1793,6 +1810,10 @@ setwd(pathWorking)
 
 
 #%- fig 5 Stats-- _Phase 5- Excinction ####
+
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 
 #1%%-- Load data from .pkl ####
@@ -2064,7 +2085,7 @@ fig5_stats_Phase_5_Exctinction_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
 
 
 # 
-# #%% 2.5 -- Final Day specific tests? ####
+# #%% 2.5 -- Final Day specific tests? ###
 # # -- RUN T TESTS ON FINAL DAY ONLY --
 # 
 # #simply copy/pasting the model code here and redefining the dataframe for minimal code changes !!
@@ -2199,7 +2220,7 @@ fig5_stats_Phase_5_Exctinction_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
 # 
 # 
 # 
-# #4.5 overwrite / save output for final session %%-- Save output to variables between tests  ####
+# #4.5 overwrite / save output for final session %%-- Save output to variables between tests  ###
 # # # trying to keep code mostly generalizable and just save custom names at end
 # # # all the results into descriptive variables between tests
 # # 

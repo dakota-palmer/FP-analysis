@@ -32,8 +32,10 @@ gsub(" ", "", pathOutput)
 
 #%% Figure 2B Stats A -- Compare DS vs NS AUC on special sessions with NS (stage >5)--####
 
-#0%%-- Clear data between tests ####
-rm(model, model_anova,tPairwise, t)
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 #1%%-- Load data from .pkl ####
 
@@ -137,8 +139,28 @@ setwd(pathWorking)
 
 #%%4.5 Figure 2B Stats B-- Compare DS vs Null/0 AUC on first session (no NS) --####
 
-#0%%-- Clear data between tests ####
-rm(model, model_anova,tPairwise, t)
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
+
+#1%%-- Load data from .pkl ####
+
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig2b.pkl"
+
+df <- pd$read_pickle(pathData)
+
+
+###### summarize data
+summary(df)
+
+#verify dtypes imported properly
+sapply(df, class) 
+
+
+#%%-- Subset data ## 
+#Remove missing/invalid observations 
+
 
 #-- subset data ####
 # subset stage 1
@@ -175,10 +197,9 @@ sink()  # returns output to the console
 
 #%% Figure 2B Stats 2 -- 'Learning' across sesssions; Compare DS AUC across all special sessions --####
 
-#0%%-- Clear data between tests ####
-rm(model, model_anova,tPairwise, t)
-rm(model_pooled, model_anova_pooled, tPairwise_pooled, t_pooled)
-rm(model_DS)
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 
 #1%%-- Load data from .pkl ####
@@ -224,7 +245,9 @@ figName= "vp-vta_fig2b_stats_C_interactionPlot.pdf"
 setwd(pathOutput)
 pdf(file=figName)
 
-emmip(model, ~ sesSpecialLabel)
+# emmip(model_pooled, ~ sesSpecialLabel)
+emmip(model_pooled, trialType ~ sesSpecialLabel)
+
 
 dev.off()
 setwd(pathWorking)
@@ -327,10 +350,10 @@ setwd(pathWorking)
 
 ## ---- FIGURE 2D --------------------------------------------------------####
 
-#0%%-- Clear data between tests ####
-rm(model, model_anova,tPairwise, t)
-rm(model_pooled, model_anova_pooled, tPairwise_pooled, t_pooled)
-rm(model_DS)
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 
 #1%%-- Load data from .pkl ####

@@ -150,8 +150,9 @@ setwd(pathWorking)
 
 #%% FIGURE 1D Stats B -- Learning DS PE Ratio--####
 
-#0%%-- Clear data between tests ####
-rm(model, model_anova,tPairwise, t)
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 #1%%-- Load data from .pkl ####
 
@@ -235,8 +236,9 @@ setwd(pathWorking)
 
 ## ----- FIGURE 1_Supplement Stats A- PE Latency---------------------------------------------------------####
 
-#0%%-- Clear data between tests ####
-rm(model, model_anova,tPairwise, t)
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 #1%%-- Load data from .pkl ####
 
@@ -327,6 +329,11 @@ setwd(pathWorking)
 # __________________________________________________ ####
 
 #%% -- Figure 1_ Supplement Stats Stats A.2 - # Number of Training Days to End ####
+
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 #1%%-- Load/subset data from .pkl ####
 

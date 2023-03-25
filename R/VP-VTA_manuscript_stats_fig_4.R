@@ -30,6 +30,11 @@ gsub(" ", "", pathOutput)
 
 #%- Fig 4CD Stats B-- No Laser Sessions ####
 
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
+
 #1%%-- Load data from .pkl ####
 
 pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig4cd.pkl"
@@ -255,6 +260,11 @@ setwd(pathWorking)
 #%- Fig 4CD Stats A-  DS Task Laser Sessions ####
 
 ##
+
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 #1%%-- Load data from .pkl ####
 
@@ -636,6 +646,11 @@ setwd(pathWorking)
 
 # ##Hmmmm given that it is 3-way interaction (which is difficult to power for) and it is so close to the 0.05 cut-off, I feel like doing some follow-up comparison are justified
 # *** It would be helpful to know if there is a cue by laser interaction within each stim length test **
+
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 #1%%-- Load data from .pkl ####
 

@@ -133,6 +133,10 @@ gsub(" ", "", pathOutput)
 
 #%- Fig 6 Stats A/B-- OG Side, Acquisition Phase ####
 
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
+
 
 #1%%-- Load data from .pkl ####
 
@@ -487,6 +491,11 @@ setwd(pathWorking)
 
 
 #%- Fig 6 Stats A/B-- Final Session, OG Side, Acquisition Phase ####
+
+
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 
 #1%%-- Load data from .pkl ####
@@ -851,10 +860,12 @@ setwd(pathWorking)
 
 # __________________________________________________ ####
 
-
-
-
 #%- Fig 6 Stats C/D-- Reversal ####
+
+
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 
 #1%%-- Load data from .pkl ####
@@ -1218,6 +1229,9 @@ setwd(pathWorking)
 
 #%- Fig 6 Stats C/D-- Final Session, Reversed Side, Reversal Phase ####
 
+#0%%-- Clear vars between tests ####
+# #clear workspace (R environment) # Except paths, Python packages (pandas)
+rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 #1%%-- Load data from .pkl ####
 
