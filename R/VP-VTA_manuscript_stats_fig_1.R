@@ -28,6 +28,11 @@ gsub(" ", "", pathOutput)
 
 ## ----- FIGURE 1D Stats A- PE Prob---------------------------------------------------------####
 
+
+#0%%-- Clear data between tests ####
+rm(model, model_anova,tPairwise, t)
+
+
 #1%%-- Load data from .pkl ####
 
 pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig1d.pkl"
@@ -144,6 +149,9 @@ setwd(pathWorking)
 
 #%% FIGURE 1D Stats B -- Learning DS PE Ratio--####
 
+#0%%-- Clear data between tests ####
+rm(model, model_anova,tPairwise, t)
+
 #1%%-- Load data from .pkl ####
 
 pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig1d.pkl"
@@ -225,6 +233,9 @@ setwd(pathWorking)
 
 
 ## ----- FIGURE 1_Supplement Stats A- PE Latency---------------------------------------------------------####
+
+#0%%-- Clear data between tests ####
+rm(model, model_anova,tPairwise, t)
 
 #1%%-- Load data from .pkl ####
 
