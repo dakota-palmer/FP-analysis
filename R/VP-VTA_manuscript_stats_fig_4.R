@@ -63,6 +63,21 @@ df_Sub_B_VTA= df_Sub_B[df_Sub_B$Projection=='VTA',]
 
 df_Sub_B_mdThal= df_Sub_B[df_Sub_B$Projection=='mdThal',]
 
+# 
+# #-- Report mean+/- SEM days to criteria
+# 
+# #define standard error of mean function
+# std.error <- function(x) sd(x)/sqrt(length(x))
+# 
+# test_VTA= df_Sub_B_finalSes_VTA[(df_Sub_B_finalSes_VTA$typeNP== 'ActiveNP'),'countNP']
+# 
+# mean(test_VTA)
+# std.error(test_VTA)
+# 
+# test_mdThal=df_Sub_B_finalSes_mdThal[(df_Sub_B_finalSes_mdThal$typeNP== 'ActiveNP'),'countNP']
+# 
+# mean(test_mdThal)
+# std.error(test_mdThal)
 
 
 #2%%-- Run LME ####

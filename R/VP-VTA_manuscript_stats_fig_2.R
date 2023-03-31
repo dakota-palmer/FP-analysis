@@ -95,7 +95,16 @@ setwd(pathWorking)
 #- Pairwise T- tests
 EMM <- emmeans(model, ~ trialType | sesSpecialLabel)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+print(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+
+#- T-Test vs. null
+# EMM <- emmeans(model, ~ trialType | sesSpecialLabel)   # where treat has 2 levels
+# this way multiple comparisons correction per session
+EMM <- emmeans(model, ~ sesSpecialLabel | trialType)   # where treat has 2 levels
+
+t= test(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+print(t, by = NULL, adjust = "sidak")   # all are in one group now
+
 
 
 #4%%-- Save output to variables between tests  ####
@@ -109,6 +118,8 @@ fig2B_stats_A_0_description= "DS vs NS AUC on special Sessions with NS"
 fig2B_stats_A_1_model= model
 fig2B_stats_A_2_model_anova= model_anova
 fig2B_stats_A_3_model_post_hoc_pairwise= tPairwise 
+fig2B_stats_A_3_model_post_hoc_t= t 
+
 
 ##5%%-- Save output to file ####
 setwd(pathOutput)
@@ -129,6 +140,9 @@ print(fig2B_stats_A_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:')
 print(fig2B_stats_A_3_model_post_hoc_pairwise, by=NULL, adjust='sidak')
+'------------------------------------------------------------------------------'
+print('3b)---- Posthoc t vs. null:')
+print(fig2B_stats_A_3_model_post_hoc_t, adjust='sidak')
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 
@@ -169,10 +183,37 @@ df_Sub_B= df[df$stage==1,]
 # subset DS trials only
 df_Sub_B= df_Sub_B[df_Sub_B$trialType== 'aucDSblue',]
 
+#2%%-- Run model ####
+# not necessary?
+# model= lmerTest::lmer('periCueBlueAuc ~ trialType + (1|subject)', data=df_Sub_B)
+# 
+model= lm('periCueBlueAuc ~ subject', data=df_Sub_B)
+
+
+model_anova= anova(model)
+
+
+## ~~~ FLAG ~~~ ####
 #--One sample T test DS vs null(0) for the first session
+# df isn't right. not accounting for subjects here in simple t test
+
+# this is multiple samples (30 trials per subj, so need to pair observations?)
 t= t.test(df_Sub_B$periCueBlueAuc)
+# 
+# 
+# just run the whole LME  in next section and use that posthoc
+# doesn't work with this model
+# EMM <- emmeans(model ~ subject)   # where treat has 2 levels
+# 
+# t= test(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+# 
+# print(t, by = NULL, adjust = "sidak")   # all are in one group now
+
+## ~~~ FLAG ~~~ ####
+
 
 #%%4-- Save output to variables between tests  ####
+
 fig2B_stats_B_0_description= "DS AUC vs 0 on first training day (no NS)"
 fig2B_stats_B_1_t= t 
 
@@ -236,7 +277,10 @@ model_anova_pooled= anova(model_pooled)
 
 
 model_DS= lmerTest::lmer('periCueBlueAuc ~ sesSpecialLabel + (1|subject)', data=df_Sub_B_DS)
+model_anova_DS= anova(model_DS)
 
+model_NS= lmerTest::lmer('periCueBlueAuc ~ sesSpecialLabel + (1|subject)', data=df_Sub_B_NS)
+model_anova_NS= anova(model_NS)
 
 #3--Posthoc pairwise comparisons (t test) ####
 
@@ -260,7 +304,6 @@ emmip(model_pooled, trialType ~ sesSpecialLabel)
 # EMM <- emmeans(model_pooled, ~ trialType | sesSpecialLabel)   # where treat has 2 levels
 EMM <- emmeans(model_pooled, ~ sesSpecialLabel|trialType)   # where treat has 2 levels
 
-
 # tPairwise_pooled= pairs(EMM, by=NULL, adjust= "sidak")
 tPairwise_pooled= pairs(EMM, adjust= "sidak")
 
@@ -272,6 +315,16 @@ print(tPairwise_pooled, adjust="sidak")
 t_pooled= test(EMM, null= 0, adjust="sidak")
 
 print(t_pooled, adjust= "sidak")
+
+# #-- Checking posthoc for DS specifically (df should be based on DS for first session?)
+# EMM <- emmeans(model_DS, ~ sesSpecialLabel)   # where treat has 2 levels
+# tPairwise_DS= pairs(EMM, adjust= "sidak")
+# print(tPairwise_pooled, adjust="sidak")
+
+# EMM <- emmeans(model_DS, ~ sesSpecialLabel)   # where treat has 2 levels
+# t_DS= test(EMM, null= 0, adjust="sidak")
+# print(t_DS, adjust= "sidak")
+
 
 #4%%-- Save output to variables between tests  ####
 fig2B_stats_C_0_description= "DS & NS AUC: Learning/Changes across sessions"
@@ -336,9 +389,9 @@ print(fig2B_stats_C_2_model_anova)
 print('3)---- Posthoc pairwise:')
 print(fig2B_stats_C_3_model_post_hoc_pairwise, adjust='sidak')
 '------------------------------------------------------------------------------'
-# print('3)---- Posthoc T vs null,:')
-# print(fig2B_stats_C_3_model_post_hoc_t, by=NULL, adjust='sidak')
-#zero isn't really the most appropriate null hypothesis here 
+print('3)---- Posthoc T vs null,:')
+print(fig2B_stats_C_3_model_post_hoc_t, by=NULL, adjust='sidak')
+# zero isn't really the most appropriate null hypothesis here?
 '---- END ---------------------------------------------------------------------'
 
 sink()  # returns output to the console
@@ -394,7 +447,13 @@ model_anova<- anova(model)
 #- Pairwise T- tests
 EMM <- emmeans(model, ~ trialOutcome)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
+print(tPairwise, adjust = "sidak")   # all are in one group now
+
+#-  T- tests vs null
+EMM <- emmeans(model, ~ trialOutcome)   # where treat has 2 levels
+t= test(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
+print(t, by = NULL, adjust = "sidak")   # all are in one group now
+
 
 
 #4%%-- Save output to variables between tests  ####
@@ -404,6 +463,7 @@ fig2D_stats_A_0_description= "Figure 2D: PE vs no PE AUC , stage 7"
 fig2D_stats_A_1_model= model
 fig2D_stats_A_2_model_anova= model_anova
 fig2D_stats_A_3_model_post_hoc_pairwise= tPairwise 
+fig2D_stats_A_3_model_post_hoc_t= t 
 
 
 
@@ -424,7 +484,11 @@ print('2)---- ANOVA of LME:')
 print(fig2D_stats_A_2_model_anova)
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc pairwise:')
-print(fig2D_stats_A_3_model_post_hoc_pairwise)
+print(fig2D_stats_A_3_model_post_hoc_pairwise, adjust='sidak')
+'------------------------------------------------------------------------------'
+print('3)---- Posthoc t:')
+print(fig2D_stats_A_3_model_post_hoc_t, adjust='sidak')
+
 '---- END ---------------------------------------------------------------------'
 sink()  # returns output to the console
 

@@ -1210,51 +1210,6 @@ fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_2_model_anova= modelLicks_anova_m
 fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_3_model_post_hoc_pairwise= tPairwiseLicks_mdThal
 
 
-#%% 2.5 -- Final Day specific tests? ####
-# Alternatively, you could just do pairwise comparisons at the start and end of each phase (so sessions 1 and 6 here), since we aren't really concerned about the specific day a difference emerged, and whether one emerged by the end of training that wasn't there on day 1.
-# just ignore the pariwise bc no sig interactions unless a priori
-
-# -- RUN T TESTS ON FINAL DAY ONLY --
-# Lever Press Count on test day
-
-# #- subset data
-# df_Sub_A_VTA_finalSes= df_Sub_A_VTA[df_Sub_A_VTA$Session==6,]
-# df_Sub_A_mdThal_finalSes= df_Sub_A_mdThal[df_Sub_A_mdThal$Session==6,]
-
-#- model
-# -- just subset() in model for easier without duplicating df
-
-# 
-# model_pooled_finalSes= lmerTest::lmer('licksPerRewardTypeLP ~ Projection * typeLP  + (1|Subject)', subset=(Session==6), data=df_Sub_A)
-# 
-# model_anova_pooled_finalSes= anova(model_VTA_finalSes)
-# 
-# 
-# model_VTA_finalSes= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP  + (1|Subject)', subset=(Session==6), data=df_Sub_A_VTA)
-# 
-# model_anova_VTA_finalSes= anova(model_VTA_finalSes)
-# 
-# model_mdThal_finalSes= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP  + (1|Subject)', subset=(Session==6), data=df_Sub_A_mdThal)
-# 
-# model_anova_mdThal_finalSes= anova(model_mdThal_finalSes)
-
-# stick to fig data
-
-# model_pooled_finalSes= lmerTest::lmer('licksPerRewardTypeLP ~ Projection * typeLP  + (1|Subject)', subset=(Session==6), data=df_Sub_A)
-# 
-# model_anova_pooled_finalSes= anova(model_VTA_finalSes)
-
-
-
-#- run pairwise t
-
-
-
-#- run t vs null
-
-
-
-
 #5%% -- Figure 6 Save output ####
 
 #- move to output directory prior to saving
@@ -1420,6 +1375,71 @@ sink()  # returns output to the console
 
 #- return to working directory after saving
 setwd(pathWorking)
+
+
+
+
+#%% 6- VIZ ####
+
+# Viz licks per reward stats
+
+#1 bar- Bar plot by session of licks/reward
+dfPlot= df_Sub_C
+
+p= ggplot(data= dfPlot)
+
+p= p+
+  
+  scale_colour_brewer(palette="Paired")+
+  
+  #- by session
+  facet_grid(Projection~Session)+
+  
+  geom_point(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, colour='black',  fill=typeLP), alpha=0.5, shape=21, size=2)+
+  
+  geom_line(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, group=Subject), colour='black', alpha=0.5)+
+  
+  stat_summary(fun=mean, geom='bar', aes(x=typeLP,y=licksPerRewardTypeLP, colour=typeLP,  fill=typeLP))+
+  
+  stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
+
+ggplotly(p)
+
+
+
+#B- Line plot by Session
+dfPlot= df_Sub_C
+
+dfPlot$Session= as.numeric(as.character(dfPlot$Session))
+
+p= ggplot(data= dfPlot)
+
+p= p+
+  
+  # scale_colour_brewer(palette="Set2")+
+  
+  #- by session
+  facet_grid(Projection~trainPhase)+
+  
+  geom_point(data= dfPlot, aes(group=Subject, x=Session, y=licksPerRewardTypeLP, colour=typeLP), alpha=0.5, shape=21, size=.5)+
+  
+  geom_line(data= dfPlot, aes(group=Subject, x=Session, y=licksPerRewardTypeLP, colour=typeLP), alpha=0.5, size=.5)+
+  
+  
+  stat_summary(fun=mean, geom='line', aes(x=Session, y=licksPerRewardTypeLP, colour=typeLP), size=2) +
+  
+  stat_summary(fun.data = mean_se, aes(x=Session, y=licksPerRewardTypeLP, fill=typeLP), alpha= 0.3, geom = "ribbon")
+
+
+# stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
+
+ggplotly(p)
+
+#%% C - compare to interaction plot? 
+emmip(modelLicks_VTA, ~ typeLP | Session )
+
+emmip(modelLicks_VTA, ~ typeLP)
+
 
 
 
@@ -2663,11 +2683,109 @@ setwd(pathWorking)
 
 #%% END ####
 
-
-#%% Licks per reward plot - is mdThal group bimodal like proportion?
-#pooled licks/reward plot
-
-
+#%% VIZ ####
+# import plotly for interactive plots 
+library(plotly)
 
 
+#%% Viz licks per reward #### 
+
+#1%%-- Load data from .pkl ####
+
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig5.pkl"
+
+df <- pd$read_pickle(pathData)
+
+
+###### summarize data
+summary(df)
+
+#verify dtypes imported properly
+sapply(df, class)
+
+
+
+#%%-- Subset data ##
+#Remove missing/invalid observations
+#- eliminate duplicate proportion values 
+# currently active proportion is session level but df has 2 per session (1 per npType)
+# so just remove from one trialType. This way can use same df for multiple models easily
+df[df$typeLP=='ActiveLeverPress','probActiveLP']= NaN
+df[df$typeLP=='ActiveLeverPress','LicksPerReward']= NaN
+
+
+#1 bar- Bar plot by session of licks/reward
+dfPlot= df
+
+p= ggplot(data= dfPlot)
+  
+p= p+
+  
+  scale_colour_brewer(palette="Paired")+
+  
+  #- by session
+  facet_grid(Projection~Session)+
+  
+  geom_point(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, colour='black',  fill=typeLP), alpha=0.5, shape=21, size=2)+
+  
+  geom_line(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, group=Subject), colour='black', alpha=0.5)+
+  
+  stat_summary(fun=mean, geom='bar', aes(x=typeLP,y=licksPerRewardTypeLP, colour=typeLP,  fill=typeLP))+
+  
+  stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
+
+ggplotly(p)
+
+
+#2 bar - by trainPhase
+dfPlot= df
+
+p= ggplot(data= dfPlot)
+
+p= p+
+  
+  scale_colour_brewer(palette="Paired")+
+  
+  # - by trainPhase
+  facet_grid(Projection~trainPhase)+
+
+  geom_point(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, colour='black',  fill=typeLP), alpha=0.7, shape=21, size=2)+
+ 
+  geom_line(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, group=Subject), colour='black', alpha=0.5)+
+  
+  stat_summary(fun=mean, geom='bar', aes(x=typeLP,y=licksPerRewardTypeLP, colour=typeLP,  fill=typeLP))+
+  
+  stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
+    
+      
+ggplotly(p)
+  
+
+#B- Line plot by Session
+dfPlot= df
+
+dfPlot$Session= as.numeric(as.character(dfPlot$Session))
+
+p= ggplot(data= dfPlot)
+
+p= p+
+  
+  # scale_colour_brewer(palette="Set2")+
+  
+  #- by session
+  facet_grid(Projection~trainPhase)+
+  
+  geom_point(data= dfPlot, aes(group=Subject, x=Session, y=licksPerRewardTypeLP, colour=typeLP), alpha=0.5, shape=21, size=.5)+
+
+  geom_line(data= dfPlot, aes(group=Subject, x=Session, y=licksPerRewardTypeLP, colour=typeLP), alpha=0.5, size=.5)+
+  
+  
+  stat_summary(fun=mean, geom='line', aes(x=Session, y=licksPerRewardTypeLP, colour=typeLP), size=2) +
+  
+  stat_summary(fun.data = mean_se, aes(x=Session, y=licksPerRewardTypeLP, fill=typeLP), alpha= 0.3, geom = "ribbon")
+
+
+  # stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
+
+ggplotly(p)
 
