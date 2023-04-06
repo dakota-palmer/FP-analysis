@@ -1084,6 +1084,18 @@ data3= data;
 data3= stack(data3, {'DSblue', 'DSbluePox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
 
 
+
+% ---- 2023-04-06
+ %Mean/SEM update
+ %instead of all trials, simplify to mean observation per subject
+ % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
+data3= groupsummary(data3, ["subject","stage","eventType", "timeLock"], "mean",["periEventBlue"]);
+
+% making new field with original column name to work with rest of old code bc 'mean_' is added 
+data3.periEventBlue= data3.mean_periEventBlue;
+
+
+
 % - Individual Subj lines
 group= data3.subject;
 
@@ -1151,6 +1163,12 @@ gPeriEvent(1,1).draw();
 dfKernelsAll= readtable("C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_output\fig3_df_kernelsAll.csv");
 
 dfPredictedMean= readtable("C:\Users\Dakota\Documents\GitHub\FP-analysis\python\_output\fig3_df_predictedMean.csv");
+
+
+%% --- Quick and dirty correlation of model predicted vs true GCaMP
+
+[rho, pval]= corr(dfPredictedMean.y, dfPredictedMean.yPredicted);
+% doesn't give degrees of freedom or more detailed stats
 
 %% -- Make Encoding model Figures
 
@@ -1225,6 +1243,16 @@ ind= ~(data.timeShift== .025);
 data(ind,'betaAUCpostEvent')= table(nan);
 
 % data= data(~isnan(data.betaAUCpostEvent),:);
+
+% ---- 2023-04-06
+ %Mean/SEM update
+ %instead of all trials, simplify to mean observation per subject
+ % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
+data= groupsummary(data, ["subject","eventType"], "mean",["betaAUCpostEvent"]);
+
+% making new field with original column name to work with rest of old code bc 'mean_' is added 
+data.betaAUCpostEvent= data.mean_betaAUCpostEvent;
+
 
 % -- Between subjects  Boxplot
 group=[]

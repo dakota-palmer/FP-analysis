@@ -302,9 +302,19 @@ cmapSubj= cmapBlueGraySubj;
 % cmapGrand= cmapCueGrand;
 % cmapSubj= cmapCueSubj;
 
+% ---- 2023-04-06
+ %Mean/SEM update
+ %instead of all trials, simplify to mean observation per subject
+ % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
+data= groupsummary(data, ["subject","sesSpecialLabel","trialTypeLabel", "timeLock"], "mean",["periCueBlue"]);
+
+% making new field with original column name to work with rest of old code bc 'mean_' is added 
+data.periCueBlue= data.mean_periCueBlue;
+
 
 % individual subjects means
-i= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group', data.subject);
+group= data.subject;
+i= gramm('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group', group);
 
 i.facet_grid([],data.sesSpecialLabel);%, 'column_labels',false);
 
@@ -383,7 +393,8 @@ i().draw();
 
 
 %mean between subj + sem
-i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group',[]);
+group= [];
+i().update('x',data.timeLock,'y',data.periCueBlue, 'color', data.trialTypeLabel, 'group',group);
 
 i().stat_summary('type',errorBar,'geom','area');
 
@@ -561,6 +572,17 @@ for thisTrialType= 1:numel(trialTypes)
     data2(ind, 'trialTypeLabel')= {trialTypeLabels(thisTrialType)};
     
 end
+
+% ---- 2023-04-06
+ %Mean/SEM update
+ %instead of all trials, simplify to mean observation per subject
+ % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
+data2= groupsummary(data2, ["subject","sesSpecialLabel","trialTypeLabel", "timeLock"], "mean",["periCueBlueAuc"]);
+
+% making new field with original column name to work with rest of old code bc 'mean_' is added 
+data2.periCueBlueAuc= data2.mean_periCueBlueAuc;
+
+
 
 %mean between subj
 group=[];
@@ -989,6 +1011,16 @@ data= stack(data, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome',
 % values and should be left with single.
 data= data(~isnan(data.periCueBlue),:);
 
+% ---- 2023-04-06
+ %Mean/SEM update
+ %instead of all trials, simplify to mean observation per subject
+ % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
+data= groupsummary(data, ["subject","stage","trialOutcome", "timeLock"], "mean",["periCueBlue"]);
+
+% making new field with original column name to work with rest of old code bc 'mean_' is added 
+data.periCueBlue= data.mean_periCueBlue;
+
+
 % figure();
 clear i2
 
@@ -1119,6 +1151,16 @@ data2= stack(data2, {'noPEtrial', 'PEtrial'}, 'IndexVariableName', 'trialOutcome
 % currently stack() makes a value for each ts for each trial. Remove nan
 % values and should be left with single.
 data2= data2(~isnan(data2.periCueBlueAuc),:);
+
+% ---- 2023-04-06
+ %Mean/SEM update
+ %instead of all trials, simplify to mean observation per subject
+ % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
+data2= groupsummary(data2, ["subject","stage","trialOutcome", "timeLock"], "mean",["periCueBlueAuc"]);
+
+% making new field with original column name to work with rest of old code bc 'mean_' is added 
+data2.periCueBlueAuc= data2.mean_periCueBlueAuc;
+
 
 % figure();
 clear i3

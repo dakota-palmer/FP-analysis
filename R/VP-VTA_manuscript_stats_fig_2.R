@@ -316,6 +316,9 @@ t_pooled= test(EMM, null= 0, adjust="sidak")
 
 print(t_pooled, adjust= "sidak")
 
+#-- Run T test on mean of subjects
+
+
 # #-- Checking posthoc for DS specifically (df should be based on DS for first session?)
 # EMM <- emmeans(model_DS, ~ sesSpecialLabel)   # where treat has 2 levels
 # tPairwise_DS= pairs(EMM, adjust= "sidak")

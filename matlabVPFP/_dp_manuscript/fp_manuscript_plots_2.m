@@ -652,6 +652,7 @@ data(ind,'sesSpecialLabel')= {''};
 
 periEventTable= data;
 
+
 %% ----------------- Figure 2---------------------------------------------------
 fp_manuscript_fig2_uiPanels();
 

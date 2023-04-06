@@ -180,6 +180,8 @@ print('saving fig2d df to file')
 #Save as pickel
 df.to_pickle(savePath+'fig2d.pkl')
 
+#%%--------- FIG 3 ENCODING MODEL PREDICTED VS ACTUAL ----
+
 
 #%% ---------------------------FIG 3 LATENCY CORRELATION ---------------
 

@@ -209,6 +209,12 @@ fig3_stats_EncodingModel_B_3_model_post_hoc_pairwise= tPairwiseSig
 fig3_stats_EncodingModel_B_3_model_post_hoc_t= tSig
 
 
+#3.5 -- Correlation between predicted vs. actual GCaMP ####
+
+dat = read.csv("C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig3_df_predictedMean.csv", header = TRUE)
+corr= cor.test(dat$y, dat$yPredicted)
+
+
 #5%%-- Save output ####
 
 #- move to output directory prior to saving
@@ -460,6 +466,7 @@ indSig= which(t$p.value<=pAlpha)
 tSig= t[indSig,]
 
 library(ggplot2)
+
 
 
 
