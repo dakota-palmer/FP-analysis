@@ -183,6 +183,12 @@ df_Sub_B= df[df$stage==1,]
 # subset DS trials only
 df_Sub_B= df_Sub_B[df_Sub_B$trialType== 'aucDSblue',]
 
+#-  aggregate so that stats run on subject means (was all trials but df was wrong) 2023-04-18 ####
+# test <- aggregate(periCueBlueAuc ~ subject, data = df_Sub_B, mean) # Equivalent
+
+df_Sub_B <- aggregate(periCueBlueAuc ~ subject + trialType, data = df_Sub_B, mean) # Equivalent
+
+
 #2%%-- Run model ####
 # not necessary?
 # model= lmerTest::lmer('periCueBlueAuc ~ trialType + (1|subject)', data=df_Sub_B)
