@@ -1,11 +1,3 @@
-#-- SET R OPTIONS ####
-# Scientific notation and sig figs
-# options(scipen=1, digits=5)
-# digits = ?? 
-# options(scipen=1, digits=7)
-# 
-# # test run with scipen off to compare results (accidentally ran with scipen off from r workshop before clearing between tests
-# options(scipen=999)
 
 ###### enter python env ####
 Sys.setenv(RETICULATE_PYTHON = "C:/Users/Dakota/anaconda3/envs/spyder-env-seaborn-update")
@@ -42,21 +34,7 @@ gsub(" ", "", pathOutput)
 rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 
-#1%%-- Load data from .pkl ####
-
-pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig1d.pkl"
-
-df <- pd$read_pickle(pathData)
-
-
-###### summarize data
-summary(df)
-
-#verify dtypes imported properly
-sapply(df, class) 
-
-
-#%% Figure 1D Stats A -- Compare DS vs NS PE Ratio--####
+#%% Figure 1D Stats A -- Compare DS vs NS PE Ratio--##
 
 ##1%%-- Load data from .pkl ####
 

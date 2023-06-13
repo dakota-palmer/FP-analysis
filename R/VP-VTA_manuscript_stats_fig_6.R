@@ -24,109 +24,6 @@ pathOutput= paste(pathWorking,'/_output', sep="")
 #get rid of space introduced by paste()
 gsub(" ", "", pathOutput)
 
-# __________________________________________________ ####
-
-# 
-# ## -------FIGUre 6 ----------------------------------------------###
-# 
-# 
-# ## ----- FIGURE 6 --------------------------------------------------------####
-# 
-# #%%-- Load data from .pkl ####
-# 
-# pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig6.pkl"
-# 
-# df <- pd$read_pickle(pathData)
-# 
-# 
-# ###### summarize data
-# summary(df)
-# 
-# #verify dtypes imported properly
-# sapply(df, class) 
-# 
-# 
-# #%%-- Subset data ## 
-# #Remove missing/invalid observations 
-# # df_Sub_A= df
-# # 
-# # #- Can only include laserTrial for StimLength >0
-# # df_Sub_A= df[df$StimLength != 0,]
-# 
-# 
-# ## %%-- Run LME ##
-# 
-# model= lmerTest::lmer('countNP ~ Projection * typeNP * Session *  trainPhase + (1|Subject)', data=df)
-# 
-# 
-# model_anova<- anova(model)
-# 
-# #2023-02-21 all grouped together, projection * cueID interaction
-# 
-# 
-# #%%-- Run Follow-up post-hoc tests ####
-# 
-# #- Signifcant interaction term, want to follow-up and estimate main effects
-# 
-# # -- Interaction plot
-# #- Viz interaction plot & save
-# figName= "vp-vta_fig46_stats_A_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model, typeNP ~ Session | trainPhase | Projection)
-# 
-# dev.off()
-# setwd(pathWorking)
-# 
-# #- Pairwise T- tests
-# EMM <- emmeans(model, ~ LaserTrial | StimLength | CueID | Projection)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# 
-# # Pairwise results- no significant contrasts
-# 
-# 
-# #- Pairwise T- tests
-# EMM <- emmeans(model, ~ trialOutcome)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# 
-# #%%-- Save output to variables between tests  ####
-# # trying to keep code mostly generalizable and just save custom names at end
-# # all the results into descriptive variables between tests
-# fig4C_stats_A_0_description= "Figure 4C: DS opto all"
-# fig4C_stats_A_1_model= model
-# fig4C_stats_A_2_model_anova= model_anova
-# fig4C_stats_A_3_model_post_hoc_pairwise= tPairwise 
-# 
-# 
-# #%%-- Save output to File ####
-# # Fig2D_A
-# setwd(pathOutput)
-# 
-# 
-# sink("vp-vta_fig4C_stats_A_PEvsNoPE_DS.txt")
-# '------------------------------------------------------------------------------'
-# '0)---- Description --: '
-# print(fig2D_stats_A_0_description)
-# '------------------------------------------------------------------------------'
-# print('1)---- LME:')
-# print(summary(fig2D_stats_A_1_model))
-# '------------------------------------------------------------------------------'
-# print('2)---- ANOVA of LME:')
-# print(fig2D_stats_A_2_model_anova)
-# '------------------------------------------------------------------------------'
-# print('3)---- Posthoc pairwise:')
-# print(fig4C_stats_A_3_model_post_hoc_pairwise)
-# '---- END ---------------------------------------------------------------------'
-# sink()  # returns output to the console
-# 
-# setwd(pathWorking)
-# 
-
 
 # __________________________________________________ ####
 
@@ -235,20 +132,9 @@ dev.off()
 setwd(pathWorking)
 
 
-#2023-02-21
-#4C) PE Prob results 
-# mdThal: Only significant effect = CueID
-# VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
-#4D) PE Latency results
-#mdThal: Only significant effect= CueID
-#VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
-
-
 #3%%-- Run Follow-up post-hoc tests ####
 
 # Pairwise comparisons between Sessions
-
-#-- LIMIT COMPARISONS TO ONLY FINAL SESSION SHOWN
 
 #-- Pooled
 EMM <- emmeans(model_pooled, ~ typeNP | Session | Projection)   # where treat has 2 levels
@@ -290,13 +176,7 @@ tPairwise_proportion_VTA= tPairwise
 t_Proportion_VTA= test(EMM, null=0.5, adjust='sidak')
 
 
-
-#vta followup tests reveal significant differences in npCount by npType only in Sessions 4, 5
-# also sig difference only between ses 1-5, 1-3
-
 # for active proportion, check if each level significantly different from 0.5 (chance)
-test2= test(EMM, null=0.5, adjust='sidak')
-
 #example test() with emmeans here- https://cran.r-project.org/web/packages/emmeans/vignettes/confidence-intervals.html
 # example of how to do 1 sample t test at each level with emmmeans 
 
@@ -321,10 +201,6 @@ tPairwise_proportion_mdThal= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
 t_Proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
-
-
-
-  #followup tests for mdThal reveal no sig diffs by session
 
 
 #4%%-- Save output to variables between tests  ####
@@ -534,7 +410,6 @@ df_Sub_A_finalSes_mdThal= df_Sub_A_finalSes[df_Sub_A_finalSes$Projection=='mdTha
 
 
 
-
 #since we've dropped levels(categories) from the factor(categorical) variable trainDayThisPhase, drop accordingly for stats to work out
 # droplevels(df_Sub_A_finalSes$trainDayThisPhase)
 # droplevels(df_Sub_A_finalSes$trainPhase)
@@ -579,7 +454,6 @@ model_anova_mdThal<- anova(model_mdThal)
 modelProportion_mdThal= lm('npActiveProportion ~ Subject', data=df_Sub_A_finalSes_mdThal)
 
 # # Only 1 observation per subject so need for model/anova, just t test 
-# modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 
 
 
@@ -608,20 +482,9 @@ dev.off()
 setwd(pathWorking)
 
 
-#2023-02-21
-#4C) PE Prob results 
-# mdThal: Only significant effect = CueID
-# VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
-#4D) PE Latency results
-#mdThal: Only significant effect= CueID
-#VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
-
-
 #3%%-- Run Follow-up post-hoc tests ####
 
 # Pairwise comparisons between Sessions
-
-#-- LIMIT COMPARISONS TO ONLY FINAL SESSION SHOWN
 
 #-- Pooled
 EMM <- emmeans(model_pooled, ~ typeNP | Projection)   # where treat has 2 levels
@@ -659,14 +522,8 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_VTA= tPairwise
 
 # #-npActiveProportion
-# EMM <- emmeans(modelProportion_VTA, ~ Subject)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_proportion_VTA= tPairwise
-# 
+ 
 # # for active proportion, check if each level significantly different from 0.5 (chance)
-# t_Proportion_VTA= test(EMM, null=0.5, adjust='sidak')
 
 # #-npActiveProportion
 # just need 1 sample t test
@@ -683,22 +540,10 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_mdThal= tPairwise
 # 
 # #-npActiveProportion
-# EMM <- emmeans(modelProportion_mdThal,)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_proportion_mdThal= tPairwise
-# 
 # # for active proportion, check if each level significantly different from 0.5 (chance)
-# t_Proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
-
-# #-npActiveProportion
 # just need 1 sample t test
 t_Proportion_mdThal= t.test(df_Sub_A_finalSes_mdThal$npActiveProportion, mu=0.5)
 
-
-
-#followup tests for mdThal reveal no sig diffs by session
 
 
 #4%%-- Save output to variables between tests  ####
@@ -968,31 +813,7 @@ dev.off()
 setwd(pathWorking)
 
 
-#2023-02-21
-#4C) PE Prob results 
-# mdThal: Only significant effect = CueID
-# VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
-#4D) PE Latency results
-#mdThal: Only significant effect= CueID
-#VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
-
-
-#3%%-- Run Follow-up post-hoc tests ####
-
-# Pairwise comparisons between Sessions
-
-# #-- Pairwise comparisons (t test) between TrialOutcome
-# #- Viz interaction plot & save
-# - interaction plots should be same as above
-
-# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_VTA, LaserTrial ~ StimLength | CueID )
-# 
-# dev.off()
-# setwd(pathWorking)
+#3%%-- Run Posthoc tests ####
 
 #- Pairwise T- tests
 
@@ -1034,13 +855,7 @@ tPairwise_proportion_VTA= tPairwise
 t_Proportion_VTA= test(EMM, null=0.5, adjust='sidak')
 
 
-
-#vta followup tests reveal significant differences in npCount by npType only in Sessions 4, 5
-# also sig difference only between ses 1-5, 1-3
-
 # for active proportion, check if each level significantly different from 0.5 (chance)
-test2= test(EMM, null=0.5, adjust='sidak')
-
 #example test() with emmeans here- https://cran.r-project.org/web/packages/emmeans/vignettes/confidence-intervals.html
 # example of how to do 1 sample t test at each level with emmmeans 
 
@@ -1066,9 +881,6 @@ tPairwise_proportion_mdThal= tPairwise
 # for active proportion, check if each level significantly different from 0.5 (chance)
 t_Proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 
-
-
-#followup tests for mdThal reveal no sig diffs by session
 
 
 #4%%-- Save output to variables between tests  ####
@@ -1312,7 +1124,6 @@ modelProportion_anova_pooled= anova(modelProportion)
 model_VTA= lmerTest::lmer('countNP ~ typeNP  + (1|Subject)', data=df_Sub_B_finalSes_VTA)
 model_anova_VTA<- anova(model_VTA)
 #-Proportion
-# modelProportion_VTA= lmerTest::lmer('npActiveProportion ~ Session + (1|Subject)', data=df_Sub_B_finalSes_VTA)
 modelProportion_VTA= lm('npActiveProportion ~ Subject', data=df_Sub_B_finalSes_VTA)
 
 # #only 1 observation per subject so no need for model/anova, just do t test
@@ -1340,8 +1151,6 @@ pdf(file=figName)
 
 emmip(model_pooled, ~ typeNP | Projection )
 
-# emmip(model_pooled, Projection ~ typeNP | Session )
-
 
 dev.off()
 setwd(pathWorking)
@@ -1357,20 +1166,10 @@ dev.off()
 setwd(pathWorking)
 
 
-#2023-02-21
-#4C) PE Prob results 
-# mdThal: Only significant effect = CueID
-# VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
-#4D) PE Latency results
-#mdThal: Only significant effect= CueID
-#VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
-
-
 #3%%-- Run Follow-up post-hoc tests ####
 
 # Pairwise comparisons between Sessions
 
-#-- LIMIT COMPARISONS TO ONLY FINAL SESSION SHOWN
 
 #-- Pooled
 EMM <- emmeans(model_pooled, ~ typeNP | Projection)   # where treat has 2 levels
@@ -1408,16 +1207,6 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_VTA= tPairwise
 
 # #-npActiveProportion
-# EMM <- emmeans(modelProportion_VTA, ~ Subject)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_proportion_VTA= tPairwise
-# 
-# # for active proportion, check if each level significantly different from 0.5 (chance)
-# t_Proportion_VTA= test(EMM, null=0.5, adjust='sidak')
-
-# #-npActiveProportion
 # just need 1 sample t test
 t_Proportion_VTA= t.test(df_Sub_B_finalSes_VTA$npActiveProportion, mu=0.5)
 
@@ -1430,24 +1219,12 @@ tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test 
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_mdThal= tPairwise
-# 
-# #-npActiveProportion
-# EMM <- emmeans(modelProportion_mdThal,)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_proportion_mdThal= tPairwise
-# 
-# # for active proportion, check if each level significantly different from 0.5 (chance)
-# t_Proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 
 # #-npActiveProportion
 # just need 1 sample t test
 t_Proportion_mdThal= t.test(df_Sub_B_finalSes_mdThal$npActiveProportion, mu=0.5)
 
 
-
-#followup tests for mdThal reveal no sig diffs by session
 
 
 #4%%-- Save output to variables between tests  ####
@@ -1613,5 +1390,6 @@ setwd(pathWorking)
 # __________________________________________________ ####
 
 
+##%% END ####
 
 

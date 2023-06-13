@@ -209,7 +209,7 @@ fig3_stats_EncodingModel_B_3_model_post_hoc_pairwise= tPairwiseSig
 fig3_stats_EncodingModel_B_3_model_post_hoc_t= tSig
 
 
-#3.5 -- Correlation between predicted vs. actual GCaMP ####
+#3.5%% -- Correlation between predicted vs. actual GCaMP ####
 
 dat = read.csv("C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig3_df_predictedMean.csv", header = TRUE)
 corr= cor.test(dat$y, dat$yPredicted)
@@ -245,7 +245,6 @@ sink()  # returns output to the console
 
 #6%%-- viz ####
 # Viz stats output of "significant" comparions by time bin
-
 
 p=''
 
@@ -380,7 +379,6 @@ ggplotly(p)
 
 
 # __________________________________________________ ####
-
 
 
 # %- fig 3 Stats-- Latency Correlation ####
@@ -757,4 +755,9 @@ p= ggplot()+
 # # 
 # # 
 ## show(p)
+
+# __________________________________________________ ####
+
+
+#%% END ####
 

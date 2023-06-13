@@ -25,8 +25,10 @@ pathOutput= paste(pathWorking,'/_output', sep="")
 gsub(" ", "", pathOutput)
 
 
+# __________________________________________________ ####
 
-## ----- FIGURE 4 CD --------------------------------------------------------####
+
+## ----- FIGURE 4 CD --------------------------------------------------------##
 
 #%- Fig 4CD Stats B-- No Laser Sessions ####
 
@@ -62,22 +64,6 @@ df_Sub_B_VTA= df_Sub_B[df_Sub_B$Projection=='VTA',]
 # df_Sub_VTA_DS= df_Sub_VTA[df_Sub_VTA$CueID=='DS',]
 
 df_Sub_B_mdThal= df_Sub_B[df_Sub_B$Projection=='mdThal',]
-
-# 
-# #-- Report mean+/- SEM days to criteria
-# 
-# #define standard error of mean function
-# std.error <- function(x) sd(x)/sqrt(length(x))
-# 
-# test_VTA= df_Sub_B_finalSes_VTA[(df_Sub_B_finalSes_VTA$typeNP== 'ActiveNP'),'countNP']
-# 
-# mean(test_VTA)
-# std.error(test_VTA)
-# 
-# test_mdThal=df_Sub_B_finalSes_mdThal[(df_Sub_B_finalSes_mdThal$typeNP== 'ActiveNP'),'countNP']
-# 
-# mean(test_mdThal)
-# std.error(test_mdThal)
 
 
 #2%%-- Run LME ####
@@ -309,10 +295,6 @@ df_Sub_A_VTA= df_Sub_A[df_Sub_A$Projection=='VTA',]
 df_Sub_A_mdThal= df_Sub_A[df_Sub_A$Projection=='mdThal',]
 
 
-#since we've dropped levels(categories) from the factor(categorical) variable trainDayThisPhase, drop accordingly for stats to work out
-# droplevels(df_Sub_A$trainDayThisPhase)
-# droplevels(df_Sub_A$trainPhase)
-
 
 #2%%-- Run LME ####
 
@@ -368,29 +350,7 @@ dev.off()
 setwd(pathWorking)
 
 
-#2023-02-21
-#4C) PE Prob results 
-# mdThal: Only significant effect = CueID
-# VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
-#4D) PE Latency results
-#mdThal: Only significant effect= CueID
-#VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
-
-
 #3%%-- Run Follow-up post-hoc tests ####
-
-# #-- Pairwise comparisons (t test) between TrialOutcome
-# #- Viz interaction plot & save
-# - interaction plots should be same as above
-
-# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_VTA, LaserTrial ~ StimLength | CueID )
-# 
-# dev.off()
-# setwd(pathWorking)
 
 #- Pairwise T- tests
 
@@ -409,23 +369,15 @@ tPairwise_latency_Pooled= tPairwise
 
 
 #-- VTA
+
+  #- prob
 EMM <- emmeans(model_VTA, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_VTA= tPairwise
 
-# #-- 2
-# # CueID:LaserTrial:StimLength 0.1292  0.1292     1 85.28   4.4146 0.03858 *  
-# 
-# EMM <- emmeans(model_VTA, ~ CueID | LaserTrial | StimLength)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_prob_VTA2= tPairwise  
-# 
-# #--2
-
+  #-latency
 
 EMM <- emmeans(modelLatency_VTA, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
@@ -435,36 +387,19 @@ tPairwise_latency_VTA= tPairwise
 
 #-- mdThal
 
+  #-prob
 EMM <- emmeans(model_mdThal, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_mdThal= tPairwise
 
+  #-latency
 EMM <- emmeans(modelLatency_mdThal, ~ LaserTrial | StimLength | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_latency_mdThal= tPairwise
-
-# 2023-02-21 posthoc comparison results: No significant contrasts. 
-
-# 
-# 
-# #-- Makes sense to examine effects of laser duration separately for cue type?
-# df_Sub_VTA_DS= df_Sub_VTA[df_Sub_VTA$CueID=='DS',]
-# df_Sub_VTA_NS= df_Sub_VTA[df_Sub_VTA$CueID=='NS',]
-# 
-# 
-# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_VTA, CueID ~ LaserTrial * StimLength )
-# 
-# dev.off()
-# setwd(pathWorking)
-
 
 
 #4%%-- Save output to variables between tests  ####
@@ -504,27 +439,6 @@ fig4D_stats_A_mdThal_0_description= "Figure 4D: DS Task opto, Laser Sessions, PE
 fig4D_stats_A_mdThal_1_model= modelLatency_mdThal
 fig4D_stats_A_mdThal_2_model_anova= modelLatency_anova_mdThal
 fig4D_stats_A_mdThal_3_model_post_hoc_pairwise= tPairwise_latency_mdThal
-
-# 
-# #--- Followup: specifically examine DS trials 
-# df_Sub_C_VTA= df_Sub_A_VTA[df_Sub_A_VTA$CueID=='DS',]
-# #VTA projection
-# #-Probability
-# model_VTA= lmerTest::lmer('ResponseProb ~ LaserTrial * StimLength + (1|Subject)', data=df_Sub_C_VTA)
-# model_anova_VTA<- anova(model_VTA)
-# #-Latency
-# modelLatency_VTA= lmerTest::lmer('RelLatency ~ LaserTrial * StimLength + (1|Subject)', data=df_Sub_C_VTA)
-# modelLatency_anova_VTA<- anova(modelLatency_VTA)
-# 
-# # pairwise
-# emmip(model_VTA, LaserTrial ~ StimLength)
-# 
-# EMM <- emmeans(model_VTA, ~ LaserTrial | StimLength)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_VTA= tPairwise
-
 
 
 #5%% -- Figure 4CD Save output ####
@@ -585,7 +499,6 @@ print('2)---- ANOVA of LME:')
 print(fig4C_stats_A_VTA_2_model_anova)
 '------------------------------------------------------------------------------'
 # print('3)---- Posthoc pairwise:') # Make sure for posthocs the summary is printed with pval correction
-# print(fig4C_stats_A_3_model_post_hoc_pairwise)
 print(summary(fig4C_stats_A_VTA_3_model_post_hoc_pairwise, by = NULL, adjust = "sidak"))
 
 '---- END ---------------------------------------------------------------------'
@@ -678,10 +591,6 @@ sapply(df, class)
 #%% Figure 4D Stats A -- Laser Sessions
 
 #%%-- Subset data ##
-# #Remove missing/invalid observations
-# 
-# #- Can only include laserTrial for StimLength >0
-# df_Sub_A= df[df$StimLength != 0,]
 
 #--- SUBSET SPECIFIC STIMLENGTH
 
@@ -736,62 +645,19 @@ modelLatency_mdThal= lmerTest::lmer('RelLatency ~ CueID * LaserTrial  + (1|Subje
 modelLatency_anova_mdThal<- anova(modelLatency_mdThal)
 
 
-
-# -- Interaction plot
-# #- Viz interaction plot & save
-# figName= "vp-vta_fig4C_stats_A_Probability_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_pooled, LaserTrial ~ StimLength | CueID | Projection )
-# 
-# dev.off()
-# setwd(pathWorking)
-# 
-# #pooled latency interaction plot
-# figName= "vp-vta_fig4D_stats_A_Latency_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(modelLatency_pooled, LaserTrial ~ StimLength | CueID | Projection )
-# 
-# dev.off()
-# setwd(pathWorking)
-
-
-#2023-02-21
-#4C) PE Prob results 
-# mdThal: Only significant effect = CueID
-# VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
-#4D) PE Latency results
-#mdThal: Only significant effect= CueID
-#VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
-
-
-#3%%-- Run Follow-up post-hoc tests ####
-
-# #-- Pairwise comparisons (t test) between TrialOutcome
-# #- Viz interaction plot & save
-# - interaction plots should be same as above
-
-# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_VTA, LaserTrial ~ StimLength | CueID )
-# 
-# dev.off()
-# setwd(pathWorking)
-
+#3%% - Posthoc tests ####
 #- Pairwise T- tests
 
 #-- Pooled
+
+  #-prob
 EMM <- emmeans(model_pooled, ~ LaserTrial  | CueID | Projection)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_Pooled= tPairwise
 
+  #-latency
 EMM <- emmeans(modelLatency_pooled, ~ LaserTrial  | CueID | Projection)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
@@ -800,24 +666,15 @@ tPairwise_latency_Pooled= tPairwise
 
 
 #-- VTA
+
+  #-prob
 EMM <- emmeans(model_VTA, ~ LaserTrial  | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_VTA= tPairwise
 
-# #-- 2
-# # CueID:LaserTrial:StimLength 0.1292  0.1292     1 85.28   4.4146 0.03858 *  
-# 
-# EMM <- emmeans(model_VTA, ~ CueID | LaserTrial | StimLength)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_prob_VTA2= tPairwise  
-# 
-# #--2
-
-
+  #-latency
 EMM <- emmeans(modelLatency_VTA, ~ LaserTrial  | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
@@ -826,36 +683,19 @@ tPairwise_latency_VTA= tPairwise
 
 #-- mdThal
 
+  #-prob
 EMM <- emmeans(model_mdThal, ~ LaserTrial  | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_mdThal= tPairwise
 
+  #-latency
 EMM <- emmeans(modelLatency_mdThal, ~ LaserTrial  | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_latency_mdThal= tPairwise
-
-# 2023-02-21 posthoc comparison results: No significant contrasts. 
-
-# 
-# 
-# #-- Makes sense to examine effects of laser duration separately for cue type?
-# df_Sub_VTA_DS= df_Sub_VTA[df_Sub_VTA$CueID=='DS',]
-# df_Sub_VTA_NS= df_Sub_VTA[df_Sub_VTA$CueID=='NS',]
-# 
-# 
-# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_VTA, CueID ~ LaserTrial * StimLength )
-# 
-# dev.off()
-# setwd(pathWorking)
-
 
 
 #4%%-- Save output to variables between tests  ####
@@ -913,37 +753,6 @@ fig4D_stats_A_mdThal_0_description= paste(c(fig4D_stats_A_mdThal_0_description, 
 fig4D_stats_A_mdThal_1_model= modelLatency_mdThal
 fig4D_stats_A_mdThal_2_model_anova= modelLatency_anova_mdThal
 fig4D_stats_A_mdThal_3_model_post_hoc_pairwise= tPairwise_latency_mdThal
-
-# 
-# #--- Followup: specifically examine DS trials 
-# df_Sub_C_VTA= df_Sub_A_VTA[df_Sub_A_VTA$CueID=='DS',]
-# #VTA projection
-# #-Probability
-# model_VTA= lmerTest::lmer('ResponseProb ~ LaserTrial * StimLength + (1|Subject)', data=df_Sub_C_VTA)
-# model_anova_VTA<- anova(model_VTA)
-# #-Latency
-# modelLatency_VTA= lmerTest::lmer('RelLatency ~ LaserTrial * StimLength + (1|Subject)', data=df_Sub_C_VTA)
-# modelLatency_anova_VTA<- anova(modelLatency_VTA)
-# 
-# # pairwise
-# emmip(model_VTA, LaserTrial ~ StimLength)
-# 
-# EMM <- emmeans(model_VTA, ~ LaserTrial | StimLength)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_VTA= tPairwise
-
-
-
-#5%% -- Figure 4CD Save output ####
-
-# fig1D_stats_A_0_description= "Figure 1D: Late Training DS vs NS PE Ratio"
-# fig1D_stats_A_1_model= model
-# fig1D_stats_A_2_model_anova= model_anova
-# fig1D_stats_A_3_model_post_hoc_pairwise= tPairwise
-
-
 #------Pooled
 
 fName= "vp-vta_fig4_stats_Phase_2_laserSessions_A_peProb_Pooled_stimLength-"
@@ -1132,10 +941,6 @@ sapply(df, class)
 #%% Figure 4D Stats A -- Laser Sessions
 
 #%%-- Subset data ##
-# #Remove missing/invalid observations
-# 
-# #- Can only include laserTrial for StimLength >0
-# df_Sub_A= df[df$StimLength != 0,]
 
 #--- SUBSET SPECIFIC STIMLENGTH
 
@@ -1148,7 +953,6 @@ df_Sub_A= df[df$StimLength==stimLength,]
 
 df_Sub_A_VTA= df_Sub_A[df_Sub_A$Projection=='VTA',]
 
-# df_Sub_VTA_DS= df_Sub_VTA[df_Sub_VTA$CueID=='DS',]
 
 df_Sub_A_mdThal= df_Sub_A[df_Sub_A$Projection=='mdThal',]
 
@@ -1189,62 +993,19 @@ modelLatency_mdThal= lmerTest::lmer('RelLatency ~ CueID * LaserTrial  + (1|Subje
 modelLatency_anova_mdThal<- anova(modelLatency_mdThal)
 
 
-
-# -- Interaction plot
-# #- Viz interaction plot & save
-# figName= "vp-vta_fig4C_stats_A_Probability_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_pooled, LaserTrial ~ StimLength | CueID | Projection )
-# 
-# dev.off()
-# setwd(pathWorking)
-# 
-# #pooled latency interaction plot
-# figName= "vp-vta_fig4D_stats_A_Latency_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(modelLatency_pooled, LaserTrial ~ StimLength | CueID | Projection )
-# 
-# dev.off()
-# setwd(pathWorking)
-
-
-#2023-02-21
-#4C) PE Prob results 
-# mdThal: Only significant effect = CueID
-# VTA: significant cueID*laserTrial*stimLength interaction ---> Followup test below
-#4D) PE Latency results
-#mdThal: Only significant effect= CueID
-#VTA: Only significant effect= CueID... close (0.052) CueID*LaserTrial*StimLength interaction
-
-
 #3%%-- Run Follow-up post-hoc tests ####
-
-# #-- Pairwise comparisons (t test) between TrialOutcome
-# #- Viz interaction plot & save
-# - interaction plots should be same as above
-
-# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_VTA, LaserTrial ~ StimLength | CueID )
-# 
-# dev.off()
-# setwd(pathWorking)
 
 #- Pairwise T- tests
 
 #-- Pooled
+  #-prob
 EMM <- emmeans(model_pooled, ~ LaserTrial  | CueID | Projection)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_Pooled= tPairwise
 
+  #-latency
 EMM <- emmeans(modelLatency_pooled, ~ LaserTrial  | CueID | Projection)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
@@ -1253,24 +1014,14 @@ tPairwise_latency_Pooled= tPairwise
 
 
 #-- VTA
+  #-prob
 EMM <- emmeans(model_VTA, ~ LaserTrial  | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_VTA= tPairwise
 
-# #-- 2
-# # CueID:LaserTrial:StimLength 0.1292  0.1292     1 85.28   4.4146 0.03858 *  
-# 
-# EMM <- emmeans(model_VTA, ~ CueID | LaserTrial | StimLength)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_prob_VTA2= tPairwise  
-# 
-# #--2
-
-
+  #-latency
 EMM <- emmeans(modelLatency_VTA, ~ LaserTrial  | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
@@ -1278,37 +1029,19 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_latency_VTA= tPairwise
 
 #-- mdThal
-
+  #-prob
 EMM <- emmeans(model_mdThal, ~ LaserTrial  | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_prob_mdThal= tPairwise
-
+  
+  #-latency
 EMM <- emmeans(modelLatency_mdThal, ~ LaserTrial  | CueID)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_latency_mdThal= tPairwise
-
-# 2023-02-21 posthoc comparison results: No significant contrasts. 
-
-# 
-# 
-# #-- Makes sense to examine effects of laser duration separately for cue type?
-# df_Sub_VTA_DS= df_Sub_VTA[df_Sub_VTA$CueID=='DS',]
-# df_Sub_VTA_NS= df_Sub_VTA[df_Sub_VTA$CueID=='NS',]
-# 
-# 
-# figName= "vp-vta_fig4CD_stats_B_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_VTA, CueID ~ LaserTrial * StimLength )
-# 
-# dev.off()
-# setwd(pathWorking)
-
 
 
 #4%%-- Save output to variables between tests  ####
@@ -1367,35 +1100,8 @@ fig4D_stats_A_mdThal_1_model= modelLatency_mdThal
 fig4D_stats_A_mdThal_2_model_anova= modelLatency_anova_mdThal
 fig4D_stats_A_mdThal_3_model_post_hoc_pairwise= tPairwise_latency_mdThal
 
-# 
-# #--- Followup: specifically examine DS trials 
-# df_Sub_C_VTA= df_Sub_A_VTA[df_Sub_A_VTA$CueID=='DS',]
-# #VTA projection
-# #-Probability
-# model_VTA= lmerTest::lmer('ResponseProb ~ LaserTrial * StimLength + (1|Subject)', data=df_Sub_C_VTA)
-# model_anova_VTA<- anova(model_VTA)
-# #-Latency
-# modelLatency_VTA= lmerTest::lmer('RelLatency ~ LaserTrial * StimLength + (1|Subject)', data=df_Sub_C_VTA)
-# modelLatency_anova_VTA<- anova(modelLatency_VTA)
-# 
-# # pairwise
-# emmip(model_VTA, LaserTrial ~ StimLength)
-# 
-# EMM <- emmeans(model_VTA, ~ LaserTrial | StimLength)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_VTA= tPairwise
-
-
 
 #5%% -- Figure 4CD Save output ####
-
-# fig1D_stats_A_0_description= "Figure 1D: Late Training DS vs NS PE Ratio"
-# fig1D_stats_A_1_model= model
-# fig1D_stats_A_2_model_anova= model_anova
-# fig1D_stats_A_3_model_post_hoc_pairwise= tPairwise
-
 
 #------Pooled
 

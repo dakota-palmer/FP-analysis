@@ -61,7 +61,7 @@ df[df$typeLP=='ActiveLeverPress','LicksPerReward']= NaN
 # #- Subset by session type 
 df_Sub_A= df[df$trainPhaseLabel == '1-FreeChoice',]
 
-# df_Sub_A= df[df$trainPhaseLabel == '2-FreeChoice-Reversal',]
+# df_Sub_B= df[df$trainPhaseLabel == '2-FreeChoice-Reversal',]
 # df_Sub_C= df[df$trainPhaseLabel == '3-ForcedChoice',]
 # df_Sub_D= df[df$trainPhaseLabel == '5-Extinction-Test',]
 
@@ -87,8 +87,7 @@ model= lmerTest::lmer('countLP ~ Projection * typeLP * Session + (1|Subject)', d
 
 modelProportion= lmerTest::lmer('probActiveLP ~ Projection * Session + (1|Subject)', data=df_Sub_A)
 
-# modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_A)
-# modelLicks=  lmerTest::lmer('rewardLicks ~ Projection * Session + (1|Subject)', data=df_Sub_A)
+
 modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_A)
 
 
@@ -101,6 +100,8 @@ modelLicks_pooled= modelLicks
 modelLicks_anova_pooled= anova(modelLicks)
 
 
+#3%%-- Posthoc tests ####
+
 #-- VTA
 #VTA projection
 #-Count
@@ -111,8 +112,6 @@ modelProportion_VTA= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data
 modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-licks/reward
-# modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_A_VTA)
-# modelLicks_anova_VTA<- anova(modelProportion_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_A_VTA)
 modelLicks_anova_VTA<- anova(modelLicks_VTA)
 
@@ -126,8 +125,6 @@ model_anova_mdThal<- anova(model_mdThal)
 modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data=df_Sub_A_mdThal)
 modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 #-licks/reward
-# modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_A_mdThal)
-# modelLicks_anova_mdThal<- anova(modelProportion_mdThal)
 modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP * Session + (1|Subject)', data=df_Sub_A_mdThal)
 modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
@@ -139,8 +136,6 @@ setwd(pathOutput)
 pdf(file=figName)
 
 emmip(model_pooled, Session ~ typeLP | Projection )
-
-# emmip(model_pooled, Projection ~ typeNP | Session )
 
 
 dev.off()
@@ -182,17 +177,17 @@ emmip(modelLicks_grand,  typeLP ~  Session | Projection )
 dev.off()
 
 
-#- Pairwise T- tests
+#- Pairwise T- tests--
 
 #-- Pooled
+  #-npCount
 EMM <- emmeans(model_pooled, ~ typeLP | Session | Projection)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_Pooled= tPairwise
 
-  #pooled followup tests reveal significant differences in npCount by npType in VTA session 3,4,5
-
+  #npActiveProportion
 EMM <- emmeans(modelProportion_pooled, ~ Session | Projection)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
@@ -204,14 +199,14 @@ t_proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
 
 
 #-- VTA
-#-npCount
+  #-npCount
 EMM <- emmeans(model_VTA, ~ typeLP | Session)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_VTA= tPairwise
   
-#-npActiveProportion
+  #-npActiveProportion
 EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
@@ -224,14 +219,14 @@ t_proportion_VTA= test(EMM, null=0.5, adjust='sidak')
 
 #-- mdThal
 
-#-npCount
+  #-npCount
 EMM <- emmeans(model_mdThal, ~ typeLP | Session)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_mdThal= tPairwise
 
-#-npActiveProportion
+  #-npActiveProportion
 EMM <- emmeans(modelProportion_mdThal, ~ Session)   # where treat has 2 levels
 tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
@@ -292,50 +287,10 @@ fig5_stats_Phase_1_FreeChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
 
 fig5_stats_Phase_1_FreeChoice_C_licks_VTA_0_description= "Figure 5: Lever Choice, Phase 1- Free Choice, licks/reward, mdThal"
 fig5_stats_Phase_1_FreeChoice_C_licks_mdThal_1_model= modelLicks_mdThal
-fig5_stats_Phase_1_FreeChoice_C_licks_mdThal_2_model_anova= modelLicks_anova_mdThal
-
-#%% 2.5 -- Final Day specific tests? ####
-# Alternatively, you could just do pairwise comparisons at the start and end of each phase (so sessions 1 and 6 here), since we aren't really concerned about the specific day a difference emerged, and whether one emerged by the end of training that wasn't there on day 1.
-# just ignore the pariwise bc no sig interactions unless a priori
-
-# -- RUN T TESTS ON FINAL DAY ONLY --
-
-# #- subset data
-# df_Sub_A_VTA_finalSes= df_Sub_A_VTA[df_Sub_A_VTA$Session==6,]
-# df_Sub_A_mdThal_finalSes= df_Sub_A_mdThal[df_Sub_A_mdThal$Session==6,]
-
-#- model
-# -- just subset() in model for easier without duplicating df
-
-# 
-# model_pooled_finalSes= lmerTest::lmer('licksPerRewardTypeLP ~ Projection * typeLP  + (1|Subject)', subset=(Session==6), data=df_Sub_A)
-# 
-# model_anova_pooled_finalSes= anova(model_VTA_finalSes)
-# 
-# 
-# model_VTA_finalSes= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP  + (1|Subject)', subset=(Session==6), data=df_Sub_A_VTA)
-# 
-# model_anova_VTA_finalSes= anova(model_VTA_finalSes)
-# 
-# model_mdThal_finalSes= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP  + (1|Subject)', subset=(Session==6), data=df_Sub_A_mdThal)
-# 
-# model_anova_mdThal_finalSes= anova(model_mdThal_finalSes)
-
-# stick to fig data
-
-# model_pooled_finalSes= lmerTest::lmer('licksPerRewardTypeLP ~ Projection * typeLP  + (1|Subject)', subset=(Session==6), data=df_Sub_A)
-# 
-# model_anova_pooled_finalSes= anova(model_VTA_finalSes)
+fig5_stats_Phase_1_FreeChoice_C_licks_mdTh
 
 
-
-#- run pairwise t
-
-
-
-#- run t vs null
-
-#5%% -- Figure 6 Save output ####
+#5%% -- Save output to File####
 
 #- move to output directory prior to saving
 setwd(pathOutput)
@@ -552,12 +507,10 @@ df_Sub_B_mdThal= df_Sub_B[df_Sub_B$Projection=='mdThal',]
 #2%%-- Run LME ####
 
 #-- Pooled
-# model= lmerTest::lmer('countNP ~ Projection * typeNP * Session *  trainPhase + (1|Subject)', data=df_Sub_B)
 model= lmerTest::lmer('countLP ~ Projection * typeLP * Session + (1|Subject)', data=df_Sub_B)
 
 modelProportion= lmerTest::lmer('probActiveLP ~ Projection * Session + (1|Subject)', data=df_Sub_B)
 
-# modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_B)
 modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_B)
 
 
@@ -580,7 +533,6 @@ modelProportion_VTA= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data
 modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-licks/reward
-# modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_B_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_B_VTA)
 
 modelLicks_anova_VTA<- anova(modelLicks_VTA)
@@ -594,35 +546,11 @@ model_anova_mdThal<- anova(model_mdThal)
 modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data=df_Sub_B_mdThal)
 modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 #-licks/reward
-# modelLicks_mdThal= lmerTest::lmer
 modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_B_mdThal)
 
 modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
-
-# # -- Interaction plot
-# #- Viz interaction plot & save
-# figName= "vp-vta_fig5_stats_A_npCount_Session_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_pooled, Session ~ typeLP | Projection )
-# 
-# # emmip(model_pooled, Projection ~ typeNP | Session )
-# 
-# 
-# dev.off()
-# setwd(pathWorking)
-# 
-# #pooled proportion interaction plot
-# figName= "vp-vta_fig5_stats_B_proportion_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(modelProportion_pooled, Session ~ Projection )
-# 
-# dev.off()
-# setwd(pathWorking)
+#3%%-- Posthoc tests ####
 
 
 #- Pairwise T- tests
@@ -739,7 +667,7 @@ fig5_stats_Phase_2_Reversal_C_licks_mdThal_2_model_anova= modelLicks_anova_mdTha
 
 
 
-#5%% -- Figure 6 Save output ####
+#5%% -- Save output to File ####
 
 #- move to output directory prior to saving
 setwd(pathOutput)
@@ -911,8 +839,6 @@ setwd(pathWorking)
 
 
 
-
-
 # __________________________________________________ ####
 
 
@@ -973,12 +899,10 @@ df_Sub_C_mdThal= df_Sub_C[df_Sub_C$Projection=='mdThal',]
 #2%%-- Run LME ####
 
 #-- Pooled
-# model= lmerTest::lmer('countNP ~ Projection * typeNP * Session *  trainPhase + (1|Subject)', data=df_Sub_C)
 model= lmerTest::lmer('countLP ~ Projection * typeLP * Session + (1|Subject)', data=df_Sub_C)
 
 modelProportion= lmerTest::lmer('probActiveLP ~ Projection * Session + (1|Subject)', data=df_Sub_C)
 
-# modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_C)
 modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_C)
 
 # Whole session licks active vs inactive
@@ -1002,7 +926,6 @@ modelProportion_VTA= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data
 modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-licks/reward
-# modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_C_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_C_VTA)
 
 modelLicks_anova_VTA<- anova(modelLicks_VTA)
@@ -1016,47 +939,11 @@ model_anova_mdThal<- anova(model_mdThal)
 modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ Session + (1|Subject)', data=df_Sub_C_mdThal)
 modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 #-licks/reward
-# modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ Session + (1|Subject)', data=df_Sub_C_mdThal)
 modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session + (1|Subject)', data=df_Sub_C_mdThal)
 
 modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
-
-# # -- Interaction plot
-# #- Viz interaction plot & save
-# figName= "vp-vta_fig5_stats_A_npCount_Session_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_pooled, Session ~ typeLP | Projection )
-# 
-# # emmip(model_pooled, Projection ~ typeNP | Session )
-# 
-# 
-# dev.off()
-# setwd(pathWorking)
-# 
-# #pooled proportion interaction plot
-# figName= "vp-vta_fig5_stats_B_proportion_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(modelProportion_pooled, Session ~ Projection )
-# 
-# dev.off()
-# setwd(pathWorking)
-
-# - viz lick data interaction plot. outliers?
-# lick_VTA_viz= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Session *Subject', data=df_Sub_C_VTA)
-
-# # quick and dirty plot instead of ggplot
-# lick_VTA_viz= lm('licksPerRewardTypeLP ~ typeLP* Session *Subject', data=df_Sub_C_VTA)
-# 
-# emmip(lick_VTA_viz, ~Subject ~ typeLP | Session)   # where treat has 2 levels
-# 
-# lick_viz= lm('licksPerRewardTypeLP ~ typeLP* Session *Subject *Projection', data=df_Sub_C)
-# 
-# emmip(lick_viz, ~Subject ~ typeLP | Session | Projection)
+#3%% Posthoc tests ####
 
 
 
@@ -1210,7 +1097,7 @@ fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_2_model_anova= modelLicks_anova_m
 fig5_stats_Phase_3_ForcedChoice_C_licks_mdThal_3_model_post_hoc_pairwise= tPairwiseLicks_mdThal
 
 
-#5%% -- Figure 6 Save output ####
+#5%% -- Save output to File ####
 
 #- move to output directory prior to saving
 setwd(pathOutput)
@@ -1377,72 +1264,6 @@ sink()  # returns output to the console
 setwd(pathWorking)
 
 
-
-
-#%% 6- VIZ ####
-
-# Viz licks per reward stats
-
-#1 bar- Bar plot by session of licks/reward
-dfPlot= df_Sub_C
-
-p= ggplot(data= dfPlot)
-
-p= p+
-  
-  scale_colour_brewer(palette="Paired")+
-  
-  #- by session
-  facet_grid(Projection~Session)+
-  
-  geom_point(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, colour='black',  fill=typeLP), alpha=0.5, shape=21, size=2)+
-  
-  geom_line(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, group=Subject), colour='black', alpha=0.5)+
-  
-  stat_summary(fun=mean, geom='bar', aes(x=typeLP,y=licksPerRewardTypeLP, colour=typeLP,  fill=typeLP))+
-  
-  stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
-
-ggplotly(p)
-
-
-
-#B- Line plot by Session
-dfPlot= df_Sub_C
-
-dfPlot$Session= as.numeric(as.character(dfPlot$Session))
-
-p= ggplot(data= dfPlot)
-
-p= p+
-  
-  # scale_colour_brewer(palette="Set2")+
-  
-  #- by session
-  facet_grid(Projection~trainPhase)+
-  
-  geom_point(data= dfPlot, aes(group=Subject, x=Session, y=licksPerRewardTypeLP, colour=typeLP), alpha=0.5, shape=21, size=.5)+
-  
-  geom_line(data= dfPlot, aes(group=Subject, x=Session, y=licksPerRewardTypeLP, colour=typeLP), alpha=0.5, size=.5)+
-  
-  
-  stat_summary(fun=mean, geom='line', aes(x=Session, y=licksPerRewardTypeLP, colour=typeLP), size=2) +
-  
-  stat_summary(fun.data = mean_se, aes(x=Session, y=licksPerRewardTypeLP, fill=typeLP), alpha= 0.3, geom = "ribbon")
-
-
-# stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
-
-ggplotly(p)
-
-#%% C - compare to interaction plot? 
-emmip(modelLicks_VTA, ~ typeLP | Session )
-
-emmip(modelLicks_VTA, ~ typeLP)
-
-
-
-
 # __________________________________________________ ####
 
 
@@ -1509,8 +1330,7 @@ model_anova_pooled<- anova(model)
 
 modelProportion= lm('probActiveLP ~ Projection', data=df_Sub_D)
 
-# modelLicks=  lmerTest::lmer('LicksPerReward ~ Projection * Session + (1|Subject)', data=df_Sub_D)
-# modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * Session + (1|Subject)', data=df_Sub_D)
+
 modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection * + (1|Subject)', data=df_Sub_D)
 
 
@@ -1530,17 +1350,13 @@ model_VTA= lmerTest::lmer('countLP ~ typeLP  + (1|Subject)', data=df_Sub_D_VTA)
 model_anova_VTA<- anova(model_VTA)
 
 #-Proportion
-# modelProportion_VTA= lmerTest::lmer('probActiveLP ~ (1|Subject)', data=df_Sub_D_VTA)
 # really just need 1 sample t test here
 modelProportion_VTA= lm('probActiveLP ~  Subject', data=df_Sub_D_VTA)
 
-# modelProportion_anova_VTA<- anova(modelProportion_VTA)
 
 #-licks/reward
-# modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_D_VTA)
 modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_D_VTA)
 
-# modelLicks_VTA= lm('licksPerRewardTypeLP ~  typeLP * Subject', data=df_Sub_D_VTA)
 
 
 modelLicks_anova_VTA<- anova(modelLicks_VTA)
@@ -1552,41 +1368,15 @@ modelLicks_anova_VTA<- anova(modelLicks_VTA)
 model_mdThal= lmerTest::lmer('countLP ~ typeLP + (1|Subject)', data=df_Sub_D_mdThal)
 model_anova_mdThal<- anova(model_mdThal)
 #-Proportion
-# modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ + (1|Subject)', data=df_Sub_D_mdThal)
 modelProportion_mdThal= lm('probActiveLP ~ Subject', data=df_Sub_D_mdThal)
 
 modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
 #-licks/reward
-# modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_D_mdThal)
 modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_D_mdThal)
 
 modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
 
-
-# # -- Interaction plot
-# #- Viz interaction plot & save
-# figName= "vp-vta_fig5_stats_A_npCount_Session_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(model_pooled, Session ~ typeLP | Projection )
-# 
-# # emmip(model_pooled, Projection ~ typeNP | Session )
-# 
-# 
-# dev.off()
-# setwd(pathWorking)
-# 
-# #pooled proportion interaction plot
-# figName= "vp-vta_fig5_stats_B_proportion_pooled_interactionPlot.pdf"
-# setwd(pathOutput)
-# pdf(file=figName)
-# 
-# emmip(modelProportion_pooled, Session ~ Projection )
-# 
-# dev.off()
-# setwd(pathWorking)
-
+#3%% Posthoc tests ####
 
 #- Pairwise T- tests
 
@@ -1608,13 +1398,6 @@ EMM <- emmeans(modelProportion_pooled, ~  Projection)
 tPairwise_proportion_projection_Pooled= pairs(EMM,  adjust='sidak')
 
 
-#pooled followup tests reveal significant differences in npCount by npType in VTA session 3,4,5
-
-# EMM <- emmeans(modelProportion_pooled, ~ Session | Projection)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_proportion_Pooled= tPairwise
 
 # for active proportion, check if each level significantly different from 0.5 (chance)
 EMM <- emmeans(modelProportion_pooled, ~  Projection) 
@@ -1630,20 +1413,8 @@ summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 tPairwise_VTA= tPairwise
 
 #-npActiveProportion
-# EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-
-# tPairwise_proportion_VTA= tPairwise
-
-# # for active proportion, check if each level significantly different from 0.5 (chance)
-# EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
-# t_proportion_VTA= test(EMM, null=0.5, adjust='sidak')
-
 
 # simple 1 sample t test
-# t_proportion_VTA= t.test(df_Sub_D_VTA$probActiveLP, null=0.5, adjust='sidak')
-
 t_proportion_VTA= t.test(df_Sub_D_VTA$probActiveLP, mu=0.5)
 
 # - licks t
@@ -1655,7 +1426,6 @@ tPairwise_VTA= tPairwise
 
 
 
-
 #-- mdThal
 
 #-npCount
@@ -1664,16 +1434,6 @@ tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test 
 summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
 
 tPairwise_mdThal= tPairwise
-
-#-npActiveProportion
-# EMM <- emmeans(modelProportion_mdThal, ~ Session)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_proportion_mdThal= tPairwise
-# 
-# # for active proportion, check if each level significantly different from 0.5 (chance)
-# t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
 
 t_proportion_mdThal= t.test(df_Sub_D_mdThal$probActiveLP, mu=0.5)
 
@@ -1732,182 +1492,6 @@ fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_0_description= "Figure 5: Lever
 fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_1_model= modelLicks_mdThal
 fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_2_model_anova= modelLicks_anova_mdThal
 fig5_stats_Phase_4_TestFreeChoice_C_licks_mdThal_3_model_post_hoc_t= tPairwise_licks_mdTHal
-
-# 
-# #%% 2.5 -- Final Day specific tests? ###
-# # -- RUN T TESTS ON FINAL DAY ONLY --
-# 
-# #simply copy/pasting the model code here and redefining the dataframe for minimal code changes !!
-# #- redefine dfs
-# finalSes= 13
-# df_Sub_D= df_Sub_D[df_Sub_D$Session==finalSes,]
-# df_Sub_D_VTA= df_Sub_D_VTA[df_Sub_D_VTA$Session==finalSes,]
-# df_Sub_D_mdThal= df_Sub_D_mdThal[df_Sub_D_mdThal$Session==finalSes,]
-# 
-# 
-# #-- Pooled
-# model= lmerTest::lmer('countLP ~ Projection * typeLP  + (1|Subject)', data=df_Sub_D)
-# 
-# model_anova_pooled<- anova(model)
-# 
-# modelProportion= lm('probActiveLP ~ Projection', data=df_Sub_D)
-# 
-# modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection + (1|Subject)', data=df_Sub_D)
-# 
-# 
-# model_pooled= model
-# model_anova_pooled<- anova(model)
-# modelProportion_pooled= modelProportion
-# modelProportion_anova_pooled= anova(modelProportion)
-# modelLicks_pooled= model
-# modelLicks_anova_pooled= anova(modelLicks)
-# 
-# 
-# #-- VTA
-# #VTA projection
-# #-Count
-# model_VTA= lmerTest::lmer('countLP ~ typeLP  + (1|Subject)', data=df_Sub_D_VTA)
-# model_anova_VTA<- anova(model_VTA)
-# 
-# #-Proportion
-# # modelProportion_VTA= lmerTest::lmer('probActiveLP ~ (1|Subject)', data=df_Sub_D_VTA)
-# # really just need 1 sample t test here
-# modelProportion_VTA= lm('probActiveLP ~  Subject', data=df_Sub_D_VTA)
-# 
-# # modelProportion_anova_VTA<- anova(modelProportion_VTA)
-# 
-# #-licks/reward
-# # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_D_VTA)
-# modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_D_VTA)
-# modelLicks_anova_VTA<- anova(modelLicks_VTA)
-# 
-# #-- mdThal
-# #mdThal projection
-# #-Probability
-# model_mdThal= lmerTest::lmer('countLP ~ typeLP + (1|Subject)', data=df_Sub_D_mdThal)
-# model_anova_mdThal<- anova(model_mdThal)
-# #-Proportion
-# # modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ + (1|Subject)', data=df_Sub_D_mdThal)
-# modelProportion_mdThal= lm('probActiveLP ~ Subject', data=df_Sub_D_mdThal)
-# 
-# modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
-# #-licks/reward
-# # modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_D_mdThal)
-# modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_D_mdThal)
-# 
-# modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
-# 
-# 
-# #- Pairwise T- tests
-# 
-# #-- Pooled
-# EMM <- emmeans(model_pooled, ~ typeLP | Projection)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_Pooled= tPairwise
-# 
-# #pooled followup tests reveal significant differences in npCount by npType in VTA session 3,4,5
-# 
-# # EMM <- emmeans(modelProportion_pooled, ~ Session | Projection)   # where treat has 2 levels
-# # tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# # summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# # 
-# # tPairwise_proportion_Pooled= tPairwise
-# 
-# # for active proportion, check if each level significantly different from 0.5 (chance)
-# EMM <- emmeans(modelProportion_pooled, ~  Projection) 
-# t_proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
-# 
-# 
-# #-- VTA
-# #-npCount
-# EMM <- emmeans(model_VTA, ~ typeLP)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_VTA= tPairwise
-# 
-# #-npActiveProportion
-# # EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
-# # tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# # summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# # tPairwise_proportion_VTA= tPairwise
-# 
-# # # for active proportion, check if each level significantly different from 0.5 (chance)
-# # EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
-# # t_proportion_VTA= test(EMM, null=0.5, adjust='sidak')
-# 
-# 
-# # simple 1 sample t test
-# # t_proportion_VTA= t.test(df_Sub_D_VTA$probActiveLP, null=0.5, adjust='sidak')
-# 
-# t_proportion_VTA= t.test(df_Sub_D_VTA$probActiveLP, mu=0.5)
-# 
-# 
-# #-- mdThal
-# 
-# #-npCount
-# EMM <- emmeans(model_mdThal, ~ typeLP | Session)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_mdThal= tPairwise
-# 
-# #-npActiveProportion
-# # EMM <- emmeans(modelProportion_mdThal, ~ Session)   # where treat has 2 levels
-# # tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# # summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# # 
-# # tPairwise_proportion_mdThal= tPairwise
-# # 
-# # # for active proportion, check if each level significantly different from 0.5 (chance)
-# # t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
-# 
-# t_proportion_mdThal= t.test(df_Sub_D_mdThal$probActiveLP, mu=0.5)
-# 
-# 
-# 
-# #4.5 overwrite / save output for final session %%-- Save output to variables between tests  ###
-# # # trying to keep code mostly generalizable and just save custom names at end
-# # # all the results into descriptive variables between tests
-# # 
-# # #-pooled
-# # fig5_stats_Phase_4_TestFreeChoice_A_Pooled_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active vs Inactive NP Count, pooled projections"
-# # fig5_stats_Phase_4_TestFreeChoice_A_Pooled_1_model= model_pooled
-# # fig5_stats_Phase_4_TestFreeChoice_A_Pooled_2_model_anova= model_anova_pooled
-# # fig5_stats_Phase_4_TestFreeChoice_A_Pooled_3_model_post_hoc_pairwise= tPairwise_Pooled
-# # 
-# # fig5_stats_Phase_4_TestFreeChoice_B_Pooled_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active NP Proportion, pooled projections"
-# # fig5_stats_Phase_4_TestFreeChoice_B_Pooled_1_model= modelProportion_pooled
-# # fig5_stats_Phase_4_TestFreeChoice_B_Pooled_2_model_anova= modelProportion_anova_pooled
-# # fig5_stats_Phase_4_TestFreeChoice_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
-# # 
-# # #-VTA
-# # fig5_stats_Phase_4_TestFreeChoice_A_VTA_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active vs Inactive NP Count, VTA projections"
-# # fig5_stats_Phase_4_TestFreeChoice_A_VTA_1_model= model_VTA
-# # fig5_stats_Phase_4_TestFreeChoice_A_VTA_2_model_anova= model_anova_VTA
-# # fig5_stats_Phase_4_TestFreeChoice_A_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
-# # 
-# # fig5_stats_Phase_4_TestFreeChoice_B_VTA_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active NP Proportion, VTA projections"
-# # fig5_stats_Phase_4_TestFreeChoice_B_VTA_1_model= modelProportion_VTA
-# # fig5_stats_Phase_4_TestFreeChoice_B_VTA_2_model_anova= modelProportion_anova_VTA
-# # fig5_stats_Phase_4_TestFreeChoice_B_VTA_3_model_post_hoc_t= t_proportion_VTA
-# # 
-# # #-mdThal
-# # fig5_stats_Phase_4_TestFreeChoice_A_mdThal_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active vs Inactive NP Count, mdThal projections"
-# # fig5_stats_Phase_4_TestFreeChoice_A_mdThal_1_model= model_mdThal
-# # fig5_stats_Phase_4_TestFreeChoice_A_mdThal_2_model_anova= model_anova_mdThal
-# # fig5_stats_Phase_4_TestFreeChoice_A_mdThal_3_model_post_hoc_pairwise= tPairwise_mdThal
-# # 
-# # fig5_stats_Phase_4_TestFreeChoice_B_mdThal_0_description= "Figure 5: Lever Choice, _Phase 4- TestFreeChoice, Active NP Proportion, mdThal projections"
-# # fig5_stats_Phase_4_TestFreeChoice_B_mdThal_1_model= modelProportion_mdThal
-# # fig5_stats_Phase_4_TestFreeChoice_B_mdThal_2_model_anova= modelProportion_anova_mdThal
-# # fig5_stats_Phase_4_TestFreeChoice_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
-# 
-# 
-
 
 #5%% -- Figure 6 Save output ####
 
@@ -2082,9 +1666,6 @@ sink()  # returns output to the console
 #- return to working directory after saving
 setwd(pathWorking)
 
-
-
-# __________________________________________________ ####
 
 
 
@@ -2372,182 +1953,6 @@ fig5_stats_Phase_5_Exctinction_B_mdThal_2_model_anova= modelProportion_anova_mdT
 fig5_stats_Phase_5_Exctinction_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
 
 
-# 
-# #%% 2.5 -- Final Day specific tests? ###
-# # -- RUN T TESTS ON FINAL DAY ONLY --
-# 
-# #simply copy/pasting the model code here and redefining the dataframe for minimal code changes !!
-# #- redefine dfs
-# finalSes= 13
-# df_Sub_E= df_Sub_E[df_Sub_E$Session==finalSes,]
-# df_Sub_E_VTA= df_Sub_E_VTA[df_Sub_E_VTA$Session==finalSes,]
-# df_Sub_E_mdThal= df_Sub_E_mdThal[df_Sub_E_mdThal$Session==finalSes,]
-# 
-# 
-# #-- Pooled
-# model= lmerTest::lmer('countLP ~ Projection * typeLP  + (1|Subject)', data=df_Sub_E)
-# 
-# model_anova_pooled<- anova(model)
-# 
-# modelProportion= lm('probActiveLP ~ Projection', data=df_Sub_E)
-# 
-# modelLicks=  lmerTest::lmer('licksPerRewardTypeLP ~ typeLP* Projection + (1|Subject)', data=df_Sub_E)
-# 
-# 
-# model_pooled= model
-# model_anova_pooled<- anova(model)
-# modelProportion_pooled= modelProportion
-# modelProportion_anova_pooled= anova(modelProportion)
-# modelLicks_pooled= model
-# modelLicks_anova_pooled= anova(modelLicks)
-# 
-# 
-# #-- VTA
-# #VTA projection
-# #-Count
-# model_VTA= lmerTest::lmer('countLP ~ typeLP  + (1|Subject)', data=df_Sub_E_VTA)
-# model_anova_VTA<- anova(model_VTA)
-# 
-# #-Proportion
-# # modelProportion_VTA= lmerTest::lmer('probActiveLP ~ (1|Subject)', data=df_Sub_E_VTA)
-# # really just need 1 sample t test here
-# modelProportion_VTA= lm('probActiveLP ~  Subject', data=df_Sub_E_VTA)
-# 
-# # modelProportion_anova_VTA<- anova(modelProportion_VTA)
-# 
-# #-licks/reward
-# # modelLicks_VTA= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_E_VTA)
-# modelLicks_VTA= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_E_VTA)
-# modelLicks_anova_VTA<- anova(modelLicks_VTA)
-# 
-# #-- mdThal
-# #mdThal projection
-# #-Probability
-# model_mdThal= lmerTest::lmer('countLP ~ typeLP + (1|Subject)', data=df_Sub_E_mdThal)
-# model_anova_mdThal<- anova(model_mdThal)
-# #-Proportion
-# # modelProportion_mdThal= lmerTest::lmer('probActiveLP ~ + (1|Subject)', data=df_Sub_E_mdThal)
-# modelProportion_mdThal= lm('probActiveLP ~ Subject', data=df_Sub_E_mdThal)
-# 
-# modelProportion_anova_mdThal<- anova(modelProportion_mdThal)
-# #-licks/reward
-# # modelLicks_mdThal= lmerTest::lmer('LicksPerReward ~ + (1|Subject)', data=df_Sub_E_mdThal)
-# modelLicks_mdThal= lmerTest::lmer('licksPerRewardTypeLP ~ typeLP + (1|Subject)', data=df_Sub_E_mdThal)
-# 
-# modelLicks_anova_mdThal<- anova(modelLicks_mdThal)
-# 
-# 
-# #- Pairwise T- tests
-# 
-# #-- Pooled
-# EMM <- emmeans(model_pooled, ~ typeLP | Projection)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_Pooled= tPairwise
-# 
-# #pooled followup tests reveal significant differences in npCount by npType in VTA session 3,4,5
-# 
-# # EMM <- emmeans(modelProportion_pooled, ~ Session | Projection)   # where treat has 2 levels
-# # tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# # summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# # 
-# # tPairwise_proportion_Pooled= tPairwise
-# 
-# # for active proportion, check if each level significantly different from 0.5 (chance)
-# EMM <- emmeans(modelProportion_pooled, ~  Projection) 
-# t_proportion_Pooled= test(EMM, null=0.5, adjust='sidak')
-# 
-# 
-# #-- VTA
-# #-npCount
-# EMM <- emmeans(model_VTA, ~ typeLP)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_VTA= tPairwise
-# 
-# #-npActiveProportion
-# # EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
-# # tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# # summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# # tPairwise_proportion_VTA= tPairwise
-# 
-# # # for active proportion, check if each level significantly different from 0.5 (chance)
-# # EMM <- emmeans(modelProportion_VTA, ~ Session)   # where treat has 2 levels
-# # t_proportion_VTA= test(EMM, null=0.5, adjust='sidak')
-# 
-# 
-# # simple 1 sample t test
-# # t_proportion_VTA= t.test(df_Sub_E_VTA$probActiveLP, null=0.5, adjust='sidak')
-# 
-# t_proportion_VTA= t.test(df_Sub_E_VTA$probActiveLP, mu=0.5)
-# 
-# 
-# #-- mdThal
-# 
-# #-npCount
-# EMM <- emmeans(model_mdThal, ~ typeLP | Session)   # where treat has 2 levels
-# tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# 
-# tPairwise_mdThal= tPairwise
-# 
-# #-npActiveProportion
-# # EMM <- emmeans(modelProportion_mdThal, ~ Session)   # where treat has 2 levels
-# # tPairwise= pairs(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# # summary(tPairwise, by = NULL, adjust = "sidak")   # all are in one group now
-# # 
-# # tPairwise_proportion_mdThal= tPairwise
-# # 
-# # # for active proportion, check if each level significantly different from 0.5 (chance)
-# # t_proportion_mdThal= test(EMM, null=0.5, adjust='sidak')
-# 
-# t_proportion_mdThal= t.test(df_Sub_E_mdThal$probActiveLP, mu=0.5)
-# 
-# 
-# 
-# #4.5 overwrite / save output for final session %%-- Save output to variables between tests  ###
-# # # trying to keep code mostly generalizable and just save custom names at end
-# # # all the results into descriptive variables between tests
-# # 
-# # #-pooled
-# # fig5_stats_Phase_5_Exctinction_A_Pooled_0_description= "Figure 5: Lever Choice, _Phase 5- Excinction, Active vs Inactive NP Count, pooled projections"
-# # fig5_stats_Phase_5_Exctinction_A_Pooled_1_model= model_pooled
-# # fig5_stats_Phase_5_Exctinction_A_Pooled_2_model_anova= model_anova_pooled
-# # fig5_stats_Phase_5_Exctinction_A_Pooled_3_model_post_hoc_pairwise= tPairwise_Pooled
-# # 
-# # fig5_stats_Phase_5_Exctinction_B_Pooled_0_description= "Figure 5: Lever Choice, _Phase 5- Excinction, Active NP Proportion, pooled projections"
-# # fig5_stats_Phase_5_Exctinction_B_Pooled_1_model= modelProportion_pooled
-# # fig5_stats_Phase_5_Exctinction_B_Pooled_2_model_anova= modelProportion_anova_pooled
-# # fig5_stats_Phase_5_Exctinction_B_Pooled_3_model_post_hoc_t= t_proportion_Pooled
-# # 
-# # #-VTA
-# # fig5_stats_Phase_5_Exctinction_A_VTA_0_description= "Figure 5: Lever Choice, _Phase 5- Excinction, Active vs Inactive NP Count, VTA projections"
-# # fig5_stats_Phase_5_Exctinction_A_VTA_1_model= model_VTA
-# # fig5_stats_Phase_5_Exctinction_A_VTA_2_model_anova= model_anova_VTA
-# # fig5_stats_Phase_5_Exctinction_A_VTA_3_model_post_hoc_pairwise= tPairwise_VTA
-# # 
-# # fig5_stats_Phase_5_Exctinction_B_VTA_0_description= "Figure 5: Lever Choice, _Phase 5- Excinction, Active NP Proportion, VTA projections"
-# # fig5_stats_Phase_5_Exctinction_B_VTA_1_model= modelProportion_VTA
-# # fig5_stats_Phase_5_Exctinction_B_VTA_2_model_anova= modelProportion_anova_VTA
-# # fig5_stats_Phase_5_Exctinction_B_VTA_3_model_post_hoc_t= t_proportion_VTA
-# # 
-# # #-mdThal
-# # fig5_stats_Phase_5_Exctinction_A_mdThal_0_description= "Figure 5: Lever Choice, _Phase 5- Excinction, Active vs Inactive NP Count, mdThal projections"
-# # fig5_stats_Phase_5_Exctinction_A_mdThal_1_model= model_mdThal
-# # fig5_stats_Phase_5_Exctinction_A_mdThal_2_model_anova= model_anova_mdThal
-# # fig5_stats_Phase_5_Exctinction_A_mdThal_3_model_post_hoc_pairwise= tPairwise_mdThal
-# # 
-# # fig5_stats_Phase_5_Exctinction_B_mdThal_0_description= "Figure 5: Lever Choice, _Phase 5- Excinction, Active NP Proportion, mdThal projections"
-# # fig5_stats_Phase_5_Exctinction_B_mdThal_1_model= modelProportion_mdThal
-# # fig5_stats_Phase_5_Exctinction_B_mdThal_2_model_anova= modelProportion_anova_mdThal
-# # fig5_stats_Phase_5_Exctinction_B_mdThal_3_model_post_hoc_t= t_proportion_mdThal
-# 
-# 
-
-
 #5%% -- Figure 6 Save output ####
 
 #- move to output directory prior to saving
@@ -2675,117 +2080,4 @@ setwd(pathWorking)
 # __________________________________________________ ####
 
 
-
-
-
-
-
-
 #%% END ####
-
-#%% VIZ ####
-# import plotly for interactive plots 
-library(plotly)
-
-
-#%% Viz licks per reward #### 
-
-#1%%-- Load data from .pkl ####
-
-pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig5.pkl"
-
-df <- pd$read_pickle(pathData)
-
-
-###### summarize data
-summary(df)
-
-#verify dtypes imported properly
-sapply(df, class)
-
-
-
-#%%-- Subset data ##
-#Remove missing/invalid observations
-#- eliminate duplicate proportion values 
-# currently active proportion is session level but df has 2 per session (1 per npType)
-# so just remove from one trialType. This way can use same df for multiple models easily
-df[df$typeLP=='ActiveLeverPress','probActiveLP']= NaN
-df[df$typeLP=='ActiveLeverPress','LicksPerReward']= NaN
-
-
-#1 bar- Bar plot by session of licks/reward
-dfPlot= df
-
-p= ggplot(data= dfPlot)
-  
-p= p+
-  
-  scale_colour_brewer(palette="Paired")+
-  
-  #- by session
-  facet_grid(Projection~Session)+
-  
-  geom_point(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, colour='black',  fill=typeLP), alpha=0.5, shape=21, size=2)+
-  
-  geom_line(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, group=Subject), colour='black', alpha=0.5)+
-  
-  stat_summary(fun=mean, geom='bar', aes(x=typeLP,y=licksPerRewardTypeLP, colour=typeLP,  fill=typeLP))+
-  
-  stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
-
-ggplotly(p)
-
-
-#2 bar - by trainPhase
-dfPlot= df
-
-p= ggplot(data= dfPlot)
-
-p= p+
-  
-  scale_colour_brewer(palette="Paired")+
-  
-  # - by trainPhase
-  facet_grid(Projection~trainPhase)+
-
-  geom_point(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, colour='black',  fill=typeLP), alpha=0.7, shape=21, size=2)+
- 
-  geom_line(data= dfPlot, aes(x=typeLP, y=licksPerRewardTypeLP, group=Subject), colour='black', alpha=0.5)+
-  
-  stat_summary(fun=mean, geom='bar', aes(x=typeLP,y=licksPerRewardTypeLP, colour=typeLP,  fill=typeLP))+
-  
-  stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
-    
-      
-ggplotly(p)
-  
-
-#B- Line plot by Session
-dfPlot= df
-
-dfPlot$Session= as.numeric(as.character(dfPlot$Session))
-
-p= ggplot(data= dfPlot)
-
-p= p+
-  
-  # scale_colour_brewer(palette="Set2")+
-  
-  #- by session
-  facet_grid(Projection~trainPhase)+
-  
-  geom_point(data= dfPlot, aes(group=Subject, x=Session, y=licksPerRewardTypeLP, colour=typeLP), alpha=0.5, shape=21, size=.5)+
-
-  geom_line(data= dfPlot, aes(group=Subject, x=Session, y=licksPerRewardTypeLP, colour=typeLP), alpha=0.5, size=.5)+
-  
-  
-  stat_summary(fun=mean, geom='line', aes(x=Session, y=licksPerRewardTypeLP, colour=typeLP), size=2) +
-  
-  stat_summary(fun.data = mean_se, aes(x=Session, y=licksPerRewardTypeLP, fill=typeLP), alpha= 0.3, geom = "ribbon")
-
-
-  # stat_summary(fun.data = mean_se, aes(x=typeLP, y=licksPerRewardTypeLP), geom = "errorbar")
-
-ggplotly(p)
-

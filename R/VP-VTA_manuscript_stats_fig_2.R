@@ -28,7 +28,7 @@ gsub(" ", "", pathOutput)
 # __________________________________________________ ####
 
 
-#%% --- FIGURE 2B STATS -------------------------------------------- #### 
+#%% --- FIGURE 2B STATS -------------------------------------------- ## 
 
 #%% Figure 2B Stats A -- Compare DS vs NS AUC on special sessions with NS (stage >5)--####
 
@@ -151,7 +151,7 @@ setwd(pathWorking)
 
 # __________________________________________________ ####
 
-#%%4.5 Figure 2B Stats B-- Compare DS vs Null/0 AUC on first session (no NS) --####
+#%% Figure 2B Stats B-- Compare DS vs Null/0 AUC on first session (no NS) --####
 
 #0%%-- Clear vars between tests ####
 # #clear workspace (R environment) # Except paths, Python packages (pandas)
@@ -176,49 +176,28 @@ sapply(df, class)
 #Remove missing/invalid observations 
 
 
-#-- subset data ####
+#-- subset data ##
 # subset stage 1
 df_Sub_B= df[df$stage==1,]
 
 # subset DS trials only
 df_Sub_B= df_Sub_B[df_Sub_B$trialType== 'aucDSblue',]
 
-#-  aggregate so that stats run on subject means (was all trials but df was wrong) 2023-04-18 ####
-# test <- aggregate(periCueBlueAuc ~ subject, data = df_Sub_B, mean) # Equivalent
-
+#-  aggregate so that stats run on subject means 
 df_Sub_B <- aggregate(periCueBlueAuc ~ subject + trialType, data = df_Sub_B, mean) # Equivalent
 
 
 #2%%-- Run model ####
-# not necessary?
-# model= lmerTest::lmer('periCueBlueAuc ~ trialType + (1|subject)', data=df_Sub_B)
-# 
+
 model= lm('periCueBlueAuc ~ subject', data=df_Sub_B)
 
 
 model_anova= anova(model)
 
 
-## ~~~ FLAG ~~~ ####
-#--One sample T test DS vs null(0) for the first session
-# df isn't right. not accounting for subjects here in simple t test
-
-# this is multiple samples (30 trials per subj, so need to pair observations?)
 t= t.test(df_Sub_B$periCueBlueAuc)
-# 
-# 
-# just run the whole LME  in next section and use that posthoc
-# doesn't work with this model
-# EMM <- emmeans(model ~ subject)   # where treat has 2 levels
-# 
-# t= test(EMM, adjust = "sidak")   # adjustment is ignored - only 1 test per group
-# 
-# print(t, by = NULL, adjust = "sidak")   # all are in one group now
 
-## ~~~ FLAG ~~~ ####
-
-
-#%%4-- Save output to variables between tests  ####
+#4%%-- Save output to variables between tests  ####
 
 fig2B_stats_B_0_description= "DS AUC vs 0 on first training day (no NS)"
 fig2B_stats_B_1_t= t 
@@ -268,10 +247,6 @@ sapply(df, class)
 df_Sub_B= df[!is.nan(df$periCueBlueAuc),]
 
 
-# # # -just get rid of the first session, handle it separately
-# df_Sub_B= df[!df$stage==1,]
-
-
 #-- subset DS trials for 'learning' across sessions
 df_Sub_B_DS= df_Sub_B[df_Sub_B$trialType =="aucDSblue",]
 
@@ -288,7 +263,7 @@ model_anova_DS= anova(model_DS)
 model_NS= lmerTest::lmer('periCueBlueAuc ~ sesSpecialLabel + (1|subject)', data=df_Sub_B_NS)
 model_anova_NS= anova(model_NS)
 
-#3--Posthoc pairwise comparisons (t test) ####
+#3%%--Posthoc pairwise comparisons (t test) ####
 
 #- Viz interaction plot & save
 figName= "vp-vta_fig2b_stats_C_interactionPlot.pdf"
@@ -322,18 +297,6 @@ t_pooled= test(EMM, null= 0, adjust="sidak")
 
 print(t_pooled, adjust= "sidak")
 
-#-- Run T test on mean of subjects
-
-
-# #-- Checking posthoc for DS specifically (df should be based on DS for first session?)
-# EMM <- emmeans(model_DS, ~ sesSpecialLabel)   # where treat has 2 levels
-# tPairwise_DS= pairs(EMM, adjust= "sidak")
-# print(tPairwise_pooled, adjust="sidak")
-
-# EMM <- emmeans(model_DS, ~ sesSpecialLabel)   # where treat has 2 levels
-# t_DS= test(EMM, null= 0, adjust="sidak")
-# print(t_DS, adjust= "sidak")
-
 
 #4%%-- Save output to variables between tests  ####
 fig2B_stats_C_0_description= "DS & NS AUC: Learning/Changes across sessions"
@@ -343,7 +306,7 @@ fig2B_stats_C_3_model_post_hoc_pairwise= tPairwise_pooled
 fig2B_stats_C_3_model_post_hoc_t= t_pooled
 
 
-#5%%- Save output to File #### 
+#5%%-- Save output to File #### 
 
 setwd(pathOutput)
 
@@ -400,7 +363,6 @@ print(fig2B_stats_C_3_model_post_hoc_pairwise, adjust='sidak')
 '------------------------------------------------------------------------------'
 print('3)---- Posthoc T vs null,:')
 print(fig2B_stats_C_3_model_post_hoc_t, by=NULL, adjust='sidak')
-# zero isn't really the most appropriate null hypothesis here?
 '---- END ---------------------------------------------------------------------'
 
 sink()  # returns output to the console
@@ -410,7 +372,10 @@ setwd(pathWorking)
 # __________________________________________________ ####
 
 
-## ---- FIGURE 2D --------------------------------------------------------####
+## ---- FIGURE 2D --------------------------------------------------------##
+
+#%% Figure 2D Stats A -- Compare PE vs no PE AUC DS #### 
+
 
 #0%%-- Clear vars between tests ####
 # #clear workspace (R environment) # Except paths, Python packages (pandas)
