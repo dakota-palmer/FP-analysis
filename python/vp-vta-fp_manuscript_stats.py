@@ -345,6 +345,12 @@ df= df[varsToInclude]
 
 #%%--Prepare data for stats
 
+#% -Subset only Initial Phase
+phaseToInclude= 1
+
+df= df[df.trainPhase==phaseToInclude]
+
+
 # #--remove missing/invalid observations
 
 # #-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
@@ -416,6 +422,7 @@ df.to_pickle(savePath+'fig5.pkl')
 
 
 
+
 #%% ---------------------------FIG 6 ICSS ---------------
 
 
@@ -440,7 +447,7 @@ df= dfFig6.copy()
 
 # y= ['ResponseProb', 'RelLatency']
 
-varsToInclude= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase', 'logNP', 'countNP', 'npactiveProportion']
+varsToInclude= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase', 'logNP', 'countNP', 'npActiveProportion']
 
 # varsToInclude.append(y)
 
@@ -448,6 +455,11 @@ df= df[varsToInclude]
 
 
 #%%--Prepare data for stats
+
+#% -Subset only Initial Phase
+phaseToInclude= 'ICSS-OG-active-side'
+
+df= df[df.trainPhase==phaseToInclude]
 
 # #--remove missing/invalid observations
 
@@ -495,6 +507,197 @@ df.to_pickle(savePath+'fig6.pkl')
 
 
 
+
+
+
+#%% ---------------------------SUPPLEMENTAL FIG 5 Choice Task ---------------
+
+
+
+#%%--Load the data
+datapath= r"C:\Users\Dakota\Documents\GitHub\DS-Training\Matlab\vp-vta-fp_stats_fig5Table.parquet"
+
+dfFig5= pd.read_parquet(datapath)
+
+
+df= dfFig5.copy()
+
+
+#%%-- Isolate only data you want
+#to save time/memory, pare down dataset to vars we are interested in
+
+#multiply y vars in this table
+
+# y= ['ResponseProb', 'RelLatency']
+
+varsToInclude= ['Subject', 'Projection', 'TotalStimulations', 'TotalPE', 'ActiveLicks', 'InactiveLicks', 'Session', 'Sex', 'Proportion', 'LicksPerReward', 'LicksPerRewardInactive', 'trainPhase', 'trainPhaseLabel', 'trainDayThisPhase', 'probActiveLP', 'probInactiveLP', 'leverPressTotal', 'typeLP', 'countLP']
+
+# varsToInclude.append(y)
+
+df= df[varsToInclude]
+
+
+#%%--Prepare data for stats
+
+#% -Don't Subset phase, retain all
+# phaseToInclude= 1
+
+# df= df[df.trainPhase==phaseToInclude]
+
+
+# #--remove missing/invalid observations
+
+# #-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
+# #so subset to stages >=5
+# ind= []
+# ind= df.stage>=5
+
+# df= df.loc[ind,:]
+
+#- Stack licksPerReward and licksPerRewardInactive by typeLP
+# test= df.melt(id_vars= 'typeLP', value_vars=['LicksPerReward','LicksPerRewardInactive'], value_name='rewardLicks')
+
+#melt() and merge by setting index subject,session,typeLP
+
+# df.reset_index(inplace=True)
+
+test= df.melt(id_vars= ['Subject','Session'], value_vars=['LicksPerReward','LicksPerRewardInactive'], var_name= 'typeLP', value_name='licksPerRewardTypeLP')
+
+# make typeLP labels identical
+test.loc[(test.typeLP=='LicksPerReward'), 'typeLP']= 'ActiveLeverPress'
+test.loc[(test.typeLP=='LicksPerRewardInactive'), 'typeLP']= 'InactiveLeverPress'
+
+
+
+#already was melted/stacked by typeLP in matlab so redundant rows here added
+test= test[test.groupby(['Subject','Session','typeLP']).cumcount()==0]
+
+
+test.set_index(['Subject','Session','typeLP'], inplace=True)
+
+df.set_index(['Subject','Session','typeLP'], inplace=True)
+
+
+# test2= df.copy()
+# test2['licksPerRewardTypeLP']= test['licksPerRewardTypeLP']
+
+df['licksPerRewardTypeLP']= test['licksPerRewardTypeLP']
+
+df.reset_index(inplace=True)
+
+
+
+#-- Fix dtypes - explicitly assign categorical type to categorical vars
+# note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
+
+catVars= ['Subject', 'Projection', 'Session', 'Sex', 'trainPhase', 'trainPhaseLabel', 'trainDayThisPhase', 'typeLP']
+
+
+df[catVars]= df[catVars].astype('category')
+
+
+
+
+#%%-- Export to R.
+
+# save to pickle
+#- pandas version needs to match R environment version to load the pickle!
+# # activate R environment for pickling (to make env management/consistency easier)
+# conda activate r-env 
+
+df= df.copy()
+
+savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+print('saving Supplemental fig5 df to file')
+
+#Save as pickel
+df.to_pickle(savePath+'supplement_fig5.pkl')
+
+
+
+
+#%% ---------------------------SUPPLEMENTAL FIG 6 ICSS ---------------
+
+
+
+#%% ----- SUPPLEMENTAL FIG 6 Stats -------
+
+# OPTO ICSS
+
+#%%--Load the data
+datapath= r"C:\Users\Dakota\Documents\GitHub\DS-Training\Matlab\vp-vta-fp_stats_fig6Table.parquet"
+
+dfFig6= pd.read_parquet(datapath)
+
+
+df= dfFig6.copy()
+
+
+#%%-- Isolate only data you want
+#to save time/memory, pare down dataset to vars we are interested in
+
+#multiply y vars in this table
+
+# y= ['ResponseProb', 'RelLatency']
+
+varsToInclude= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase', 'logNP', 'countNP', 'npActiveProportion']
+
+# varsToInclude.append(y)
+
+df= df[varsToInclude]
+
+
+#%%--Prepare data for stats
+
+# #% -DONT Subset by phase, keep all
+# phaseToInclude= 'ICSS-OG-active-side'
+
+# df= df[df.trainPhase==phaseToInclude]
+
+# #--remove missing/invalid observations
+
+# #-can only do stat comparison for DS vs NS in stages/sessions where NS auc is present
+# #so subset to stages >=5
+# ind= []
+# ind= df.stage>=5
+
+# df= df.loc[ind,:]
+
+#-- Fix dtypes - explicitly assign categorical type to categorical vars
+# note can use C() in statsmodels formula to treat as categorical tho good practice to change in df 
+
+catVars= ['Subject', 'Projection', 'Session', 'Sex','typeNP', 'trainPhase']
+
+df[catVars]= df[catVars].astype('category')
+
+
+
+#%%-- Export to R.
+
+# save to pickle
+#- pandas version needs to match R environment version to load the pickle!
+# # activate R environment for pickling (to make env management/consistency easier)
+# conda activate r-env 
+
+df= df.copy()
+
+savePath= r'./_output/' #r'C:\Users\Dakota\Documents\GitHub\DS-Training\Python' 
+
+print('saving Supplemental fig6 df to file')
+
+#Save as pickel
+df.to_pickle(savePath+'supplement_fig6.pkl')
+
+
+# # Save an df with session-level observations (active proportion)
+# df2= df[df.groupby(['Subject','Session']).cumcount()==0]
+
+
+# print('saving fig6sessionLevel df to file')
+
+# #Save as pickel
+# df.to_pickle(savePath+'fig6sessionLevel.pkl')
 
 
 

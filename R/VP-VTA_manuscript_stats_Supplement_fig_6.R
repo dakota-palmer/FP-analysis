@@ -37,7 +37,7 @@ rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 #1%%-- Load data from .pkl ####
 
-pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig6.pkl"
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\supplement_fig6.pkl"
 
 df <- pd$read_pickle(pathData)
 
@@ -376,7 +376,7 @@ rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 #1%%-- Load data from .pkl ####
 
-pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig6.pkl"
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\supplement_fig6.pkl"
 
 df <- pd$read_pickle(pathData)
 
@@ -718,7 +718,7 @@ rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 #1%%-- Load data from .pkl ####
 
-pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig6.pkl"
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\supplement_fig6.pkl"
 
 df <- pd$read_pickle(pathData)
 
@@ -1050,7 +1050,7 @@ rm(list = setdiff(ls(), c("pathWorking", "pathOutput", "pd")))
 
 #1%%-- Load data from .pkl ####
 
-pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\fig6.pkl"
+pathData <- "C:\\Users\\Dakota\\Documents\\GitHub\\FP-analysis\\python\\_output\\supplement_fig6.pkl"
 
 df <- pd$read_pickle(pathData)
 
