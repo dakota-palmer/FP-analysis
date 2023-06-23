@@ -577,7 +577,7 @@ end
  %Mean/SEM update
  %instead of all trials, simplify to mean observation per subject
  % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
-data2= groupsummary(data2, ["subject","sesSpecialLabel","trialTypeLabel", "timeLock"], "mean",["periCueBlueAuc"]);
+data2= groupsummary(data2, ["subject","sesSpecialLabel","fileID","trialTypeLabel", "timeLock"], "mean",["periCueBlueAuc"]);
 
 % making new field with original column name to work with rest of old code bc 'mean_' is added 
 data2.periCueBlueAuc= data2.mean_periCueBlueAuc;
@@ -737,7 +737,7 @@ for thisGroupID= 1:numel(groupIDsUnique)
     
 end 
 
-test=groupsummary(df2, ["subject", "trainDay"]);
+% test=groupsummary(df2, ["subject", "trainDay"]);
 
 test=groupsummary(dataTableFig2B, ["subject","sesSpecialLabel"]);
 

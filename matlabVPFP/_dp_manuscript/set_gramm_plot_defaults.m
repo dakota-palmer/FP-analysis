@@ -458,192 +458,192 @@ colormap(map)
 
 
 %% ---- GRAMM examples from custom ICSS example data ----- 
-
-%load some example ICSS data
-load('example_data_icss.mat');
-
-dataFull= data;
-
-%define the cmaps you want for grand & subj observations (custom maps defined above)
-cmapGrand= cmapBlueGrayGrand;
-cmapSubj= cmapBlueGraySubj;
-
-%% Example line plot with individual lines
-
-%subset data
-data= dataFull;
-
-%generate figure
-figure; clear d;
-
-%-- individual subj
-group= data.Subject;
-
-d=gramm('x',data.trainDayThisPhase,'y',data.countNP,'color',data.typeNP, 'group', group)
-
-%facet by trainPhase - ideally could set sharex of facets false but idk w gramm
-d.facet_grid([],data.trainPhase);
-
-d.stat_summary('type','sem','geom','line');
-d.set_names('x','Session','y','Number of Nose Pokes','color','Nosepoke Side')
-
-d().set_line_options('base_size',linewidthSubj);
-d.set_color_options('map', cmapSubj);
-
-d.no_legend(); %prevent legend duplicates if you like
-
-
-%set text options
-d.set_text_options(text_options_DefaultStyle{:}); 
-
-
-d.draw()
-
-%-- btwn subj mean as well
-group= [];
-
-d.update('x',data.trainDayThisPhase,'y',data.countNP,'color',data.typeNP, 'group', group)
-
-d.stat_summary('type','sem','geom','area');
-
-d.set_names('x','Session','y','Number of Nose Pokes','color','Nosepoke Side')
-
-d().set_line_options('base_size',linewidthGrand);
-d.set_color_options('map', cmapGrand);
-
-
-figTitle= strcat('ICSS-dp-npType');   
-d.set_title(figTitle);   
-
-%Zoom in on lower NP subjects if desired
-% d().axe_property( 'YLim',[0 300]) %low responders
-d().axe_property( 'YLim',[0, 1200]) %high responders
-
-% SET X TICK = 1 SESSION
-d.axe_property('XTick',[min(data.trainDayThisPhase):1:max(data.trainDayThisPhase)]); %,'YLim',[0 75],'YTick',[0:25:75]);
-
-
-d.draw()
-
-
-%% Example bar w individual points and connecting lines: 
-
-%subset data
-sesToPlot= 5; %plot last day before reversal
-
-ind= [];
-ind= data.Session== sesToPlot;
-
-data= data(ind, :);
-
-%make fig
-clear d; figure();
-
-%- Bar of btwn subj means (group = [])
-group= []; %var by which to group
-
-d=gramm('x',data.typeNP,'y',data.countNP,'color',data.typeNP, 'group', group)
-
-d(1,1).stat_summary('type','sem', 'geom',{'bar' 'black_errorbar'}, 'dodge', dodge) 
-d(1,1).set_color_options('map',cmapGrand); 
-
-d.set_names('x','Nosepoke Side','y','Number of Nose Pokes','color','Nosepoke Side')
-d(1,1).set_title('ICSS Final day before reversal nosepoke inset')
-
-%set text options- do before first draw() call so applied on subsequent updates()
-d.set_text_options(text_options_DefaultStyle{:}); 
-
-d.draw()
-
-%- Draw lines between individual subject points (group= subject, color=[]);
-group= data.Subject;
-d.update('x', data.typeNP,'y',data.countNP,'color',[], 'group', group)
-
-% d(1,1).stat_summary('geom',{'line'});
-d(1,1).geom_line('alpha',0.3);
-d().set_line_options('base_size',linewidthSubj);
-
-d(1,1).set_color_options('chroma', 0); %black lines connecting points
-
-d.draw()
-
-%- Update with point of individual subj points (group= subject)
-group= data.Subject;
-d.update('x', data.typeNP,'y',data.countNP,'color',data.typeNP, 'group', group)
-d(1,1).stat_summary('type','sem','geom',{'point'}, 'dodge', dodge)%,'bar' 'black_errorbar'});
-
-d(1,1).set_color_options('map',cmapSubj); 
-
-d.draw();
-
-
-figTitle= 'ICSS_inset_final_session_preReversal';
-
-
-%% -Example Histogram
-
-% - Prior to stats, viz the distribution 
-%wondering if should run stats on log or raw nosepoke counts
-
-figure(); clear g;
-
-g(1,1)= gramm('x', data.countNP, 'color', data.typeNP);
-
-g(1,1).set_names('x','Number of Nose Pokes','color','Nosepoke Side')
-
-g(1,1).stat_bin()
-
-g(2,1)= gramm('x', data.logNP, 'color', data.typeNP);
-
-g(2,1).stat_bin()
-
-g(1,1).set_names('x','Log(Number of Nose Pokes)','color','Nosepoke Side')
-
-figTitle= 'ICSS inset final session preReversal-Stats Distribution';
-
-g().set_title(figTitle)
-
-g.set_text_options(text_options_DefaultStyle{:}); %set text options- do before first draw() call so applied on subsequent updates()
-
-g.set_color_options('map',cmapGrand); 
-
-g.draw();
-
-% saveFig(gcf, figPath,figTitle,figFormats);
-
-
-%% -------TODO: matlab plotting examples ------
-
-% %generate random data
-% dataTest= table();
 % 
-% testN= 1000; %n observations (rows in table)
+% %load some example ICSS data
+% load('example_data_icss.mat');
 % 
-% %-yValue data
-% %use randn to make random arrays: 1000 values (1000 rows x 1 column) with desired mean and std
-% testMean= 50;
-% testStd= 4;
+% dataFull= data;
 % 
-% dataTest.yValue= testMean+ testStd*randn(testN,1);
+% %define the cmaps you want for grand & subj observations (custom maps defined above)
+% cmapGrand= cmapBlueGrayGrand;
+% cmapSubj= cmapBlueGraySubj;
 % 
-% %-xValue data
-% testMean= 20;
-% testStd= 2;
+% %% Example line plot with individual lines
 % 
-% dataTest.xValue= testMean+ testStd*randn(testN,1);
+% %subset data
+% data= dataFull;
 % 
-% %-colorValue data
-% % make some arbitrary possible labels and then use randsample to sample
-% % randomly with replacement
-% testLabels= {'catA'; 'catB'; 'catC'; 'catD'};
+% %generate figure
+% figure; clear d;
 % 
-% dataTest.colorValues= randsample(testLabels, testN, true);
-
-
-
+% %-- individual subj
+% group= data.Subject;
+% 
+% d=gramm('x',data.trainDayThisPhase,'y',data.countNP,'color',data.typeNP, 'group', group)
+% 
+% %facet by trainPhase - ideally could set sharex of facets false but idk w gramm
+% d.facet_grid([],data.trainPhase);
+% 
+% d.stat_summary('type','sem','geom','line');
+% d.set_names('x','Session','y','Number of Nose Pokes','color','Nosepoke Side')
+% 
+% d().set_line_options('base_size',linewidthSubj);
+% d.set_color_options('map', cmapSubj);
+% 
+% d.no_legend(); %prevent legend duplicates if you like
+% 
+% 
+% %set text options
+% d.set_text_options(text_options_DefaultStyle{:}); 
+% 
+% 
+% d.draw()
+% 
+% %-- btwn subj mean as well
+% group= [];
+% 
+% d.update('x',data.trainDayThisPhase,'y',data.countNP,'color',data.typeNP, 'group', group)
+% 
+% d.stat_summary('type','sem','geom','area');
+% 
+% d.set_names('x','Session','y','Number of Nose Pokes','color','Nosepoke Side')
+% 
+% d().set_line_options('base_size',linewidthGrand);
+% d.set_color_options('map', cmapGrand);
+% 
+% 
+% figTitle= strcat('ICSS-dp-npType');   
+% d.set_title(figTitle);   
+% 
+% %Zoom in on lower NP subjects if desired
+% % d().axe_property( 'YLim',[0 300]) %low responders
+% d().axe_property( 'YLim',[0, 1200]) %high responders
+% 
+% % SET X TICK = 1 SESSION
+% d.axe_property('XTick',[min(data.trainDayThisPhase):1:max(data.trainDayThisPhase)]); %,'YLim',[0 75],'YTick',[0:25:75]);
+% 
+% 
+% d.draw()
+% 
+% 
+% %% Example bar w individual points and connecting lines: 
+% 
+% %subset data
+% sesToPlot= 5; %plot last day before reversal
+% 
+% ind= [];
+% ind= data.Session== sesToPlot;
+% 
+% data= data(ind, :);
+% 
+% %make fig
+% clear d; figure();
+% 
+% %- Bar of btwn subj means (group = [])
+% group= []; %var by which to group
+% 
+% d=gramm('x',data.typeNP,'y',data.countNP,'color',data.typeNP, 'group', group)
+% 
+% d(1,1).stat_summary('type','sem', 'geom',{'bar' 'black_errorbar'}, 'dodge', dodge) 
+% d(1,1).set_color_options('map',cmapGrand); 
+% 
+% d.set_names('x','Nosepoke Side','y','Number of Nose Pokes','color','Nosepoke Side')
+% d(1,1).set_title('ICSS Final day before reversal nosepoke inset')
+% 
+% %set text options- do before first draw() call so applied on subsequent updates()
+% d.set_text_options(text_options_DefaultStyle{:}); 
+% 
+% d.draw()
+% 
+% %- Draw lines between individual subject points (group= subject, color=[]);
+% group= data.Subject;
+% d.update('x', data.typeNP,'y',data.countNP,'color',[], 'group', group)
+% 
+% % d(1,1).stat_summary('geom',{'line'});
+% d(1,1).geom_line('alpha',0.3);
+% d().set_line_options('base_size',linewidthSubj);
+% 
+% d(1,1).set_color_options('chroma', 0); %black lines connecting points
+% 
+% d.draw()
+% 
+% %- Update with point of individual subj points (group= subject)
+% group= data.Subject;
+% d.update('x', data.typeNP,'y',data.countNP,'color',data.typeNP, 'group', group)
+% d(1,1).stat_summary('type','sem','geom',{'point'}, 'dodge', dodge)%,'bar' 'black_errorbar'});
+% 
+% d(1,1).set_color_options('map',cmapSubj); 
+% 
+% d.draw();
+% 
+% 
+% figTitle= 'ICSS_inset_final_session_preReversal';
+% 
+% 
+% %% -Example Histogram
+% 
+% % - Prior to stats, viz the distribution 
+% %wondering if should run stats on log or raw nosepoke counts
+% 
+% figure(); clear g;
+% 
+% g(1,1)= gramm('x', data.countNP, 'color', data.typeNP);
+% 
+% g(1,1).set_names('x','Number of Nose Pokes','color','Nosepoke Side')
+% 
+% g(1,1).stat_bin()
+% 
+% g(2,1)= gramm('x', data.logNP, 'color', data.typeNP);
+% 
+% g(2,1).stat_bin()
+% 
+% g(1,1).set_names('x','Log(Number of Nose Pokes)','color','Nosepoke Side')
+% 
+% figTitle= 'ICSS inset final session preReversal-Stats Distribution';
+% 
+% g().set_title(figTitle)
+% 
+% g.set_text_options(text_options_DefaultStyle{:}); %set text options- do before first draw() call so applied on subsequent updates()
+% 
+% g.set_color_options('map',cmapGrand); 
+% 
+% g.draw();
+% 
+% % saveFig(gcf, figPath,figTitle,figFormats);
+% 
+% 
+% %% -------TODO: matlab plotting examples ------
+% 
+% % %generate random data
+% % dataTest= table();
+% % 
+% % testN= 1000; %n observations (rows in table)
+% % 
+% % %-yValue data
+% % %use randn to make random arrays: 1000 values (1000 rows x 1 column) with desired mean and std
+% % testMean= 50;
+% % testStd= 4;
+% % 
+% % dataTest.yValue= testMean+ testStd*randn(testN,1);
+% % 
+% % %-xValue data
+% % testMean= 20;
+% % testStd= 2;
+% % 
+% % dataTest.xValue= testMean+ testStd*randn(testN,1);
+% % 
+% % %-colorValue data
+% % % make some arbitrary possible labels and then use randsample to sample
+% % % randomly with replacement
+% % testLabels= {'catA'; 'catB'; 'catC'; 'catD'};
+% % 
+% % dataTest.colorValues= randsample(testLabels, testN, true);
+% 
+% 
+% 
 %% CLOSE ALL example figures 
 close all;
-
+% 
 
 
 %% ----TODO
