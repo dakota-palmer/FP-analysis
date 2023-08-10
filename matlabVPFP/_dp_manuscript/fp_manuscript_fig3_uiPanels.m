@@ -9,13 +9,27 @@ errorBar= 'sem';
 
 %% set defaults
 
-% for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
-figSize1= [100, 100, 430, 600];
+%% set defaults
 
-figSize2= [100, 100, 650, 600];
+% % for JNeuro, 1.5 Col max width = 11.6cm (~438 pixels); 2 col max width = 17.6cm (~665 pixels)
+% figSize1= [100, 100, 430, 600];
+% 
+% figSize2= [100, 100, 650, 600];
+
+% Size in CM
+% works with PDF, doens't seem to work with svg... could consider trying
+% pixel values with svg
+% make units in cm
+figWidth= 17.25;
+figHeight= 17;
+    %position must allow fit on screen
+figPosV= 25; 
+figPosH= 2;
 
 %make appropriate size
-figSize= figSize2
+% figSize= figSize2
+
+figSize= [figPosV, figPosH, figWidth, figHeight];
 
 %% Scrap copying approach, use uipanels and draw one at a time
 

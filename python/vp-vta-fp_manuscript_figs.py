@@ -93,9 +93,9 @@ criteriaNS= 0.4
 
 #%% Exclude data if necessary
 
-modeExcludeSubj= 'allSubjects'
+# modeExcludeSubj= 'allSubjects'
 
-# modeExcludeSubj= 'excludeSubjects'
+modeExcludeSubj= 'excludeSubjects'
 
 dfTemp= dfTidy.copy()
 

@@ -585,6 +585,21 @@ test2= groupcounts(test, ["sesSpecialLabel", "subject"], "IncludeEmptyGroups",tr
 test3= test2(ismember(test2.GroupCount,0),:); % should contain empty groups if they exist
 
 
+%% Remove last day of Stage 5 specialSes?
+
+data= periEventTable;
+
+%search for this label and remove it
+labelsToClear= {'stage-5-final-day'};
+
+ind = strcmp(data.sesSpecialLabel,labelsToClear);
+
+%remove label with empty
+data(ind,'sesSpecialLabel')= {''};
+
+periEventTable= data;
+
+
 
 %% --Report # days to reach criteria
 % (based on sessions for special criteria sessions in Figure 2)
@@ -633,29 +648,23 @@ group=[];
 g= gramm('x', test.trainDay, 'color', test.sesSpecialLabel, 'group', group);
 g.facet_grid(test.sesSpecialLabel,[]);
 g.stat_bin();
+g.geom_point();
 g.draw();
 
 
+% Save the days to criteria table to file
+experimentName= 'vp-vta-fp';
 
+%- save this along with figures
+titleFile= [];
+titleFile= strcat(experimentName,'-days-to-criteria-summary');
 
-%% Remove last day of Stage 5 specialSes?
+%save as .csv
+titleFile= strcat(figPath,titleFile,'.csv');
 
-data= periEventTable;
-
-%search for this label and remove it
-labelsToClear= {'stage-5-final-day'};
-
-ind = strcmp(data.sesSpecialLabel,labelsToClear);
-
-%remove label with empty
-data(ind,'sesSpecialLabel')= {''};
-
-periEventTable= data;
-
+writetable(daysToCriteriaTable,titleFile)
 
 %% --SAVE DATA TABLE FOR MANUSCRIPT DATA REPO
-
-experimentName= 'vp-vta-fp';
 
 save(fullfile(figPath,strcat(experimentName,'-',date, '-periEventTableManuscript')), 'periEventTable', '-v7.3');
 
