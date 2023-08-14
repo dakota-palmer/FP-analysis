@@ -1489,6 +1489,234 @@ gLat().draw();
 % saveFig(gcf, figPath, titleFig, figFormats);
 
 
+%% Calculate/viz mean pe latency distribution
+
+%- d, simplified mean latency
+
+latMean= nanmean(data.poxDSrelMean);
+
+% % ggplot histogram of PE latency
+figure;
+g=[];
+group=[];
+g= gramm('x', data.poxDSrelMean, 'color', data.subject, 'group', group);
+g.facet_grid(data.latencyOrder,[]);
+g.stat_bin();
+g.geom_point();
+g.draw();
+
+latTableC= [];
+latTableC= groupsummary(data, ["subject"], 'all', "poxDSrelMean");
+
+%% 
+%----- a/b all trials
+
+dat=[];
+%- SUBSET data
+data= periEventTable;
+
+% subset data- by stage
+% stagesToPlot= [1:11];
+stagesToPlot= [7];
+
+ind=[];
+ind= ismember(data.stage, stagesToPlot);
+
+data= data(ind,:);
+
+
+% -- Subset data- restrict to last 3 sessions of stage 7 (same as encoding model input?)
+nSesToInclude= 3; 
+
+% reverse cumcount of sessions within stage, mark for exclusion
+groupIDs= [];
+
+% data.StartDate= cell2mat(data.StartDate);
+groupIDs= findgroups(data.subject, data.stage);
+
+groupIDsUnique= [];
+groupIDsUnique= unique(groupIDs);
+
+data(:, 'includedSes')= table(nan);
+
+
+for thisGroupID= 1:numel(groupIDsUnique)
+    %for each groupID, find index matching groupID
+    ind= [];
+    ind= find(groupIDs==groupIDsUnique(thisGroupID));
+        
+    %for each groupID, get the table data matching this group
+    thisGroup=[];
+    thisGroup= data(ind,:);
+
+    % get max trainDayThisStage for this Subject
+    maxTrainDayThisStage= [];
+    thisGroup(:,'maxTrainDayThisStage')= table(max(thisGroup.trainDayThisStage));
+
+    %check if difference between trainDayThisStage and max is within
+    %nSesToInclude
+    thisGroup(:,'deltaTrainDayThisStage')= table(thisGroup.maxTrainDayThisStage - thisGroup.trainDayThisStage);
+
+    % this way delta==0 is final day, up to delta < nSesToInclude
+    ind2=[];
+    ind2= thisGroup.deltaTrainDayThisStage < nSesToInclude;
+    thisGroup(:,'includedSes')= table(nan);
+
+    thisGroup(ind2,'includedSes')= table(1);
+
+    
+        
+    %assign back into table
+    data(ind, 'includedSes')= table(thisGroup.includedSes);
+%     
+%     %now cumulative count of observations in this group
+%     %make default value=1 for each, and then cumsum() to get cumulative count
+%     thisGroup(:,'cumcount')= table(1);
+%     thisGroup(:,'cumcount')= table(cumsum(thisGroup.cumcount));
+%     
+%     thisGroup(:,'cumcountMax')= table(max(thisGroup.cumcount));
+    
+    %assign back into table
+%     data(ind, 'testCount')= table(thisGroup.cumcount);
+  
+    %subtract trainDayThisStage - cumcount max and if 
+    
+%     % Check if >1 observation here in group
+%     % if so, flag for review
+%     if height(thisGroup)>1
+%        disp('duplicate ses found!')
+%         dupes(ind, :)= thisGroup;
+% 
+%     end
+    
+end 
+
+
+ind= [];
+ind= data.includedSes==1;
+
+data= data(ind,:);
+
+
+%subset data- simply require DS trial
+ind=[];
+ind= ~isnan(data.DStrialID);
+
+data= data(ind,:);
+
+%subset data- based on behavioral outcome
+% subset data- by PE outcome; only include trials with PE or inPort
+% ind=[];
+% % ind= data.DStrialOutcome==1 | data.DStrialOutcome==3;
+% ind= (data.DStrialOutcome==1) | (data.DStrialOutcome==3);
+% 
+% data= data(ind,:);
+
+
+% subset data- by PE outcome; only include trials with valid PE post-cue
+ind=[];
+ind= data.DStrialOutcome==1;
+
+data= data(ind,:);
+
+
+%-- subset to one observation per trial
+%use findgroups to groupby trialIDcum and subset to 1 observation per
+data2= table();
+data3= table();
+
+data2= data;
+groupIDs= [];
+groupIDs= findgroups(data2.trialIDcum);
+
+groupIDsUnique= [];
+groupIDsUnique= unique(groupIDs);
+
+data3=table; 
+for thisGroupID= 1:numel(groupIDsUnique)
+    %for each groupID, find index matching groupID
+    ind= [];
+    ind= find(groupIDs==groupIDsUnique(thisGroupID));
+    
+    %for each groupID, get the table data matching this group
+    thisGroup=[];
+    thisGroup= data2(ind,:);
+
+    %now cumulative count of observations in this group
+    %make default value=1 for each, and then cumsum() to get cumulative count
+    thisGroup(:,'cumcount')= table(1);
+    thisGroup(:,'cumcount')= table(cumsum(thisGroup.cumcount));
+    
+    %save only single observation per trial (get first value)
+    %get observation where timeLock==0
+    ind= [];
+    ind= thisGroup.timeLock==0;
+    
+    data3(thisGroupID,:)= thisGroup(ind,:);
+    
+end 
+
+%redefine data table
+data2= table();
+data2= data3;
+
+figure;
+g=[];
+group=[];
+g= gramm('x', data3.poxDSrel, 'color', data3.subject, 'group', group);
+g.stat_bin();
+g.geom_point();
+g.draw();
+
+% 
+%-boxplot distro of PE latency by subj
+cmapGrand= 'brewer_dark';
+cmapSubj= 'brewer2';
+
+figure;
+g=[];
+group=[];
+g= gramm('x', data3.subject, 'y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+
+g.set_title('Figure 3: Distribution of Port-Entry Latencies');
+g.set_names('y','Port-Entry Latency (s)','x','Subject','color','Subject', 'column', '');
+
+g.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+
+% g.stat_boxplot();
+g.stat_boxplot('dodge', dodge, 'width', 5);
+g.set_color_options('map',cmapGrand);
+g.no_legend();
+g.draw();
+
+%- overlay individual subj
+group= data3.subject;
+g.update('x', data3.subject, 'y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+g.geom_point();
+g.set_color_options('map',cmapSubj);
+g.set_line_options('base_size',linewidthSubj);
+g.no_legend();
+% g.draw();
+
+%- overlay grand mean pe latency
+latMean= nanmean(data3.poxDSrel);
+g.geom_hline('yintercept', latMean, 'style', 'm--', 'linewidth',linewidthReference); 
+
+%-make horizontal
+g.coord_flip();
+
+%- final draw call
+g.draw();
+
+
+latTableAB= [];
+latTableAB= groupsummary(data3, ["subject"], 'all', "poxDSrel");
+
+nanmean(latTableAB.mean_poxDSrel);
+
+nanmean(data3.poxDSrel)
+
 %% Save the figure
 
 %-Declare Size of Figure at time of creation (up top), not time of saving.

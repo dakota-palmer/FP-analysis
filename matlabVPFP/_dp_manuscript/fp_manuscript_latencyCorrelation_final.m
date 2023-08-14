@@ -149,6 +149,241 @@ end
 % % % end
 %     
 
+
+%% viz/save distribution of mean pe latency 
+
+
+data= latencyCorrInputTable;
+
+%- subsetting to same data that will be plotted in figure 3f
+stagesToPlot= 7;
+data= data;
+
+ind=[];
+ind= (data.stage==stagesToPlot);
+
+data= data(ind,:);
+
+%-- subset to one observation per trial
+%use findgroups to groupby trialIDcum and subset to 1 observation per trial
+data2= table();
+data3= table();
+
+data2= data;
+groupIDs= [];
+groupIDs= findgroups(data2.trialIDcum);
+
+groupIDsUnique= [];
+groupIDsUnique= unique(groupIDs);
+
+% ignore nan trialIDcums (not sure where these came from)
+groupIDsUnique= groupIDsUnique(~isnan(groupIDsUnique));
+
+data3=table; 
+for thisGroupID= 1:numel(groupIDsUnique)
+    %for each groupID, find index matching groupID
+    ind= [];
+    ind= find(groupIDs==groupIDsUnique(thisGroupID));
+    
+    %for each groupID, get the table data matching this group
+    thisGroup=[];
+    thisGroup= data2(ind,:);
+
+    %now cumulative count of observations in this group
+    %make default value=1 for each, and then cumsum() to get cumulative count
+    thisGroup(:,'cumcount')= table(1);
+    thisGroup(:,'cumcount')= table(cumsum(thisGroup.cumcount));
+    
+    %save only single observation per trial (get first value)
+    %get observation where timeLock==0
+    ind= [];
+    ind= thisGroup.timeLock==0;
+    
+    data3(thisGroupID,:)= thisGroup(ind,:);
+    
+end 
+
+%redefine data table
+data2= table();
+data2= data3;
+
+figure;
+g=[];
+group=[];
+g= gramm('x', data3.poxDSrel, 'color', data3.subject, 'group', group);
+g.stat_bin();
+g.geom_point();
+g.draw();
+
+% 
+%-boxplot distro of PE latency by subj
+cmapGrand= 'brewer_dark';
+cmapSubj= 'brewer2';
+
+figure;
+g=[];
+group=[];
+g= gramm('x', data3.subject, 'y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+
+g.set_title('Figure 3F Supplement: Distribution of Port-Entry Latencies');
+g.set_names('y','Port-Entry Latency (s)','x','Subject','color','Subject', 'column', '');
+
+g.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+
+% g.stat_boxplot();
+g.stat_boxplot('dodge', dodge, 'width', 5);
+g.set_color_options('map',cmapGrand);
+g.no_legend();
+g.draw();
+
+%- overlay individual subj
+group= data3.subject;
+g.update('x', data3.subject, 'y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+g.geom_point();
+g.set_color_options('map',cmapSubj);
+g.set_line_options('base_size',linewidthSubj);
+g.no_legend();
+% g.draw();
+
+%- overlay grand mean pe latency
+
+ % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data
+data4=[];
+data4= groupsummary(data3, ["subject"], "mean",["poxDSrel"]);
+
+latMean= nanmean(data4.mean_poxDSrel);
+g.geom_hline('yintercept', latMean, 'style', 'm--', 'linewidth',linewidthReference); 
+
+%-make horizontal
+g.coord_flip();
+
+%- final draw call
+g.draw();
+
+%%  
+%-grand boxplot distro of PE latency 
+cmapGrand= 'brewer_dark';
+cmapSubj= 'brewer2';
+
+figure;
+clear g;
+group=[];
+% g= gramm('x', data3.subject, 'y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+
+% % g= gramm('x', data3.poxDSrel, 'group', group);
+% % g.facet_grid(2,1, 'scale', 'free_y'); %trying to link axes manually but not working 
+
+g(1,1)= gramm('x', data3.poxDSrel, 'group', group);
+
+g(1,1).set_title('Between-Subjects');
+
+g(1,1).axe_property('XLim',[0,10]);
+
+g(1,1).set_names('y','','x','Port-Entry Latency (s)','color','', 'column', '');
+
+g(1,1).set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+
+% % g(1,1).stat_boxplot();
+% % g(1,1).stat_boxplot('dodge', dodge, 'width', 5);
+g(1,1).stat_bin('geom','bar','normalization','pdf');
+% % g(1,1).stat_violin(); %violin not working with 1d?
+% % g(1,1).stat_violin('half','true');
+% g(1,1).stat_bin('geom','bar');
+
+g(1,1).stat_density();
+
+
+g(1,1).set_color_options('map',cmapGrand);
+g(1,1).no_legend();
+
+%- overlay grand mean pe latency
+
+ % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data
+data4=[];
+data4= groupsummary(data3, ["subject"], "mean",["poxDSrel"]);
+
+latMean= nanmean(data4.mean_poxDSrel);
+g(1,1).geom_vline('xintercept', latMean, 'style', 'm--', 'linewidth',linewidthReference); 
+
+g(1,1).draw();
+
+%- (2,1) overlay individual subj
+g(2,1)= gramm('x', data3.subject, 'y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+
+g(2,1).set_title('Individual Subjects');
+g(2,1).set_names('y','Port-Entry Latency (s)','x','Subject','color','Subject', 'column', '');
+
+
+
+g(2,1).set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+g(2,1).stat_boxplot('dodge', dodge, 'width', 5);
+g(2,1).set_color_options('map',cmapGrand);
+g(2,1).no_legend();
+
+g(2,1).coord_flip();
+
+
+g(2,1).draw();
+
+%- overlay individual subj points
+group= data3.subject;
+% g(2,1).update('x', data3.poxDSrel, 'color', data3.subject, 'group', group);
+g(2,1).update('y', data3.poxDSrel, 'x', data3.subject, 'color', data3.subject, 'group', group);
+
+g(2,1).geom_point();
+
+% % g(2,1).update('y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+% % g(2,1).update('x', data3.subject, 'y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+% % g(2,1).update('y', data3.subject, 'x', data3.poxDSrel, 'color', data3.subject, 'group', group);
+% g(2,1).update('x', data3.poxDSrel, 'color', data3.subject, 'group', group);
+% 
+% g(2,1).geom_raster();
+% % haviing issues with raster + boxplot combo (axes mismatch)
+
+g(2,1).geom_hline('yintercept', latMean, 'style', 'm--', 'linewidth',linewidthReference); 
+
+
+g(2,1).set_title('Individual Subjects');
+
+
+g(2,1).axe_property('XLim',[0,10], 'YLim', [0, 10]);
+
+g(2,1).set_color_options('map',cmapSubj);
+% g.set_line_options('base_size',linewidthSubj);
+g(2,1).no_legend();
+
+% g(2,1).draw();
+
+
+%-make horizontal
+% g(2,1).coord_flip();
+
+g.set_title('Figure 3F Supplement: Distribution of Port-Entry Latencies');
+
+%- final draw call
+g.draw();
+
+% comparing grand mean methods 
+% latTableF= [];
+% latTableF= groupsummary(data3, ["subject"], 'all', "poxDSrel");
+% 
+% nanmean(data3.poxDSrel)
+% 
+% nanmean(data3.poxDSrel)
+% 
+% nanmean(latTableF.mean_poxDSrel) % Correct like below! this was plotted and reported for Fig3F
+% 
+% correct!
+% %  % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
+% % test= groupsummary(data3, ["subject"], "mean",["poxDSrel"]);
+
+titleFig='vp-vta_Figure3_supplement_latency_distro';
+saveFig(gcf, figPath, titleFig, figFormats);
+
+
 %% Run correlation of pooled data for each timestamp
 
 %If we want to relate Z scored fluorescence with PE latency, one way to do

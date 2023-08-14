@@ -1717,9 +1717,6 @@ data= stack(data, {'rhoBlue', 'rhoBlueShuffled'}, 'IndexVariableName', 'latencyO
 parquetwrite(strcat('vp-vta-fp_stats_fig3_latencyCorr_Table'), data);
 
 
-
-
-
 %% lme
 
 
