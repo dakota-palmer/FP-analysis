@@ -14,13 +14,12 @@ clear; close all; clc;
 % % airPLS version
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-30-Aug-2022subjDataAnalyzed_airPLS_modeFitFP-airPLS.mat")
 % 
-% %revised licks .. pre 2023-03-18 criteriaSes fix
+% % %revised licks .. pre 2023-03-18 criteriaSes fix
 % load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-09-Nov-2022subjDataAnalyzed_airPLS_modeFitFP-airPLS.mat")
 
 
 %2023-03-18 revised DS/NS ratios (criteriaSes based on 10sec ratio)
 load("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\broken up code\VP-VTA-FP-18-Mar-2023subjDataAnalyzed_airPLS_modeFitFP-airPLS.mat")
-
 
 
 experimentName= 'vp-vta-fp-airPLS';

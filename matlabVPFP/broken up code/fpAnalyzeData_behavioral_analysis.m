@@ -954,6 +954,8 @@ for subj= 1:numel(subjects)
     %                     ind = find([lox{:}] > pox{1}(1)); %cell
                         ind = find([lox] < pox(1)); 
 
+
+                        
                         %-----Error on subj 1, session 22, trial 16
                         % no port entry, not inPort, but licks still present
                         %seems the PE timestamp is exactly equivalent to DS

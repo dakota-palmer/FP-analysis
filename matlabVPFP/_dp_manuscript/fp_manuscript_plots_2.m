@@ -1569,99 +1569,101 @@ close all;
 
 %% dp 2022-11-07 examining invalid licks (licks before pe) / lick cleaning
 % 
-% %subset data
-% data= periEventTable;
+%subset data
+data= periEventTable;
+
+
+% subset data- by stage
+stagesToPlot= [7];
+
+ind=[];
+ind= ismember(data.stage, stagesToPlot);
+
+data= data(ind,:);
+
+
+
+%-- add simple cumcount of trials in these subset data
+id= [];
+id= unique(data.DStrialIDcum, 'stable'); %stable to prevent sorting
+
+idCount= [];
+idCount= 1:numel(id);
+
+%initialize
+data(:,'DStrialIDcumcount')= table(nan);
+
+for thisID= 1:numel(id)
+     
+    ind=[];
+    ind= data.DStrialIDcum==id(thisID);
+    
+    
+    data(ind,'DStrialIDcumcount')= table(idCount(thisID)); 
+
+    
+end
+
+
+
+ind= []
+
+ind= data.poxDSrel < data.loxDSrel;
+
+test= data(ind,:);
+
+unique(test.DStrialOutcome)
+
+% trials here include both 1) port entry and 3) inPort
+
+figure(); title('examining pre-PE licks');
+
+
+ %get data; not in table format
+x=[], y=[], c=[];
+x= (test.timeLock);
+y= (test.DStrialIDcumcount);%cumcount);
+c= (test.DSblue);
+
+trials= [];
+trials= numel(unique(y));
+
+c= reshape(c, [], trials);
+
+%make heatplot
+imagesc(y,x,c);    
+set(gca,'YDir','normal') %increasing latency from top to bottom
+view([90, 90]) %// instead of normal view, which is view([0 90])
+
+
+%     caxis manual;
+%     caxis([bottom, top]);
+cbar= colorbar; %colorbar legend
+
+colormap parula;
+
+% % overlays pretty slow , lots of data
+% hold on; %scatter overlays
 % 
+% overlayAlpha=0.8;
+% overlayPointSize=5;
+%  %overlay cue (0)
+% s= scatter(test.DStrialIDcumcount,zeros(size(test.DStrialIDcum)), 'filled', 'b');
+% s.MarkerFaceAlpha= overlayAlpha;
+% s.AlphaData= overlayAlpha;
+% s.SizeData= overlayPointSize;
 % 
-% % subset data- by stage
-% stagesToPlot= [7];
+% %overlay first PE
+% s= scatter(test.DStrialIDcumcount ,test.poxDSrel, 'filled', 'm');
+% s.MarkerFaceAlpha= overlayAlpha;
+% s.AlphaData= overlayAlpha;
+% s.SizeData= overlayPointSize;
 % 
-% ind=[];
-% ind= ismember(data.stage, stagesToPlot);
-% 
-% data= data(ind,:);
-% 
-% 
-% 
-% %-- add simple cumcount of trials in these subset data
-% id= [];
-% id= unique(data.DStrialIDcum, 'stable'); %stable to prevent sorting
-% 
-% idCount= [];
-% idCount= 1:numel(id);
-% 
-% %initialize
-% data(:,'DStrialIDcumcount')= table(nan);
-% 
-% for thisID= 1:numel(id)
-%      
-%     ind=[];
-%     ind= data.DStrialIDcum==id(thisID);
-%     
-%     
-%     data(ind,'DStrialIDcumcount')= table(idCount(thisID)); 
-% 
-%     
-% end
-% 
-% 
-% 
-% ind= []
-% 
-% ind= data.poxDSrel < data.loxDSrel;
-% 
-% test= data(ind,:);
-% 
-% unique(test.DStrialOutcome)
-% 
-% % trials here include both 1) port entry and 3) inPort
-% 
-% figure(); title('examining pre-PE licks');
-% 
-% 
-%  %get data; not in table format
-% x=[], y=[], c=[];
-% x= (test.timeLock);
-% y= (test.DStrialIDcumcount);%cumcount);
-% c= (test.DSblue);
-% 
-% trials= [];
-% trials= numel(unique(y));
-% 
-% c= reshape(c, [], trials);
-% 
-% %make heatplot
-% imagesc(y,x,c);    
-% set(gca,'YDir','normal') %increasing latency from top to bottom
-% view([90, 90]) %// instead of normal view, which is view([0 90])
-% 
-% 
-% %     caxis manual;
-% %     caxis([bottom, top]);
-% cbar= colorbar; %colorbar legend
-% 
-% colormap parula;
-% % 
-%overlays pretty slow , lots of data
-% % hold on; %scatter overlays
-% % 
-% %  %overlay cue (0)
-% % s= scatter(test.DStrialIDcumcount,zeros(size(test.DStrialIDcum)), 'filled', 'k');
-% % s.MarkerFaceAlpha= overlayAlpha;
-% % s.AlphaData= overlayAlpha;
-% % s.SizeData= overlayPointSize;
-% % 
-% % %overlay first PE
-% % s= scatter(test.DStrialIDcumcount ,test.poxDSrel, 'filled', 'm');
-% % s.MarkerFaceAlpha= overlayAlpha;
-% % s.AlphaData= overlayAlpha;
-% % s.SizeData= overlayPointSize;
-% % 
-% % %overlay first lick 
-% % s= scatter(test.DStrialIDcumcount,test.loxDSrel, 'filled', 'g');
-% % s.MarkerFaceAlpha= overlayAlpha;
-% % s.AlphaData= overlayAlpha;
-% % s.SizeData= overlayPointSize;
+% %overlay first lick 
+% s= scatter(test.DStrialIDcumcount,test.loxDSrel, 'filled', 'k');
+% s.MarkerFaceAlpha= overlayAlpha;
+% s.AlphaData= overlayAlpha;
+% s.SizeData= overlayPointSize;
 
 %overall looks like good spread of values, not a systemic weird outlier
 
