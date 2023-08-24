@@ -392,8 +392,16 @@ data3= data2;
 test= [];
 test= groupsummary(data3, ["subject", "fileID"], "all",["loxDSrelCountAllThisTrial"]);
 
-%% 
+%% Examine variability in lick counts within-subject, within-session
+% does lick count change throughout session (e.g. with satiety?)
+
+%-- summary by within-subject, within-session
+withinSesTable= [];
+withinSesTable= groupsummary(data3, ["subject", "fileID"], "all",["loxDSrelCountAllThisTrial"]);
+
+
 %--time series within-subj, within-session?
+% What is the variability of lick counts within-subject within-session?
 cmapGrand= 'brewer_dark';
 cmapSubj= 'brewer2';
 
@@ -405,7 +413,10 @@ g=[];
 group=data3.fileID;
 g= gramm('x', data3.DStrialID, 'y', data3.loxDSrelCountAllThisTrial, 'color', data3.subject, 'group', group);
 g.facet_grid([],data3.subject);
-g.set_title('Figure 3 Supplement: Time Series of Lick Count');
+g.set_title('Figure 3 Supplement: Time Series of Lick Counts Within-Session');
+
+g.set_names('y','Lick Count','x','Trial #','color','Subject', 'column', 'Subject');
+
 % g.geom_point();
 g.geom_line();
 g.set_color_options('map',cmapSubj);
@@ -420,8 +431,135 @@ g.set_color_options('map',cmapGrand);
 g.set_line_options('base_size',linewidthGrand);
 g.draw();
 
-%% 
-%--distro within-subj, within-session?
+% 
+% Save fig
+titleFig='vp-vta_supplement_fig3_lickCounts_withinSession';
+% saveFig(gcf, figPath, titleFig, figFormats);
+
+ 
+%% above time-series but share x axes (no subj facet)
+
+% too messy, below is great
+
+% %--time series within-subj, within-session?
+% % What is the variability of lick counts within-subject within-session?
+% cmapGrand= 'brewer_dark';
+% cmapSubj= 'brewer2';
+% 
+% figure;
+% g=[];
+% 
+% 
+% %individual session lines
+% group=data3.fileID;
+% g= gramm('x', data3.DStrialID, 'y', data3.loxDSrelCountAllThisTrial, 'color', data3.subject, 'group', group);
+% % g.facet_grid([],data3.subject);
+% g.set_title('Figure 3 Supplement: Time Series of Lick Counts Within-Session');
+% 
+% g.set_names('y','Lick Count','x','Trial #','color','Subject', 'column', 'Subject');
+% 
+% % g.geom_point();
+% g.geom_line();
+% g.set_color_options('map',cmapSubj);
+% g.set_line_options('base_size',linewidthSubj);
+% g.draw();
+% 
+% %between session mean top
+% group= data3.subject;
+% g.update('x', data3.DStrialID, 'y', data3.loxDSrelCountAllThisTrial, 'color', data3.subject, 'group', group);
+% g.stat_summary('geom','area', 'type', 'sem');
+% g.set_color_options('map',cmapGrand);
+% g.set_line_options('base_size',linewidthGrand);
+% g.draw();
+% 
+% % 
+% % Save fig
+% titleFig='vp-vta_supplement_fig3_lickCounts_withinSession';
+% % saveFig(gcf, figPath, titleFig, figFormats);
+
+
+%% -- Distro by trial? Nice 
+
+cmapGrand= 'brewer_dark';
+cmapSubj= 'brewer2';
+
+figure;
+g=[];
+
+%subj mean
+group= data3.subject;
+g= gramm('x', data3.DStrialID, 'y', data3.loxDSrelCountAllThisTrial, 'color', data3.subject, 'group', group);
+g.set_title('Figure 3 Supplement: Time Course of Lick Count Within-Session (n=3 sessions)');
+g.facet_grid(data3.subject,[]);
+% g.geom_point();
+% g.geom_line();
+g.stat_boxplot('dodge', dodge, 'width', 5);
+g.set_color_options('map',cmapGrand);
+g.set_names('y','Lick Count','x','Trial #','color','Subject', 'column', 'Subject');
+
+
+g.draw();
+
+%ind sessions
+group= data3.fileID;
+g.update('x', data3.DStrialID, 'y', data3.loxDSrelCountAllThisTrial, 'color', data3.subject, 'group', group);
+% g.geom_point();
+g.no_legend();
+g.geom_line();
+g.set_color_options('map',cmapSubj);
+g.set_line_options('base_size',linewidthSubj);
+
+
+%-make horizontal
+% g.coord_flip();
+% g.draw();
+
+%%-- next step for correlation would be to correlate/viz peri-PE with lick
+%count
+
+%- overlay grand mean lick count
+
+ % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data
+data4=[];
+data4= groupsummary(data3, ["subject"], "mean",["loxDSrelCountAllThisTrial"]);
+
+lickMean= [];
+lickMean= nanmean(data4.mean_loxDSrelCountAllThisTrial);
+% g.geom_hline('yintercept', lickMean, 'style', 'k--', 'linewidth',linewidthReference); 
+
+%final draw call
+g.draw();
+
+titleFig='vp-vta_supplement_fig3_lickCounts_withinSession';
+saveFig(gcf, figPath, titleFig, figFormats);
+
+
+%% -- simple scatter of lick count by trialID?
+
+% clear g;
+% figure;
+% 
+% %-individual trial scatter by subj
+% group= data3.trialIDcum;
+% g(1,1)= gramm('y', data3.DStrialID, 'x', data3.loxDSrelCountAllThisTrial, 'color', data3.subject, 'group', group);
+% 
+% g(1,1).facet_grid([], data3.fileID);
+% 
+% g(1,1).geom_point();
+% 
+% g(1,1).set_title('Lick Count vs Peri-DS AUC');
+% g(1,1).set_names('y', 'Lick Count', 'x', 'Peri-DS AUC');
+% 
+% 
+% %- vline at 0 
+% g(1,1).geom_vline('xintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
+% 
+% 
+% %first draw
+% g(1,1).draw
+
+
+%% --distro within-subj, within-session? grouping may be incorrect
 cmapGrand= 'brewer_dark';
 cmapSubj= 'brewer2';
 
@@ -431,7 +569,7 @@ g=[];
 %subj mean
 group= data3.subject;
 g= gramm('x', data3.subject, 'y', data3.loxDSrelCountAllThisTrial, 'color', data3.subject, 'group', group);
-g.set_title('Figure 3 Supplement: Lick Count Distribution');
+g.set_title('Figure 3 Supplement: Lick Count Distribution Within-Session');
 % g.geom_point();
 % g.geom_line();
 g.stat_boxplot('dodge', dodge, 'width', 5);

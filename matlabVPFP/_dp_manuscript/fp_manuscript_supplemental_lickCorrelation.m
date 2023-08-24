@@ -1,11 +1,53 @@
 
-%% LICK CORRELATION with PERI-PE GCaMP --------------------------
+%% -------- LICK CORRELATION with PERI-PE GCaMP --------------------------
 
+
+%% Load data
 data= periEventTable;
 
 corrInputTable= table;
 
 corrInputTable= data;
+
+%% Set gramm plot defaults
+set_gramm_plot_defaults();
+
+
+%% Plot Settings
+figPath= strcat(pwd,'\_figures\_mockups\');
+
+%SVG good for exporting for final edits
+% figFormats= {'.svg'} %list of formats to save figures as (for saveFig.m)
+
+%PNG good for quickly viewing many
+% figFormats= {'.png'} %list of formats to save figures as (for saveFig.m)
+% figFormats= {'.svg','.fig'} %list of formats to save figures as (for saveFig.m)
+%pdf for final drafts
+figFormats= {'.pdf','.svg','.fig'} %list of formats to save figures as (for saveFig.m)
+
+
+%-- Master plot linestyles and colors
+
+%thin, light lines for individual subj
+linewidthSubj= 0.5;
+
+%dark, thick lines for between subj grand mean
+linewidthGrand= 1.5;
+
+%thicker lines for reference lines
+linewidthReference= 2;
+
+%-- Master plot axes settings
+%- set default axes limits between plots for consistency
+%default lims for traces 
+ylimTraces= [-2,5];
+xlimTraces= [-2,10];
+
+%default lims for AUC plots
+%note xlims best to calculate dynamically for bar plots based on num x categories
+% ylimAUC= [-1,16];
+ylimAUC= [-6,16.5];
+
 
  %% Exclude FP signals following lick? ??
 
@@ -69,7 +111,7 @@ for trial= 1:numel(allTrials)
     
      corrInputTable(ind,'loxDSrelCountAllThisTrialShuffled')= data(ind2(1), 'loxDSrelCountAllThisTrial');  
 
-    
+      
 end
 
 
@@ -382,7 +424,7 @@ g(2,1).no_legend();
 %-make horizontal
 % g(2,1).coord_flip();
 
-g.set_title('Figure 3F Supplement: Distribution of Lick Counts');
+g.set_title('Figure 3 Supplement: Distribution of Trial Lick Counts');
 
 %- final draw call
 g.draw();
@@ -401,8 +443,8 @@ g.draw();
 % %  % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
 % % test= groupsummary(data3, ["subject"], "mean",["poxDSrel"]);
 
-titleFig='vp-vta_Figure3_supplement_lickCount_distro';
-% saveFig(gcf, figPath, titleFig, figFormats);
+titleFig='vp-vta_supplement_fig3_lickCount_distro';
+saveFig(gcf, figPath, titleFig, figFormats);
 
 
 %% Run correlation of pooled data for each timestamp
@@ -458,8 +500,15 @@ for thisStage= 1:numel(allStages)
 
                 %-Ordered latency
 
-                y1= data4.DSblue; 
+                %dynamic, switch between periDS and periDSpox
+                
+                y1var= 'DSblue'; 
+%                 y1var= 'DSbluePox';
+                
+%                 y1= data4.DSblue; 
 %                 y1= data4.DSbluePox; 
+
+                y1= data4.(y1var); 
 
                 y2= data4.loxDSrelCountAllThisTrial;
 
@@ -471,6 +520,7 @@ for thisStage= 1:numel(allStages)
 
 %                 y1= data4.DSblue; 
 %                 y1= data4.DSbluePox; 
+                y1= data4.(y1var);
 
                 y2= data4.loxDSrelCountAllThisTrialShuffled;
 
@@ -482,6 +532,19 @@ for thisStage= 1:numel(allStages)
                 lickCountMean= [];
                 lickCountMean= nanmean(data4.loxDSrelCountAllThisTrial);
                 
+                %save mean PE latency for plotting overlay
+                poxDSrelMean=[];
+                poxDSrelMean= nanmean(data4.poxDSrel);
+                
+                %save mean lick latency for plotting overlay
+                loxDSrelMean=[];
+                loxDSrelMean= nanmean(data4.loxDSrel);
+                
+                loxDSpoxRelMean=[];
+                loxDSpoxRelMean= nanmean(data4.loxDSpoxRel);
+                
+%                 lick = periEventTable.loxDSrelAllThisTrial{1,1}
+                
                 %assign data to output table
                 metaColumns= ["stage", "subject", "timeLock"];
 
@@ -492,7 +555,12 @@ for thisStage= 1:numel(allStages)
                 corrOutputTable(indOutput,"rhoBlueShuffled")= table(rhoBlueShuffled); 
                 corrOutputTable(indOutput,"pvalBlueShuffled")= table(pvalBlueShuffled); 
 
+                corrOutputTable(indOutput,"poxDSrelMean")= table(poxDSrelMean);
+                
                 corrOutputTable(indOutput,"lickCountMean")= table(lickCountMean);
+                corrOutputTable(indOutput,"loxDSrelMean")= table(loxDSrelMean);
+                corrOutputTable(indOutput,"loxDSpoxRelMean")= table(loxDSpoxRelMean);
+
                 
                 indOutput= indOutput+1;            
             end
@@ -663,6 +731,15 @@ alphaThreshold= 0.05;
 
 %% make plot simlar to manuscript fig 3f
 
+%- Aesthetics
+yLimCorrelation= [-0.5, 0.5];
+% xLimCorrelation= [-2,5];
+% xTickCorrelation= [-2:2:5];
+
+xLimCorrelation= [-2,10];
+xTickCorrelation= [-2:1:10];
+
+
 % Shuffled vs. Ordered data stat comparison… 2 way anova or lmm for shuffled vs real signal 
 % (is there interaction with time; if not then no need for single timestamp comparisons) 
 
@@ -722,28 +799,55 @@ gCorr().set_color_options('map', cmapGrand)
 gCorr().set_line_options('base_size', linewidthGrand); 
 
 
-titleFig= strcat('fig3latcorr');
+titleFig= strcat('Correlation of Lick Count per Trial with ', y1var);
 
 
 gCorr().set_title(titleFig);
-gCorr().set_names('x','Time from DS onset (s)','y','Correlation Coefficient','color','latencyOrder');
+gCorr().set_names('x','Time from event onset (s)','y','Correlation Coefficient','color','latencyOrder');
 gCorr().no_legend();
 
-gCorr().geom_vline('xintercept', 0, 'style', 'b--', 'linewidth',linewidthReference); %horizontal line @ 0 (cue onset)
+if strcmp(y1var, 'DSblue')
+    gCorr().geom_vline('xintercept', 0, 'style', 'b--', 'linewidth',linewidthReference); % line @ 0 (event onset)
+    
+    %add vertical line for mean PE latency
+    peMean= [];
+    peMean= nanmean(data.poxDSrelMean);
+    gCorr().geom_vline('xintercept', peMean, 'style', 'm--', 'linewidth',linewidthReference); % line @ 0 (event onset)
 
+    
+    %add vertical line overlay for mean Lick latency
+    lickMean= [];
+    lickMean= nanmean(data.loxDSrelMean);
+    gCorr().geom_vline('xintercept', lickMean, 'style', 'k-.', 'linewidth',linewidthReference); % line @ mean 
+    
+elseif strcmp(y1var, 'DSbluePox')
+    gCorr().geom_vline('xintercept', 0, 'style', 'm--', 'linewidth',linewidthReference); % line @ 0 (event onset)
+    
+    %add vertical line overlay for mean Lick latency
+    lickMean= [];
+    lickMean= nanmean(data.loxDSpoxRelMean);
+    gCorr().geom_vline('xintercept', lickMean, 'style', 'k-.', 'linewidth',linewidthReference); % line @ mean 
+    
+end
+    
+    
 %-set limits
 gCorr().axe_property('YLim',yLimCorrelation);
 gCorr().axe_property('XLim',xLimCorrelation);
 gCorr().axe_property('XTick',xTickCorrelation);
 
 
-%add vertical line overlay for mean PE latency
-lickMean= [];
-lickMean= nanmean(data.lickCountMean);
-gCorr().geom_vline('xintercept', lickMean, 'style', 'k-.', 'linewidth',linewidthReference); %horizontal line @ mean PE
-
 gCorr().axe_property('YLim',[-0.5,0.5]);
 % gCorr().axe_property('xLim',[-2,5]); %capping at +5s
 
-
 gCorr().draw();
+
+titleFig='vp-vta_supplement_fig3_correlation_lickCount_x_';
+
+titleFig= strcat(titleFig, y1var);
+
+saveFig(gcf, figPath, titleFig, figFormats);
+
+
+
+
