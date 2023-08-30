@@ -114,13 +114,6 @@ end %end subject loop
 %% Identify PEs and licks occuring during the DS 
 %DP updated 3/10/22 no longer shifting timestamps/relying on cutTime as index... just using raw timestamps. Using fp_trialEventID function
  
-for subj= 1:numel(subjects)
-    
-    currentSubj= subjData.(subjects{subj});
-    currentSubjAnalyzed= subjDataAnalyzed.(subjects{subj});
-
-    
-    for session= 1:numel(currentSubjAnalyzed)
 
         %First, let's establish the cue duration based on training stage
         if currentSubj(session).trainStage == 1

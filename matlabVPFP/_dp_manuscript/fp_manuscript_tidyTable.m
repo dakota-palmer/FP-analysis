@@ -163,20 +163,28 @@ for subj= 1:numel(subjects)
                 %lick latency relative to PE 
             loxDSpoxrel= nan(periCueFrames, numTrials);
             
-                %dp 2023-08-15 peer review simple count of licks per trial
-                    %could/should have just used the same variables above,
-                    %but adding this late and want to make sure not causing
-                    %any errors/miscalculations based on above variables
-                    %only including 1st lick...so making new ones
-                
-                    %count of all licks in trial
-                loxDSrelCountAllThisTrial= nan(periCueFrames, numTrials);
-                    %lick latencies of all licks in trial 
-                    %for now cell array
-%                 loxDSrelAllThisTrial= nan(periCueFrames, numTrials);
-                loxDSrelAllThisTrial= cell(periCueFrames, numTrials);
+%                 %dp 2023-08-15 peer review simple count of licks per trial
+%                     %could/should have just used the same variables above,
+%                     %but adding this late and want to make sure not causing
+%                     %any errors/miscalculations based on above variables
+%                     %only including 1st lick...so making new ones
+%                 
+%                     %count of all licks in trial
+%                 loxDSrelCountAllThisTrial= nan(periCueFrames, numTrials);
+%                     %lick latencies of all licks in trial 
+%                     %for now cell array
+% %                 loxDSrelAllThisTrial= nan(periCueFrames, numTrials);
+%                 loxDSrelAllThisTrial= cell(periCueFrames, numTrials);
 
+                % dp 2023-08-29 change "licks per trial"... instead of cue
+                % duration, count licks within fixed amount of time post-PE
+                % (within the peri-PE epoch)
                 
+                %add new script up top. Run that, then will have
+                %periDSpox.loxPostPE and .loxPostPErel
+                
+                loxDSrelAllThisTrial= cell(periCueFrames, numTrials);
+              
             
             
             %reward info
@@ -247,11 +255,15 @@ for subj= 1:numel(subjects)
                     % for now just save in 1st position cell instead of worrying about
                     % binned assignment. not a good approach anyway. want
                     % the raw timestamps
-                    loxDSrelAllThisTrial(1,cue)= {currentSubj(includedSession).behavior.loxDSrel{cue}};
-
+%                     loxDSrelAllThisTrial(1,cue)= {currentSubj(includedSession).behavior.loxDSrel{cue}};
                     
                     % simple count of licks per trial
-                    loxDSrelCountAllThisTrial(trialInd, cue)= numel(currentSubj(includedSession).behavior.loxDSrel{cue});
+%                     loxDSrelCountAllThisTrial(trialInd, cue)= numel(currentSubj(includedSession).behavior.loxDSrel{cue});
+
+                    % dp 2023-08-29 changing from peri-DS licks to within fixed time window post-PE
+                    loxDSrelAllThisTrial(1,cue)= {currentSubj(includedSession).periDSpox.loxPostPE{cue}};
+                    loxDSrelCountAllThisTrial(trialInd, cue)= numel(currentSubj(includedSession).periDSpox.loxPostPE{cue});
+
 
                 else
                      loxDSrel(trialInd, cue)= nan;

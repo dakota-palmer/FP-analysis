@@ -130,6 +130,11 @@ lightnessRangeGrand= [10,10];
 
 
 
+%% Get Licks per trial (for manuscript review)
+
+% licks within fixed time post-PE 
+fpManuscript_supplement_licks_per_trial_count();
+
 %% Create periEventTable
 fp_manuscript_tidyTable();
 

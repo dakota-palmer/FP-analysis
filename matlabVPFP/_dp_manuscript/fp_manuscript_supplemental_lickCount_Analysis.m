@@ -2,15 +2,17 @@
 
 %% Load periEvent Table (with AUC computed and licks per trial counted)
 
-pathData= ("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-22-Aug-2023periEventTable.mat");
+% pathData= ("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-22-Aug-2023periEventTable.mat");
 
+pathData= ("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-29-Aug-2023periEventTable.mat");
 
 % for now loads as 'data' struct
 clear periEventTable;
 
 load(pathData);
 
-%% ----
+%% Set gramm plot defaults
+set_gramm_plot_defaults();
 
 
 %% --- Compute AUC of peri-PE ---
@@ -213,11 +215,11 @@ test2= test(test.DStrialOutcome==1,:);
 %DS= [1344.80936960000], poxDS= {1348.58702848000}, loxDS= [1345.65838848000][1349.65706752000]
 % how did this get past cleaning? should have definitely been removed
 
-%defined in periEventTable as currentSubj(includedSession).behavior.loxDSrel{cue}(1)
-% this loxDSrel should have been removed in behavioral_analysis script
-% single trial exception from 2022-09-11 subjDataAnalyzed file:
-% trialIDcum 13089
-subjDataAnalyzed.('rat14')(18).behavior.loxDSrel{12}(1)
+% %defined in periEventTable as currentSubj(includedSession).behavior.loxDSrel{cue}(1)
+% % this loxDSrel should have been removed in behavioral_analysis script
+% % single trial exception from 2022-09-11 subjDataAnalyzed file:
+% % trialIDcum 13089
+% subjDataAnalyzed.('rat14')(18).behavior.loxDSrel{12}(1)
 
 %problem could theoretically be related to deleting loxDSrel =[] and index
 %mismatch with loxDS ... but it doesn't matter. should have worked:
@@ -820,7 +822,7 @@ g(1,1).set_names('x', 'PE latency', 'y', 'Lick latency');
 g(1,1).draw
 
 
-%% -- Viz of lick count by latency
+%% -- Viz of lick count by lick latency
 
 % heat plot might help resolve density here...
 
@@ -838,6 +840,31 @@ g(1,1)= gramm('y', data3.loxDSrelCountAllThisTrial, 'x', data3.loxDSrel, 'color'
 g(1,1).geom_point();
 
 g(1,1).set_title('Lick Count vs Lick latency');
+g(1,1).set_names('y', 'Lick Count', 'x', 'Lick latency');
+
+%first draw
+g(1,1).draw
+
+
+
+%% -- Viz of lick count by pe latency
+
+% heat plot might help resolve density here...
+
+%interesting. relationship between lick count and latency is mostly linear
+%but there are some notable low lick count trials event when the latency to first lick is
+%quick.
+
+clear g;
+figure;
+
+%-individual trial scatter by subj
+group= data3.trialIDcum;
+g(1,1)= gramm('y', data3.loxDSrelCountAllThisTrial, 'x', data3.poxDSrel, 'color', data3.subject, 'group', group);
+
+g(1,1).geom_point();
+
+g(1,1).set_title('Lick Count vs PE latency');
 g(1,1).set_names('y', 'Lick Count', 'x', 'Lick latency');
 
 %first draw
@@ -1143,6 +1170,7 @@ gPeriEvent(1,1)= gramm('x', data3.timeLock, 'y', data3.periEventBlue, 'color', d
 
 % gPeriEvent(1,1).facet_grid(data3.lickCountBinEdge,data3.eventType);
 gPeriEvent(1,1).facet_grid([],data3.eventType);
+% gPeriEvent(1,1).facet_grid(data3.subject,data3.eventType);
 
 
 % % gPeriEvent(1,1).geom_line();
