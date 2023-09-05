@@ -280,7 +280,7 @@ g(1,1).set_title('Between-Subjects');
 
 g(1,1).axe_property('XLim',[0,10]);
 
-g(1,1).set_names('y','','x','Port-Entry Latency (s)','color','', 'column', '');
+g(1,1).set_names('y','Proportion of Trials','x','Port-Entry Latency (s)','color','', 'column', '');
 
 g(1,1).set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
 
@@ -292,7 +292,7 @@ g(1,1).stat_bin('geom','bar','normalization','pdf');
 % % g(1,1).stat_violin('half','true');
 % g(1,1).stat_bin('geom','bar');
 
-g(1,1).stat_density();
+% g(1,1).stat_density();
 
 
 g(1,1).set_color_options('map',cmapGrand);

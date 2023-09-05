@@ -51,12 +51,17 @@ ylimAUC= [-6,16.5];
 % %loxDSpoxRel present
 % pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-08-Nov-2022periEventTable.mat";
 
-% %revised licks
-pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-09-Nov-2022periEventTable.mat";
-
 
 % % 2023-03-18 criteriaSes change
 % pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-18-Mar-2023periEventTable.mat";
+
+
+% %revised licks- OG MANUSCRIPT DATA
+% pathData = "C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-09-Nov-2022periEventTable.mat";
+
+% % added lick count
+pathData= ("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-29-Aug-2023periEventTable.mat");
+
 
 
 
@@ -651,6 +656,104 @@ g.stat_bin();
 g.geom_point();
 g.draw();
 
+
+% - boxplot of days to criteria
+dataCriteria= [];
+dataCriteria= test;
+
+% subset data- relabel 'criteria' for readability
+
+ %make labels matching each 'sesSpecialLabel' and loop thru to search/match
+criteriaTypes= {'First Session-Stage1', 'stage-5-day-1', 'stage-5-day-1-criteria', 'stage-7-day-1-criteria', 'stage-7-final-day'};
+criteriaLabels= {'0_60s_DS','1_NS Intoduced', '2_DS versus NS Discrimination', '3_Reward Delivery Delay Introduced', '4_Final Session'};
+
+
+for thisTrialType= 1:numel(criteriaTypes)
+    ind= [];
+    
+    ind= strcmp(string(dataCriteria.sesSpecialLabel), criteriaTypes(thisTrialType));
+
+    dataCriteria(ind, 'sesSpecialLabel')= {criteriaLabels(thisTrialType)};
+    
+end
+
+% now, subset data- remove first criteria type
+ind=[];
+ind= strcmp(dataCriteria.sesSpecialLabel, '0_60s_DS');
+
+dataCriteria= dataCriteria(~ind, :);
+
+
+clear gDaysToCriteria; 
+figure;
+
+%- 
+group= [];
+
+gDaysToCriteria= gramm('x', dataCriteria.sesSpecialLabel, 'y', dataCriteria.trainDay, 'group', group);
+
+gDaysToCriteria.set_title('Days to Criteria');
+gDaysToCriteria.set_names('y','Number of Training Sessions','x','Criteria','color','', 'column', '');
+
+
+
+gDaysToCriteria.set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
+
+gDaysToCriteria.stat_boxplot;%('dodge', dodge, 'width', 5);
+gDaysToCriteria.set_color_options('map',cmapGrand);
+gDaysToCriteria.no_legend();
+
+gDaysToCriteria.coord_flip();
+
+% gDaysToCriteria(1,1).set_parent(p2);
+% gDaysToCriteria.set_parent(p2);
+
+
+gDaysToCriteria.draw();
+% 
+% %- overlay individual subj points
+group= dataCriteria.subject;
+% gDaysToCriteria.update('x', data3.poxDSrel, 'color', data3.subject, 'group', group);
+gDaysToCriteria.update('y', dataCriteria.trainDay, 'x', dataCriteria.sesSpecialLabel, 'color', dataCriteria.subject, 'group', group);
+
+gDaysToCriteria.geom_point();
+
+% % gDaysToCriteria.update('y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+% % gDaysToCriteria.update('x', data3.subject, 'y', data3.poxDSrel, 'color', data3.subject, 'group', group);
+% % gDaysToCriteria.update('y', data3.subject, 'x', data3.poxDSrel, 'color', data3.subject, 'group', group);
+% gDaysToCriteria.update('x', data3.poxDSrel, 'color', data3.subject, 'group', group);
+% 
+% gDaysToCriteria.geom_raster();
+% % haviing issues with raster + boxplot combo (axes mismatch)
+
+% gDaysToCriteria.geom_hline('yintercept', latMean, 'style', 'k--', 'linewidth',linewidthReference); 
+
+
+gDaysToCriteria.set_title('Individual Subjects');
+
+
+% gDaysToCriteria.axe_property('XLim',[0,10], 'YLim', [0, 10]);
+
+% gDaysToCriteria.axe_property('YLim',[0,70], 'XLim', [0,10]);
+
+
+gDaysToCriteria.set_color_options('map',cmapSubj);
+% g.set_line_options('base_size',linewidthSubj);
+gDaysToCriteria.no_legend();
+
+% gDaysToCriteria.draw();
+
+
+%-make horizontal
+% gDaysToCriteria.coord_flip();
+
+g.set_title('Figure 1 Supplement: Training Criteria');
+
+%- final draw call
+gDaysToCriteria.draw();
+
+titleFig='Figure 1 Supplement- Training Criteria';
+saveFig(gcf, figPath, titleFig, figFormats, figSize);
 
 % Save the days to criteria table to file
 experimentName= 'vp-vta-fp';

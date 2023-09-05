@@ -2059,7 +2059,7 @@ g(1,1).stat_boxplot();
 
 % %- dist with density smoothed
 g(1,1).stat_bin('geom','bar','normalization','pdf');
-g(1,1).stat_density();
+% g(1,1).stat_density();
 
 
 g(1,1).set_color_options('map',cmapGrand);

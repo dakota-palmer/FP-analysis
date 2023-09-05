@@ -1,8 +1,17 @@
 
 %% -------- LICK CORRELATION with PERI-PE GCaMP --------------------------
 
+% change y1Var to run correlation of peri-DS or peri-PE signal
+
 
 %% Load data
+pathData= ("C:\Users\Dakota\Documents\GitHub\FP-analysis\matlabVPFP\_dp_manuscript\_figures\_allSes\vp-vta-fp-airPLS-29-Aug-2023periEventTable.mat");
+
+% for now loads as 'data' struct
+clear periEventTable;
+
+load(pathData);
+
 data= periEventTable;
 
 corrInputTable= table;
@@ -10,7 +19,7 @@ corrInputTable= table;
 corrInputTable= data;
 
 %% Set gramm plot defaults
-% set_gramm_plot_defaults();
+set_gramm_plot_defaults();
 
 
 %% Plot Settings
@@ -443,7 +452,7 @@ g(1,1).set_title('Between-Subjects');
 
 g(1,1).axe_property('XLim',[0,70]);
 
-g(1,1).set_names('y','','x','Number of Licks','color','', 'column', '');
+g(1,1).set_names('y','Proportion of Trials','x','Number of Licks','color','', 'column', '');
 
 g(1,1).set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
 
@@ -455,7 +464,8 @@ g(1,1).stat_bin('geom','bar','normalization','pdf');
 % % g(1,1).stat_violin('half','true');
 % g(1,1).stat_bin('geom','bar');
 
-g(1,1).stat_density();
+% just show bins for clarity
+% g(1,1).stat_density();
 
 
 g(1,1).set_color_options('map',cmapGrand);
@@ -609,10 +619,10 @@ for thisStage= 1:numel(allStages)
 
                 %-Ordered latency
 
-                %dynamic, switch between periDS and periDSpox
+%                 %dynamic, switch between periDS and periDSpox
                 
-                y1var= 'DSblue'; 
-%                 y1var= 'DSbluePox';
+%                 y1var= 'DSblue'; 
+                y1var= 'DSbluePox';
                 
 %                 y1= data4.DSblue; 
 %                 y1= data4.DSbluePox; 
@@ -979,101 +989,14 @@ titleFig= strcat(titleFig, y1var);
 saveFig(gcf, figPath, titleFig, figFormats);
 
 
-%% Plot input to correlation? 
 
-%% -- todo plot 'pooled/mean' y1 at each timestamp by subj
-
-
-
-% figure();
-clear gCorr; figure;
-
-cmapGrand= cmapBlueGrayGrand;
-cmapSubj= cmapBlueGraySubj;
+%% --EXPORT AS PARQUET FOR STATS ---
+parquetwrite(strcat('vp-vta-fp_supplement_stats_fig3_correlation_lickCount_x_',y1var,'_Table'), data);
 
 
-%Don't use Lightness facet since importing to illustrator will make
-%grouping a problem ... instead use group
+%- Save .mat Output of Latency correlation to make figures
+save(fullfile(figPath,strcat('vp-vta-fp_supplement_stats_fig3_correlation_lickCount_x_',y1var,'_Table','-',date)), 'data', '-v7.3');
 
-    %-individual subj lines
-% i= gramm('x', data.timeLock, 'y', data.periCueRho, 'color', data.latencyOrder, 'lightness', data.subject);
-gCorr= gramm('x', data.timeLock, 'y', data.y1Mean, 'color', data.latencyOrder, 'group', data.subject);
-
-
-gCorr().stat_summary('type','sem','geom','area');
-
-% gLat().set_color_options('lightness_range', lightnessRangeSubj) 
-gCorr().set_color_options('map', cmapSubj) 
-
-gCorr().set_line_options('base_size', linewidthSubj)
-
-gCorr().no_legend();
-
-
-% % % set parent uiPanel in overall figure
-% gCorr().set_parent(p6);
-
-%- first draw call
-gCorr().draw();
-
-    %-between subj mean+sem
-gCorr().update('x', data.timeLock, 'y', data.y1Mean, 'color', data.latencyOrder, 'lightness', [], 'group', []);
-
-gCorr().stat_summary('type','sem','geom','area');
-
-
-% gLat().set_color_options('lightness_range', lightnessRangeGrand); 
-gCorr().set_color_options('map', cmapGrand) 
-
-gCorr().set_line_options('base_size', linewidthGrand); 
-
-
-titleFig= strcat('Correlation Input of Lick Count per Trial with ', y1var);
-
-
-gCorr().set_title(titleFig);
-gCorr().set_names('x','Time from event onset (s)','y',y1var,'color','latencyOrder');
-gCorr().no_legend();
-
-if strcmp(y1var, 'DSblue')
-    gCorr().geom_vline('xintercept', 0, 'style', 'b--', 'linewidth',linewidthReference); % line @ 0 (event onset)
-    
-    %add vertical line for mean PE latency
-    peMean= [];
-    peMean= nanmean(data.poxDSrelMean);
-    gCorr().geom_vline('xintercept', peMean, 'style', 'm--', 'linewidth',linewidthReference); % line @ 0 (event onset)
-
-    
-    %add vertical line overlay for mean Lick latency
-    lickMean= [];
-    lickMean= nanmean(data.loxDSrelMean);
-    gCorr().geom_vline('xintercept', lickMean, 'style', 'k-.', 'linewidth',linewidthReference); % line @ mean 
-    
-elseif strcmp(y1var, 'DSbluePox')
-    gCorr().geom_vline('xintercept', 0, 'style', 'm--', 'linewidth',linewidthReference); % line @ 0 (event onset)
-    
-    %add vertical line overlay for mean Lick latency
-    lickMean= [];
-    lickMean= nanmean(data.loxDSpoxRelMean);
-    gCorr().geom_vline('xintercept', lickMean, 'style', 'k-.', 'linewidth',linewidthReference); % line @ mean 
-    
-end
-    
-    
-%-set limits
-% gCorr().axe_property('YLim',yLimTraces);
-gCorr().axe_property('XLim',xLimCorrelation);
-gCorr().axe_property('XTick',xTickCorrelation);
-
-
-% gCorr().axe_property('YLim',[-0.5,0.5]);
-% gCorr().axe_property('xLim',[-2,5]); %capping at +5s
-
-gCorr().draw();
-
-% titleFig='vp-vta_supplement_fig3_correlation_INPUT_lickCount_x_';
-
-% titleFig= strcat(titleFig, y1var);
 
 
 %% -- Viz of lick count by pe latency
@@ -1474,224 +1397,6 @@ gPeriEvent(1,1).geom_vline('xintercept', 0, 'style', 'k--', 'linewidth',linewidt
 
 % %- save final draw til end
 gPeriEvent(1,1).draw();
-
-
-
-%% plot input signals- closer individual trial examination?
-
-% Subset data
-data= corrInputTable;
-
-
-% for binning and faceting copy code from fp_manuscript_session_correlation
-
-%initialize columns
-data(:,'lickCountBin')= table(nan);
-data(:,'lickCountBinEdge')= table(nan);
-
-%----convert lick Count into n bins 
-%quick and dirty binning using discretize() 
-
-nBins=[];
-nBins= 5;
-
-y= [];
-e= [];
-
-[y, e]= discretize(data.loxDSrelCountAllThisTrial, nBins);
-
-data.lickCountBin= y;
-
-%save labels of bin edges too 
-for bin= 1:numel(e)-1
-    
-    ind= [];
-    ind= data.lickCountBin== bin;
-    
-   data(ind, "lickCountBinEdge")= table(e(bin)); 
-end
-
-
-%-----
-% Vizualize periDSPE, faceted by lick count bin
-
-
-
-% ---- Add Plots of peri-event mean traces
-
-%- subset data (relying on above)
-%- note: keep full time series for viz
-data= data;
-
-clear gPeriEvent
-
-%- aesthetics
-xlimTraces= [-2,10];
-ylimTraces= [-2,5];
-
-% yTickTraces= [0:2:10] 
-xTickTraces= [-2:2:10]; % ticks every 2s
-% xTickTraces= [-2:1:10]; % ticks every 1s
-
-xTickHeat= [-4:2:10]; %expanded to capture longer PE latencies
-xLimHeat= [-4,10];
-
-yLimCorrelation= [-0.5, 0.5];
-xLimCorrelation= [-2,5];
-xTickCorrelation= [-2:2:5];
-
-errorBar='sem';
-
-
-
-
-%stack() the data by eventType
-data3= data;
-
-%all 3 events:
-data3= stack(data3, {'DSblue', 'DSbluePox', 'DSblueLox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
-cmapGrand= 'brewer_dark';
-cmapSubj= 'brewer2';
-
-% % DS and PE only
-% data3= stack(data3, {'DSblue', 'DSbluePox'}, 'IndexVariableName', 'eventType', 'NewDataVariableName', 'periEventBlue');
-% % %flip the color order so that PE is consistent with fig2 (purple)
-% % % cmapGrand= cmapPEGrand;
-% % % cmapSubj= cmapPESubj;
-% cmapGrand= flip(cmapPEGrand);
-% cmapSubj= flip(cmapPESubj);
-
-% - rename eventTypes so auto faceting are in order of events
-%manually relabel trialType for clarity
-%convert categorical to string then search 
-% data3(:,"eventType")= {''};
-
- %make labels matching each 'trialType' and loop thru to search/match
-trialTypes= {'DSblue', 'DSbluePox', 'DSblueLox'};
-trialTypeLabels= {'1_Peri-DS','2_Peri-PE', '3_Peri-Lick'};
-
-for thisTrialType= 1:numel(trialTypes)
-    ind= [];
-    
-    ind= strcmp(string(data3.eventType), trialTypes(thisTrialType));
-
-    data3(ind, 'eventType')= {trialTypeLabels(thisTrialType)};
-    
-end
-
-
-% - All trials?
-group= data3.DStrialIDcum;
-
-figure;
-
-
-clear gPeriEvent;
-
-% gPeriEvent(1,1)= gramm('x', data3.timeLock, 'y', data3.periEventBlue, 'color', data3.eventType, 'group', group);
-
-gPeriEvent(1,1)= gramm('x', data3.timeLock, 'y', data3.periEventBlue, 'color', data3.subject, 'group', group);
-
-% gPeriEvent(1,1)= gramm('x', data3.timeLock, 'y', data3.periEventBlue, 'group', group);
-
-gPeriEvent(1,1).facet_grid(data3.lickCountBinEdge,data3.eventType);
-
-% gPeriEvent(1,1).facet_grid(data3.lickCountBinEdge,data3.eventType);
-% gPeriEvent(1,1).facet_grid(data3.lickCountBinEdge,data3.subject);
-
-% gPeriEvent(1,1).facet_grid(data3.subject,data3.eventType);
-
-
-% gPeriEvent(1,1).stat_bin2d('geom','image');
-
-
-gPeriEvent(1,1).geom_line();
-
-% gPeriEvent(1,1).stat_summary('type','sem','geom','area');
-
-gPeriEvent.draw();
-
-
-
-
-% ---- 2023-04-06
- %Mean/SEM update
- %instead of all trials, simplify to mean observation per subject
- % "Grand" mean+SEM should reflect mean and SEM of subject means, not mean and SEM of pooled data?
-% data3= groupsummary(data3, ["subject","stage","eventType", "timeLock"], "mean",["periEventBlue"]);
-
-data3= groupsummary(data3, ["subject","stage", "lickCountBinEdge", "eventType", "timeLock"], "mean",["periEventBlue"]);
-
-
-% making new field with original column name to work with rest of old code bc 'mean_' is added 
-data3.periEventBlue= data3.mean_periEventBlue;
-
-
-% - Individual Subj lines
-group= data3.subject;
-
-figure;
-
-clear gPeriEvent;
-
-gPeriEvent(1,1)= gramm('x', data3.timeLock, 'y', data3.periEventBlue, 'color', data3.eventType, 'group', group);
-
-gPeriEvent(1,1).facet_grid(data3.lickCountBinEdge,data3.eventType);
-
-
-% gPeriEvent(1,1).geom_line();
-gPeriEvent(1,1).stat_summary('type',errorBar,'geom','line');
-
-
-% i2.set_title(titleFig); 
-gPeriEvent(1,1).set_color_options('map',cmapSubj);
-gPeriEvent(1,1).set_line_options('base_size',linewidthSubj);
-gPeriEvent(1,1).set_names('x','Time from event (s)','y','GCaMP (Z-Score)','color','Event Type', 'column', 'Event Type', 'row', 'Trial Licks (Binned)');
-
-gPeriEvent(1,1).set_text_options(text_options_DefaultStyle{:}); %apply default text sizes/styles
-
-%remove legend
-gPeriEvent(1,1).no_legend();
-
-%-set limits
-gPeriEvent(1,1).axe_property('YLim',ylimTraces);
-gPeriEvent(1,1).axe_property('XLim',xlimTraces);
-gPeriEvent(1,1).axe_property('XTick',xTickTraces);
-
-% gPeriEvent(1,1).axe_property('XLim',xLimHeat);
-% gPeriEvent(1,1).axe_property('XTick',xTickHeat);
-
-
-% % % % set parent uiPanel in overall figure
-% gPeriEvent(1,1).set_parent(p2);
-% gPeriEvent(1,1).set_parent(p1);
-
-
-%- First Draw call
-gPeriEvent(1,1).draw();
-
-% -- Between subjects mean+SEM 
-group=[]
-gPeriEvent(1,1).update('x', data3.timeLock, 'y', data3.periEventBlue, 'color', data3.eventType, 'group', group);
-
-gPeriEvent(1,1).stat_summary('type',errorBar,'geom','area');
-
-gPeriEvent(1,1).set_color_options('map',cmapGrand);
-gPeriEvent(1,1).set_line_options('base_size',linewidthGrand);
-
-
-%remove legend
-gPeriEvent(1,1).no_legend();
-
-
-%- vline at 0 
-gPeriEvent(1,1).geom_vline('xintercept', 0, 'style', 'k--', 'linewidth',linewidthReference); 
-
-
-% %- save final draw til end
-gPeriEvent(1,1).draw();
-
-
 
 
 
