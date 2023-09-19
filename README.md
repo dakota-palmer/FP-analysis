@@ -15,12 +15,28 @@ Fiber photometry analysis pipeline developed with Alexandra Scott for Jocelyn Ri
 
 ### Note about use/adapting:
 
+
 * As I developed this code over ~4 years, I branched out into other programming languages (Python/R) and improved my programming/data science skills. While I think the code is robust and generalizable, I started this project while learning MATLAB and older code is not super efficient. Early on, I used nonoptimal nested struct organization with many loops. I also manually created and saved a ton of figures  (before learning about packages like gramm/seaborn/ggplot).  Eventually, in MATLAB, converted the inefficient structs into tables which are much easier to work with (see fpStruct2Table.m and fp_manuscript_TidyTable.m scripts). Newer/more recent MATLAB code (e.g. manuscript figure scripts) tends to use tables as well as the gramm package for data visualizations. I recommend going to table/dataframe format ASAP for any new analyses. If I had to do this over again, I’d ditch MATLAB and structs from the beginning and just use Python or R (possibly with relational databases).
 
 * This code can be adapted to other behavioral tasks but many of the variable names/behavioral analyses are currently task-specific (e.g. DS, NS, port-entry (pox), licks (lox)). 
 Fiber photometry analysis pipeline developed with Alexandra Scott for Jocelyn Richard’s Lab at the University of Minnesota. Used for analyses including those reported in Palmer et al., 2023.
 
+### Manuscript info:
+     Palmer, D., Cayton, C.A., Scott, A., Lin, I., Newell, B., Weberg, M., & Richard, J.M. (under review). Ventral pallidum projections to the ventral tegmental area reinforce but do not invigorate reward-seeking behavior. Preprint on bioRxiv: https://doi.org/10.1101/2023.05.22.541796.
+
+## Dependencies from other authors
+
+###  **Make sure you've installed these dependencies before starting workflow**
+
+* gramm for MATLAB figures/visualizations: https://github.com/piermorel/gramm 
+
+* TDT Matlab SDK for importing/converting raw data tanks to .NEX format: https://www.tdt.com/docs/sdk/offline-data-analysis/offline-data-matlab/getting-started/ 
+
+
 ## Data Analysis Workflow
+
+**Make sure you've installed dependencies listed above prior to beginning**
+
 
 ### Data Extraction 
 
