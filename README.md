@@ -22,7 +22,8 @@ Fiber photometry analysis pipeline developed with Alexandra Scott for Jocelyn Ri
 Fiber photometry analysis pipeline developed with Alexandra Scott for Jocelyn Richard’s Lab at the University of Minnesota. Used for analyses including those reported in Palmer et al., 2023.
 
 ### Manuscript info:
-     Palmer, D., Cayton, C.A., Scott, A., Lin, I., Newell, B., Weberg, M., & Richard, J.M. (under review). Ventral pallidum projections to the ventral tegmental area reinforce but do not invigorate reward-seeking behavior. Preprint on bioRxiv: https://doi.org/10.1101/2023.05.22.541796.
+
+Palmer, D., Cayton, C.A., Scott, A., Lin, I., Newell, B., Weberg, M., & Richard, J.M. (under review). Ventral pallidum projections to the ventral tegmental area reinforce but do not invigorate reward-seeking behavior. Preprint on bioRxiv: https://doi.org/10.1101/2023.05.22.541796.
 
 ## Dependencies from other authors
 
