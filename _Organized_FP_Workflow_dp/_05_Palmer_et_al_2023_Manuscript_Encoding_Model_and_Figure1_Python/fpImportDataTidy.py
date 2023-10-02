@@ -195,6 +195,8 @@ contVars= ['reblue','repurple']
 #e.g. different trial types in addition to DS vs NS (e.g. laser ON vs laser OFF trials; TODO: variable reward outcome)
 #TODO: consider making cueType it's own trialVar... then can use for stats easy later on
 
+#Note as of 2023-09-20 focused on DS task analyses, so trialIDs are defined by DStime and NStime. Should be made generalizable
+
 trialVars= []
 
 #e.g. for Opto:
@@ -447,6 +449,8 @@ test= df.loc[df.fileID==df.fileID.min()]
 # # remove invalid/placeholder 0s
 # # TODO: seem to be removing legitimate port exits with peDur==0, not sure how to deal with this so just excluding
 # df = df[df.eventTime != 0]
+
+#Note as of 2023-09-20 focused on DS task analyses, so trialIDs are defined by DStime and NStime. Should be made generalizable
 
 # add trialID column by cumulative counting each DS or NS within each file
 # now we have ID for trials 0-59 matching DS or NS within each session, nan for other events
